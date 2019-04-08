@@ -6,7 +6,7 @@
     <description>Recent content in R Markdown on bad to the code</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/ribice&#34;&gt;Emir Ribic&lt;/a&gt; 2017</copyright>
+    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
     <lastBuildDate>Sat, 30 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/r-markdown/index.xml" rel="self" type="application/rss+xml" />
@@ -19,7 +19,7 @@
       
       <guid>/post/google-location-tracking/</guid>
       <description>Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
-So I downloaded the data, that comes in json format, and had a go at it. You can download yours from your Google account.</description>
+So I downloaded the data, that comes in json format, and had a go at it. You can download your Google location data from your Google account.</description>
     </item>
     
     <item>

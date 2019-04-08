@@ -4,61 +4,255 @@
     <title>bad to the code</title>
     <link>/</link>
     <description>Recent content on bad to the code</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo - gohugo.io</generator>
     <language>en</language>
-    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/ribice&#34;&gt;Emir Ribic&lt;/a&gt; 2017</copyright>
-    <lastBuildDate>Sat, 30 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <contact>madcap1090@gmail.com</contact>
+    <copyright>&copy; <a href="https://github.com/madcap1090">William Bourgeois</a> 2019</copyright>
     
-	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+        <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>google location tracking</title>
       <link>/post/google-location-tracking/</link>
       <pubDate>Sat, 30 Mar 2019 00:00:00 +0000</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/post/google-location-tracking/</guid>
-      <description>Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
-So I downloaded the data, that comes in json format, and had a go at it. You can download yours from your Google account.</description>
+      <description></description>
+      
+      <content>
+
+
+&lt;p&gt;Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.&lt;/p&gt;
+&lt;p&gt;So I downloaded the data, that comes in json format, and had a go at it. You can &lt;a href=&#34;https://takeout.google.com/settings/takeout&#34;&gt;download&lt;/a&gt; your Google location data from your Google account.&lt;/p&gt;
+&lt;p&gt;Let’s load the data and attach the libraries that are needed.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;jsonlite&amp;quot;)
+library(&amp;quot;tidyverse&amp;quot;)
+library(&amp;quot;lubridate&amp;quot;)
+library(&amp;quot;ggplot2&amp;quot;)
+library(&amp;quot;ggmap&amp;quot;)    # devtools::install_github(&amp;quot;dkahle/ggmap&amp;quot;)
+library(&amp;quot;glue&amp;quot;)
+library(&amp;quot;emo&amp;quot;)      # devtools::install_github(&amp;quot;hadley/emo&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;data &amp;lt;- fromJSON(&amp;quot;./data/Location History.json&amp;quot;) # extracts a list
+locations &amp;lt;- data$locations # and the list contains a dataframe
+rm(data)  # no need for this anymore&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This &lt;a href=&#34;https://shiring.github.io/maps/2016/12/30/Standortverlauf_post&#34;&gt;blogpost&lt;/a&gt; from Shirin Glander was super useful and I am shamelessly stealing some of her ideas. The time stamp needs to be converted to be readable.
+The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- locations %&amp;gt;% 
+  mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &amp;quot;1970-01-01&amp;quot;)) 
+
+sort(unique(df$heading)) #naught to 360&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   [1]   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+##  [18]  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33
+##  [35]  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50
+##  [52]  51  52  53  54  55  56  57  58  59  60  61  62  63  64  65  66  67
+##  [69]  68  69  70  71  72  73  74  75  76  77  78  79  80  81  82  83  84
+##  [86]  85  86  87  88  89  90  91  92  93  94  95  96  97  98  99 100 101
+## [103] 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118
+## [120] 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135
+## [137] 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150 151 152
+## [154] 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169
+## [171] 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186
+## [188] 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203
+## [205] 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220
+## [222] 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237
+## [239] 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254
+## [256] 255 256 257 258 259 260 261 262 263 264 265 266 267 268 269 270 271
+## [273] 272 273 274 275 276 277 278 279 280 281 282 283 284 285 286 287 288
+## [290] 289 290 291 292 293 294 295 296 297 298 299 300 301 302 303 304 305
+## [307] 306 307 308 309 310 311 312 313 314 315 316 317 318 319 320 321 322
+## [324] 323 324 325 326 327 328 329 330 331 332 333 334 335 336 337 338 339
+## [341] 340 341 342 343 344 345 346 347 348 349 350 351 352 353 354 355 356
+## [358] 357 358 359&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Is the velocity in miles per hour ?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unique(df$velocity)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] NA  0  1  3  5 14 28  2  4  7  8 25 29 15 16 19 10  6  9 11 13 12 21
+## [24] 24 20 17 26 27 30 23 22 18 31 33 32 34 35 36 82 83 77 74 67 37&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h :scream: ji(“scream”)&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&amp;quot;km!&amp;quot;); ji(&amp;quot;scream&amp;quot;)
+fine &amp;lt;- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&amp;quot;km!&amp;quot;)
+scream &amp;lt;- ji_glue(&amp;quot;:scream:&amp;quot;) 
+glue(&amp;quot;{fine} {scream} {scream} {scream}&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 134 km! &amp;lt;U+0001F631&amp;gt; &amp;lt;U+0001F631&amp;gt; &amp;lt;U+0001F631&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Could this information get me fined? Or will this type information be used in the future determine guilt?
+Are the police allowed to access this type of Google data to for instance find perps of hit &amp;amp; runs?&lt;/p&gt;
+&lt;p&gt;The data frame also contains lists with times tamps and estimations of activity at that time stamp.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;str(df$activity[80])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## List of 1
+##  $ :&amp;#39;data.frame&amp;#39;:    1 obs. of  2 variables:
+##   ..$ timestampMs: chr &amp;quot;1395248054966&amp;quot;
+##   ..$ activity   :List of 1
+##   .. ..$ :&amp;#39;data.frame&amp;#39;:  5 obs. of  2 variables:
+##   .. .. ..$ type      : chr [1:5] &amp;quot;ON_FOOT&amp;quot; &amp;quot;STILL&amp;quot; &amp;quot;IN_VEHICLE&amp;quot; &amp;quot;UNKNOWN&amp;quot; ...
+##   .. .. ..$ confidence: int [1:5] 49 20 16 10 2&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;glimpse(unique(df$altitude)) # ? what sensor does it use?&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  int [1:633] NA 27 41 38 42 60 16 57 63 49 ...&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(unique(df$altitude))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&amp;#39;s 
+## -1299.0   108.8   266.5   274.0   435.2  2983.0       1&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s plot some data on maps.&lt;/p&gt;
+&lt;p&gt;First some additional date prep.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- df %&amp;gt;% 
+  mutate(lat   = latitudeE7/1e7,
+         lon   = longitudeE7/1e7,
+         time  = strftime(datetime, format = &amp;quot;%H:%M:%S&amp;quot;),
+         date  = date(datetime),
+         year  = year(datetime),
+         month = month(datetime),
+         wday  = wday(datetime))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info &lt;a href=&#34;https://developers.google.com/maps/documentation/embed/get-api-key&#34;&gt;here&lt;/a&gt;. For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your &lt;a href=&#34;https://console.developers.google.com/apis/credentials?project=grounded-block-178714&amp;amp;folder&amp;amp;organizationId&#34;&gt;IP&lt;/a&gt;. Will have a go at OSM in a future post, promised.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;secrets &amp;lt;- readRDS(&amp;quot;~/R/geo/secret/secrets.rds&amp;quot;)
+key &amp;lt;- secrets$key[1]
+register_google(key = key)
+
+belgium &amp;lt;- get_map(location = &amp;#39;Belgium&amp;#39;, zoom = 8)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/staticmap?center=Belgium&amp;amp;zoom=8&amp;amp;size=640x640&amp;amp;scale=2&amp;amp;maptype=terrain&amp;amp;language=en-EN&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Belgium&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The map coverage is called the bounding box of the map and it is an attribute of the ggmap object. xxxx&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(belgium, &amp;quot;bb&amp;quot;)
+bb&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 1 x 4
+##   ll.lat ll.lon ur.lat ur.lon
+##    &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;
+## 1   49.4   2.71   51.6   6.23&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;x &amp;lt;- df %&amp;gt;% 
+  filter(lat &amp;lt; 51.607 &amp;amp; lat &amp;gt; 49.37082,
+         lon &amp;gt; 2.71487 &amp;amp; lon &amp;lt; 6.20495)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
+                            color = &amp;quot;black&amp;quot;, size = .5) + 
+  theme(legend.position = &amp;quot;right&amp;quot;) + 
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;Location history data points in Belgium&amp;quot;,
+    caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1344&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, binking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live in Brussels.&lt;/p&gt;
+</content>
+      
     </item>
     
     <item>
       <title>A Plain Markdown Post</title>
       <link>/post/2016-12-30-hello-markdown/</link>
       <pubDate>Fri, 30 Dec 2016 21:49:57 -0700</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/post/2016-12-30-hello-markdown/</guid>
-      <description>This is a post written in plain Markdown (*.md) instead of R Markdown (*.Rmd). The major differences are:
- You cannot run any R code in a plain Markdown document, whereas in an R Markdown document, you can embed R code chunks (```{r}); A plain Markdown post is rendered through Blackfriday, and an R Markdown document is compiled by rmarkdown and Pandoc.  There are many differences in syntax between Blackfriday&amp;rsquo;s Markdown and Pandoc&amp;rsquo;s Markdown.</description>
+      <description></description>
+      
+      <content>&lt;p&gt;This is a post written in plain Markdown (&lt;code&gt;*.md&lt;/code&gt;) instead of R Markdown (&lt;code&gt;*.Rmd&lt;/code&gt;). The major differences are:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;You cannot run any R code in a plain Markdown document, whereas in an R Markdown document, you can embed R code chunks (&lt;code&gt;```{r}&lt;/code&gt;);&lt;/li&gt;
+&lt;li&gt;A plain Markdown post is rendered through &lt;a href=&#34;https://gohugo.io/overview/configuration/&#34; target=&#34;_blank&#34;&gt;Blackfriday&lt;/a&gt;, and an R Markdown document is compiled by &lt;a href=&#34;http://rmarkdown.rstudio.com&#34; target=&#34;_blank&#34;&gt;&lt;strong&gt;rmarkdown&lt;/strong&gt;&lt;/a&gt; and &lt;a href=&#34;http://pandoc.org&#34; target=&#34;_blank&#34;&gt;Pandoc&lt;/a&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;There are many differences in syntax between Blackfriday&amp;rsquo;s Markdown and Pandoc&amp;rsquo;s Markdown. For example, you can write a task list with Blackfriday but not with Pandoc:&lt;/p&gt;
+
+&lt;ul class=&#34;task-list&#34;&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; checked disabled class=&#34;task-list-item&#34;&gt; Write an R package.&lt;/label&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; disabled class=&#34;task-list-item&#34;&gt; Write a book.&lt;/label&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; disabled class=&#34;task-list-item&#34;&gt; &amp;hellip;&lt;/label&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; disabled class=&#34;task-list-item&#34;&gt; Profit!&lt;/label&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Similarly, Blackfriday does not support LaTeX math and Pandoc does. I have added the MathJax support to this theme (&lt;a href=&#34;https://github.com/yihui/hugo-lithium&#34; target=&#34;_blank&#34;&gt;hugo-lithium&lt;/a&gt;) but there is a caveat for plain Markdown posts: you have to include math expressions in a pair of backticks (inline: &lt;code&gt;`$ $`&lt;/code&gt;; display style: &lt;code&gt;`$$ $$`&lt;/code&gt;), e.g., &lt;code&gt;$S_n = \sum_{i=1}^n X_i$&lt;/code&gt;.&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:This-is-because&#34;&gt;&lt;a href=&#34;#fn:This-is-because&#34;&gt;1&lt;/a&gt;&lt;/sup&gt; For R Markdown posts, you do not need the backticks, because Pandoc can identify and process math expressions.&lt;/p&gt;
+
+&lt;p&gt;When creating a new post, you have to decide whether the post format is Markdown or R Markdown, and this can be done via the &lt;code&gt;ext&lt;/code&gt; argument of the function &lt;code&gt;blogdown::new_post()&lt;/code&gt;, e.g.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-r&#34;&gt;blogdown::new_post(&amp;quot;Post Title&amp;quot;, ext = &#39;.Rmd&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&#34;footnotes&#34;&gt;
+
+&lt;hr /&gt;
+
+&lt;ol&gt;
+&lt;li id=&#34;fn:This-is-because&#34;&gt;This is because we have to protect the math expressions from being interpreted as Markdown. You may not need the backticks if your math expression does not contain any special Markdown syntax such as underscores or asterisks, but it is always a safer choice to use backticks. When you happen to have a pair of literal dollar signs inside the same element, you can escape one dollar sign, e.g., &lt;code&gt;\$50 and $100&lt;/code&gt; renders &amp;ldquo;\$50 and $100&amp;rdquo;. &lt;a class=&#34;footnote-return&#34; href=&#34;#fnref:This-is-because&#34;&gt;&lt;sup&gt;[return]&lt;/sup&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+</content>
+      
     </item>
     
     <item>
       <title>About</title>
       <link>/about/</link>
       <pubDate>Thu, 05 May 2016 21:48:51 -0700</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/about/</guid>
-      <description>This is a &amp;ldquo;hello world&amp;rdquo; example website for the blogdown package. The theme was forked from @jrutheiser/hugo-lithium-theme and modified by Yihui Xie.</description>
+      <description></description>
+      
+      <content>&lt;p&gt;This is a &amp;ldquo;hello world&amp;rdquo; example website for the &lt;a href=&#34;https://github.com/rstudio/blogdown&#34; target=&#34;_blank&#34;&gt;&lt;strong&gt;blogdown&lt;/strong&gt;&lt;/a&gt; package. The theme was forked from &lt;a href=&#34;https://github.com/jrutheiser/hugo-lithium-theme&#34; target=&#34;_blank&#34;&gt;@jrutheiser/hugo-lithium-theme&lt;/a&gt; and modified by &lt;a href=&#34;https://github.com/yihui/hugo-lithium&#34; target=&#34;_blank&#34;&gt;Yihui Xie&lt;/a&gt;.&lt;/p&gt;
+</content>
+      
     </item>
     
     <item>
       <title>Hello R Markdown</title>
       <link>/post/2015-07-23-r-rmarkdown/</link>
       <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/post/2015-07-23-r-rmarkdown/</guid>
-      <description>R MarkdownThis is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
-You can embed an R code chunk like this:
-summary(cars)## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
+      <description></description>
+      
+      <content>
+
+
+&lt;div id=&#34;r-markdown&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;R Markdown&lt;/h1&gt;
+&lt;p&gt;This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see &lt;a href=&#34;http://rmarkdown.rstudio.com&#34; class=&#34;uri&#34;&gt;http://rmarkdown.rstudio.com&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;You can embed an R code chunk like this:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(cars)
+##      speed           dist       
+##  Min.   : 4.0   Min.   :  2.00  
+##  1st Qu.:12.0   1st Qu.: 26.00  
+##  Median :15.0   Median : 36.00  
+##  Mean   :15.4   Mean   : 42.98  
+##  3rd Qu.:19.0   3rd Qu.: 56.00  
+##  Max.   :25.0   Max.   :120.00
+fit &amp;lt;- lm(dist ~ speed, data = cars)
+fit
+## 
+## Call:
+## lm(formula = dist ~ speed, data = cars)
+## 
+## Coefficients:
+## (Intercept)        speed  
+##     -17.579        3.932&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;including-plots&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Including Plots&lt;/h1&gt;
+&lt;p&gt;You can also embed plots. See Figure &lt;a href=&#34;#fig:pie&#34;&gt;1&lt;/a&gt; for example:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;par(mar = c(0, 1, 0, 1))
+pie(
+  c(280, 60, 20),
+  c(&amp;#39;Sky&amp;#39;, &amp;#39;Sunny side of pyramid&amp;#39;, &amp;#39;Shady side of pyramid&amp;#39;),
+  col = c(&amp;#39;#0292D8&amp;#39;, &amp;#39;#F7EA39&amp;#39;, &amp;#39;#C4B632&amp;#39;),
+  init.angle = -50, border = NA
+)&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&#34;figure&#34;&gt;&lt;span id=&#34;fig:pie&#34;&gt;&lt;/span&gt;
+&lt;img src=&#34;/post/2015-07-23-r-rmarkdown_files/figure-html/pie-1.png&#34; alt=&#34;A fancy pie chart.&#34; width=&#34;672&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;
+Figure 1: A fancy pie chart.
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</content>
+      
     </item>
     
     <item>
       <title>Lorem Ipsum</title>
       <link>/post/2015-01-01-lorem-ipsum/</link>
       <pubDate>Thu, 01 Jan 2015 13:09:13 -0600</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/post/2015-01-01-lorem-ipsum/</guid>
-      <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</description>
+      <description></description>
+      
+      <content>&lt;p&gt;&lt;strong&gt;Lorem ipsum&lt;/strong&gt; dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore &lt;em&gt;magna aliqua&lt;/em&gt;. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&lt;/p&gt;
+</content>
+      
     </item>
     
   </channel>

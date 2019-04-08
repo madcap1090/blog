@@ -12,17 +12,17 @@ tags:
 
 
 <p>Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.</p>
-<p>So I downloaded the data, that comes in json format, and had a go at it. You can <a href="https://takeout.google.com/settings/takeout">download</a> yours from your Google account.</p>
+<p>So I downloaded the data, that comes in json format, and had a go at it. You can <a href="https://takeout.google.com/settings/takeout">download</a> your Google location data from your Google account.</p>
 <p>Let’s load the data and attach the libraries that are needed.</p>
 <pre class="r"><code>library(&quot;jsonlite&quot;)
 library(&quot;tidyverse&quot;)
 library(&quot;lubridate&quot;)
 library(&quot;ggplot2&quot;)
-library(&quot;ggmap&quot;) # devtools::install_github(&quot;dkahle/ggmap&quot;)
+library(&quot;ggmap&quot;)    # devtools::install_github(&quot;dkahle/ggmap&quot;)
 library(&quot;glue&quot;)
-library(&quot;emo&quot;) # devtools::install_github(&quot;hadley/emo&quot;)</code></pre>
+library(&quot;emo&quot;)      # devtools::install_github(&quot;hadley/emo&quot;)</code></pre>
 <pre class="r"><code>data &lt;- fromJSON(&quot;./data/Location History.json&quot;) # extracts a list
-locations &lt;- data$locations # and the list contians a dataframe
+locations &lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore</code></pre>
 <p>This <a href="https://shiring.github.io/maps/2016/12/30/Standortverlauf_post">blogpost</a> from Shirin Glander was super useful and I am shamelessly stealing some of her ideas. The time stamp needs to be converted to be readable.
 The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).</p>
@@ -89,7 +89,7 @@ Are the police allowed to access this type of Google data to for instance find p
          year  = year(datetime),
          month = month(datetime),
          wday  = wday(datetime))</code></pre>
-<p>Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info <a href="https://developers.google.com/maps/documentation/embed/get-api-key">here</a>. For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your <a href="https://console.developers.google.com/apis/credentials?project=grounded-block-178714&amp;folder&amp;organizationId">IP</a>.</p>
+<p>Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info <a href="https://developers.google.com/maps/documentation/embed/get-api-key">here</a>. For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your <a href="https://console.developers.google.com/apis/credentials?project=grounded-block-178714&amp;folder&amp;organizationId">IP</a>. Will have a go at OSM in a future post, promised.</p>
 <pre class="r"><code>secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;)
 key &lt;- secrets$key[1]
 register_google(key = key)
@@ -107,7 +107,8 @@ bb</code></pre>
 <pre class="r"><code>x &lt;- df %&gt;% 
   filter(lat &lt; 51.607 &amp; lat &gt; 49.37082,
          lon &gt; 2.71487 &amp; lon &lt; 6.20495)</code></pre>
-<pre class="r"><code>ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, color = &quot;black&quot;, size = .5) + 
+<pre class="r"><code>ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
+                            color = &quot;black&quot;, size = .5) + 
   theme(legend.position = &quot;right&quot;) + 
   labs(
     x = &quot;Longitude&quot;, 
@@ -115,3 +116,4 @@ bb</code></pre>
     title = &quot;Location history data points in Belgium&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1344" /></p>
+<p>A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, binking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live in Brussels.</p>

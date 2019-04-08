@@ -11,7 +11,7 @@ tags:
 
 Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
 
-So I downloaded the data, that comes in json format, and had a go at it. You can [download](https://takeout.google.com/settings/takeout) yours from your Google account. 
+So I downloaded the data, that comes in json format, and had a go at it. You can [download](https://takeout.google.com/settings/takeout) your Google location data from your Google account. 
 
 Let's load the data and attach the libraries that are needed.
 
@@ -20,15 +20,15 @@ library("jsonlite")
 library("tidyverse")
 library("lubridate")
 library("ggplot2")
-library("ggmap") # devtools::install_github("dkahle/ggmap")
+library("ggmap")    # devtools::install_github("dkahle/ggmap")
 library("glue")
-library("emo") # devtools::install_github("hadley/emo")
+library("emo")      # devtools::install_github("hadley/emo")
 
 ```
 
 ```{r}
 data <- fromJSON("./data/Location History.json") # extracts a list
-locations <- data$locations # and the list contians a dataframe
+locations <- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore
 
 ```
@@ -107,7 +107,7 @@ df <- df %>%
 ```
 
 
-Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info [here](https://developers.google.com/maps/documentation/embed/get-api-key). For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your [IP](https://console.developers.google.com/apis/credentials?project=grounded-block-178714&folder&organizationId).
+Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info [here](https://developers.google.com/maps/documentation/embed/get-api-key). For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your [IP](https://console.developers.google.com/apis/credentials?project=grounded-block-178714&folder&organizationId). Will have a go at OSM in a future post, promised. 
 
 ```{r}
 secrets <- readRDS("~/R/geo/secret/secrets.rds")
@@ -135,7 +135,8 @@ x <- df %>%
 
 
 ```{r fig.height=9, fig.width=14}
-ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, color = "black", size = .5) + 
+ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
+                            color = "black", size = .5) + 
   theme(legend.position = "right") + 
   labs(
     x = "Longitude", 
@@ -144,5 +145,5 @@ ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, color 
     caption = "\nA simple point plot shows recorded positions.")
 ```
 
-
+A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, binking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live in Brussels.
 
