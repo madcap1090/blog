@@ -107,7 +107,7 @@ df <- df %>%
 ```
 
 
-Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info [here](https://developers.google.com/maps/documentation/embed/get-api-key). For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your [IP](https://console.developers.google.com/apis/credentials?project=grounded-block-178714&folder&organizationId).
+Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info [here](https://developers.google.com/maps/documentation/embed/get-api-key). For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your [IP](https://console.developers.google.com/apis/credentials?project=grounded-block-178714&folder&organizationId). Will have a go at OSM in a future post, promised. 
 
 ```{r}
 secrets <- readRDS("~/R/geo/secret/secrets.rds")
