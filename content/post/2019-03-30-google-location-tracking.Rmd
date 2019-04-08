@@ -135,7 +135,8 @@ x <- df %>%
 
 
 ```{r fig.height=9, fig.width=14}
-ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, color = "black", size = .5) + 
+ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
+                            color = "black", size = .5) + 
   theme(legend.position = "right") + 
   labs(
     x = "Longitude", 
@@ -144,5 +145,5 @@ ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, color 
     caption = "\nA simple point plot shows recorded positions.")
 ```
 
-
+A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, binking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live in Brussels.
 
