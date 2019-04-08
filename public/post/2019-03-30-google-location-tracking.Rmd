@@ -1,0 +1,148 @@
+---
+title: google location tracking
+author: William Bourgeois
+date: '2019-03-30'
+slug: google-location-tracking
+categories:
+  - geocoding
+tags:
+  - R Markdown
+---
+
+Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
+
+So I downloaded the data, that comes in json format, and had a go at it. You can [download](https://takeout.google.com/settings/takeout) yours from your Google account. 
+
+Let's load the data and attach the libraries that are needed.
+
+```{r message=FALSE, warning=FALSE}
+library("jsonlite")
+library("tidyverse")
+library("lubridate")
+library("ggplot2")
+library("ggmap") # devtools::install_github("dkahle/ggmap")
+library("glue")
+library("emo") # devtools::install_github("hadley/emo")
+
+```
+
+```{r}
+data <- fromJSON("./data/Location History.json") # extracts a list
+locations <- data$locations # and the list contians a dataframe
+rm(data)  # no need for this anymore
+
+```
+
+
+
+This [blogpost](https://shiring.github.io/maps/2016/12/30/Standortverlauf_post) from Shirin Glander was super useful and I am shamelessly stealing some of her ideas. The time stamp needs to be converted to be readable. 
+The field heading seems to be in degrees, is velocity in mph? And I don't know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).
+
+```{r}
+
+
+df <- locations %>% 
+  mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = "1970-01-01")) 
+
+sort(unique(df$heading)) #naught to 360
+
+
+```
+
+Is the velocity in miles per hour ?
+
+```{r}
+unique(df$velocity)
+```
+
+
+Does that mean that I ever broke the speed limit? We're not supposed to drive faster than 120 km/h :scream: ji("scream")
+
+```{r}
+
+#paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),"km!"); ji("scream")
+fine <- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),"km!")
+scream <- ji_glue(":scream:") 
+glue("{fine} {scream} {scream} {scream}")
+
+
+```
+
+Could this information get me fined? Or will this type information be used in the future determine guilt?
+Are the police allowed to access this type of Google data to for instance find perps of hit & runs?
+
+The data frame also contains lists with times tamps and estimations of activity at that time stamp.
+
+```{r}
+
+str(df$activity[80])
+
+```
+
+And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.
+
+```{r}
+glimpse(unique(df$altitude)) # ? what sensor does it use?
+
+```
+
+```{r}
+summary(unique(df$altitude))
+```
+
+
+Let's plot some data on maps. 
+
+First some additional date prep.
+```{r}
+df <- df %>% 
+  mutate(lat   = latitudeE7/1e7,
+         lon   = longitudeE7/1e7,
+         time  = strftime(datetime, format = "%H:%M:%S"),
+         date  = date(datetime),
+         year  = year(datetime),
+         month = month(datetime),
+         wday  = wday(datetime))
+
+```
+
+
+Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info [here](https://developers.google.com/maps/documentation/embed/get-api-key). For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your [IP](https://console.developers.google.com/apis/credentials?project=grounded-block-178714&folder&organizationId).
+
+```{r}
+secrets <- readRDS("~/R/geo/secret/secrets.rds")
+key <- secrets$key[1]
+register_google(key = key)
+
+belgium <- get_map(location = 'Belgium', zoom = 8)
+
+
+```
+
+The map coverage is called the bounding box of the map and it is an attribute of the ggmap object. xxxx
+
+```{r}
+bb <- attr(belgium, "bb")
+bb
+```
+
+```{r}
+x <- df %>% 
+  filter(lat < 51.607 & lat > 49.37082,
+         lon > 2.71487 & lon < 6.20495)
+
+```
+
+
+```{r fig.height=9, fig.width=14}
+ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, color = "black", size = .5) + 
+  theme(legend.position = "right") + 
+  labs(
+    x = "Longitude", 
+    y = "Latitude", 
+    title = "Location history data points in Belgium",
+    caption = "\nA simple point plot shows recorded positions.")
+```
+
+
+
