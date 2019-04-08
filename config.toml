@@ -1,6 +1,6 @@
 baseurl = "/"
 languageCode = "en"
-title = "Hugo Kiss theme"
+title = "bad to the code"
 theme = "kiss"
 copyright = "&copy; <a href=\"https://github.com/ribice\">Emir Ribic</a> 2017"
 disqusShortname = "shortname"
