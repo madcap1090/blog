@@ -2,7 +2,7 @@ baseurl = "/"
 languageCode = "en"
 title = "bad to the code"
 theme = "kiss"
-copyright = "&copy; <a href=\"https://github.com/ribice\">Emir Ribic</a> 2017"
+copyright = "&copy; <a href=\"https://github.com/madcap1090\">William Bourgeois</a> 2019"
 disqusShortname = "shortname"
 googleAnalytics = ""
 Paginate = 5 # Number of posts per page
