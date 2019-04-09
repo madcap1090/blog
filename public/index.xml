@@ -107,22 +107,6 @@ key &amp;lt;- secrets$key[1]
 register_google(key = key)
 
 belgium &amp;lt;- get_map(location = &amp;#39;Belgium&amp;#39;, zoom = 8, maptype = &amp;quot;terrain-lines&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## maptype = &amp;quot;terrain-lines&amp;quot; is only available with source = &amp;quot;stamen&amp;quot;.&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## resetting to source = &amp;quot;stamen&amp;quot;...&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/staticmap?center=Belgium&amp;amp;zoom=8&amp;amp;size=640x640&amp;amp;scale=2&amp;amp;maptype=terrain&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Belgium&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/129/85.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/130/85.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/131/85.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/132/85.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/129/86.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/130/86.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/131/86.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/132/86.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/129/87.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/130/87.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/131/87.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/132/87.png&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;The map coverage is called the bounding box of the map and it is an attribute of the ggmap object.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(belgium, &amp;quot;bb&amp;quot;)
 bb&lt;/code&gt;&lt;/pre&gt;
@@ -133,7 +117,7 @@ bb&lt;/code&gt;&lt;/pre&gt;
          lon &amp;gt; 2.71487 &amp;amp; lon &amp;lt; 6.20495)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(belgium, maptype = &amp;quot;terrain-lines&amp;quot;) + 
   geom_point(data = x, aes(x = lon, y = lat),
-             alpha = 0.1, color = &amp;quot;black&amp;quot;, size = .5) + 
+             alpha = 0.1, color = &amp;quot;#FC4E07&amp;quot;, size = .5) + 
   theme(legend.position = &amp;quot;right&amp;quot;) + 
   labs(
     x = &amp;quot;Longitude&amp;quot;, 
@@ -141,7 +125,7 @@ bb&lt;/code&gt;&lt;/pre&gt;
     title = &amp;quot;Location history data points in Belgium&amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1536&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;Black lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.&lt;/p&gt;
+&lt;p&gt;Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.&lt;/p&gt;
 </content>
       
     </item>

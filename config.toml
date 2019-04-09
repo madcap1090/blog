@@ -1,10 +1,10 @@
-baseurl = "/"
+baseurl = "https://badtothecode.netlify.com/"
 languageCode = "en"
 title = "bad to the code"
 theme = "kiss"
 copyright = "&copy; <a href=\"https://github.com/madcap1090\">William Bourgeois</a> 2019"
 disqusShortname = "shortname"
-googleAnalytics = ""
+googleAnalytics = "UA-137981534-1"
 Paginate = 5 # Number of posts per page
 enableRobotsTXT = true
 
@@ -40,13 +40,13 @@ twitter = "WilliamBourgeoi"
 github = "madcap1090"
 email = "madcap1090.com"
 linkedin = "williambourgeois"
-facebook = "ribice"
+#facebook = ""
 instagram = ""
 codepen = ""
 rss = "index.xml" # Add this to show RSS button in social.
 
 [params.social.config]
-platforms = ["github","facebook","twitter","instagram","email","codepen","linkedin"]
+platforms = ["facebook","instagram","email","codepen","linkedin","twitter","github"]
 
 [params.matomoAnalytics]
 siteID = 1

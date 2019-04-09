@@ -109,7 +109,7 @@ df <- df %>%
 
 Working with ggmap is pretty straightforward, but you need to obtain an api key from google and enable billing. More info [here](https://developers.google.com/maps/documentation/embed/get-api-key). For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your [IP](https://console.developers.google.com/apis/credentials?project=grounded-block-178714&folder&organizationId). Will have a go at OSM in a future post, promised. 
 
-```{r}
+```{r message=FALSE}
 secrets <- readRDS("~/R/geo/secret/secrets.rds")
 key <- secrets$key[1]
 register_google(key = key)
@@ -138,7 +138,7 @@ x <- df %>%
 
 ggmap(belgium, maptype = "terrain-lines") + 
   geom_point(data = x, aes(x = lon, y = lat),
-             alpha = 0.1, color = "black", size = .5) + 
+             alpha = 0.1, color = "#FC4E07", size = .5) + 
   theme(legend.position = "right") + 
   labs(
     x = "Longitude", 
@@ -147,6 +147,6 @@ ggmap(belgium, maptype = "terrain-lines") +
     caption = "\nA simple point plot shows recorded positions.")
 ```
 
-Black lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.
+Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.
 
 

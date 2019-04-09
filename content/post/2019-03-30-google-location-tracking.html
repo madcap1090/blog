@@ -95,22 +95,6 @@ key &lt;- secrets$key[1]
 register_google(key = key)
 
 belgium &lt;- get_map(location = &#39;Belgium&#39;, zoom = 8, maptype = &quot;terrain-lines&quot;)</code></pre>
-<pre><code>## maptype = &quot;terrain-lines&quot; is only available with source = &quot;stamen&quot;.</code></pre>
-<pre><code>## resetting to source = &quot;stamen&quot;...</code></pre>
-<pre><code>## Source : https://maps.googleapis.com/maps/api/staticmap?center=Belgium&amp;zoom=8&amp;size=640x640&amp;scale=2&amp;maptype=terrain&amp;key=xxx</code></pre>
-<pre><code>## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Belgium&amp;key=xxx</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/129/85.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/130/85.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/131/85.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/132/85.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/129/86.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/130/86.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/131/86.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/132/86.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/129/87.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/130/87.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/131/87.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/132/87.png</code></pre>
 <p>The map coverage is called the bounding box of the map and it is an attribute of the ggmap object.</p>
 <pre class="r"><code>bb &lt;- attr(belgium, &quot;bb&quot;)
 bb</code></pre>
@@ -121,7 +105,7 @@ bb</code></pre>
          lon &gt; 2.71487 &amp; lon &lt; 6.20495)</code></pre>
 <pre class="r"><code>ggmap(belgium, maptype = &quot;terrain-lines&quot;) + 
   geom_point(data = x, aes(x = lon, y = lat),
-             alpha = 0.1, color = &quot;black&quot;, size = .5) + 
+             alpha = 0.1, color = &quot;#FC4E07&quot;, size = .5) + 
   theme(legend.position = &quot;right&quot;) + 
   labs(
     x = &quot;Longitude&quot;, 
@@ -129,4 +113,4 @@ bb</code></pre>
     title = &quot;Location history data points in Belgium&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1536" /></p>
-<p>Black lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.</p>
+<p>Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.</p>
