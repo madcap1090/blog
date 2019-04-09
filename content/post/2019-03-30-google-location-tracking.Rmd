@@ -134,10 +134,11 @@ x <- df %>%
 ```
 
 
-```{r fig.height=12, fig.width=18}
+```{r fig.height=12, fig.width=16}
 
-ggmap(belgium, maptype = "terrain-lines") + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
-                            color = "black", size = .5) + 
+ggmap(belgium, maptype = "terrain-lines") + 
+  geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.1, color = "black", size = .5) + 
   theme(legend.position = "right") + 
   labs(
     x = "Longitude", 

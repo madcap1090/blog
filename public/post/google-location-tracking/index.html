@@ -218,15 +218,16 @@ bb</code></pre>
 <pre class="r"><code>x &lt;- df %&gt;% 
   filter(lat &lt; 51.607 &amp; lat &gt; 49.37082,
          lon &gt; 2.71487 &amp; lon &lt; 6.20495)</code></pre>
-<pre class="r"><code>ggmap(belgium, maptype = &quot;terrain-lines&quot;) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
-                            color = &quot;black&quot;, size = .5) + 
+<pre class="r"><code>ggmap(belgium, maptype = &quot;terrain-lines&quot;) + 
+  geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.1, color = &quot;black&quot;, size = .5) + 
   theme(legend.position = &quot;right&quot;) + 
   labs(
     x = &quot;Longitude&quot;, 
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in Belgium&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1728" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1536" /></p>
 <p>Black lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.</p>
 
       

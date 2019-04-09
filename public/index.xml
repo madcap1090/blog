@@ -131,15 +131,16 @@ bb&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;x &amp;lt;- df %&amp;gt;% 
   filter(lat &amp;lt; 51.607 &amp;amp; lat &amp;gt; 49.37082,
          lon &amp;gt; 2.71487 &amp;amp; lon &amp;lt; 6.20495)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(belgium, maptype = &amp;quot;terrain-lines&amp;quot;) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
-                            color = &amp;quot;black&amp;quot;, size = .5) + 
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(belgium, maptype = &amp;quot;terrain-lines&amp;quot;) + 
+  geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.1, color = &amp;quot;black&amp;quot;, size = .5) + 
   theme(legend.position = &amp;quot;right&amp;quot;) + 
   labs(
     x = &amp;quot;Longitude&amp;quot;, 
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in Belgium&amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1728&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1536&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;Black lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.&lt;/p&gt;
 </content>
       
