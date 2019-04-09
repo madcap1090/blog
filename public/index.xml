@@ -23,7 +23,7 @@
       <content>
 
 
-&lt;p&gt;Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.&lt;/p&gt;
+&lt;p&gt;Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a regular user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.&lt;/p&gt;
 &lt;p&gt;So I downloaded the data, that comes in json format, and had a go at it. You can &lt;a href=&#34;https://takeout.google.com/settings/takeout&#34;&gt;download&lt;/a&gt; your Google location data from your Google account.&lt;/p&gt;
 &lt;p&gt;Let’s load the data and attach the libraries that are needed.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;jsonlite&amp;quot;)
@@ -36,7 +36,7 @@ library(&amp;quot;emo&amp;quot;)      # devtools::install_github(&amp;quot;hadle
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;data &amp;lt;- fromJSON(&amp;quot;./data/Location History.json&amp;quot;) # extracts a list
 locations &amp;lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;This &lt;a href=&#34;https://shiring.github.io/maps/2016/12/30/Standortverlauf_post&#34;&gt;blogpost&lt;/a&gt; from Shirin Glander was super useful and I am shamelessly stealing some of her ideas. The time stamp needs to be converted to be readable.
+&lt;p&gt;This &lt;a href=&#34;https://shiring.github.io/maps/2016/12/30/Standortverlauf_post&#34;&gt;blogpost&lt;/a&gt; from Shirin Glander was super useful and I am shamelessly stealing some of her brilliant ideas. The time stamp needs to be converted to be readable.
 The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- locations %&amp;gt;% 
   mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &amp;quot;1970-01-01&amp;quot;)) 
@@ -76,7 +76,7 @@ glue(&amp;quot;{fine} {scream} {scream} {scream}&amp;quot;)&lt;/code&gt;&lt;/pre
 &lt;pre&gt;&lt;code&gt;## 134 km! &amp;lt;U+0001F631&amp;gt; &amp;lt;U+0001F631&amp;gt; &amp;lt;U+0001F631&amp;gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Could this information get me fined? Or will this type information be used in the future determine guilt?
 Are the police allowed to access this type of Google data to for instance find perps of hit &amp;amp; runs?&lt;/p&gt;
-&lt;p&gt;The data frame also contains lists with times tamps and estimations of activity at that time stamp.&lt;/p&gt;
+&lt;p&gt;The data frame also contains lists with times stamps and estimations of activity at that time stamp.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;str(df$activity[80])&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## List of 1
 ##  $ :&amp;#39;data.frame&amp;#39;:    1 obs. of  2 variables:
@@ -101,25 +101,37 @@ Are the police allowed to access this type of Google data to for instance find p
          year  = year(datetime),
          month = month(datetime),
          wday  = wday(datetime))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info &lt;a href=&#34;https://developers.google.com/maps/documentation/embed/get-api-key&#34;&gt;here&lt;/a&gt;. For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your &lt;a href=&#34;https://console.developers.google.com/apis/credentials?project=grounded-block-178714&amp;amp;folder&amp;amp;organizationId&#34;&gt;IP&lt;/a&gt;. Will have a go at OSM in a future post, promised.&lt;/p&gt;
+&lt;p&gt;Working with ggmap is pretty straightforward, but you need to obtain an api key from google and enable billing. More info &lt;a href=&#34;https://developers.google.com/maps/documentation/embed/get-api-key&#34;&gt;here&lt;/a&gt;. For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your &lt;a href=&#34;https://console.developers.google.com/apis/credentials?project=grounded-block-178714&amp;amp;folder&amp;amp;organizationId&#34;&gt;IP&lt;/a&gt;. Will have a go at OSM in a future post, promised.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;secrets &amp;lt;- readRDS(&amp;quot;~/R/geo/secret/secrets.rds&amp;quot;)
 key &amp;lt;- secrets$key[1]
 register_google(key = key)
 
-belgium &amp;lt;- get_map(location = &amp;#39;Belgium&amp;#39;, zoom = 8)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/staticmap?center=Belgium&amp;amp;zoom=8&amp;amp;size=640x640&amp;amp;scale=2&amp;amp;maptype=terrain&amp;amp;language=en-EN&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
+belgium &amp;lt;- get_map(location = &amp;#39;Belgium&amp;#39;, zoom = 8, maptype = &amp;quot;terrain-lines&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## maptype = &amp;quot;terrain-lines&amp;quot; is only available with source = &amp;quot;stamen&amp;quot;.&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## resetting to source = &amp;quot;stamen&amp;quot;...&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/staticmap?center=Belgium&amp;amp;zoom=8&amp;amp;size=640x640&amp;amp;scale=2&amp;amp;maptype=terrain&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Belgium&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The map coverage is called the bounding box of the map and it is an attribute of the ggmap object. xxxx&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/129/85.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/130/85.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/131/85.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/132/85.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/129/86.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/130/86.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/131/86.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/132/86.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/129/87.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/130/87.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/131/87.png&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/8/132/87.png&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The map coverage is called the bounding box of the map and it is an attribute of the ggmap object.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(belgium, &amp;quot;bb&amp;quot;)
 bb&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## # A tibble: 1 x 4
-##   ll.lat ll.lon ur.lat ur.lon
-##    &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;
-## 1   49.4   2.71   51.6   6.23&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##          ll.lat  ll.lon ur.lat   ur.lon
+## bottom 49.37082 2.71487 51.607 6.230495&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;x &amp;lt;- df %&amp;gt;% 
   filter(lat &amp;lt; 51.607 &amp;amp; lat &amp;gt; 49.37082,
          lon &amp;gt; 2.71487 &amp;amp; lon &amp;lt; 6.20495)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(belgium, maptype = &amp;quot;terrain-lines&amp;quot;) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
                             color = &amp;quot;black&amp;quot;, size = .5) + 
   theme(legend.position = &amp;quot;right&amp;quot;) + 
   labs(
@@ -127,8 +139,8 @@ bb&lt;/code&gt;&lt;/pre&gt;
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in Belgium&amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1344&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, binking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live in Brussels.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1728&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Black lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.&lt;/p&gt;
 </content>
       
     </item>

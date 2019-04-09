@@ -7,7 +7,7 @@
 <title>google location tracking | bad to the code</title>
 
 <meta property='og:title' content='google location tracking - bad to the code'>
-<meta property='og:description' content='Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
+<meta property='og:description' content='Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a regular user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
 So I downloaded the data, that comes in json format, and had a go at it. You can download your Google location data from your Google account.'>
 <meta property='og:url' content='/post/google-location-tracking/'>
 <meta property='og:site_name' content='bad to the code'>
@@ -110,7 +110,7 @@ So I downloaded the data, that comes in json format, and had a go at it. You can
       
 
 
-<p>Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.</p>
+<p>Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a regular user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.</p>
 <p>So I downloaded the data, that comes in json format, and had a go at it. You can <a href="https://takeout.google.com/settings/takeout">download</a> your Google location data from your Google account.</p>
 <p>Let’s load the data and attach the libraries that are needed.</p>
 <pre class="r"><code>library(&quot;jsonlite&quot;)
@@ -123,7 +123,7 @@ library(&quot;emo&quot;)      # devtools::install_github(&quot;hadley/emo&quot;)
 <pre class="r"><code>data &lt;- fromJSON(&quot;./data/Location History.json&quot;) # extracts a list
 locations &lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore</code></pre>
-<p>This <a href="https://shiring.github.io/maps/2016/12/30/Standortverlauf_post">blogpost</a> from Shirin Glander was super useful and I am shamelessly stealing some of her ideas. The time stamp needs to be converted to be readable.
+<p>This <a href="https://shiring.github.io/maps/2016/12/30/Standortverlauf_post">blogpost</a> from Shirin Glander was super useful and I am shamelessly stealing some of her brilliant ideas. The time stamp needs to be converted to be readable.
 The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).</p>
 <pre class="r"><code>df &lt;- locations %&gt;% 
   mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &quot;1970-01-01&quot;)) 
@@ -163,7 +163,7 @@ glue(&quot;{fine} {scream} {scream} {scream}&quot;)</code></pre>
 <pre><code>## 134 km! &lt;U+0001F631&gt; &lt;U+0001F631&gt; &lt;U+0001F631&gt;</code></pre>
 <p>Could this information get me fined? Or will this type information be used in the future determine guilt?
 Are the police allowed to access this type of Google data to for instance find perps of hit &amp; runs?</p>
-<p>The data frame also contains lists with times tamps and estimations of activity at that time stamp.</p>
+<p>The data frame also contains lists with times stamps and estimations of activity at that time stamp.</p>
 <pre class="r"><code>str(df$activity[80])</code></pre>
 <pre><code>## List of 1
 ##  $ :&#39;data.frame&#39;:    1 obs. of  2 variables:
@@ -188,25 +188,37 @@ Are the police allowed to access this type of Google data to for instance find p
          year  = year(datetime),
          month = month(datetime),
          wday  = wday(datetime))</code></pre>
-<p>Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info <a href="https://developers.google.com/maps/documentation/embed/get-api-key">here</a>. For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your <a href="https://console.developers.google.com/apis/credentials?project=grounded-block-178714&amp;folder&amp;organizationId">IP</a>. Will have a go at OSM in a future post, promised.</p>
+<p>Working with ggmap is pretty straightforward, but you need to obtain an api key from google and enable billing. More info <a href="https://developers.google.com/maps/documentation/embed/get-api-key">here</a>. For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your <a href="https://console.developers.google.com/apis/credentials?project=grounded-block-178714&amp;folder&amp;organizationId">IP</a>. Will have a go at OSM in a future post, promised.</p>
 <pre class="r"><code>secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;)
 key &lt;- secrets$key[1]
 register_google(key = key)
 
-belgium &lt;- get_map(location = &#39;Belgium&#39;, zoom = 8)</code></pre>
-<pre><code>## Source : https://maps.googleapis.com/maps/api/staticmap?center=Belgium&amp;zoom=8&amp;size=640x640&amp;scale=2&amp;maptype=terrain&amp;language=en-EN&amp;key=xxx</code></pre>
+belgium &lt;- get_map(location = &#39;Belgium&#39;, zoom = 8, maptype = &quot;terrain-lines&quot;)</code></pre>
+<pre><code>## maptype = &quot;terrain-lines&quot; is only available with source = &quot;stamen&quot;.</code></pre>
+<pre><code>## resetting to source = &quot;stamen&quot;...</code></pre>
+<pre><code>## Source : https://maps.googleapis.com/maps/api/staticmap?center=Belgium&amp;zoom=8&amp;size=640x640&amp;scale=2&amp;maptype=terrain&amp;key=xxx</code></pre>
 <pre><code>## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Belgium&amp;key=xxx</code></pre>
-<p>The map coverage is called the bounding box of the map and it is an attribute of the ggmap object. xxxx</p>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/129/85.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/130/85.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/131/85.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/132/85.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/129/86.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/130/86.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/131/86.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/132/86.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/129/87.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/130/87.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/131/87.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/8/132/87.png</code></pre>
+<p>The map coverage is called the bounding box of the map and it is an attribute of the ggmap object.</p>
 <pre class="r"><code>bb &lt;- attr(belgium, &quot;bb&quot;)
 bb</code></pre>
-<pre><code>## # A tibble: 1 x 4
-##   ll.lat ll.lon ur.lat ur.lon
-##    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
-## 1   49.4   2.71   51.6   6.23</code></pre>
+<pre><code>##          ll.lat  ll.lon ur.lat   ur.lon
+## bottom 49.37082 2.71487 51.607 6.230495</code></pre>
 <pre class="r"><code>x &lt;- df %&gt;% 
   filter(lat &lt; 51.607 &amp; lat &gt; 49.37082,
          lon &gt; 2.71487 &amp; lon &lt; 6.20495)</code></pre>
-<pre class="r"><code>ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
+<pre class="r"><code>ggmap(belgium, maptype = &quot;terrain-lines&quot;) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
                             color = &quot;black&quot;, size = .5) + 
   theme(legend.position = &quot;right&quot;) + 
   labs(
@@ -214,8 +226,8 @@ bb</code></pre>
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in Belgium&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1344" /></p>
-<p>A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, binking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live in Brussels.</p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1728" /></p>
+<p>Black lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.</p>
 
       
       <div class="related">

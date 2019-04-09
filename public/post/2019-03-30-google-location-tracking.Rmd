@@ -9,7 +9,7 @@ tags:
   - R Markdown
 ---
 
-Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
+Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a regular user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
 
 So I downloaded the data, that comes in json format, and had a go at it. You can [download](https://takeout.google.com/settings/takeout) your Google location data from your Google account. 
 
@@ -35,7 +35,7 @@ rm(data)  # no need for this anymore
 
 
 
-This [blogpost](https://shiring.github.io/maps/2016/12/30/Standortverlauf_post) from Shirin Glander was super useful and I am shamelessly stealing some of her ideas. The time stamp needs to be converted to be readable. 
+This [blogpost](https://shiring.github.io/maps/2016/12/30/Standortverlauf_post) from Shirin Glander was super useful and I am shamelessly stealing some of her brilliant ideas. The time stamp needs to be converted to be readable. 
 The field heading seems to be in degrees, is velocity in mph? And I don't know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).
 
 ```{r}
@@ -71,7 +71,7 @@ glue("{fine} {scream} {scream} {scream}")
 Could this information get me fined? Or will this type information be used in the future determine guilt?
 Are the police allowed to access this type of Google data to for instance find perps of hit & runs?
 
-The data frame also contains lists with times tamps and estimations of activity at that time stamp.
+The data frame also contains lists with times stamps and estimations of activity at that time stamp.
 
 ```{r}
 
@@ -107,19 +107,19 @@ df <- df %>%
 ```
 
 
-Working with ggmap is pretty straitforward, but you need to obtain an api key from google and enable billing. More info [here](https://developers.google.com/maps/documentation/embed/get-api-key). For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your [IP](https://console.developers.google.com/apis/credentials?project=grounded-block-178714&folder&organizationId). Will have a go at OSM in a future post, promised. 
+Working with ggmap is pretty straightforward, but you need to obtain an api key from google and enable billing. More info [here](https://developers.google.com/maps/documentation/embed/get-api-key). For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your [IP](https://console.developers.google.com/apis/credentials?project=grounded-block-178714&folder&organizationId). Will have a go at OSM in a future post, promised. 
 
 ```{r}
 secrets <- readRDS("~/R/geo/secret/secrets.rds")
 key <- secrets$key[1]
 register_google(key = key)
 
-belgium <- get_map(location = 'Belgium', zoom = 8)
+belgium <- get_map(location = 'Belgium', zoom = 8, maptype = "terrain-lines")
 
 
 ```
 
-The map coverage is called the bounding box of the map and it is an attribute of the ggmap object. xxxx
+The map coverage is called the bounding box of the map and it is an attribute of the ggmap object. 
 
 ```{r}
 bb <- attr(belgium, "bb")
@@ -134,8 +134,9 @@ x <- df %>%
 ```
 
 
-```{r fig.height=9, fig.width=14}
-ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
+```{r fig.height=12, fig.width=18}
+
+ggmap(belgium, maptype = "terrain-lines") + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1, 
                             color = "black", size = .5) + 
   theme(legend.position = "right") + 
   labs(
@@ -145,5 +146,6 @@ ggmap(belgium) + geom_point(data = x, aes(x = lon, y = lat), alpha = 0.1,
     caption = "\nA simple point plot shows recorded positions.")
 ```
 
-A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, binking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live in Brussels.
+Black lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.
+
 
