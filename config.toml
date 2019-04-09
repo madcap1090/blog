@@ -7,6 +7,12 @@ disqusShortname = "shortname"
 googleAnalytics = "UA-137981534-1"
 Paginate = 5 # Number of posts per page
 enableRobotsTXT = true
+enableEmoji = true
+
+# Logo image. This is displayed ogp image.
+#  logo = "/path/to/logo"
+#  favicon = "/path/to/favicon"
+
 
 [params.rss] # Adding this tag enables RSS feed
 includeContent = true # Includes whole content in rss
@@ -38,9 +44,10 @@ page = "" # Twitter Page username. If not set, params.social.twitter will be use
 [params.social]
 twitter = "WilliamBourgeoi"
 github = "madcap1090"
-email = "madcap1090.com"
+email = "madcap1090@gmail.com"
 linkedin = "williambourgeois"
-#facebook = ""
+#facebook = "ramon.marquez.967/videos/1878191778880532/"
+facebook = "OClassicoOficial/videos/391802167961744/"
 instagram = ""
 codepen = ""
 rss = "index.xml" # Add this to show RSS button in social.

@@ -58,7 +58,7 @@ sort(unique(df$heading)) #naught to 360</code></pre>
 <pre class="r"><code>unique(df$velocity)</code></pre>
 <pre><code>##  [1] NA  0  1  3  5 14 28  2  4  7  8 25 29 15 16 19 10  6  9 11 13 12 21
 ## [24] 24 20 17 26 27 30 23 22 18 31 33 32 34 35 36 82 83 77 74 67 37</code></pre>
-<p>Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h :scream: ji(“scream”)</p>
+<p>Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h in :BE: :scream:</p>
 <pre class="r"><code>#paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&quot;km!&quot;); ji(&quot;scream&quot;)
 fine &lt;- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&quot;km!&quot;)
 scream &lt;- ji_glue(&quot;:scream:&quot;) 
@@ -75,6 +75,7 @@ Are the police allowed to access this type of Google data to for instance find p
 ##   .. ..$ :&#39;data.frame&#39;:  5 obs. of  2 variables:
 ##   .. .. ..$ type      : chr [1:5] &quot;ON_FOOT&quot; &quot;STILL&quot; &quot;IN_VEHICLE&quot; &quot;UNKNOWN&quot; ...
 ##   .. .. ..$ confidence: int [1:5] 49 20 16 10 2</code></pre>
+<p>So if I read this correcttly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables, the type of activity and the probabilty calculated for it. So on timestamp “1395248054966” I had a 49% probablility to be on foot.</p>
 <p>And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.</p>
 <pre class="r"><code>glimpse(unique(df$altitude)) # ? what sensor does it use?</code></pre>
 <pre><code>##  int [1:633] NA 27 41 38 42 60 16 57 63 49 ...</code></pre>
@@ -107,7 +108,7 @@ bb</code></pre>
          lon &gt; 2.71487 &amp; lon &lt; 6.20495)</code></pre>
 <pre class="r"><code>ggmap(belgium, maptype = &quot;terrain-lines&quot;) + 
   geom_point(data = x, aes(x = lon, y = lat),
-             alpha = 0.1, color = &quot;#FC4E07&quot;, size = .5) + 
+             alpha = 0.1, color = &quot;#FC4E07&quot;, size = .65) + 
   theme(legend.position = &quot;right&quot;) + 
   labs(
     x = &quot;Longitude&quot;, 
@@ -116,3 +117,32 @@ bb</code></pre>
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1440" /></p>
 <p>Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.</p>
+<p>So let’s take a closer look at Brussels.</p>
+<pre class="r"><code>Brussels &lt;- get_map(location = &#39;Brussels&#39;, zoom = 12, maptype = &quot;terrain-lines&quot;)</code></pre>
+<pre><code>## maptype = &quot;terrain-lines&quot; is only available with source = &quot;stamen&quot;.</code></pre>
+<pre><code>## resetting to source = &quot;stamen&quot;...</code></pre>
+<pre><code>## Source : https://maps.googleapis.com/maps/api/staticmap?center=Brussels&amp;zoom=12&amp;size=640x640&amp;scale=2&amp;maptype=terrain&amp;key=xxx</code></pre>
+<pre><code>## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Brussels&amp;key=xxx</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2096/1372.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2097/1372.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2098/1372.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2096/1373.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2097/1373.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2098/1373.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2096/1374.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2097/1374.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2098/1374.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2096/1375.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2097/1375.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2098/1375.png</code></pre>
+<pre class="r"><code>ggmap(Brussels) + 
+  geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.5, color = &quot;#FC4E07&quot;, size = .65) + 
+  theme(legend.position = &quot;right&quot;) + 
+  labs(
+    x = &quot;Longitude&quot;, 
+    y = &quot;Latitude&quot;, 
+    title = &quot;Location history data points in Brussels&quot;,
+    caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
+<pre><code>## Warning: Removed 42343 rows containing missing values (geom_point).</code></pre>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-15-1.png" width="1440" /></p>

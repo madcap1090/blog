@@ -58,7 +58,7 @@ unique(df$velocity)
 ```
 
 
-Does that mean that I ever broke the speed limit? We're not supposed to drive faster than 120 km/h :scream: ji("scream")
+Does that mean that I ever broke the speed limit? We're not supposed to drive faster than 120 km/h in :BE:  :scream: 
 
 ```{r}
 
@@ -80,6 +80,8 @@ The data frame also contains lists with times stamps and estimations of activity
 str(df$activity[80])
 
 ```
+
+So if I read this correcttly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables, the type of activity and the probabilty calculated for it. So on timestamp "1395248054966" I had a 49% probablility to be on foot. 
 
 And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.
 
@@ -140,7 +142,7 @@ x <- df %>%
 
 ggmap(belgium, maptype = "terrain-lines") + 
   geom_point(data = x, aes(x = lon, y = lat),
-             alpha = 0.1, color = "#FC4E07", size = .5) + 
+             alpha = 0.1, color = "#FC4E07", size = .65) + 
   theme(legend.position = "right") + 
   labs(
     x = "Longitude", 
@@ -151,4 +153,23 @@ ggmap(belgium, maptype = "terrain-lines") +
 
 Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.
 
+So let's take a closer look at Brussels.
+
+```{r}
+Brussels <- get_map(location = 'Brussels', zoom = 12, maptype = "terrain-lines")
+
+```
+
+```{r fig.height=10, fig.width=15}
+ggmap(Brussels) + 
+  geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.5, color = "#FC4E07", size = .65) + 
+  theme(legend.position = "right") + 
+  labs(
+    x = "Longitude", 
+    y = "Latitude", 
+    title = "Location history data points in Brussels",
+    caption = "\nA simple point plot shows recorded positions.")
+
+```
 
