@@ -7,6 +7,8 @@ categories:
   - geocoding
 tags:
   - R Markdown
+  - Google
+  - Geocoding
 ---
 
 Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a regular user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
@@ -134,7 +136,7 @@ x <- df %>%
 ```
 
 
-```{r fig.height=12, fig.width=16}
+```{r fig.height=10, fig.width=15}
 
 ggmap(belgium, maptype = "terrain-lines") + 
   geom_point(data = x, aes(x = lon, y = lat),
