@@ -221,24 +221,15 @@ bb</code></pre>
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1440" /></p>
 <p>Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.</p>
 <p>So let’s take a closer look at Brussels.</p>
-<pre class="r"><code>Brussels &lt;- get_map(location = &#39;Brussels&#39;, zoom = 12, maptype = &quot;terrain-lines&quot;)</code></pre>
-<pre><code>## maptype = &quot;terrain-lines&quot; is only available with source = &quot;stamen&quot;.</code></pre>
-<pre><code>## resetting to source = &quot;stamen&quot;...</code></pre>
-<pre><code>## Source : https://maps.googleapis.com/maps/api/staticmap?center=Brussels&amp;zoom=12&amp;size=640x640&amp;scale=2&amp;maptype=terrain&amp;key=xxx</code></pre>
-<pre><code>## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Brussels&amp;key=xxx</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2096/1372.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2097/1372.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2098/1372.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2096/1373.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2097/1373.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2098/1373.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2096/1374.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2097/1374.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2098/1374.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2096/1375.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2097/1375.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain-lines/12/2098/1375.png</code></pre>
-<pre class="r"><code>ggmap(Brussels) + 
+<pre class="r"><code>brussels &lt;- get_map(location = &#39;Brussels&#39;, zoom = 12, maptype = &quot;terrain-lines&quot;)</code></pre>
+<pre class="r"><code>bb &lt;- attr(brussels, &quot;bb&quot;)
+bb</code></pre>
+<pre><code>##          ll.lat   ll.lon   ur.lat   ur.lon
+## bottom 50.78082 4.242029 50.91955 4.461756</code></pre>
+<pre class="r"><code>x &lt;- df %&gt;% 
+  filter(lat &lt; bb$ur.lat &amp; lat &gt; bb$ll.lat,
+         lon &gt; bb$ll.lon &amp; lon &lt; bb$ur.lon)</code></pre>
+<pre class="r"><code>ggmap(brussels) + 
   geom_point(data = x, aes(x = lon, y = lat),
              alpha = 0.5, color = &quot;#FC4E07&quot;, size = .65) + 
   theme(legend.position = &quot;right&quot;) + 
@@ -247,8 +238,7 @@ bb</code></pre>
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in Brussels&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
-<pre><code>## Warning: Removed 42343 rows containing missing values (geom_point).</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-15-1.png" width="1440" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png" width="1440" /></p>
 
       
       <div class="related">

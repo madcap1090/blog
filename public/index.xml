@@ -128,24 +128,15 @@ bb&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1440&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.&lt;/p&gt;
 &lt;p&gt;So let’s take a closer look at Brussels.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;Brussels &amp;lt;- get_map(location = &amp;#39;Brussels&amp;#39;, zoom = 12, maptype = &amp;quot;terrain-lines&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## maptype = &amp;quot;terrain-lines&amp;quot; is only available with source = &amp;quot;stamen&amp;quot;.&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## resetting to source = &amp;quot;stamen&amp;quot;...&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/staticmap?center=Brussels&amp;amp;zoom=12&amp;amp;size=640x640&amp;amp;scale=2&amp;amp;maptype=terrain&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Brussels&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2096/1372.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2097/1372.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2098/1372.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2096/1373.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2097/1373.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2098/1373.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2096/1374.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2097/1374.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2098/1374.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2096/1375.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2097/1375.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Source : http://tile.stamen.com/terrain-lines/12/2098/1375.png&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(Brussels) + 
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;brussels &amp;lt;- get_map(location = &amp;#39;Brussels&amp;#39;, zoom = 12, maptype = &amp;quot;terrain-lines&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(brussels, &amp;quot;bb&amp;quot;)
+bb&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##          ll.lat   ll.lon   ur.lat   ur.lon
+## bottom 50.78082 4.242029 50.91955 4.461756&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;x &amp;lt;- df %&amp;gt;% 
+  filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
+         lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(brussels) + 
   geom_point(data = x, aes(x = lon, y = lat),
              alpha = 0.5, color = &amp;quot;#FC4E07&amp;quot;, size = .65) + 
   theme(legend.position = &amp;quot;right&amp;quot;) + 
@@ -154,8 +145,7 @@ bb&lt;/code&gt;&lt;/pre&gt;
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in Brussels&amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## Warning: Removed 42343 rows containing missing values (geom_point).&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-15-1.png&#34; width=&#34;1440&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png&#34; width=&#34;1440&#34; /&gt;&lt;/p&gt;
 </content>
       
     </item>

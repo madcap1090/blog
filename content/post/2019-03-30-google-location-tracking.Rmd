@@ -155,7 +155,7 @@ Orange lines are my movements. A rock festival to the east of Antwerp, some visi
 
 So let's take a closer look at Brussels.
 
-```{r}
+```{r message=FALSE}
 brussels <- get_map(location = 'Brussels', zoom = 12, maptype = "terrain-lines")
 
 ```
@@ -173,7 +173,7 @@ x <- df %>%
 
 
 ```{r fig.height=10, fig.width=15}
-ggmap(Brussels) + 
+ggmap(brussels) + 
   geom_point(data = x, aes(x = lon, y = lat),
              alpha = 0.5, color = "#FC4E07", size = .65) + 
   theme(legend.position = "right") + 
