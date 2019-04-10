@@ -165,6 +165,8 @@ bb <- attr(brussels, "bb")
 bb
 ```
 ```{r}
+# just keeping data from brussels
+
 x <- df %>% 
   filter(lat < bb$ur.lat & lat > bb$ll.lat,
          lon > bb$ll.lon & lon < bb$ur.lon)

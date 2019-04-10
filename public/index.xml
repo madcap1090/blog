@@ -133,7 +133,9 @@ bb&lt;/code&gt;&lt;/pre&gt;
 bb&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##          ll.lat   ll.lon   ur.lat   ur.lon
 ## bottom 50.78082 4.242029 50.91955 4.461756&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;x &amp;lt;- df %&amp;gt;% 
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# just keeping data from brussels
+
+x &amp;lt;- df %&amp;gt;% 
   filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
          lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(brussels) + 

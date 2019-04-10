@@ -123,7 +123,9 @@ bb</code></pre>
 bb</code></pre>
 <pre><code>##          ll.lat   ll.lon   ur.lat   ur.lon
 ## bottom 50.78082 4.242029 50.91955 4.461756</code></pre>
-<pre class="r"><code>x &lt;- df %&gt;% 
+<pre class="r"><code># just keeping data from brussels
+
+x &lt;- df %&gt;% 
   filter(lat &lt; bb$ur.lat &amp; lat &gt; bb$ll.lat,
          lon &gt; bb$ll.lon &amp; lon &lt; bb$ur.lon)</code></pre>
 <pre class="r"><code>ggmap(brussels) + 

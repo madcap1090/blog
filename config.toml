@@ -11,7 +11,7 @@ enableEmoji = true
 
 # Logo image. This is displayed ogp image.
 #  logo = "/path/to/logo"
-#  favicon = "/path/to/favicon"
+favicon = "/static"
 
 
 [params.rss] # Adding this tag enables RSS feed
