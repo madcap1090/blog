@@ -189,7 +189,7 @@ ggmap(brussels) +
 
 Let's see to where we can zoom in.
 
-```{r}
+```{r message=FALSE}
 
 zoom <- get_map(location = c(lon = 4.349078, lat = 50.850586), zoom = 16, maptype = "satellite")
 
@@ -249,8 +249,10 @@ x <- df %>%
          lon > bb$ll.lon & lon < bb$ur.lon)
 
 ggmap(brussels) + 
-  stat_summary_2d(geom = "tile", bins = 75, data = x, aes(x = lon, y = lat, z = from_dawn), alpha = 0.5) + 
-  scale_fill_gradientn(colours = terrain.colors(10), guide = guide_legend(title = "seconds")) +
+  stat_summary_2d(geom = "tile", bins = 75, data = x, 
+                  aes(x = lon, y = lat, z = from_dawn), alpha = 0.5) + 
+  scale_fill_gradientn(colours = terrain.colors(10), 
+                       guide = guide_legend(title = "seconds")) +
   labs(
     x = "Longitude", 
     y = "Latitude", 
