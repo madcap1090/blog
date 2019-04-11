@@ -208,13 +208,50 @@ x <- df %>%
 
 ggmap(zoom) + 
  geom_point(data = x, aes(x = lon, y = lat),
-             alpha = 0.5, color = "#FC4E07", size = .65) + 
+             alpha = 0.7, color = "#FC4E07", size = .85) + 
   theme(legend.position = "right") + 
   labs(
     x = "Longitude", 
     y = "Latitude", 
     title = "Location history data points in central Brussels",
-    caption = "\nA simple point plot shows recorded positions.")
+    caption = "\n favorite haunts.")
     
 ```
 
+So that is pretty consistant with my favorite downtown haunts. Let's pan out and add the number of seconds from 6 am in the day to the dataframe. 
+
+```{r}
+period_to_seconds(hms("06:00:00")) # seconds at 6am
+
+period_to_seconds(hms("23:59:59")) # seconds just before midnight
+```
+
+```{r}
+
+df <- df %>% 
+  mutate(from_dawn = 
+           case_when((period_to_seconds(hms(time)) > 21600) ~ 
+                       (period_to_seconds(hms(time))-21600),
+                     TRUE ~ (period_to_seconds(hms(time))+64799)))
+
+
+```
+
+
+
+```{r fig.height=10, fig.width=15}
+bb <- attr(brussels, "bb")
+x <- df %>% 
+  filter(lat < bb$ur.lat & lat > bb$ll.lat,
+         lon > bb$ll.lon & lon < bb$ur.lon,
+         year > 2014)
+
+ggmap(brussels) + facet_wrap(~year) +
+geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = "#FC4E07", size = .8) + 
+  theme(legend.position = "right") + 
+  labs(
+    x = "Longitude", 
+    y = "Latitude", 
+    title = "Location history data points in Brussels - by year ",
+    caption = "\nA simple point plot shows recorded positions.")
+```
