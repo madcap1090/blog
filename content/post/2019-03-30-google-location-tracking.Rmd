@@ -187,3 +187,34 @@ ggmap(brussels) +
 
 ```
 
+Let's see to where we can zoom in.
+
+```{r}
+
+zoom <- get_map(location = c(lon = 4.349078, lat = 50.850586), zoom = 16, maptype = "satellite")
+
+
+```
+
+```{r}
+bb <- attr(zoom, "bb")
+x <- df %>% 
+  filter(lat < bb$ur.lat & lat > bb$ll.lat,
+         lon > bb$ll.lon & lon < bb$ur.lon)
+```
+
+
+```{r fig.height=10, fig.width=15}
+
+ggmap(zoom) + 
+ geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.5, color = "#FC4E07", size = .65) + 
+  theme(legend.position = "right") + 
+  labs(
+    x = "Longitude", 
+    y = "Latitude", 
+    title = "Location history data points in central Brussels",
+    caption = "\nA simple point plot shows recorded positions.")
+    
+```
+

@@ -19,6 +19,23 @@ library(emo)
 #install.packages("purrr", "Rcpp")
 
 
+# bug hunting
+
+# git
+# https://stackoverflow.com/questions/4873980/git-diff-says-subproject-is-dirty
+
+
+
+
+
+
+
+
+
+
+
+
+
 # worflow and nice theme
 # https://www.garrickadenbuie.com/blog/blogdown-netlify-new-post-workflow/
 # theme = "hyde"
