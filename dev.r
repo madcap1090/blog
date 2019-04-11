@@ -11,6 +11,33 @@ test <- df %>%
                      TRUE ~ (period_to_seconds(hms(time))+64799)))
 
 
+
+options(stringsAsFactors = T)
+ggmap(brussels) + 
+  stat_summary_2d(geom = "tile", bins = 75, data = df, aes(x = lon, y = lat, z = from_dawn), alpha = 0.5) + 
+  scale_fill_gradientn(colours = terrain.colors(10), guide = guide_legend(title = "Velocity")) +
+  labs(
+    x = "Longitude", 
+    y = "Latitude", 
+    title = "Location history data points around Brussels",
+    subtitle = "Color scale shows accuracy (low: blue, high: red)",
+    caption = "\nThis bin plot shows recorded positions 
+    and their accuracy in and around M?nster")
+
+
+options(stringsAsFactors = T)
+ggmap(brussels) + 
+  stat_summary_2d(geom = "tile", data = df, aes(x = lon, y = lat, z = from_dawn), alpha = 0.5) + 
+  scale_fill_gradientn(colours = terrain.colors(10), guide = guide_legend(title = "Velocity")) +
+  labs(
+    x = "Longitude", 
+    y = "Latitude", 
+    title = "Location history data points around Brussels",
+    subtitle = "Color scale shows accuracy (low: blue, high: red)",
+    caption = "\nThis bin plot shows recorded positions 
+    and their accuracy in and around M?nster")
+
+
 names(df)
 unique(df$time)
 as.numeric(as.POSIXct("2007-05-17 09:00:00")-as.POSIXct("2007-05-07 09:00:00"), units="secs")
