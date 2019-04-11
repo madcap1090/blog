@@ -64,3 +64,7 @@ tag ="tags"
 
 [blackfriday]
 hrefTargetBlank = true
+
+[ignorefiles]
+ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
+
