@@ -22,5 +22,14 @@
 So I downloaded the data, that comes in json format, and had a go at it. You can download your Google location data from your Google account.</description>
     </item>
     
+    <item>
+      <title>plot size</title>
+      <link>/post/plot-size/</link>
+      <pubDate>Tue, 12 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/plot-size/</guid>
+      <description>library(ggplot2)ggplot(mpg, aes(displ, hwy, colour = class)) + geom_point()</description>
+    </item>
+    
   </channel>
 </rss>

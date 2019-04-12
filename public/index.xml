@@ -210,7 +210,42 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &amp;quot;#FC4E
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in Brussels - by year &amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png&#34; width=&#34;1440&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(brussels, &amp;quot;bb&amp;quot;)
+x &amp;lt;- df %&amp;gt;%
+  filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
+         lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon,
+         year &amp;gt; 2014)
+
+ggmap(brussels) + facet_wrap(~year) +
+geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &amp;quot;#FC4E07&amp;quot;, size = .8) + 
+  theme(legend.position = &amp;quot;right&amp;quot;) + 
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;Location history data points in Brussels - by year &amp;quot;,
+    caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+</content>
+      
+    </item>
+    
+    <item>
+      <title>plot size</title>
+      <link>/post/plot-size/</link>
+      <pubDate>Tue, 12 Mar 2019 00:00:00 +0000</pubDate>
+      <author>William Bourgeois</author>
+      <guid>/post/plot-size/</guid>
+      <description></description>
+      
+      <content>
+
+
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ggplot2)
+
+ggplot(mpg, aes(displ, hwy, colour = class)) + 
+  geom_point()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-12-plot-size_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
 </content>
       
     </item>

@@ -268,7 +268,7 @@ Looking at it by year.
 
 
 
-```{r fig.height=10, fig.width=15}
+```{r fig.height=10, fig.width=10}
 bb <- attr(brussels, "bb")
 x <- df %>% 
   filter(lat < bb$ur.lat & lat > bb$ll.lat,
@@ -284,3 +284,23 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = "#FC4E07", size
     title = "Location history data points in Brussels - by year ",
     caption = "\nA simple point plot shows recorded positions.")
 ```
+
+
+```{r fig.height=10, fig.width=10}
+
+bb <- attr(brussels, "bb")
+x <- df %>%
+  filter(lat < bb$ur.lat & lat > bb$ll.lat,
+         lon > bb$ll.lon & lon < bb$ur.lon,
+         year > 2014)
+
+ggmap(brussels) + facet_wrap(~year) +
+geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = "#FC4E07", size = .8) + 
+  theme(legend.position = "right") + 
+  labs(
+    x = "Longitude", 
+    y = "Latitude", 
+    title = "Location history data points in Brussels - by year ",
+    caption = "\nA simple point plot shows recorded positions.")
+```
+

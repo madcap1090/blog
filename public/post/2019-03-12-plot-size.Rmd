@@ -1,0 +1,18 @@
+---
+title: plot size
+author: William Bourgeois
+date: '2019-03-12'
+slug: plot-size
+categories: []
+tags: []
+---
+```{r fig.height=5, fig.width=10}
+
+library(ggplot2)
+
+ggplot(mpg, aes(displ, hwy, colour = class)) + 
+  geom_point()
+
+
+```
+

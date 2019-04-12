@@ -303,7 +303,22 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &quot;#FC4E07&q
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in Brussels - by year &quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png" width="1440" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png" width="960" /></p>
+<pre class="r"><code>bb &lt;- attr(brussels, &quot;bb&quot;)
+x &lt;- df %&gt;%
+  filter(lat &lt; bb$ur.lat &amp; lat &gt; bb$ll.lat,
+         lon &gt; bb$ll.lon &amp; lon &lt; bb$ur.lon,
+         year &gt; 2014)
+
+ggmap(brussels) + facet_wrap(~year) +
+geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &quot;#FC4E07&quot;, size = .8) + 
+  theme(legend.position = &quot;right&quot;) + 
+  labs(
+    x = &quot;Longitude&quot;, 
+    y = &quot;Latitude&quot;, 
+    title = &quot;Location history data points in Brussels - by year &quot;,
+    caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png" width="960" /></p>
 
       
       <div class="related">
