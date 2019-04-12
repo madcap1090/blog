@@ -148,7 +148,7 @@ x &amp;lt;- df %&amp;gt;%
     title = &amp;quot;Location history data points in Brussels&amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;Let’s see to where we can zoom in.&lt;/p&gt;
+&lt;p&gt;Let’s see to how we can zoom in.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;zoom &amp;lt;- get_map(location = c(lon = 4.349078, lat = 50.850586), zoom = 16, maptype = &amp;quot;satellite&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(zoom, &amp;quot;bb&amp;quot;)
 x &amp;lt;- df %&amp;gt;% 
@@ -163,7 +163,7 @@ x &amp;lt;- df %&amp;gt;%
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in central Brussels&amp;quot;,
     caption = &amp;quot;\n favorite haunts.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;864&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;So that is pretty consistent with my favorite downtown haunts. Let’s pan out and add the number of seconds from 6 am in the day to the dataframe.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;period_to_seconds(hms(&amp;quot;06:00:00&amp;quot;)) # seconds at 6am&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] 21600&lt;/code&gt;&lt;/pre&gt;
@@ -197,21 +197,6 @@ ggmap(brussels) +
 &lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-23-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;Looking at it by year.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(brussels, &amp;quot;bb&amp;quot;)
-x &amp;lt;- df %&amp;gt;% 
-  filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
-         lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon,
-         year &amp;gt; 2014)
-
-ggmap(brussels) + facet_wrap(~year) +
-geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &amp;quot;#FC4E07&amp;quot;, size = .8) + 
-  theme(legend.position = &amp;quot;right&amp;quot;) + 
-  labs(
-    x = &amp;quot;Longitude&amp;quot;, 
-    y = &amp;quot;Latitude&amp;quot;, 
-    title = &amp;quot;Location history data points in Brussels - by year &amp;quot;,
-    caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(brussels, &amp;quot;bb&amp;quot;)
 x &amp;lt;- df %&amp;gt;%
   filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
          lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon,
@@ -225,7 +210,12 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &amp;quot;#FC4E
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in Brussels - by year &amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It would seem that I moved a lot in 2016 compared to the other years, but to that extent it does not look right. Let’s dig a little deeper in the data.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(data = x, aes(x = datetime, y = lat))+
+  geom_line()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png&#34; width=&#34;960&#34; /&gt;
+So clearly 2015, 2017 have much less data.&lt;/p&gt;
 </content>
       
     </item>

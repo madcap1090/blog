@@ -187,7 +187,7 @@ ggmap(brussels) +
 
 ```
 
-Let's see to where we can zoom in.
+Let's see to how we can zoom in.
 
 ```{r message=FALSE}
 
@@ -204,7 +204,7 @@ x <- df %>%
 ```
 
 
-```{r fig.height=10, fig.width=10}
+```{r fig.height=9, fig.width=9}
 
 ggmap(zoom) + 
  geom_point(data = x, aes(x = lon, y = lat),
@@ -267,26 +267,6 @@ ggmap(brussels) +
 Looking at it by year.
 
 
-
-```{r fig.height=10, fig.width=10}
-
-bb <- attr(brussels, "bb")
-x <- df %>% 
-  filter(lat < bb$ur.lat & lat > bb$ll.lat,
-         lon > bb$ll.lon & lon < bb$ur.lon,
-         year > 2014)
-
-ggmap(brussels) + facet_wrap(~year) +
-geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = "#FC4E07", size = .8) + 
-  theme(legend.position = "right") + 
-  labs(
-    x = "Longitude", 
-    y = "Latitude", 
-    title = "Location history data points in Brussels - by year ",
-    caption = "\nA simple point plot shows recorded positions.")
-```
-
-
 ```{r fig.height=10, fig.width=10}
 
 bb <- attr(brussels, "bb")
@@ -303,5 +283,19 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = "#FC4E07", size
     y = "Latitude", 
     title = "Location history data points in Brussels - by year ",
     caption = "\nA simple point plot shows recorded positions.")
+```
+
+It would seem that I moved a lot in 2016 compared to the other years, but to that extent it does not look right. Let's dig a little deeper in the data.
+
+```{r fig.height=10, fig.width=10}
+
+ggplot(data = x, aes(x = datetime, y = lat))+
+  geom_line()
+
+```
+ So clearly 2015, 2017 have much less data.
+
+```{r}
+
 ```
 

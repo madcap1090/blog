@@ -138,7 +138,7 @@ x &lt;- df %&gt;%
     title = &quot;Location history data points in Brussels&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png" width="960" /></p>
-<p>Let’s see to where we can zoom in.</p>
+<p>Let’s see to how we can zoom in.</p>
 <pre class="r"><code>zoom &lt;- get_map(location = c(lon = 4.349078, lat = 50.850586), zoom = 16, maptype = &quot;satellite&quot;)</code></pre>
 <pre class="r"><code>bb &lt;- attr(zoom, &quot;bb&quot;)
 x &lt;- df %&gt;% 
@@ -153,7 +153,7 @@ x &lt;- df %&gt;%
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in central Brussels&quot;,
     caption = &quot;\n favorite haunts.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png" width="960" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png" width="864" /></p>
 <p>So that is pretty consistent with my favorite downtown haunts. Let’s pan out and add the number of seconds from 6 am in the day to the dataframe.</p>
 <pre class="r"><code>period_to_seconds(hms(&quot;06:00:00&quot;)) # seconds at 6am</code></pre>
 <pre><code>## [1] 21600</code></pre>
@@ -187,21 +187,6 @@ ggmap(brussels) +
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-23-1.png" width="960" /></p>
 <p>Looking at it by year.</p>
 <pre class="r"><code>bb &lt;- attr(brussels, &quot;bb&quot;)
-x &lt;- df %&gt;% 
-  filter(lat &lt; bb$ur.lat &amp; lat &gt; bb$ll.lat,
-         lon &gt; bb$ll.lon &amp; lon &lt; bb$ur.lon,
-         year &gt; 2014)
-
-ggmap(brussels) + facet_wrap(~year) +
-geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &quot;#FC4E07&quot;, size = .8) + 
-  theme(legend.position = &quot;right&quot;) + 
-  labs(
-    x = &quot;Longitude&quot;, 
-    y = &quot;Latitude&quot;, 
-    title = &quot;Location history data points in Brussels - by year &quot;,
-    caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png" width="960" /></p>
-<pre class="r"><code>bb &lt;- attr(brussels, &quot;bb&quot;)
 x &lt;- df %&gt;%
   filter(lat &lt; bb$ur.lat &amp; lat &gt; bb$ll.lat,
          lon &gt; bb$ll.lon &amp; lon &lt; bb$ur.lon,
@@ -215,4 +200,9 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &quot;#FC4E07&q
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in Brussels - by year &quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png" width="960" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png" width="960" /></p>
+<p>It would seem that I moved a lot in 2016 compared to the other years, but to that extent it does not look right. Let’s dig a little deeper in the data.</p>
+<pre class="r"><code>ggplot(data = x, aes(x = datetime, y = lat))+
+  geom_line()</code></pre>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png" width="960" />
+So clearly 2015, 2017 have much less data.</p>
