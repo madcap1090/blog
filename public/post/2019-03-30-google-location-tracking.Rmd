@@ -81,7 +81,7 @@ str(df$activity[80])
 
 ```
 
-So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables, the type of activity and the probability calculated for it. So on timestamp "1395248054966" I had a 49% probability to be on foot. 
+So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables: the type of activity and the probability calculated for it. So on timestamp "1395248054966" I had a 49% probability to be on foot. 
 
 And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.
 

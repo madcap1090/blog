@@ -75,7 +75,7 @@ Are the police allowed to access this type of Google data to for instance find p
 ##   .. ..$ :&#39;data.frame&#39;:  5 obs. of  2 variables:
 ##   .. .. ..$ type      : chr [1:5] &quot;ON_FOOT&quot; &quot;STILL&quot; &quot;IN_VEHICLE&quot; &quot;UNKNOWN&quot; ...
 ##   .. .. ..$ confidence: int [1:5] 49 20 16 10 2</code></pre>
-<p>So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables, the type of activity and the probability calculated for it. So on timestamp “1395248054966” I had a 49% probability to be on foot.</p>
+<p>So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables: the type of activity and the probability calculated for it. So on timestamp “1395248054966” I had a 49% probability to be on foot.</p>
 <p>And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.</p>
 <pre class="r"><code>glimpse(unique(df$altitude)) # ? what sensor does it use?</code></pre>
 <pre><code>##  int [1:633] NA 27 41 38 42 60 16 57 63 49 ...</code></pre>
