@@ -268,7 +268,7 @@ Looking at it by year.
 
 
 
-```{r fig.height=10, fig.width=15}
+```{r out.width= "100%"}
 bb <- attr(brussels, "bb")
 x <- df %>% 
   filter(lat < bb$ur.lat & lat > bb$ll.lat,
