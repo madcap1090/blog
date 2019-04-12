@@ -26,7 +26,7 @@ library(&quot;emo&quot;)      # devtools::install_github(&quot;hadley/emo&quot;)
 <pre class="r"><code>data &lt;- fromJSON(&quot;./data/Location History.json&quot;) # extracts a list
 locations &lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore</code></pre>
-<p>This <a href="https://shiring.github.io/maps/2016/12/30/Standortverlauf_post">blogpost</a> from Shirin Glander was super useful and I am shamelessly stealing some of her brilliant ideas. The time stamp needs to be converted to be readable.
+<p>This <a href="https://shiring.github.io/maps/2016/12/30/Standortverlauf_post">blogpost</a> from Shirin Glander was super useful and I am shamelessly stealing some of her great ideas. The time stamp needs to be converted to be readable.
 The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).</p>
 <pre class="r"><code>df &lt;- locations %&gt;% 
   mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &quot;1970-01-01&quot;)) 
@@ -115,7 +115,7 @@ bb</code></pre>
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in Belgium&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="1440" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png" width="960" /></p>
 <p>Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.</p>
 <p>So let’s take a closer look at Brussels.</p>
 <pre class="r"><code>brussels &lt;- get_map(location = &#39;Brussels&#39;, zoom = 12, maptype = &quot;terrain-lines&quot;)</code></pre>
@@ -137,7 +137,7 @@ x &lt;- df %&gt;%
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in Brussels&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png" width="1440" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png" width="960" /></p>
 <p>Let’s see to where we can zoom in.</p>
 <pre class="r"><code>zoom &lt;- get_map(location = c(lon = 4.349078, lat = 50.850586), zoom = 16, maptype = &quot;satellite&quot;)</code></pre>
 <pre class="r"><code>bb &lt;- attr(zoom, &quot;bb&quot;)
@@ -153,7 +153,7 @@ x &lt;- df %&gt;%
     y = &quot;Latitude&quot;, 
     title = &quot;Location history data points in central Brussels&quot;,
     caption = &quot;\n favorite haunts.&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png" width="1440" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png" width="960" /></p>
 <p>So that is pretty consistent with my favorite downtown haunts. Let’s pan out and add the number of seconds from 6 am in the day to the dataframe.</p>
 <pre class="r"><code>period_to_seconds(hms(&quot;06:00:00&quot;)) # seconds at 6am</code></pre>
 <pre><code>## [1] 21600</code></pre>
@@ -184,7 +184,7 @@ ggmap(brussels) +
     subtitle = &quot;Color scale shows accuracy (low: blue, high: red)&quot;,
     caption = &quot;\nThis bin plot shows recorded positions 
     and their time of day&quot;)</code></pre>
-<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-23-1.png" width="1440" /></p>
+<p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-23-1.png" width="960" /></p>
 <p>Looking at it by year.</p>
 <pre class="r"><code>bb &lt;- attr(brussels, &quot;bb&quot;)
 x &lt;- df %&gt;% 

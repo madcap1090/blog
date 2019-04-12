@@ -37,7 +37,7 @@ rm(data)  # no need for this anymore
 
 
 
-This [blogpost](https://shiring.github.io/maps/2016/12/30/Standortverlauf_post) from Shirin Glander was super useful and I am shamelessly stealing some of her brilliant ideas. The time stamp needs to be converted to be readable. 
+This [blogpost](https://shiring.github.io/maps/2016/12/30/Standortverlauf_post) from Shirin Glander was super useful and I am shamelessly stealing some of her great ideas. The time stamp needs to be converted to be readable. 
 The field heading seems to be in degrees, is velocity in mph? And I don't know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).
 
 ```{r}
@@ -138,7 +138,7 @@ x <- df %>%
 ```
 
 
-```{r fig.height=10, fig.width=15}
+```{r fig.height=10, fig.width=10}
 
 ggmap(belgium, maptype = "terrain-lines") + 
   geom_point(data = x, aes(x = lon, y = lat),
@@ -174,7 +174,7 @@ x <- df %>%
 
 
 
-```{r fig.height=10, fig.width=15}
+```{r fig.height=10, fig.width=10}
 ggmap(brussels) + 
   geom_point(data = x, aes(x = lon, y = lat),
              alpha = 0.5, color = "#FC4E07", size = .65) + 
@@ -204,7 +204,7 @@ x <- df %>%
 ```
 
 
-```{r fig.height=10, fig.width=15}
+```{r fig.height=10, fig.width=10}
 
 ggmap(zoom) + 
  geom_point(data = x, aes(x = lon, y = lat),
@@ -240,7 +240,7 @@ df <- df %>%
 
 So now there is a value (from_dawn) that is equal to 0 at six am and continues to increase until just before six. "It's six o'clock in the morning, do you know where your parents are?"
 
-```{r fig.height=10, fig.width=15, warning=FALSE}
+```{r fig.height=10, fig.width=10, warning=FALSE}
 options(stringsAsFactors = T)
 
 bb <- attr(brussels, "bb")
@@ -269,6 +269,7 @@ Looking at it by year.
 
 
 ```{r fig.height=10, fig.width=10}
+
 bb <- attr(brussels, "bb")
 x <- df %>% 
   filter(lat < bb$ur.lat & lat > bb$ll.lat,

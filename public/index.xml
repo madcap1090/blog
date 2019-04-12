@@ -36,7 +36,7 @@ library(&amp;quot;emo&amp;quot;)      # devtools::install_github(&amp;quot;hadle
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;data &amp;lt;- fromJSON(&amp;quot;./data/Location History.json&amp;quot;) # extracts a list
 locations &amp;lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;This &lt;a href=&#34;https://shiring.github.io/maps/2016/12/30/Standortverlauf_post&#34;&gt;blogpost&lt;/a&gt; from Shirin Glander was super useful and I am shamelessly stealing some of her brilliant ideas. The time stamp needs to be converted to be readable.
+&lt;p&gt;This &lt;a href=&#34;https://shiring.github.io/maps/2016/12/30/Standortverlauf_post&#34;&gt;blogpost&lt;/a&gt; from Shirin Glander was super useful and I am shamelessly stealing some of her great ideas. The time stamp needs to be converted to be readable.
 The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- locations %&amp;gt;% 
   mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &amp;quot;1970-01-01&amp;quot;)) 
@@ -125,7 +125,7 @@ bb&lt;/code&gt;&lt;/pre&gt;
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in Belgium&amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;1440&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.&lt;/p&gt;
 &lt;p&gt;So let’s take a closer look at Brussels.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;brussels &amp;lt;- get_map(location = &amp;#39;Brussels&amp;#39;, zoom = 12, maptype = &amp;quot;terrain-lines&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
@@ -147,7 +147,7 @@ x &amp;lt;- df %&amp;gt;%
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in Brussels&amp;quot;,
     caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png&#34; width=&#34;1440&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;Let’s see to where we can zoom in.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;zoom &amp;lt;- get_map(location = c(lon = 4.349078, lat = 50.850586), zoom = 16, maptype = &amp;quot;satellite&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(zoom, &amp;quot;bb&amp;quot;)
@@ -163,7 +163,7 @@ x &amp;lt;- df %&amp;gt;%
     y = &amp;quot;Latitude&amp;quot;, 
     title = &amp;quot;Location history data points in central Brussels&amp;quot;,
     caption = &amp;quot;\n favorite haunts.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;1440&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;So that is pretty consistent with my favorite downtown haunts. Let’s pan out and add the number of seconds from 6 am in the day to the dataframe.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;period_to_seconds(hms(&amp;quot;06:00:00&amp;quot;)) # seconds at 6am&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] 21600&lt;/code&gt;&lt;/pre&gt;
@@ -194,7 +194,7 @@ ggmap(brussels) +
     subtitle = &amp;quot;Color scale shows accuracy (low: blue, high: red)&amp;quot;,
     caption = &amp;quot;\nThis bin plot shows recorded positions 
     and their time of day&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-23-1.png&#34; width=&#34;1440&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-23-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;Looking at it by year.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(brussels, &amp;quot;bb&amp;quot;)
 x &amp;lt;- df %&amp;gt;% 
