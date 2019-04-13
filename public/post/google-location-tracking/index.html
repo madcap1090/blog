@@ -123,9 +123,10 @@ So I downloaded the data, that comes in json format, and had a go at it. You can
 library(&quot;tidyverse&quot;)
 library(&quot;lubridate&quot;)
 library(&quot;ggplot2&quot;)
-library(&quot;ggmap&quot;)    # devtools::install_github(&quot;dkahle/ggmap&quot;)
+library(&quot;ggmap&quot;)      # devtools::install_github(&quot;dkahle/ggmap&quot;)
 library(&quot;glue&quot;)
-library(&quot;emo&quot;)      # devtools::install_github(&quot;hadley/emo&quot;)</code></pre>
+library(&quot;emo&quot;)        # devtools::install_github(&quot;hadley/emo&quot;)
+library(&quot;viridis&quot;)    # install.packages(&quot;viridis&quot;)</code></pre>
 <pre class="r"><code>data &lt;- fromJSON(&quot;./data/Location History.json&quot;) # extracts a list
 locations &lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore</code></pre>
@@ -161,7 +162,7 @@ sort(unique(df$heading)) #naught to 360</code></pre>
 <pre class="r"><code>unique(df$velocity)</code></pre>
 <pre><code>##  [1] NA  0  1  3  5 14 28  2  4  7  8 25 29 15 16 19 10  6  9 11 13 12 21
 ## [24] 24 20 17 26 27 30 23 22 18 31 33 32 34 35 36 82 83 77 74 67 37</code></pre>
-<p>Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h in :BE: 😱</p>
+<p>Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h in :Flag:BE: 😱</p>
 <pre class="r"><code>#paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&quot;km!&quot;); ji(&quot;scream&quot;)
 fine &lt;- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&quot;km!&quot;)
 scream &lt;- ji_glue(&quot;😱&quot;) 
@@ -267,19 +268,20 @@ x &lt;- df %&gt;%
            case_when((period_to_seconds(hms(time)) &gt; 21600) ~ 
                        (period_to_seconds(hms(time))-21600),
                      TRUE ~ (period_to_seconds(hms(time))+64799)))</code></pre>
-<p>So now there is a value (from_dawn) that is equal to 0 at six am and continues to increase until just before six. “It’s six o’clock in the morning, do you know where your parents are?”</p>
+<p>So now there is a value (from_dawn) that is equal to 0 at six am and continues to increase until just before six. Easy to convert to hours starting from six am. Values seem higher in the center of the city. “It’s six o’clock in the morning, do you know where your parents are?” :crazy:</p>
 <pre class="r"><code>options(stringsAsFactors = T)
 
 bb &lt;- attr(brussels, &quot;bb&quot;)
 x &lt;- df %&gt;% 
   filter(lat &lt; bb$ur.lat &amp; lat &gt; bb$ll.lat,
-         lon &gt; bb$ll.lon &amp; lon &lt; bb$ur.lon)
+         lon &gt; bb$ll.lon &amp; lon &lt; bb$ur.lon) %&gt;% 
+  mutate(hours = from_dawn/3600)
 
 ggmap(brussels) + 
-  stat_summary_2d(geom = &quot;tile&quot;, bins = 75, data = x, 
-                  aes(x = lon, y = lat, z = from_dawn), alpha = 0.5) + 
-  scale_fill_gradientn(colours = terrain.colors(10), 
-                       guide = guide_legend(title = &quot;seconds&quot;)) +
+  stat_summary_2d(geom = &quot;tile&quot;, bins = 100, data = x, 
+                  aes(x = lon, y = lat, z = hours), alpha = 0.7) + 
+  scale_fill_gradientn(colors  =  viridis(4), 
+                       guide = guide_legend(title = &quot;hours since 6am&quot;)) +
   labs(
     x = &quot;Longitude&quot;, 
     y = &quot;Latitude&quot;, 
@@ -308,7 +310,8 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &quot;#FC4E07&q
 <pre class="r"><code>ggplot(data = x, aes(x = datetime, y = lat))+
   geom_line()</code></pre>
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png" width="960" />
-So clearly 2015, 2017 have much less data.</p>
+So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off. Whether Google still keeps track of my whereabouts is of course another matter.</p>
+<p>I still don’t know if my commute has gotten longer. I will try to find out writing a next blog post.</p>
 
       
       <div class="related">
