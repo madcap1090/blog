@@ -59,14 +59,14 @@ unique(df$velocity)
 ```
 
 
-Does that mean that I ever broke the speed limit? We're not supposed to drive faster than 120 km/h in :Flag:BE:  :scream: 
+Does that mean that I ever broke the speed limit? We're not supposed to drive faster than 120 km/h in Belgium  :scream: :scream: :police_car:
 
 ```{r}
 
 #paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),"km!"); ji("scream")
 fine <- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),"km!")
-scream <- ji_glue(":scream:") 
-glue("{fine} {scream} {scream} {scream}")
+
+glue("{fine} :scream: :scream: :scream:")
 
 
 ```
@@ -239,7 +239,7 @@ df <- df %>%
 ```
 
 
-So now there is a value (from_dawn) that is equal to 0 at six am and continues to increase until just before six. Easy to convert to hours starting from six am. Values seem higher in the center of the city.  "It's six o'clock in the morning, do you know where your parents are?" :crazy:
+So now there is a value (from_dawn) that is equal to 0 at six am and continues to increase until just before six. Easy to convert to hours starting from six am. Values seem higher in the center of the city.  "It's six o'clock in the morning, do you know where your parents are?" :waxing_gibbous_moon:  
 
 ```{r fig.height=10, fig.width=10, warning=FALSE}
 options(stringsAsFactors = T)
@@ -296,7 +296,7 @@ ggplot(data = x, aes(x = datetime, y = lat))+
 ```
 So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off. Whether Google still keeps track of my whereabouts is of course another matter. 
 
-I still don't know if my commute has gotten longer. I will try to find out writing a next blog post.
+I still don't know if my commute has gotten longer. I will try to find out in a next blog post.
 
 ```{r}
 
