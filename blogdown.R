@@ -24,10 +24,16 @@ library(emo)
 # git
 # https://stackoverflow.com/questions/4873980/git-diff-says-subproject-is-dirty
 
+# emoji
+# https://gist.github.com/rxaviers/7360908
 
 
 
-
+# ggplot 
+#$ https://ggplot2.tidyverse.org/reference/geom_density_2d.html
+# http://stat405.had.co.nz/ggmap.pdf
+# https://ggplot2.tidyverse.org/reference/geom_density_2d.html
+# https://www.littlemissdata.com/blog/maps
 
 
 
