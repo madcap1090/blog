@@ -131,7 +131,7 @@ library(&quot;viridis&quot;)    # install.packages(&quot;viridis&quot;)</code></
 locations &lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore</code></pre>
 <p>This <a href="https://shiring.github.io/maps/2016/12/30/Standortverlauf_post">blogpost</a> from Shirin Glander was super useful and I am shamelessly stealing some of her great ideas. The time stamp needs to be converted to be readable.
-The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).</p>
+The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading comes from (maybe not a pressure sensor but gps triangulation?, ground elevation?).</p>
 <pre class="r"><code>df &lt;- locations %&gt;% 
   mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &quot;1970-01-01&quot;)) 
 
@@ -330,7 +330,7 @@ So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used 
     <div id="show_comments"><a id="load_comments" class="button is-link">Load comments</a></div>
   
     <script type="text/javascript">
-      var disqus_shortname = 'shortname';
+      var disqus_shortname = 'bad-to-the-code';
       function disqus() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';

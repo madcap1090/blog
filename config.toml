@@ -3,7 +3,7 @@ languageCode = "en"
 title = "bad to the code"
 theme = "kiss"
 copyright = "&copy; <a href=\"https://github.com/madcap1090\">William Bourgeois</a> 2019"
-disqusShortname = "shortname"
+disqusShortname = "bad-to-the-code"
 googleAnalytics = "UA-137981534-1"
 Paginate = 5 # Number of posts per page
 enableRobotsTXT = true

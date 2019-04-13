@@ -38,7 +38,7 @@ library(&amp;quot;viridis&amp;quot;)    # install.packages(&amp;quot;viridis&amp
 locations &amp;lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;This &lt;a href=&#34;https://shiring.github.io/maps/2016/12/30/Standortverlauf_post&#34;&gt;blogpost&lt;/a&gt; from Shirin Glander was super useful and I am shamelessly stealing some of her great ideas. The time stamp needs to be converted to be readable.
-The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).&lt;/p&gt;
+The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading comes from (maybe not a pressure sensor but gps triangulation?, ground elevation?).&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- locations %&amp;gt;% 
   mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &amp;quot;1970-01-01&amp;quot;)) 
 

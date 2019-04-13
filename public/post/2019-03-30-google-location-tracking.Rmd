@@ -39,7 +39,7 @@ rm(data)  # no need for this anymore
 
 
 This [blogpost](https://shiring.github.io/maps/2016/12/30/Standortverlauf_post) from Shirin Glander was super useful and I am shamelessly stealing some of her great ideas. The time stamp needs to be converted to be readable. 
-The field heading seems to be in degrees, is velocity in mph? And I don't know where the altitude reading come from (maybe not a pressure sensor but gps triangulation?, ground elevation?).
+The field heading seems to be in degrees, is velocity in mph? And I don't know where the altitude reading comes from (maybe not a pressure sensor but gps triangulation?, ground elevation?).
 
 ```{r}
 
