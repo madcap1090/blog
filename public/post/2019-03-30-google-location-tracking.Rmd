@@ -59,7 +59,7 @@ unique(df$velocity)
 ```
 
 
-Does that mean that I ever broke the speed limit? We're not supposed to drive faster than 120 km/h in Belgium  :scream: :scream: :police_car:
+Does that mean that I ever broke the speed limit? We're not supposed to drive faster than 120 km/h in Belgium :police_car:!
 
 ```{r}
 

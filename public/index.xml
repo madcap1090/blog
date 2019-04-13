@@ -69,7 +69,7 @@ sort(unique(df$heading)) #naught to 360&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unique(df$velocity)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##  [1] NA  0  1  3  5 14 28  2  4  7  8 25 29 15 16 19 10  6  9 11 13 12 21
 ## [24] 24 20 17 26 27 30 23 22 18 31 33 32 34 35 36 82 83 77 74 67 37&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h in Belgium 😱 😱 🚓&lt;/p&gt;
+&lt;p&gt;Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h in Belgium 🚓!&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&amp;quot;km!&amp;quot;); ji(&amp;quot;scream&amp;quot;)
 fine &amp;lt;- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&amp;quot;km!&amp;quot;)
 
