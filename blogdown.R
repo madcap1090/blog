@@ -4,11 +4,9 @@
 # https://bookdown.org/yihui/blogdown/custom-layouts.html
 library(blogdown) # devtools::install_github("rstudio/blogdown")
 # blogdown::new_site()
-
 # blogdown::install_hugo()
 
 blogdown::serve_site()
-
 
 blogdown::new_post("test2")
 
@@ -18,16 +16,13 @@ file.edit("~/.Rprofile")
 library(emo)
 #install.packages("purrr", "Rcpp")
 
-
-# masking location data for paost 13/04/20019
+# masking location data for post 13/04/20019
 
 data <- fromJSON("./data/Location History.json") # extracts a list
 locations <- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore
 
-locations <- locations %>% 
-  mutate(latitudeE7 =  latitudeE7 -(0.297*1e7),
-         longitudeE7=  longitudeE7 + (0.876*1e7))
+# apply shift data in secrets
 
 saveRDS(locations, "./content/post/data/location.rds")
 
