@@ -18,6 +18,7 @@ Attaching some libraries
 ```{r message=FALSE}
 library("tidyverse")
 library("lubridate")
+library("glue")
 
 ```
 
@@ -91,9 +92,9 @@ ggplot(data = work, aes(x = datetime, y = lat))+
 ```
 
 
-So that would mean that in my data set I have 330 working days and the data that comes along with it. I started working at my current job at the end of 2015 and not everyday got tracked, so 330 days seems about right.
+So that would mean that in my data set I have 330 working days and the data that comes along with it. 
 
-Since at this point I am not interested in the data from days I was not working, these can be filtered out. And I will only look at the morning commute, so the rest can be filtered out too.
+Since at this point I am not interested in the data from days I was not working, these can be filtered out. 
 
 ```{r}
 home <- df %>%
@@ -189,7 +190,35 @@ as.numeric(commute_time)
 
 ```
 
-2 minutes is a bit too fast. The problem is that the first time out of the house, on that particular date, is recorded pretty late. So the last time in the house ith) is the one that is needed. 
+2 minutes is a bit too fast. The problem is that the first time out of the house, on that particular date, is recorded pretty late. So the last time in the house (ith) is the one that is needed. ALSO BECAUSE ADD THE STARTING ON 30/01/2016 ??? there is a strange pattern
+
+```{r}
+day <- home_work %>%
+  filter(date == "2018-07-03") %>% 
+  filter(time > "08:00:00",
+         time < "09:30:00")
+
+ggplot(data = day, aes(x = datetime, y = lat))+
+  geom_line()
+```
+
+And that pattern did not happen before February 2016. For instance "2016-01-08" gives.
+
+```{r}
+day <- home_work %>%
+  filter(date == "2016-01-08") %>% 
+  filter(time > "07:30:00",
+         time < "09:30:00")
+
+ggplot(data = day, aes(x = datetime, y = lat))+
+  geom_line()
+```
+
+A collegue came up with the hypothesis that it was my computer at home that was messing up my phone location data, which was a great idea, but in fact it was my tablet. 
+
+I bought it on 30/01/2016, and both it's location data and my phone location data are merged ever since. Which is kind of surprising or rather dissapointing. 
+
+Google is serving us dirty data in the location history. I cannot imagine they do not distinguish between my devises... ADD SCREENSHOT
 
 ```{r}
 oth <- day %>% 
@@ -239,11 +268,47 @@ keep_dates <- home_work %>%
   spread(homework, freq) %>% 
   filter(work > 0) %>% 
   select(date)
-
-head(keep_dates)
-
+glue("so there are now {nrow(keep_dates)} days to be analysed")
 ```
 
+Let's define a function to do it.
+
+```{r}
+# building the function
+
+get_time_am <- function(x_date){
+    day <- home_work %>%
+    filter(date ==  x_date) %>% 
+    filter(time > "07:30:00",
+           time < "09:30:00")
+  oth <- day %>% 
+    filter(lat < 50.5756) %>% 
+    filter(time == min(time)) %>% 
+    select(time) %>% 
+    mutate(time = as.POSIXct(time, format = "%H:%M:%S"))
+  
+  ith <- day %>% 
+    mutate(time = as.POSIXct(time, format = "%H:%M:%S")) %>% 
+    filter(time < oth$time) %>% 
+    filter(time == max(time))%>% 
+    select(time) %>% 
+    mutate(time = as.POSIXct(time, format = "%H:%M:%S"))
+
+    itw <- day %>% 
+    filter(lat < 50.558) %>% 
+    filter(time == min(time)) %>% 
+    select(time)%>% 
+    mutate(time = as.POSIXct(time, format = "%H:%M:%S"))
+  
+  x <- difftime(itw$time,ith$time, units = c("mins"))
+  class(x)
+  as.numeric(x)
+  print(ith)
+  print(itw)
+  print(x)
+}
+
+```
 
 
 
@@ -257,3 +322,4 @@ ggplot(data = day, aes(x = datetime, y = lat))+
   geom_line(aes(color = homework))
 ```
 
+Finally I wanted to share the patés with you. Not often enough 
