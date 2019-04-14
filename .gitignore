@@ -5,4 +5,4 @@
 /public/post/data/*
 /content/post/data/*
 blogdown.R
-
+/blogdown.R
