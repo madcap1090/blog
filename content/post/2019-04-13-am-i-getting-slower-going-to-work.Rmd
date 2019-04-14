@@ -1,0 +1,158 @@
+---
+title: Am I getting slower going to work?
+author: William Bourgeois
+date: '2019-04-13'
+slug: am-i-getting-slower-going-to-work
+categories: 
+  - geocoding
+tags:
+  - Geocoding
+  - Google
+  - R Markdown
+---
+
+I got a bit distracted writing the last post. What I want to find out is, based on my Goole location history, how fast I bike to work and if this has changed over time. 
+
+Attaching some libraries
+
+```{r message=FALSE}
+library("tidyverse")
+library("lubridate")
+
+```
+
+And loading the data
+
+```{r}
+
+# the code to convert your location data to a data frame:
+# see last post too
+# data <- fromJSON("./data/Location History.json") # extracts a list
+# locations <- data$locations # and the list contains a dataframe
+
+location <- readRDS("~/R/blog/content/post/data/location.rds")
+
+df <- location %>% 
+  mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = "1970-01-01")) 
+
+df <- df %>% 
+  mutate(lat   = latitudeE7/1e7,
+         lon   = longitudeE7/1e7,
+         time  = strftime(datetime, format = "%H:%M:%S"),
+         date  = date(datetime),
+         year  = year(datetime),
+         month = month(datetime),
+         wday  = wday(datetime))
+
+
+```
+
+So what do we have here?
+
+```{r}
+nrow(df)                   # rows
+length(unique(df$date))    # days
+min(unique(df$date))       # first day
+max(unique(df$date))       # last day
+
+```
+
+Plotted:
+
+```{r}
+ggplot(data = df, aes(x = datetime, y = lat))+
+  geom_line()
+
+```
+
+I changed jobs in Septembre 2014, my first working day at my current job was 15/09/2014.
+
+Let's see which days I was working there. The dataframe "work", then contains all the datapoints from where I am at work.
+
+```{r}
+
+work <- df %>% 
+  filter(date > "2014-09-14") %>%
+  filter(round(lat,3) == 50.557) %>% 
+  filter(round(lon,3) == 5.183) %>% 
+  mutate(homework = "work") %>% 
+  mutate(am_pm = case_when(am(datetime) ~ "am",
+                           TRUE ~ "pm"))
+
+length(unique(work$date)) 
+
+
+```
+
+```{r}
+ggplot(data = work, aes(x = datetime, y = lat))+
+  geom_line()
+
+```
+
+
+So that would mean that in my dataset I have 330 working days and the data that comes along with it. I started working at my current job at the end of 2015 and not everyday got tracked, so 330 days seems about right.
+
+Since at this point I am not interested in the data from days I was not working, these can be filtered out. 
+
+```{r}
+home <- df %>% 
+  mutate(homework = "home") %>% 
+  filter(date %in%(unique(work$date))) %>% 
+  mutate(am_pm = case_when(am(datetime) ~ "am",
+                           TRUE ~ "pm"))
+```
+
+Check if the dates are the same
+
+```{r}
+setdiff(unique(home$date),unique(work$date))  
+```
+
+Nice. The dates are equal. The home and work dateframes can be binded.
+
+
+```{r}
+
+home_work <- rbind(home, work) %>% 
+  arrange(datetime)
+
+```
+
+What days at work got tracked? 
+
+```{r}
+length(unique(home_work$date)) # workdays
+min(unique(home_work$date))    # first day
+max(unique(home_work$date))    # last day
+```
+
+Hmm. Why is the latest day not in October 2018. Why does the series stop in July?
+
+```{r}
+
+day <- df %>% 
+  filter(date > "2018-07-01") 
+
+ggplot(data = day, aes(x = datetime, y = lat))+
+  geom_line()
+
+
+```
+
+The date in October is just isolated. So there is less useful data in the data set then I orgiginally thought. 
+
+To calculate the time of my daily commute I have to find the time between I last was at home and the time I arrived at work. 
+
+The latitude changes during a tipical working day look like this (although this one is particularly bring).
+
+```{r}
+day <- df %>% 
+  filter(date == "2014-12-23") 
+
+ggplot(data = day, aes(x = datetime, y = lat))+
+  geom_line()
+
+```
+
+

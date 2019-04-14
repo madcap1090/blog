@@ -19,6 +19,18 @@ library(emo)
 #install.packages("purrr", "Rcpp")
 
 
+# masking location data for paost 13/04/20019
+
+data <- fromJSON("./data/Location History.json") # extracts a list
+locations <- data$locations # and the list contains a dataframe
+rm(data)  # no need for this anymore
+
+locations <- locations %>% 
+  mutate(latitudeE7 =  latitudeE7 -(0.297*1e7),
+         longitudeE7=  longitudeE7 + (0.876*1e7))
+
+saveRDS(locations, "./content/post/data/location.rds")
+
 # bug hunting
 
 # git
@@ -28,47 +40,12 @@ library(emo)
 # https://gist.github.com/rxaviers/7360908
 
 
-
 # ggplot 
 #$ https://ggplot2.tidyverse.org/reference/geom_density_2d.html
 # http://stat405.had.co.nz/ggmap.pdf
 # https://ggplot2.tidyverse.org/reference/geom_density_2d.html
 # https://www.littlemissdata.com/blog/maps
 
-
-
-
-
-
-
-
 # worflow and nice theme
 # https://www.garrickadenbuie.com/blog/blogdown-netlify-new-post-workflow/
-# theme = "hyde"
-# https://github.com/spf13/hyde
-
-
-# minimal themes
-# https://themes.gohugo.io/hugo_theme_pickles/
-
-
-# https://themes.gohugo.io//theme/temple/
-
-# https://themes.gohugo.io/hugo-theme-basic/
-# https://themes.gohugo.io/hugo-xmin/
-# https://themes.gohugo.io/theme/hugo-coder/
-
-
-
-
-
-
-
-# nice themes to test
-# © 2019 Dr. Jason Timm. Powered by Hugo. Theme by PPOffice.
-# https://www.jtimm.net/2018/01/30/keyphrase-extraction-from-a-corpus-of-texts/
-
-# https://themes.gohugo.io/hugo-icarus/
-
-# https://www.r-bloggers.com/setting-up-our-blog-with-rstudio-and-blogdown-i-creating-the-blog/amp/
 

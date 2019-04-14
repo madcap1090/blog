@@ -34,6 +34,8 @@ data <- fromJSON("./data/Location History.json") # extracts a list
 locations <- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore
 
+
+
 ```
 
 
@@ -294,7 +296,9 @@ ggplot(data = x, aes(x = datetime, y = lat))+
   geom_line()
 
 ```
-So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off. Whether Google still keeps track of my whereabouts is of course another matter. 
+So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off. 
+
+Whether Google still keeps track of my whereabouts is of course another matter. 
 
 I still don't know if my commute has gotten longer. I will try to find out in a next blog post.
 
