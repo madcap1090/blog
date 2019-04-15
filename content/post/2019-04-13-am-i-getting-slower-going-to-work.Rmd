@@ -11,7 +11,9 @@ tags:
   - R Markdown
 ---
 
-I got a bit distracted writing the last post. What I want to find out is, based on my Google location history, how fast I bike to work and if this has changed over time. 
+I got a bit distracted writing the last post. What I want to find out is, based on my Google location history, how fast I bike to work and if this has changed over time.
+
+I'll have a go also at the [bbplot]https://bbc.github.io/rcookbook/#how_to_create_bbc_style_graphics) package. 
 
 Attaching some libraries
 
@@ -19,7 +21,10 @@ Attaching some libraries
 library("tidyverse")
 library("lubridate")
 library("glue")
-
+library("purrr")
+library("bbplot")   # devtools::install_github('bbc/bbplot') 
+windowsFonts(Helvetica = "TT Arial") # issue with bbc thme fonts
+# https://github.com/bbc/bbplot/issues/10
 ```
 
 And loading the data
@@ -62,9 +67,41 @@ Plotted:
 
 ```{r}
 ggplot(data = df, aes(x = datetime, y = lat))+
-  geom_line()
+ geom_line()+
+  labs(title="commuting slower?",
+       subtitle = "latitude tracking 2014 - 2018",
+       x = "days",
+       y = "latitude")+ 
+  theme_bw()
+
 
 ```
+
+
+```{r}
+#ggplot(data = df, aes(x = datetime, y = lat))+
+#  geom_line()
+
+ggplot(df, aes(x = datetime, y = lat)) +
+  geom_line(colour = "#1380A1", size = 1) +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  bbc_style() +
+  theme(text = element_text(family="Serif")) +
+  labs(title="commuting slower?",
+       subtitle = "latitude tracking 2014 - 2018")
+
+
+```
+
+```{r}
+library(ggplot2)
+library(extrafont)
+loadfonts(device = "win")
+font_import() #importing extra fonts
+y
+
+```
+
 
 I changed jobs in September 2014, my first working day at my current job was 15/09/2014.
 
@@ -275,9 +312,8 @@ Let's define a function to do it.
 
 ```{r}
 # building the function
-
-get_time_am <- function(x_date){
-    day <- home_work %>%
+get_time <- function(x_date){
+  day <- home_work %>%
     filter(date ==  x_date) %>% 
     filter(time > "07:30:00",
            time < "09:30:00")
@@ -285,7 +321,8 @@ get_time_am <- function(x_date){
     filter(lat < 50.5756) %>% 
     filter(time == min(time)) %>% 
     select(time) %>% 
-    mutate(time = as.POSIXct(time, format = "%H:%M:%S"))
+    mutate(time = as.POSIXct(time, format = "%H:%M:%S")) %>% 
+    slice(1) # making sure one value is returned
   
   ith <- day %>% 
     mutate(time = as.POSIXct(time, format = "%H:%M:%S")) %>% 
@@ -293,30 +330,72 @@ get_time_am <- function(x_date){
     filter(time == max(time))%>% 
     select(time) %>% 
     mutate(time = as.POSIXct(time, format = "%H:%M:%S"))
-
-    itw <- day %>% 
+  
+  if(nrow(ith) == 0) {ith <- oth} 
+  
+  itw <- day %>% 
     filter(lat < 50.558) %>% 
     filter(time == min(time)) %>% 
     select(time)%>% 
-    mutate(time = as.POSIXct(time, format = "%H:%M:%S"))
+    mutate(time = as.POSIXct(time, format = "%H:%M:%S"))%>% 
+    slice(1) # making sure one value is returned
   
   x <- difftime(itw$time,ith$time, units = c("mins"))
-  class(x)
-  as.numeric(x)
-  print(ith)
-  print(itw)
-  print(x)
+  x <- round(as.numeric(x),2)
+  return(x)
+  
 }
 
 ```
 
+I had a struggle with purrr's map_df() , but map_dbl() also does the trick
 
+```{r}
+result <- map_dbl(keep_dates$date, get_time) %>% 
+  as.data.frame() %>% 
+  rename("minutes" = ".") %>% 
+  cbind(keep_dates) %>% 
+  select(date, minutes)
+
+head(result)
+```
+
+```{r}
+max(result$minutes)
+min(result$minutes)
+```
+
+```{r}
+ggplot(result, aes(x = date, y = minutes))+
+  geom_bar(stat = "identity")
+
+```
+
+2018 seems to have the cleanest data at this point. I sometimes walk to work or take the bus or the car. All of these take me more time than biking to work. There are five trafic lights on the way and I tend to stop for trafic lights when they are red. 
+
+I bike ride would not take more than twenty minutes, and surely not less than 5.
+
+```{r}
+r_2018 <- result %>% 
+  filter(year(date) == 2018) %>% 
+  filter(minutes < 20,
+         minutes > 5)
+
+ggplot(r_2018, aes(x = date, y = minutes))+
+  geom_bar(stat = "identity")
+
+
+```
+
+```{r}
+mean(r_2018$minutes)
+```
 
 
 
 ```{r}
 day <- home_work %>% 
-  filter(date == "2016-06-15") 
+  filter(date == "2016-08-31")
 
 ggplot(data = day, aes(x = datetime, y = lat))+
   geom_line(aes(color = homework))
