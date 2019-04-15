@@ -72,7 +72,8 @@ ggplot(data = df, aes(x = datetime, y = lat))+
        subtitle = "latitude tracking 2014 - 2018",
        x = "days",
        y = "latitude")+ 
-  theme_bw()
+  # theme_bw()
+  theme_minimal()
 
 
 ```
@@ -401,4 +402,6 @@ ggplot(data = day, aes(x = datetime, y = lat))+
   geom_line(aes(color = homework))
 ```
 
-Finally I wanted to share the patés with you. Not often enough 
+Finally I wanted to share the patés with you. Not often enough part of the team takes a break and walks around the block. 
+
+Rumor has it our boss does not like that, and apparantly it is against HR regulations. But hey, life is short, it's good for our health and walking meetings are the new thing.
