@@ -34,6 +34,8 @@ data <- fromJSON("./data/Location History.json") # extracts a list
 locations <- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore
 
+
+
 ```
 
 
@@ -71,7 +73,7 @@ glue("{fine} :scream: :scream: :scream:")
 
 ```
 
-Could this information get me fined? Or will this type information be used in the future determine guilt?
+Could this information get me fined? Or will this type information be used in the future to determine guilt?
 Are the police allowed to access this type of Google data to for instance find perps of hit & runs?
 
 The data frame also contains lists with times stamps and estimations of activity at that time stamp.
@@ -82,7 +84,7 @@ str(df$activity[80])
 
 ```
 
-So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables: the type of activity and the probability calculated for it. So on timestamp "1395248054966" I had a 49% probability to be on foot. 
+So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables: the type of activity and the probability calculated for it. So on timestamp "1395248054966" (= 2014-03-19 17:54:14 CET) I had a 49% probability to be on foot. 
 
 And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.
 
@@ -294,7 +296,9 @@ ggplot(data = x, aes(x = datetime, y = lat))+
   geom_line()
 
 ```
-So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off. Whether Google still keeps track of my whereabouts is of course another matter. 
+So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off. 
+
+Whether Google still keeps track of my whereabouts is of course another matter. 
 
 I still don't know if my commute has gotten longer. I will try to find out in a next blog post.
 

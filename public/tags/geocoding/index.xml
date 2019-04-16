@@ -7,10 +7,22 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Sat, 30 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 13 Apr 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/geocoding/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Am I getting slower going to work?</title>
+      <link>/post/am-i-getting-slower-going-to-work/</link>
+      <pubDate>Sat, 13 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/am-i-getting-slower-going-to-work/</guid>
+      <description>I got a bit distracted writing the last post. What I want to find out is, based on my Google location history, how fast I bike to work and if this has changed over time.
+Attaching libraries
+library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;lubridate&amp;quot;)library(&amp;quot;glue&amp;quot;)library(&amp;quot;purrr&amp;quot;)library(&amp;quot;ggmap&amp;quot;)library(&amp;quot;ggplot2&amp;quot;); theme_set(theme_minimal())And loading the data
+# the code to convert your location data to a data frame:# see last post too# data &amp;lt;- fromJSON(&amp;quot;./data/Location History.</description>
+    </item>
     
     <item>
       <title>google location tracking</title>

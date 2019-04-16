@@ -13,6 +13,344 @@
     
     
     <item>
+      <title>Am I getting slower going to work?</title>
+      <link>/post/am-i-getting-slower-going-to-work/</link>
+      <pubDate>Sat, 13 Apr 2019 00:00:00 +0000</pubDate>
+      <author>William Bourgeois</author>
+      <guid>/post/am-i-getting-slower-going-to-work/</guid>
+      <description></description>
+      
+      <content>
+
+
+&lt;p&gt;I got a bit distracted writing the last post. What I want to find out is, based on my Google location history, how fast I bike to work and if this has changed over time.&lt;/p&gt;
+&lt;p&gt;Attaching libraries&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;tidyverse&amp;quot;)
+library(&amp;quot;lubridate&amp;quot;)
+library(&amp;quot;glue&amp;quot;)
+library(&amp;quot;purrr&amp;quot;)
+library(&amp;quot;ggmap&amp;quot;)
+library(&amp;quot;ggplot2&amp;quot;); theme_set(theme_minimal())&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And loading the data&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# the code to convert your location data to a data frame:
+# see last post too
+# data &amp;lt;- fromJSON(&amp;quot;./data/Location History.json&amp;quot;) # extracts a list
+# locations &amp;lt;- data$locations # and the list contains a dataframe
+
+location &amp;lt;- readRDS(&amp;quot;~/R/blog/content/post/data/location.rds&amp;quot;)
+
+df &amp;lt;- location %&amp;gt;% 
+  mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &amp;quot;1970-01-01&amp;quot;)) 
+
+df &amp;lt;- df %&amp;gt;% 
+  mutate(lat   = latitudeE7/1e7,
+         lon   = longitudeE7/1e7,
+         time  = strftime(datetime, format = &amp;quot;%H:%M:%S&amp;quot;),
+         date  = date(datetime),
+         year  = year(datetime),
+         month = month(datetime),
+         wday  = wday(datetime))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So what do we have here?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;nrow(df)                   # rows&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 522770&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(unique(df$date))    # days&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 1249&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;min(unique(df$date))       # first day&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;2014-01-14&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;max(unique(df$date))       # last day&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;2018-10-15&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Plotted:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(data = df, aes(x = datetime, y = lat))+
+ geom_line()+
+  labs(title=&amp;quot;commuting slower?&amp;quot;,
+       subtitle = &amp;quot;latitude tracking 2014 - 2018&amp;quot;,
+       x = &amp;quot;days&amp;quot;,
+       y = &amp;quot;latitude&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;I changed jobs in September 2014, my first working day at my current job was 15/09/2014.&lt;/p&gt;
+&lt;p&gt;Let’s see which days I was working there. The dataframe “work”, then contains all the data points from where I am at work.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;work &amp;lt;- df %&amp;gt;% 
+  filter(date &amp;gt; &amp;quot;2014-09-14&amp;quot;) %&amp;gt;%
+  filter(round(lat,3) == 50.557) %&amp;gt;% 
+  filter(round(lon,2) == 5.18) %&amp;gt;% # a little less accuracy on the longitude
+  mutate(homework = &amp;quot;work&amp;quot;) %&amp;gt;% 
+  mutate(am_pm = case_when(am(datetime) ~ &amp;quot;am&amp;quot;,
+                           TRUE ~ &amp;quot;pm&amp;quot;))
+
+length(unique(work$date)) &lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 406&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(data = work, aes(x = datetime, y = lat))+
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;lattitude between home and work by day&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So that would mean that in my data set I have 406 working days and the data that comes along with it.
+Since at this point I am not interested in the data from days I was not working, these can be filtered out.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;home &amp;lt;- df %&amp;gt;%
+  filter(round(lat,3) != 50.557) %&amp;gt;% 
+  filter(round(lon,2) != 5.18) %&amp;gt;%
+  mutate(homework = &amp;quot;not_work&amp;quot;) %&amp;gt;% 
+  filter(date %in%(unique(work$date))) %&amp;gt;% 
+  mutate(am_pm = case_when(am(datetime) ~ &amp;quot;am&amp;quot;,
+                           TRUE ~ &amp;quot;pm&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Check if the dates are the same&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;setdiff(unique(home$date),unique(work$date))  &lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## numeric(0)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Nice. The dates are equal. The home and work date frames can be binded.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;home_work &amp;lt;- rbind(home, work) %&amp;gt;% 
+  arrange(datetime)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;What days at work got tracked?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(unique(home_work$date)) # workdays&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 406&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;min(unique(home_work$date))    # first day&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;2014-09-15&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;max(unique(home_work$date))    # last day&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;2018-07-03&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Why is the latest day not in October 2018. Why does the series stop in July?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- df %&amp;gt;% 
+  filter(date &amp;gt; &amp;quot;2018-07-01&amp;quot;) 
+
+ggplot(data = day, aes(x = datetime, y = lat))+
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;July to October 2018&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-11-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The date in October is just isolated. So there is less useful data in the dataset then I originally thought.&lt;/p&gt;
+&lt;p&gt;To calculate the time of my daily commute I have to find the time between I last was at home and the time I arrived at work.&lt;/p&gt;
+&lt;p&gt;The latitude changes during a typical working day look like this (although this one is particularly boring 😒).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- df %&amp;gt;% 
+  filter(date == &amp;quot;2014-12-23&amp;quot;) 
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;23/12/2014 - another day at the office&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;And if we look at the first hours of the day and arriving at work:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- df %&amp;gt;% 
+  filter(date == &amp;quot;2014-12-23&amp;quot;) %&amp;gt;% 
+  filter(time &amp;gt; &amp;quot;07:00:00&amp;quot;,
+         time &amp;lt; &amp;quot;09:30:00&amp;quot;)
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;23/12/2014 - zooming in on arriving at work&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So the time spent in the commute is the time first at around 50.560 latitude (itw) minus the last time at around 50.580 latitude (oth), and that for the time period of let’s say between 7am and 9.30am.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;oth &amp;lt;- day %&amp;gt;% 
+  filter(lat &amp;lt; 50.5756) %&amp;gt;% 
+  filter(time == min(time)) %&amp;gt;% 
+  select(time) %&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+itw &amp;lt;- day %&amp;gt;% 
+  filter(lat &amp;lt; 50.558) %&amp;gt;% 
+  filter(time == min(time)) %&amp;gt;% 
+  select(time)%&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+commute_time &amp;lt;- difftime(itw$time,oth$time, units = c(&amp;quot;mins&amp;quot;)) #9.93 minutes
+class(commute_time)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;difftime&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;as.numeric(commute_time)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 2.083333&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2 minutes is a bit too fast. The problem is that the first time out of the house, on that particular date, is recorded pretty late. So the last time in the house (ith) is the one that is needed. Also because starting around 30/01/2016 a strange pattern is emerging&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- home_work %&amp;gt;%
+  filter(date == &amp;quot;2018-07-03&amp;quot;) %&amp;gt;% 
+  filter(time &amp;gt; &amp;quot;08:00:00&amp;quot;,
+         time &amp;lt; &amp;quot;09:30:00&amp;quot;)
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;&amp;#39;bilocation&amp;#39; pattern&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-15-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;And that pattern did not happen before February 2016. For instance “2016-01-08” gives.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- home_work %&amp;gt;%
+  filter(date == &amp;quot;2016-01-08&amp;quot;) %&amp;gt;% 
+  filter(time &amp;gt; &amp;quot;07:30:00&amp;quot;,
+         time &amp;lt; &amp;quot;09:30:00&amp;quot;)
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line()+
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;before February 2016&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;A collegue came up with the hypothesis that it was my computer at home that was messing up my phone location data, which was a great idea, but in fact it was my tablet.&lt;/p&gt;
+&lt;p&gt;I bought it on 30/01/2016, and both it’s location data and my phone location data are merged ever since. Which is kind of surprising or rather dissapointing.&lt;/p&gt;
+&lt;p&gt;Google is serving us dirty data in the location history. I cannot imagine it does not distinguish between my devises.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;files/20190413/stu.png&#34; alt=&#34;optional caption text&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;optional caption text&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;files/20190413/stu.png&#34; alt=&#34;optional caption text&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;optional caption text&lt;/p&gt;
+&lt;/div&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;oth &amp;lt;- day %&amp;gt;% 
+  filter(lat &amp;lt; 50.5756) %&amp;gt;% 
+  filter(time == min(time)) %&amp;gt;% 
+  select(time) %&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+# the last time in the house
+ith &amp;lt;- day %&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;)) %&amp;gt;% 
+  filter(time &amp;lt; oth$time) %&amp;gt;% 
+  filter(time == max(time))%&amp;gt;% 
+  select(time) %&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+
+itw &amp;lt;- day %&amp;gt;% 
+  filter(lat &amp;lt; 50.557) %&amp;gt;% 
+  filter(time == min(time)) %&amp;gt;% 
+  select(time)%&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+commute_time &amp;lt;- difftime(itw$time,ith$time, units = c(&amp;quot;mins&amp;quot;)) #9.93 minutes
+class(commute_time)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;difftime&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;as.numeric(commute_time)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 44.48333&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;17 minutes on the other hand seems a lot. But the data and calculations look correct to me. One explanation could be that sometimes there is a big delay in reporting the arrival time. Like on April 17 2015, where arrival was recorded after 12am.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- df %&amp;gt;% 
+  filter(date == &amp;quot;2015-04-17&amp;quot;) 
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-18-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So it’s time to do some more data cleaning, and select dates that have data from both work and home between 7 and 9:30am.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;keep_dates &amp;lt;- home_work %&amp;gt;% 
+  filter(time &amp;gt; &amp;quot;07:00:00&amp;quot;,
+         time &amp;lt; &amp;quot;09:30:00&amp;quot;) %&amp;gt;%
+  plyr::count(c(&amp;#39;date&amp;#39;, &amp;#39;homework&amp;#39;)) %&amp;gt;% 
+  spread(homework, freq) %&amp;gt;% 
+  filter(work &amp;gt; 0) %&amp;gt;% 
+  select(date)
+glue(&amp;quot;so there are now {nrow(keep_dates)} days to be analysed&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## so there are now 336 days to be analysed&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s define a function to do it.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# building the function
+get_time &amp;lt;- function(x_date){
+  day &amp;lt;- home_work %&amp;gt;%
+    filter(date ==  x_date) %&amp;gt;% 
+    filter(time &amp;gt; &amp;quot;07:30:00&amp;quot;,
+           time &amp;lt; &amp;quot;09:30:00&amp;quot;)
+  oth &amp;lt;- day %&amp;gt;% 
+    filter(lat &amp;lt; 50.5756) %&amp;gt;% 
+    filter(time == min(time)) %&amp;gt;% 
+    select(time) %&amp;gt;% 
+    mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;)) %&amp;gt;% 
+    slice(1) # making sure one value is returned
+  
+  ith &amp;lt;- day %&amp;gt;% 
+    mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;)) %&amp;gt;% 
+    filter(time &amp;lt; oth$time) %&amp;gt;% 
+    filter(time == max(time))%&amp;gt;% 
+    select(time) %&amp;gt;% 
+    mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+  
+  if(nrow(ith) == 0) {ith &amp;lt;- oth} 
+  
+  itw &amp;lt;- day %&amp;gt;% 
+    filter(lat &amp;lt; 50.558) %&amp;gt;% 
+    filter(time == min(time)) %&amp;gt;% 
+    select(time)%&amp;gt;% 
+    mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))%&amp;gt;% 
+    slice(1) # making sure one value is returned
+  
+  x &amp;lt;- difftime(itw$time,ith$time, units = c(&amp;quot;mins&amp;quot;))
+  x &amp;lt;- round(as.numeric(x),2)
+  return(x)
+  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I had a struggle with purrr’s map_df() , but map_dbl() also does the trick&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;result &amp;lt;- map_dbl(keep_dates$date, get_time) %&amp;gt;% 
+  as.data.frame() %&amp;gt;% 
+  rename(&amp;quot;minutes&amp;quot; = &amp;quot;.&amp;quot;) %&amp;gt;% 
+  cbind(keep_dates) %&amp;gt;% 
+  select(date, minutes)
+
+head(result)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##         date minutes
+## 1 2014-09-16   18.53
+## 2 2014-09-18   10.45
+## 3 2014-09-24   28.02
+## 4 2014-09-26   32.77
+## 5 2014-09-30    9.30
+## 6 2014-10-01   20.92&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;max(result$minutes)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 100.95&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;min(result$minutes)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.13&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(result, aes(x = date, y = minutes)) +
+  geom_bar(stat = &amp;quot;identity&amp;quot;)+ 
+  scale_y_continuous(limits = c(0, 65))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-23-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;2018 seems to have the cleanest data at this point. I sometimes walk to work or take the bus or the car. All of these take me more time than biking to work. There are five trafic lights on the way and I tend to stop for trafic lights when they are red. So the trafic ligths might explain much of the variance.&lt;/p&gt;
+&lt;p&gt;I bike ride would not take more than twenty minutes, and surely not less than 5.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;r_2018 &amp;lt;- result %&amp;gt;% 
+  filter(year(date) == 2018) %&amp;gt;% 
+  filter(minutes &amp;lt; 20,
+         minutes &amp;gt; 5)
+
+ggplot(r_2018, aes(x = date, y = minutes)) +
+  geom_bar(stat = &amp;quot;identity&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-24-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;round(mean(r_2018$minutes),2)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 12.18&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So that would then be around 12 minutes. I still need to time my current commutes for a while to see if I got slower.&lt;/p&gt;
+&lt;p&gt;I hoped for a bit cleaner data and the possibility to easyly compare the evolution of the time spent commuting over several years. But it’ll take the 12.18 minutes for now.&lt;/p&gt;
+&lt;p&gt;Finally I wanted to share the “patés” with you. Not often enough part of the team takes a break and walks around the office block, and those we call doing a “paté” (= block). They say walking meetings are in these days.&lt;/p&gt;
+&lt;p&gt;I was looking to see how many of them we are doing, but as you will see below the datapoints are mostly centered on the building itself.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;zoom &amp;lt;- get_map(location = c(lon = 4.306, lat = 50.8545), zoom = 19, maptype = &amp;quot;satellite&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/staticmap?center=50.8545,4.306&amp;amp;zoom=19&amp;amp;size=640x640&amp;amp;scale=2&amp;amp;maptype=satellite&amp;amp;language=en-EN&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- readRDS(&amp;quot;~/R/blog/content/post/data/location_509.rds&amp;quot;) %&amp;gt;% 
+  filter(year != 2017)
+
+ggmap(zoom) + 
+  geom_point(data = df, aes(x = lon, y = lat),
+             alpha = 0.7, color = &amp;quot;#FC4E07&amp;quot;, size = .8) + 
+  facet_wrap(~year) +
+  theme(legend.position = &amp;quot;right&amp;quot;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;always happy @work&amp;quot;,
+    caption = &amp;quot;\n removed 2017 because there were few data points.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-27-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It seems to me all the data is a bit off. 2014 to 2016 a bit or a lot shifted to the left, and 2018 just a tad too much to the left.&lt;/p&gt;
+</content>
+      
+    </item>
+    
+    <item>
       <title>google location tracking</title>
       <link>/post/google-location-tracking/</link>
       <pubDate>Sat, 30 Mar 2019 00:00:00 +0000</pubDate>
@@ -75,7 +413,7 @@ fine &amp;lt;- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&a
 
 glue(&amp;quot;{fine} 😱 😱 😱&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## 134 km! 😱 😱 😱&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Could this information get me fined? Or will this type information be used in the future determine guilt?
+&lt;p&gt;Could this information get me fined? Or will this type information be used in the future to determine guilt?
 Are the police allowed to access this type of Google data to for instance find perps of hit &amp;amp; runs?&lt;/p&gt;
 &lt;p&gt;The data frame also contains lists with times stamps and estimations of activity at that time stamp.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;str(df$activity[80])&lt;/code&gt;&lt;/pre&gt;
@@ -86,7 +424,7 @@ Are the police allowed to access this type of Google data to for instance find p
 ##   .. ..$ :&amp;#39;data.frame&amp;#39;:  5 obs. of  2 variables:
 ##   .. .. ..$ type      : chr [1:5] &amp;quot;ON_FOOT&amp;quot; &amp;quot;STILL&amp;quot; &amp;quot;IN_VEHICLE&amp;quot; &amp;quot;UNKNOWN&amp;quot; ...
 ##   .. .. ..$ confidence: int [1:5] 49 20 16 10 2&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables: the type of activity and the probability calculated for it. So on timestamp “1395248054966” I had a 49% probability to be on foot.&lt;/p&gt;
+&lt;p&gt;So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables: the type of activity and the probability calculated for it. So on timestamp “1395248054966” (= 2014-03-19 17:54:14 CET) I had a 49% probability to be on foot.&lt;/p&gt;
 &lt;p&gt;And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;glimpse(unique(df$altitude)) # ? what sensor does it use?&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##  int [1:633] NA 27 41 38 42 60 16 57 63 49 ...&lt;/code&gt;&lt;/pre&gt;
@@ -217,7 +555,8 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &amp;quot;#FC4E
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(data = x, aes(x = datetime, y = lat))+
   geom_line()&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png&#34; width=&#34;960&#34; /&gt;
-So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off. Whether Google still keeps track of my whereabouts is of course another matter.&lt;/p&gt;
+So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off.&lt;/p&gt;
+&lt;p&gt;Whether Google still keeps track of my whereabouts is of course another matter.&lt;/p&gt;
 &lt;p&gt;I still don’t know if my commute has gotten longer. I will try to find out in a next blog post.&lt;/p&gt;
 </content>
       
