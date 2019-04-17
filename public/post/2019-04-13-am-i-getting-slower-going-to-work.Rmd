@@ -108,18 +108,7 @@ home <- df %>%
   filter(date %in%(unique(work$date))) %>% 
   mutate(am_pm = case_when(am(datetime) ~ "am",
                            TRUE ~ "pm"))
-```
 
-Check if the dates are the same
-
-```{r}
-setdiff(unique(home$date),unique(work$date))  
-```
-
-Nice. The dates are equal. The home and work date frames can be binded.
-
-
-```{r}
 home_work <- rbind(home, work) %>% 
   arrange(datetime)
 ```

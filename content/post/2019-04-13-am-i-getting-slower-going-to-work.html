@@ -87,12 +87,9 @@ Since at this point I am not interested in the data from days I was not working,
   mutate(homework = &quot;not_work&quot;) %&gt;% 
   filter(date %in%(unique(work$date))) %&gt;% 
   mutate(am_pm = case_when(am(datetime) ~ &quot;am&quot;,
-                           TRUE ~ &quot;pm&quot;))</code></pre>
-<p>Check if the dates are the same</p>
-<pre class="r"><code>setdiff(unique(home$date),unique(work$date))  </code></pre>
-<pre><code>## numeric(0)</code></pre>
-<p>Nice. The dates are equal. The home and work date frames can be binded.</p>
-<pre class="r"><code>home_work &lt;- rbind(home, work) %&gt;% 
+                           TRUE ~ &quot;pm&quot;))
+
+home_work &lt;- rbind(home, work) %&gt;% 
   arrange(datetime)</code></pre>
 <p>What days at work got tracked?</p>
 <pre class="r"><code>length(unique(home_work$date)) # workdays</code></pre>
@@ -113,7 +110,7 @@ ggplot(data = day, aes(x = datetime, y = lat)) +
         axis.ticks.y=element_blank()) +
   labs(y = &quot;latitude&quot;, 
     title = &quot;23/12/2014 - another day at the office&quot;)</code></pre>
-<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>And if we look at the first hours of the day and arriving at work:</p>
 <pre class="r"><code>day &lt;- df %&gt;% 
   filter(date == &quot;2014-12-23&quot;) %&gt;% 
@@ -127,7 +124,7 @@ ggplot(data = day, aes(x = datetime, y = lat)) +
         axis.ticks.y=element_blank()) +
   labs(y = &quot;Latitude&quot;, 
     title = &quot;23/12/2014 - zooming in on arriving at work&quot;)</code></pre>
-<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>So the time spent in the commute is the time first at around 50.560 latitude (itw) minus the last time at around 50.580 latitude (oth), and that for the time period of let’s say between 7am and 9.30am.</p>
 <pre class="r"><code>oth &lt;- day %&gt;% 
   filter(lat &lt; 50.5756) %&gt;% 
@@ -159,7 +156,7 @@ ggplot(data = day, aes(x = datetime, y = lat)) +
         axis.ticks.y=element_blank()) +
   labs(y = &quot;latitude&quot;, 
     title = &quot;&#39;bilocation&#39; pattern&quot;)</code></pre>
-<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>And that pattern did not happen before February 2016. For instance “2016-01-08” gives.</p>
 <pre class="r"><code>day &lt;- home_work %&gt;%
   filter(date == &quot;2016-01-08&quot;) %&gt;% 
@@ -173,7 +170,7 @@ ggplot(data = day, aes(x = datetime, y = lat)) +
         axis.ticks.y=element_blank()) +
   labs(y = &quot;latitude&quot;, 
     title = &quot;before February 2016&quot;)</code></pre>
-<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <p>A collegue came up with the hypothesis that it was my computer at home that was messing up my phone location data, which was a great idea, but in fact it was my tablet.</p>
 <p>I bought it on 30/01/2016, and both it’s location data and my phone location data are merged ever since. Which is kind of surprising or rather dissapointing.</p>
 <p>Google is serving us dirty data in the location history. I cannot imagine it does not distinguish between my devises.</p>
@@ -214,7 +211,7 @@ ggplot(data = day, aes(x = datetime, y = lat)) +
         axis.ticks.y=element_blank()) +
   labs(y = &quot;latitude&quot;, 
     title = &quot;April 17 2015&quot;)</code></pre>
-<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 <p>So it’s time to do some more data cleaning, and select dates that have data from both work and home between 7 and 9:30am.</p>
 <pre class="r"><code>keep_dates &lt;- home_work %&gt;% 
   filter(time &gt; &quot;07:00:00&quot;,
@@ -283,7 +280,7 @@ head(result)</code></pre>
   scale_y_continuous(limits = c(0, 65)) +
   labs(y = &quot;minutes to work&quot;, 
     title = &quot;2015 - 2018&quot;)</code></pre>
-<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 <p>2018 seems to have the cleanest data at this point. I sometimes walk to work or take the bus or the car. All of these take me more time than biking to work. There are five trafic lights on the way and I tend to stop for trafic lights when they are red. So the trafic ligths might explain much of the variance.</p>
 <p>A bike ride would not take more than twenty minutes, and surely not less than 5.</p>
 <pre class="r"><code>r_2018 &lt;- result %&gt;% 
@@ -295,7 +292,7 @@ ggplot(r_2018, aes(x = date, y = minutes)) +
   geom_bar(stat = &quot;identity&quot;) +
   labs(y = &quot;minutes to work&quot;, 
     title = &quot;2018&quot;)</code></pre>
-<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 <pre class="r"><code>round(mean(r_2018$minutes),2)</code></pre>
 <pre><code>## [1] 12.18</code></pre>
 <p>So that would then be around 12 minutes. I still need to time my current commutes for a while to see if I got slower.</p>
@@ -327,6 +324,6 @@ ggmap(zoom) +
     y = &quot;Latitude&quot;, 
     title = &quot;always happy @work&quot;,
     caption = &quot;\n removed 2017 because there were few data points.&quot;)</code></pre>
-<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-26-1.png" width="960" /></p>
+<p><img src="/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-24-1.png" width="960" /></p>
 <p>It seems to me all the data is a bit off. 2014 to 2016 a bit or a lot shifted to the left, and 2018 just a tad too much to the left.</p>
 <p>But still. Welcome to the panopticon.</p>
