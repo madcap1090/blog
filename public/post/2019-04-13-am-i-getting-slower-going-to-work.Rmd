@@ -76,7 +76,6 @@ I changed jobs in September 2014, my first working day at my current job was 15/
 Let's see which days I was working there. The dataframe "work", then contains all the data points from where I am at work.
 
 ```{r}
-
 work <- df %>% 
   filter(date > "2014-09-14") %>%
   filter(round(lat,3) == 50.557) %>% 
@@ -86,8 +85,6 @@ work <- df %>%
                            TRUE ~ "pm"))
 
 length(unique(work$date)) 
-
-
 ```
 
 ```{r}
@@ -322,9 +319,7 @@ get_time <- function(x_date){
   x <- difftime(itw$time,ith$time, units = c("mins"))
   x <- round(as.numeric(x),2)
   return(x)
-  
 }
-
 ```
 
 I had a struggle with purrr's map_df() , but map_dbl() also does the trick
@@ -350,7 +345,6 @@ ggplot(result, aes(x = date, y = minutes)) +
   scale_y_continuous(limits = c(0, 65)) +
   labs(y = "minutes to work", 
     title = "2015 - 2018")
-
 ```
 
 2018 seems to have the cleanest data at this point. I sometimes walk to work or take the bus or the car. All of these take me more time than biking to work. There are five trafic lights on the way and I tend to stop for trafic lights when they are red. So the trafic ligths might explain much of the variance.  
@@ -382,6 +376,10 @@ Finally I wanted to share the "patés" with you. Not often enough part of the te
 I was looking to see how many of them we are doing, but as you will see below the datapoints are mostly centered on our office building itself. And I cannot see how I can construct a pattern around it representing the "patés". 
 
 ```{r}
+secrets <- readRDS("~/R/geo/secret/secrets.rds")
+key <- secrets$key[1]
+register_google(key = key)
+
 zoom <- get_map(location = c(lon = 4.306, lat = 50.8545), zoom = 19, maptype = "satellite")
 ```
 

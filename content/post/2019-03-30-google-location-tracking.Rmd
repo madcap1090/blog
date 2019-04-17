@@ -65,7 +65,6 @@ Does that mean that I ever broke the speed limit? We're not supposed to drive fa
 
 ```{r}
 
-#paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),"km!"); ji("scream")
 fine <- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),"km!")
 
 glue("{fine} :scream: :scream: :scream:")
@@ -110,7 +109,6 @@ df <- df %>%
          year  = year(datetime),
          month = month(datetime),
          wday  = wday(datetime))
-
 ```
 
 
@@ -293,7 +291,10 @@ It would seem that I moved a lot in 2016 compared to the other years, but to tha
 ```{r fig.height=10, fig.width=10}
 
 ggplot(data = x, aes(x = datetime, y = lat))+
-  geom_line()
+  geom_line()+
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
 
 ```
 So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off. 

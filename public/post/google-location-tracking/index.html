@@ -163,8 +163,7 @@ sort(unique(df$heading)) #naught to 360</code></pre>
 <pre><code>##  [1] NA  0  1  3  5 14 28  2  4  7  8 25 29 15 16 19 10  6  9 11 13 12 21
 ## [24] 24 20 17 26 27 30 23 22 18 31 33 32 34 35 36 82 83 77 74 67 37</code></pre>
 <p>Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h in Belgium 🚓!</p>
-<pre class="r"><code>#paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&quot;km!&quot;); ji(&quot;scream&quot;)
-fine &lt;- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&quot;km!&quot;)
+<pre class="r"><code>fine &lt;- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&quot;km!&quot;)
 
 glue(&quot;{fine} 😱 😱 😱&quot;)</code></pre>
 <pre><code>## 134 km! 😱 😱 😱</code></pre>
@@ -308,7 +307,10 @@ geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &quot;#FC4E07&q
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png" width="960" /></p>
 <p>It would seem that I moved a lot in 2016 compared to the other years, but to that extent it does not look right. Let’s dig a little deeper in the data.</p>
 <pre class="r"><code>ggplot(data = x, aes(x = datetime, y = lat))+
-  geom_line()</code></pre>
+  geom_line()+
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())</code></pre>
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png" width="960" />
 So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off.</p>
 <p>Whether Google still keeps track of my whereabouts is of course another matter.</p>

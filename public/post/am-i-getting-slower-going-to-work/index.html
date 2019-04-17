@@ -362,7 +362,6 @@ get_time &lt;- function(x_date){
   x &lt;- difftime(itw$time,ith$time, units = c(&quot;mins&quot;))
   x &lt;- round(as.numeric(x),2)
   return(x)
-  
 }</code></pre>
 <p>I had a struggle with purrr’s map_df() , but map_dbl() also does the trick</p>
 <pre class="r"><code>result &lt;- map_dbl(keep_dates$date, get_time) %&gt;% 
@@ -407,7 +406,11 @@ ggplot(r_2018, aes(x = date, y = minutes)) +
 <p>I hoped for a bit cleaner data and the possibility to easyly compare the evolution of the time spent commuting over several years. But I’ll take the 12.18 minutes for now.</p>
 <p>Finally I wanted to share the “patés” with you. Not often enough part of the team takes a break and walks around the office block, and those we call doing a “paté” (= block). They say walking meetings are in these days.</p>
 <p>I was looking to see how many of them we are doing, but as you will see below the datapoints are mostly centered on our office building itself. And I cannot see how I can construct a pattern around it representing the “patés”.</p>
-<pre class="r"><code>zoom &lt;- get_map(location = c(lon = 4.306, lat = 50.8545), zoom = 19, maptype = &quot;satellite&quot;)</code></pre>
+<pre class="r"><code>secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;)
+key &lt;- secrets$key[1]
+register_google(key = key)
+
+zoom &lt;- get_map(location = c(lon = 4.306, lat = 50.8545), zoom = 19, maptype = &quot;satellite&quot;)</code></pre>
 <pre><code>## Source : https://maps.googleapis.com/maps/api/staticmap?center=50.8545,4.306&amp;zoom=19&amp;size=640x640&amp;scale=2&amp;maptype=satellite&amp;language=en-EN&amp;key=xxx</code></pre>
 <pre class="r"><code>df &lt;- readRDS(&quot;~/R/blog/content/post/data/location_509.rds&quot;) %&gt;% 
   filter(year != 2017)
