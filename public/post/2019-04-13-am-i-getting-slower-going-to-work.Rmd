@@ -1,5 +1,5 @@
 ---
-title: Am I getting slower going to work?
+title: am I getting slower going to work?
 author: William Bourgeois
 date: '2019-04-13'
 slug: am-i-getting-slower-going-to-work
@@ -61,7 +61,10 @@ Plotted:
 ```{r}
 ggplot(data = df, aes(x = datetime, y = lat))+
  geom_line()+
-  labs(title="commuting slower?",
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+    labs(title="commuting slower?",
        subtitle = "latitude tracking 2014 - 2018",
        x = "days",
        y = "latitude")
@@ -131,23 +134,6 @@ length(unique(home_work$date)) # workdays
 min(unique(home_work$date))    # first day
 max(unique(home_work$date))    # last day
 ```
-
-Why is the latest day not in October 2018. Why does the series stop in July?
-
-```{r}
-day <- df %>% 
-  filter(date > "2018-07-01") 
-
-ggplot(data = day, aes(x = datetime, y = lat))+
-  geom_line() +
-  theme(axis.title.x=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank())+
-  labs(y = "latitude", 
-    title = "July to October 2018")
-```
-
-The date in October is just isolated. So there is less useful data in the dataset then I originally thought. 
 
 To calculate the time of my daily commute I have to find the time between I last was at home and the time I arrived at work. 
 
@@ -245,12 +231,6 @@ I bought it on 30/01/2016, and both it's location data and my phone location dat
 
 Google is serving us dirty data in the location history. I cannot imagine it does not distinguish between my devises.
 
-![optional caption text](~/R/blog/content/post/files/20190413/stu.png)
-
-![optional caption text](~/R/blog/content/post/files/20190413/stu.png)
-
-
-
 ```{r}
 oth <- day %>% 
   filter(lat < 50.5756) %>% 
@@ -285,7 +265,12 @@ day <- df %>%
   filter(date == "2015-04-17") 
 
 ggplot(data = day, aes(x = datetime, y = lat)) +
-  geom_line()
+  geom_line() + 
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = "latitude", 
+    title = "April 17 2015")
 
 ```
 
@@ -362,13 +347,15 @@ min(result$minutes)
 ```{r message=FALSE, warning=FALSE}
 ggplot(result, aes(x = date, y = minutes)) +
   geom_bar(stat = "identity")+ 
-  scale_y_continuous(limits = c(0, 65))
+  scale_y_continuous(limits = c(0, 65)) +
+  labs(y = "minutes to work", 
+    title = "2015 - 2018")
 
 ```
 
 2018 seems to have the cleanest data at this point. I sometimes walk to work or take the bus or the car. All of these take me more time than biking to work. There are five trafic lights on the way and I tend to stop for trafic lights when they are red. So the trafic ligths might explain much of the variance.  
 
-I bike ride would not take more than twenty minutes, and surely not less than 5.
+A bike ride would not take more than twenty minutes, and surely not less than 5.
 
 ```{r}
 r_2018 <- result %>% 
@@ -377,10 +364,10 @@ r_2018 <- result %>%
          minutes > 5)
 
 ggplot(r_2018, aes(x = date, y = minutes)) +
-  geom_bar(stat = "identity")
-
-
-```
+  geom_bar(stat = "identity") +
+  labs(y = "minutes to work", 
+    title = "2018")
+``` 
 
 ```{r}
 round(mean(r_2018$minutes),2)
@@ -388,11 +375,11 @@ round(mean(r_2018$minutes),2)
 
 So that would then be around 12 minutes. I still need to time my current commutes for a while to see if I got slower. 
 
-I hoped for a bit cleaner data and the possibility to easyly compare the evolution of the time spent commuting over several years. But it'll take the 12.18 minutes for now. 
+I hoped for a bit cleaner data and the possibility to easyly compare the evolution of the time spent commuting over several years. But I'll take the 12.18 minutes for now. 
 
 Finally I wanted to share the "patés" with you. Not often enough part of the team takes a break and walks around the office block, and those we call doing a "paté" (= block). They say walking meetings are in these days.
 
-I was looking to see how many of them we are doing, but as you will see below the datapoints are mostly centered on the building itself.
+I was looking to see how many of them we are doing, but as you will see below the datapoints are mostly centered on our office building itself. And I cannot see how I can construct a pattern around it representing the "patés". 
 
 ```{r}
 zoom <- get_map(location = c(lon = 4.306, lat = 50.8545), zoom = 19, maptype = "satellite")
@@ -424,3 +411,5 @@ ggmap(zoom) +
 ```
 
 It seems to me all the data is a bit off. 2014 to 2016 a bit or a lot shifted to the left, and 2018 just a tad too much to the left. 
+
+But still. Welcome to the panopticon. 
