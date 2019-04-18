@@ -116,7 +116,7 @@ So indeed 29 representatives. But some left to work in the government and then c
 
 But it does make the identification of a tweet as a tweet being sent by a member of parlaiment a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hardcoding also.
 
-Let's have some fun first. Looking at the page of the current members of parlaiment, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website.
+Let's have some fun first. Looking at the page of the current members of parlaiment, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the xpath is known its is relatively easy to extract the indivdual member's webpage url. 
 
 ```{r}
 url <- "http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm"
@@ -124,7 +124,6 @@ url <- "http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm
 page <- url %>% 
   read_html() %>% 
   html_nodes(xpath=  '//*[@id="story"]/table') 
-page
 
 # loop to get urls
 urls <- tibble()
@@ -132,15 +131,33 @@ urls <- tibble()
 for(i in 1:nrow(table_54)){
   url <- xml_attrs(xml_child(xml_child(xml_child(page[[1]], i), 1), 1))
   url <- unname(url)
-  name <- table_54$name[i]
+  name <- table_54$ln_fn[i]
   url <- cbind(name, url)
   urls <- rbind(urls, url)
 }
 
-urls <- urls %>% 
-  mutate(url = paste0("http://www.dekamer.be/kvvcr/", url))
+table_ids <- urls %>%
+   mutate(url = paste0("http://www.dekamer.be/kvvcr/", url)) %>%   # constructing the url
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url)) %>%           # extract their id from the url
+  mutate(id = gsub('O','0',id))                                    # some of them have O instead of 0
+
+head(table_ids)
+
 ```
 
-So now we have in 'urls' the links to the personal webpage of the representatives on the chamber's website. Let's get their mugshots. 
+So now we have in 'urls' the name and links to the personal webpage of the representatives on the chamber's website. Notice their id at the end of the url after 'cfm?key='. 
+
+Let's get their mugshots. 
+
+url <- urls$url[1]
+url 
+page <- url %>% 
+  read_html() %>% 
+  html_node("img")
+
+page <- url %>% 
+  read_html() %>% 
+  html_node("td img")
+
 
 
