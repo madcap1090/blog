@@ -23,6 +23,7 @@ library("tidyverse")
 library("rvest")
 library("XML")
 library("glue")
+library("magick")
 ```
 
 ```{r}
@@ -259,22 +260,22 @@ map2(.x = table_ids$name, .y = table_ids$id, .f = download_gifs)
 So sometimes the 0 is used and sometimes it is just the value withhout leading 0. One possible solution is to enhance the 'download_gifs' function.
 
 ```{r}
-
-download_gifs <- function (name, id){
-  url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
-  download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
-}
+# 
+# download_gifs <- function (name, id){
+#   url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
+#   download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
+# }
 
 download_gifs_with_0 <- function (name, id){
   url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
-  download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
+  download.file(url_pic, destfile = glue("./data/190417/down_1/{name}.gif"), mode = "wb")
 }
 
 
 download_gifs_no_0 <- function (name, id){
   id <- as.numeric(id)
   url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
-  download.file(url_pic, destfile = glue("./data/190417/temp/{name}.gif"), mode = "wb")
+  download.file(url_pic, destfile = glue("./data/190417/down_2/{name}.gif"), mode = "wb")
 }
 
 
@@ -289,6 +290,7 @@ Trying to simplify the use of the purrr function safely, by Lionel Henry who I t
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+dir.create("./data/190417/down_1")
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_with_0, otherwise = NULL))
 ```
 
@@ -296,20 +298,19 @@ So using 'safely' the error are being skipped and we managed to download how man
 
 ```{r}
 
-length(list.files("./data/190417"))-1
+length(list.files("./data/190417/down_1"))
 
 ```
 
 Only few missing. Let's use the other function.
 
 ```{r include=FALSE}
+dir.create("./data/190417/down_2")
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_no_0, otherwise = NULL))
 ```
 
 ```{r}
-
-length(list.files("./data/190417/temp"))
-
+length(list.files("./data/190417/down_2"))
 ```
 
 Hmm so now we have too many pictures (and the ones with na leading 0 seem older). And it seems some are still missing :unamused:.
@@ -322,21 +323,25 @@ Hmm so now we have too many pictures (and the ones with na leading 0 seem older)
 Which new pics were obtained?
 
 ```{r}
-new <- list.files("./data/190417")
-old <- list.files("./data/190417/temp")
+new <- list.files("./data/190417/down_1")
+old <- list.files("./data/190417/down_2")
 new_pics <- setdiff(old, new)
 new_pics
 
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-# file.copy(from= new_pics, to="./content/post/data/190417", 
-#           overwrite = recursive, recursive = FALSE, 
-#           copy.mode = TRUE)
+# copy the old and new to 'permanent' folder
 
-lapply(new_pics, function(x) file.copy(paste ("./data/190417/temp", x , sep = "/"),  
+lapply(new, function(x) file.copy(paste ("./data/190417/down_1", x , sep = "/"),  
                                         paste ("./data/190417",x, sep = "/"), recursive = FALSE,  copy.mode = TRUE))
 
+
+lapply(new_pics, function(x) file.copy(paste ("./data/190417/down_2", x , sep = "/"),  
+                                        paste ("./data/190417",x, sep = "/"), recursive = FALSE,  copy.mode = TRUE))
+
+unlink("./data/190417/down_1", recursive = TRUE) # don't need those anymore
+unlink("./data/190417/down_2", recursive = TRUE) # don't need those anymore
 ```
 
 So are we missing some?
@@ -358,9 +363,76 @@ setdiff(names_list, names$ln_fn)
 
 :cool:
 
-```{r}
-unlink("./data/190417/temp", recursive = TRUE) # don't need those anymore
 
+```{r include=FALSE}
+# code for a patch work
+# https://masalmon.eu/2017/03/19/facesofr/
+
+dir.create("./data/190417/patch")
+
+lapply(fileslist, function(x) file.copy(paste ("./data/190417", x , sep = "/"),
+                                        paste("./data/190417/patch",x, sep = "/"), 
+                                        recursive = FALSE,  copy.mode = TRUE))
+```
+
+
+```{r include=FALSE}
+getwd()
+setwd("./data/190417/patch")
+length(list.files())
+file.rename(list.files(), 
+            paste0("g_", 1:179,".gif"))
+```
+
+
+
+```{r}
+dir.create("./data/190417/cols")
+
+getwd()
+files <- dir("data/190417/patch", full.names = TRUE)
+set.seed(1)
+files <- sample(files, length(files))
+gmp::factorize(length(files))
+
+no_rows <- 11
+no_cols <- 16
+
+make_column <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("cols/", i, ".jpg"))
+}
+
+
+fun <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("./data/190417/cols/", i, ".jpg"))
+}
+
+# could not really make wal function ;-(
+
+for(i in (0:(no_cols-1))) {
+fun(i, files, no_rows)
+}
 
 ```
 
+So we have the columns. Still need to bind them together.
+
+```{r}
+getwd()
+
+x <- image_read(dir(".data/190417/cols/", full.names = TRUE))
+
+
+
+img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
+image_append(stack = FALSE) 
+
+setwd("./files/20190417")
+getwd()
+image_write(img,"2019-04-17-faces_of_54.jpg")
+
+```
