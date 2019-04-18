@@ -7,7 +7,8 @@ categories: []
 tags:
   - Scraping
   - Belgian Politics
-  - Twitter
+  - magick
+  - purrr
 ---
 
 For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments? 
@@ -260,17 +261,10 @@ map2(.x = table_ids$name, .y = table_ids$id, .f = download_gifs)
 So sometimes the 0 is used and sometimes it is just the value withhout leading 0. One possible solution is to enhance the 'download_gifs' function.
 
 ```{r}
-# 
-# download_gifs <- function (name, id){
-#   url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
-#   download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
-# }
-
 download_gifs_with_0 <- function (name, id){
   url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
   download.file(url_pic, destfile = glue("./data/190417/down_1/{name}.gif"), mode = "wb")
 }
-
 
 download_gifs_no_0 <- function (name, id){
   id <- as.numeric(id)
@@ -278,16 +272,9 @@ download_gifs_no_0 <- function (name, id){
   download.file(url_pic, destfile = glue("./data/190417/down_2/{name}.gif"), mode = "wb")
 }
 
-
 ```
 
 Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work & presentation at the RUser2018 conference in Budapest.
-
-```{r}
-
-# safely(map2(.x = table_ids$name, .y = table_ids$id, .f = download_gifs_with_0), otherwise = NULL)
-
-```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 dir.create("./data/190417/down_1")
@@ -297,9 +284,7 @@ map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_with_0, otherwis
 So using 'safely' the error are being skipped and we managed to download how many files?
 
 ```{r}
-
 length(list.files("./data/190417/down_1"))
-
 ```
 
 Only few missing. Let's use the other function.
@@ -330,18 +315,20 @@ new_pics
 
 ```
 
+Nice guy, Georges. 
+
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # copy the old and new to 'permanent' folder
 
 lapply(new, function(x) file.copy(paste ("./data/190417/down_1", x , sep = "/"),  
                                         paste ("./data/190417",x, sep = "/"), recursive = FALSE,  copy.mode = TRUE))
 
-
 lapply(new_pics, function(x) file.copy(paste ("./data/190417/down_2", x , sep = "/"),  
                                         paste ("./data/190417",x, sep = "/"), recursive = FALSE,  copy.mode = TRUE))
 
 unlink("./data/190417/down_1", recursive = TRUE) # don't need those anymore
 unlink("./data/190417/down_2", recursive = TRUE) # don't need those anymore
+
 ```
 
 So are we missing some?
@@ -426,8 +413,6 @@ getwd()
 
 x <- image_read(dir(".data/190417/cols/", full.names = TRUE))
 
-
-
 img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
 image_append(stack = FALSE) 
 
@@ -436,3 +421,23 @@ getwd()
 image_write(img,"2019-04-17-faces_of_54.jpg")
 
 ```
+```{r}
+unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
+```
+
+So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But that is indeed a very small sample of Belgians. 
+
+What I can says is that given my age, gender and skin color, I would fit right in. 
+
+Wondering what the 55 legislature will look like. Will keep you posted.
+
+```{r}
+
+for(i in (1:10000)){
+print(i)
+url_pic <- glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
+safely(download.file(url_pic, destfile = glue("./content/post/data/190417/{i}.jpeg", mode = "wb")),otherwise = NULL)
+}
+
+```
+
