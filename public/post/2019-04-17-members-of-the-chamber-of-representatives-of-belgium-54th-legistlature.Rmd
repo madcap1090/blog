@@ -1,0 +1,168 @@
+---
+title: members of the chamber of representatives of Belgium, 54th legistlature
+author: William Bourgeois
+date: '2019-04-17'
+slug: members-of-the-chamber-of-representatives-of-belgium-54th-legistlature
+categories: []
+tags:
+  - Scraping
+  - Belgian Politics
+  - Twitter
+---
+
+For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments? 
+
+We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? We elected them to represent us all at the national level after all.
+
+https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature follwing the 2014 elections. 
+
+Let's scrape them.
+
+```{r message=FALSE}
+library("tidyverse")
+library("rvest")
+library("XML")
+
+```
+
+```{r}
+url <- "http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm"
+
+table <- url %>% 
+  read_html() %>% 
+  html_nodes("#story > table") %>% 
+  html_table()
+
+table <- table[[1]] # extracting the dataframe
+
+names(table) <- c("ln_fn", "party", "d1", "d2")
+table <- table %>% 
+  select(ln_fn, party) %>% 
+  arrange(ln_fn)
+
+head(table)
+
+```
+
+Funny that all the white spaces between "Beke" and "Wouter" cannot be seen. But they need to be cleaned.
+
+```{r}
+
+table <- table %>%
+  mutate(ln_fn = (str_replace_all(ln_fn,"  +"," ")),
+         ln_fn = trimws(table$ln_fn, which = "both"))
+
+table$ln_fn <- str_replace_all(table$ln_fn,"  +"," ")
+table$ln_fn <- trimws(table$ln_fn, which = "both") # for good measure
+nrow(table)
+```
+
+150 members today with their current polical party. I'm goin to save that data, because after the elections of next month it will not be available for a long time.
+
+```{r}
+saveRDS(table, "~/R/blog/content/post/data/190417/reps_54_190417.rds")
+```
+
+And the parties are:
+
+```{r}
+table %>% 
+  group_by(party) %>% 
+  summarise(members=n()) %>% 
+  arrange(desc(members))
+
+```
+
+We can also scrape the complete list of members of the 54th legistlature. 
+
+```{r}
+url <- "https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=cvlist54.cfm?legis=54&today=n"
+
+table_54 <- url %>% 
+  read_html() %>% 
+  html_nodes("#story > table") %>% 
+  html_table()
+
+table_54 <- table_54[[1]] # extracting the dataframe
+
+names(table_54) <- c("ln_fn", "d1", "d2", "d3")  
+table_54 <- table_54 %>% 
+  select(ln_fn) %>% 
+  arrange(ln_fn)
+
+table_54 <- table_54 %>%
+  mutate(ln_fn = (str_replace_all(ln_fn,"  +"," ")),
+         ln_fn = trimws(ln_fn, which = "both"))
+
+table$ln_fn <- str_replace_all(table$ln_fn,"  +"," ")
+table$ln_fn <- trimws(table$ln_fn, which = "both") # for good measure
+
+```
+
+This table does not mention the party, which is a pity because some members have changed since 2014.
+
+Who has left ?
+
+```{r message=FALSE}
+
+table_54 %>% 
+  anti_join(table) %>% 
+  unlist() %>% 
+  unname()
+
+```
+
+So indeed 29 representatives. But some left to work in the government and then came back when their party decided to leave government because of a city in northen Africa. Go figure. 
+
+But it does make the identification of a tweet as a tweet being sent by a member of parlaiment a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hardcoding also.
+
+Let's have some fun first. Looking at the page of the current members of parlaiment, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the xpath is known its is relatively easy to extract the indivdual member's webpage url. 
+
+```{r}
+url <- "http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm"
+url <- "http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=cvlist54.cfm?legis=54&today=n"
+page <- url %>% 
+  read_html() %>% 
+  html_nodes(xpath=  '//*[@id="story"]/table') 
+
+# loop to get urls
+urls <- tibble()
+
+for(i in 1:nrow(table_54)){
+  url <- xml_attrs(xml_child(xml_child(xml_child(page[[1]], i), 1), 1))
+  url <- unname(url)
+  name <- table_54$ln_fn[i]
+  url <- cbind(name, url)
+  urls <- rbind(urls, url)
+}
+
+table_ids <- urls %>%
+  mutate(url = paste0("http://www.dekamer.be/kvvcr/", url)) %>%    # constructing the url
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url)) %>%           # extract their id from the url
+  mutate(id = gsub('O','0',id))                                    # some of them have O instead of 0
+
+head(table_ids)
+
+```
+
+So now we have in 'urls' the name and links to the personal webpage of the representatives on the chamber's website. Notice their id at the end of the url after 'cfm?key=' and before '&lat'. 
+
+Let's get their mugshots. 
+
+
+![Finding the image url](/img/20190417/inspect.png)
+
+So the images are in http://www.dekamer.be/site/wwwroot/images/cv/
+
+
+
+```{r}
+
+
+
+
+```
+
+
+
+

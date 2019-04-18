@@ -1,0 +1,172 @@
+---
+title: members of the chamber of representatives of Belgium, 54th legistlature
+author: William Bourgeois
+date: '2019-04-17'
+slug: members-of-the-chamber-of-representatives-of-belgium-54th-legistlature
+categories: []
+tags:
+  - Scraping
+  - Belgian Politics
+  - Twitter
+---
+
+
+
+<p>For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments?</p>
+<p>We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? We elected them to represent us all at the national level after all.</p>
+<p><a href="https://www.dekamer.be" class="uri">https://www.dekamer.be</a> is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature follwing the 2014 elections.</p>
+<p>Let’s scrape them.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;rvest&quot;)
+library(&quot;XML&quot;)</code></pre>
+<pre class="r"><code>url &lt;- &quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm&quot;
+
+table &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(&quot;#story &gt; table&quot;) %&gt;% 
+  html_table()
+
+table &lt;- table[[1]] # extracting the dataframe
+
+names(table) &lt;- c(&quot;ln_fn&quot;, &quot;party&quot;, &quot;d1&quot;, &quot;d2&quot;)
+table &lt;- table %&gt;% 
+  select(ln_fn, party) %&gt;% 
+  arrange(ln_fn)
+
+head(table)</code></pre>
+<pre><code>##                                  ln_fn       party
+## 1                        Almaci Meyrem Ecolo-Groen
+## 2                           Becq Sonja        CD&amp;V
+## 3 Beke                          Wouter        CD&amp;V
+## 4                         Bellens Rita        N-VA
+## 5                      Ben Hamou Nawal          PS
+## 6                   Blanchart Philippe          PS</code></pre>
+<p>Funny that all the white spaces between “Beke” and “Wouter” cannot be seen. But they need to be cleaned.</p>
+<pre class="r"><code>table &lt;- table %&gt;%
+  mutate(ln_fn = (str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;)),
+         ln_fn = trimws(table$ln_fn, which = &quot;both&quot;))
+
+table$ln_fn &lt;- str_replace_all(table$ln_fn,&quot;  +&quot;,&quot; &quot;)
+table$ln_fn &lt;- trimws(table$ln_fn, which = &quot;both&quot;) # for good measure
+nrow(table)</code></pre>
+<pre><code>## [1] 150</code></pre>
+<p>150 members today with their current polical party. I’m goin to save that data, because after the elections of next month it will not be available for a long time.</p>
+<pre class="r"><code>saveRDS(table, &quot;~/R/blog/content/post/data/190417/reps_54_190417.rds&quot;)</code></pre>
+<p>And the parties are:</p>
+<pre class="r"><code>table %&gt;% 
+  group_by(party) %&gt;% 
+  summarise(members=n()) %&gt;% 
+  arrange(desc(members))</code></pre>
+<pre><code>## # A tibble: 14 x 2
+##    party        members
+##    &lt;chr&gt;          &lt;int&gt;
+##  1 N-VA              31
+##  2 PS                23
+##  3 MR                20
+##  4 CD&amp;V              17
+##  5 Open Vld          14
+##  6 sp.a              13
+##  7 Ecolo-Groen       12
+##  8 cdH                9
+##  9 VB                 3
+## 10 DéFI               2
+## 11 PTB-GO!            2
+## 12 Vuye&amp;Wouters       2
+## 13 ONAFH              1
+## 14 PP                 1</code></pre>
+<p>We can also scrape the complete list of members of the 54th legistlature.</p>
+<pre class="r"><code>url &lt;- &quot;https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvlist54.cfm?legis=54&amp;today=n&quot;
+
+table_54 &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(&quot;#story &gt; table&quot;) %&gt;% 
+  html_table()
+
+table_54 &lt;- table_54[[1]] # extracting the dataframe
+
+names(table_54) &lt;- c(&quot;ln_fn&quot;, &quot;d1&quot;, &quot;d2&quot;, &quot;d3&quot;)  
+table_54 &lt;- table_54 %&gt;% 
+  select(ln_fn) %&gt;% 
+  arrange(ln_fn)
+
+table_54 &lt;- table_54 %&gt;%
+  mutate(ln_fn = (str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;)),
+         ln_fn = trimws(ln_fn, which = &quot;both&quot;))
+
+table$ln_fn &lt;- str_replace_all(table$ln_fn,&quot;  +&quot;,&quot; &quot;)
+table$ln_fn &lt;- trimws(table$ln_fn, which = &quot;both&quot;) # for good measure</code></pre>
+<p>This table does not mention the party, which is a pity because some members have changed since 2014.</p>
+<p>Who has left ?</p>
+<pre class="r"><code>table_54 %&gt;% 
+  anti_join(table) %&gt;% 
+  unlist() %&gt;% 
+  unname()</code></pre>
+<pre><code>##  [1] &quot;Bacquelaine Daniel&quot;      &quot;Claerhout Sarah&quot;        
+##  [3] &quot;Crusnière Stéphane&quot;      &quot;De Block Maggie&quot;        
+##  [5] &quot;De Crem Pieter&quot;          &quot;De Croo Alexander&quot;      
+##  [7] &quot;Demeyer Willy&quot;           &quot;Ducarme Denis&quot;          
+##  [9] &quot;Flahaut André&quot;           &quot;Fremault Céline&quot;        
+## [11] &quot;Geens Koen&quot;              &quot;Gerkens Muriel&quot;         
+## [13] &quot;Hellings Benoit&quot;         &quot;Hufkens Renate&quot;         
+## [15] &quot;Khattabi Zakia&quot;          &quot;Klaps Johan&quot;            
+## [17] &quot;Lahaye-Battheu Sabien&quot;   &quot;Marghem Marie-Christine&quot;
+## [19] &quot;Massin Eric&quot;             &quot;Michel Charles&quot;         
+## [21] &quot;Poncelet Isabelle&quot;       &quot;Raskin Wouter&quot;          
+## [23] &quot;Reynders Didier&quot;         &quot;Turtelboom Annemie&quot;     
+## [25] &quot;Van der Donckt Wim&quot;      &quot;Vande Lanotte Johan&quot;    
+## [27] &quot;Vanheste Ann&quot;            &quot;Wathelet Melchior&quot;      
+## [29] &quot;Wilmès Sophie&quot;</code></pre>
+<p>So indeed 29 representatives. But some left to work in the government and then came back when their party decided to leave government because of a city in northen Africa. Go figure.</p>
+<p>But it does make the identification of a tweet as a tweet being sent by a member of parlaiment a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hardcoding also.</p>
+<p>Let’s have some fun first. Looking at the page of the current members of parlaiment, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the xpath is known its is relatively easy to extract the indivdual member’s webpage url.</p>
+<pre class="r"><code>url &lt;- &quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm&quot;
+url &lt;- &quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvlist54.cfm?legis=54&amp;today=n&quot;
+page &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(xpath=  &#39;//*[@id=&quot;story&quot;]/table&#39;) 
+
+# loop to get urls
+urls &lt;- tibble()
+
+for(i in 1:nrow(table_54)){
+  url &lt;- xml_attrs(xml_child(xml_child(xml_child(page[[1]], i), 1), 1))
+  url &lt;- unname(url)
+  name &lt;- table_54$ln_fn[i]
+  url &lt;- cbind(name, url)
+  urls &lt;- rbind(urls, url)
+}
+
+table_ids &lt;- urls %&gt;%
+  mutate(url = paste0(&quot;http://www.dekamer.be/kvvcr/&quot;, url)) %&gt;%    # constructing the url
+  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url)) %&gt;%           # extract their id from the url
+  mutate(id = gsub(&#39;O&#39;,&#39;0&#39;,id))                                    # some of them have O instead of 0
+
+head(table_ids)</code></pre>
+<pre><code>##                 name
+## 1      Almaci Meyrem
+## 2 Bacquelaine Daniel
+## 3         Becq Sonja
+## 4        Beke Wouter
+## 5       Bellens Rita
+## 6    Ben Hamou Nawal
+##                                                                                                            url
+## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01189&amp;lactivity=54
+## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=00757&amp;lactivity=54
+## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01190&amp;lactivity=54
+## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01149&amp;lactivity=54
+## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06592&amp;lactivity=54
+## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06647&amp;lactivity=54
+##      id
+## 1 01189
+## 2 00757
+## 3 01190
+## 4 01149
+## 5 06592
+## 6 06647</code></pre>
+<p>So now we have in ‘urls’ the name and links to the personal webpage of the representatives on the chamber’s website. Notice their id at the end of the url after ‘cfm?key=’ and before ‘&amp;lat’.</p>
+<p>Let’s get their mugshots.</p>
+<div class="figure">
+<img src="/img/20190417/inspect.png" alt="Finding the image url" />
+<p class="caption">Finding the image url</p>
+</div>
+<p>So the images are in <a href="http://www.dekamer.be/site/wwwroot/images/cv/" class="uri">http://www.dekamer.be/site/wwwroot/images/cv/</a></p>

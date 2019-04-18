@@ -14,7 +14,7 @@ For a country as small as Belgium 6 governments is a lot. Its maybe because we B
 
 We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? We elected them to represent us all at the national level after all.
 
-https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature follwing the 2014 elections. 
+https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature following the 2014 elections. 
 
 Let's scrape them.
 
@@ -22,7 +22,7 @@ Let's scrape them.
 library("tidyverse")
 library("rvest")
 library("XML")
-
+library("glue")
 ```
 
 ```{r}
@@ -137,27 +137,230 @@ for(i in 1:nrow(table_54)){
 }
 
 table_ids <- urls %>%
-   mutate(url = paste0("http://www.dekamer.be/kvvcr/", url)) %>%   # constructing the url
-  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url)) %>%           # extract their id from the url
-  mutate(id = gsub('O','0',id))                                    # some of them have O instead of 0
-
+  mutate(url = paste0("http://www.dekamer.be/kvvcr/", url))   # constructing the url
+  
 head(table_ids)
 
 ```
 
-So now we have in 'urls' the name and links to the personal webpage of the representatives on the chamber's website. Notice their id at the end of the url after 'cfm?key='. 
+But there is a problem with matching the names and the ids.
+
+```{r}
+
+x <- table_ids
+
+names <- tibble()
+
+for (i in (1:nrow(x))){
+  url <- x$url[i]
+  fn_ln <- url %>%
+    read_html() %>%
+    html_nodes(xpath=  '//*[@id="myform"]/center/h2') %>% 
+    html_text() %>% 
+    as.data.frame()
+  info <- cbind(fn_ln, url)
+  names <- rbind(names, info)
+}
+
+names(names) <- c("fn_ln","url")
+
+names <- names %>% 
+  mutate(fn_ln =(str_replace_all(fn_ln,"  +"," ")))
+
+head(names)
+
+```
+
+
+So we need to correct that the ids and fn_ln are correct so? so build a key based on the letters in the name of the person
+
+```{r message=FALSE}
+
+str_sort <- function(x)
+  sapply(lapply(strsplit(x, NULL), sort), paste, collapse="")
+
+w_key <- table_ids %>% 
+  mutate(key = tolower(str_replace_all(name," ",""))) %>% 
+  mutate(key = str_sort(key)) %>% 
+  select(-url)
+
+names_w_key <- names %>% 
+  mutate(key = tolower(str_replace_all(fn_ln," ",""))) %>% 
+  mutate(key = str_sort(key))
+
+names <- names_w_key %>% 
+  left_join(w_key) %>% 
+  rename("ln_fn" = "name")
+
+names %>% 
+  select(-url) %>% 
+  head()
+
+```
+
+Seems to work. Names are clean. Now the id code is needed. 
+
+```{r}
+# correct id
+
+names <- names %>%
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url))               # extract their id from the url
+  #mutate(id = gsub('O','0',id))      # some of them have O instead of 0 but we need to keep them
+
+```
+
+
+So now we have in 'urls' the name and links to the personal webpage of the representatives on the chamber's website. Notice their id at the end of the url after 'cfm?key=' and before '&lat'. 
 
 Let's get their mugshots. 
 
-url <- urls$url[1]
-url 
-page <- url %>% 
-  read_html() %>% 
-  html_node("img")
 
-page <- url %>% 
-  read_html() %>% 
-  html_node("td img")
+![Inspecting the code of the webpage](/img/20190417/inspect.png)
 
 
+So the images are in http://www.dekamer.be/site/wwwroot/images/cv/
+
+
+```{r}
+# let's try purrr again
+
+download_gifs <- function (name, id){
+  url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
+  download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
+}
+
+download_gifs("test","01203")
+```
+
+So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :alarm:, shame on you webmaster :wink:. 
+
+
+```{r}
+#table_ids %>% 
+#  map2(.x = name, .y = id, .f = download_gifs)
+
+# 
+# table_ids$id[table_ids$id == "00902"] <- 902
+# table_ids$id[table_ids$id == "06918"] <- 6918
+# table_ids$id[table_ids$id == "06536"] <- 6536
+# table_ids$id[table_ids$id == "00951"] <- 951
+# table_ids$id[table_ids$id == "06325"] <- 6325
+# table_ids$id[table_ids$id == "06885"] <- 6885
+# table_ids$id[table_ids$id == "06665"] <- 6665
+# table_ids$id[table_ids$id == "01123"] <- 1123
+# table_ids$id[table_ids$id == "06843"] <- 6843
+
+map2(.x = table_ids$name, .y = table_ids$id, .f = download_gifs)
+
+
+
+```
+
+So sometimes the 0 is used and sometimes it is just the value withhout leading 0. One possible solution is to enhance the 'download_gifs' function.
+
+```{r}
+
+download_gifs <- function (name, id){
+  url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
+  download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
+}
+
+download_gifs_with_0 <- function (name, id){
+  url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
+  download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
+}
+
+
+download_gifs_no_0 <- function (name, id){
+  id <- as.numeric(id)
+  url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
+  download.file(url_pic, destfile = glue("./data/190417/temp/{name}.gif"), mode = "wb")
+}
+
+
+```
+
+Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work & presentation at the RUser2018 conference in Budapest.
+
+```{r}
+
+# safely(map2(.x = table_ids$name, .y = table_ids$id, .f = download_gifs_with_0), otherwise = NULL)
+
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_with_0, otherwise = NULL))
+```
+
+So using 'safely' the error are being skipped and we managed to download how many files?
+
+```{r}
+
+length(list.files("./data/190417"))-1
+
+```
+
+Only few missing. Let's use the other function.
+
+```{r include=FALSE}
+map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_no_0, otherwise = NULL))
+```
+
+```{r}
+
+length(list.files("./data/190417/temp"))
+
+```
+
+Hmm so now we have too many pictures (and the ones with na leading 0 seem older). And it seems some are still missing :unamused:.
+
+
+![Old Mr Calvo](/img/20190417/Calvo Kristof_06128_old.gif)
+
+![Young Mr Calvo](/img/20190417/Calvo Kristof_young.gif)
+
+Which new pics were obtained?
+
+```{r}
+new <- list.files("./data/190417")
+old <- list.files("./data/190417/temp")
+new_pics <- setdiff(old, new)
+new_pics
+
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# file.copy(from= new_pics, to="./content/post/data/190417", 
+#           overwrite = recursive, recursive = FALSE, 
+#           copy.mode = TRUE)
+
+lapply(new_pics, function(x) file.copy(paste ("./data/190417/temp", x , sep = "/"),  
+                                        paste ("./data/190417",x, sep = "/"), recursive = FALSE,  copy.mode = TRUE))
+
+```
+
+So are we missing some?
+
+```{r}
+
+fileslist <- list.files("./data/190417")
+fileslist <-grep(".gif",fileslist,value=TRUE)
+length(fileslist)
+
+```
+
+Looks promising. But double checking can not harm.
+
+```{r}
+names_list <- gsub(".gif","",fileslist)
+setdiff(names_list, names$ln_fn)
+```
+
+:cool:
+
+```{r}
+unlink("./data/190417/temp", recursive = TRUE) # don't need those anymore
+
+
+```
 
