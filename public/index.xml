@@ -251,7 +251,7 @@ download_gifs &amp;lt;- function (name, id){
 }
 
 #download_gifs(&amp;quot;test&amp;quot;,&amp;quot;01203&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data :rotating light:, shame on you webmaster 😉.&lt;/p&gt;
+&lt;p&gt;So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data :rotating lights:, shame on you webmaster 😉.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#table_ids %&amp;gt;% 
 #  map2(.x = name, .y = id, .f = download_gifs)
 
@@ -364,7 +364,7 @@ getwd()&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unlink(&amp;quot;./data/190417/patch&amp;quot;, recursive = TRUE) # don&amp;#39;t need those anymore&lt;/code&gt;&lt;/pre&gt;
 &lt;center&gt;
 &lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;/img/20190417/2019-04-17-faces_of_54.jpg&#34; alt=&#34;Old Mr Calvo&#34; width=&#34;300&#34; height=&#34;900&#34; /&gt;
+&lt;img src=&#34;/img/20190417/2019-04-17-faces_of_54.jpg&#34; alt=&#34;Old Mr Calvo&#34; width=&#34;500&#34; height=&#34;900&#34; /&gt;
 &lt;p class=&#34;caption&#34;&gt;Old Mr Calvo&lt;/p&gt;
 &lt;/div&gt;
 &lt;/center&gt;

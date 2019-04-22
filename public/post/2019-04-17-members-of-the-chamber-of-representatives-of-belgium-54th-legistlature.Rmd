@@ -234,7 +234,7 @@ download_gifs <- function (name, id){
 #download_gifs("test","01203")
 ```
 
-So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :rotating light:, shame on you webmaster :wink:. 
+So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :rotating lights:, shame on you webmaster :wink:. 
 
 
 ```{r}
@@ -300,7 +300,6 @@ length(list.files("./data/190417/down_2"))
 
 Hmm so now we have too many pictures (and the ones with no leading 0 seem older). See the aging of Mr Calvo: 
 <center>
-
 ![Young Mr Calvo](/img/20190417/Calvo Kristof_young.gif) ![Old Mr Calvo](/img/20190417/Calvo Kristof_06128_old.gif)
 
 </center>
@@ -429,7 +428,7 @@ unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
 ```
 
 <center>
-![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=300px height=900px} 
+![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=500px height=900px} 
 
 </center>
 
@@ -456,5 +455,4 @@ Wait a minute. Did I say belgian national soccer teams? Hold my beer.
 # }
 
 ```
-
 
