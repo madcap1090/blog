@@ -428,7 +428,7 @@ unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
 ```
 
 <center>
-![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=750px height=900px} 
+![reps 54](/img/20190417/2019-04-17-faces_of_54.jpg){width=800px height=850px} 
 
 </center>
 
