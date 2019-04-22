@@ -28,7 +28,7 @@ library("glue")
 library("magick")
 ```
 
-```{r}
+```{r echo=TRUE}
 url <- "http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm"
 
 table <- url %>% 
@@ -224,7 +224,7 @@ Let's get their mugshots.
 So the images are in http://www.dekamer.be/site/wwwroot/images/cv/
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # let's try purrr again
 
 download_gifs <- function (name, id){
@@ -238,7 +238,7 @@ download_gifs <- function (name, id){
 So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :rotating_light:, shame on you webmaster :wink:. 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #table_ids %>% 
 #  map2(.x = name, .y = id, .f = download_gifs)
 
@@ -277,20 +277,20 @@ download_gifs_no_0 <- function (name, id){
 
 Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work & presentation at the RUser2018 conference in Budapest.
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 dir.create("./data/190417/down_1")
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_with_0, otherwise = NULL))
 ```
 
 So using 'safely' the error are being skipped and we managed to download how many files?
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 length(list.files("./data/190417/down_1"))
 ```
 
 Only few missing. Let's use the other function.
 
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 dir.create("./data/190417/down_2")
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_no_0, otherwise = NULL))
 ```
@@ -354,7 +354,7 @@ setdiff(names_list, names$ln_fn)
 :cool: we have a picture of all of them.
 
 
-```{r include=FALSE}
+```{r message=FALSE, include=FALSE}
 # code for a patch work
 # https://masalmon.eu/2017/03/19/facesofr/
 
@@ -366,12 +366,12 @@ lapply(fileslist, function(x) file.copy(paste ("./data/190417", x , sep = "/"),
 ```
 
 
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 getwd()
 setwd("./data/190417/patch")
 length(list.files())
 file.rename(list.files(), 
-            paste0("g_", 1:179,".gif"))
+            paste0("g_", 1:112,".gif"))
 ```
 
 
@@ -403,15 +403,15 @@ fun <- function(i, files, no_rows){
 
 # could not really make wal function ;-(
 
-for(i in (0:(no_cols-1))) {
-fun(i, files, no_rows)
-}
+# for(i in (0:(no_cols-1))) {
+# fun(i, files, no_rows)
+# }
 
 ```
 
 So we have the columns. Still need to bind them together.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 getwd()
 
 x <- image_read(dir(".data/190417/cols/", full.names = TRUE))
@@ -477,7 +477,7 @@ unlink(erase, recursive=TRUE, force=FALSE)
 
 Next is downloadng the pictures of the women:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 for(i in (1:7000)){
   
@@ -506,7 +506,7 @@ There are 978 pictures of national soccer players; 709 men and 269 women. Most o
 
 Sampeling 176 of them:
 
-```{r message=FALSE}
+```{r message=FALSE, include=FALSE}
 # renaming files, so we do not have the same file names between men and women
 
 setwd("./data/190417down_1/")
@@ -514,7 +514,7 @@ length(list.files())
 file.rename(list.files(), 
             paste0("m_", 1:709,".jpg"))
 ```
-```{r}
+```{r include=FALSE}
 
 setwd("./data/190417down_2/")
 length(list.files())
@@ -536,7 +536,7 @@ sampled_files <- sample(player_files, 176)
 
 Making the same patchwork
 
-```{r}
+```{r message=FALSE, include=FALSE}
 
 dir.create("./data/190417/patch")
 
@@ -567,8 +567,20 @@ make_column <- function(i, files, no_rows){
   image_append(stack = TRUE) %>%
     image_write(paste0("cols/", i, ".jpg"))
 }
+```
+
+ok so it is a bit messy above, but below the thing we have to do is image scale
 
 
+```{r}
+
+
+  image_scale(170*250) %>% 
+```
+
+
+
+```{r}
 fun <- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
   image_append(stack = TRUE) %>%
@@ -583,10 +595,12 @@ fun(i, files, no_rows)
 
 ```
 
+
 ```{r}
 getwd()
 
-x <- image_read(dir(".data/190417/cols/", full.names = TRUE))
+x <- image_read(dir(".data/190417/cols/", full.names = TRUE))  
+
 
 img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
 image_append(stack = FALSE) 
@@ -594,4 +608,4 @@ image_append(stack = FALSE)
 setwd("./files/20190417")
 getwd()
 image_write(img,"2019-04-17-faces_of_devils.jpg")
-
+```
