@@ -8,7 +8,7 @@
 
 <meta property='og:title' content='members of the chamber of representatives of Belgium, 54th legistlature - bad to the code'>
 <meta property='og:description' content='For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments?
-We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them.'>
+We also love politicians, so we want to have a lot of them. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of them I searched for an objective criteria to subset them.'>
 <meta property='og:url' content='/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/'>
 <meta property='og:site_name' content='bad to the code'>
 <meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='scraping'><meta property='article:tag' content='Belgian politics'><meta property='article:tag' content='magick'><meta property='article:tag' content='purrr'><meta property='article:published_time' content='2019-04-17T00:00:00Z'/><meta property='article:modified_time' content='2019-04-17T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
@@ -119,7 +119,7 @@ We also love our politicians, so we want to have lots of them. I also like them 
 
 
 <p>For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments?</p>
-<p>We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? We elected them to represent us all at the national level after all.</p>
+<p>We also love politicians, so we want to have a lot of them. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of them I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.</p>
 <p><a href="https://www.dekamer.be" class="uri">https://www.dekamer.be</a> is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature following the 2014 elections.</p>
 <p>Let’s scrape them.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
@@ -386,7 +386,7 @@ Hmm so now we have too many pictures (and the ones with no leading 0 seem older)
 <p><img src="/img/20190417/Calvo%20Kristof_young.gif" alt="Young Mr Calvo" /> <img src="/img/20190417/Calvo%20Kristof_06128_old.gif" alt="Old Mr Calvo" /></p>
 </center>
 <p>And it seems some are still missing 😒.</p>
-<p>Whose pics did were additionally obtained?</p>
+<p>Whose pics were additionally obtained?</p>
 <pre class="r"><code>new &lt;- list.files(&quot;./data/190417/down_1&quot;)
 old &lt;- list.files(&quot;./data/190417/down_2&quot;)
 new_pics &lt;- setdiff(old, new)
@@ -401,7 +401,7 @@ new_pics</code></pre>
 ## [15] &quot;Van Hoof Els.gif&quot;         &quot;Van Peteghem Vincent.gif&quot;
 ## [17] &quot;Vanden Burre Gilles.gif&quot;  &quot;Vuye Hendrik.gif&quot;        
 ## [19] &quot;Wilmès Sophie.gif&quot;</code></pre>
-<p>Nice guy, Georges.</p>
+<p>Nice guy, Georges. Recently became grandfather again.</p>
 <p>So are we missing some?</p>
 <pre class="r"><code>fileslist &lt;- list.files(&quot;./data/190417&quot;)
 fileslist &lt;-grep(&quot;.gif&quot;,fileslist,value=TRUE)
@@ -411,7 +411,7 @@ length(fileslist)</code></pre>
 <pre class="r"><code>names_list &lt;- gsub(&quot;.gif&quot;,&quot;&quot;,fileslist)
 setdiff(names_list, names$ln_fn)</code></pre>
 <pre><code>## character(0)</code></pre>
-<p>🆒</p>
+<p>🆒 we have a picture of all of them.</p>
 <pre class="r"><code>dir.create(&quot;./data/190417/cols&quot;)</code></pre>
 <pre><code>## Warning in dir.create(&quot;./data/190417/cols&quot;): &#39;.\data\190417\cols&#39; already
 ## exists</code></pre>
@@ -459,7 +459,7 @@ getwd()</code></pre>
 <pre class="r"><code>unlink(&quot;./data/190417/patch&quot;, recursive = TRUE) # don&#39;t need those anymore</code></pre>
 <center>
 <div class="figure">
-<img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="Old Mr Calvo" width="650" height="900" />
+<img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="Old Mr Calvo" width="750" height="900" />
 <p class="caption">Old Mr Calvo</p>
 </div>
 </center>

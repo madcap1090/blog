@@ -24,7 +24,7 @@
 
 
 &lt;p&gt;For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments?&lt;/p&gt;
-&lt;p&gt;We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? We elected them to represent us all at the national level after all.&lt;/p&gt;
+&lt;p&gt;We also love politicians, so we want to have a lot of them. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of them I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.&lt;/p&gt;
 &lt;p&gt;&lt;a href=&#34;https://www.dekamer.be&#34; class=&#34;uri&#34;&gt;https://www.dekamer.be&lt;/a&gt; is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature following the 2014 elections.&lt;/p&gt;
 &lt;p&gt;Let’s scrape them.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;tidyverse&amp;quot;)
@@ -291,7 +291,7 @@ Hmm so now we have too many pictures (and the ones with no leading 0 seem older)
 &lt;p&gt;&lt;img src=&#34;/img/20190417/Calvo%20Kristof_young.gif&#34; alt=&#34;Young Mr Calvo&#34; /&gt; &lt;img src=&#34;/img/20190417/Calvo%20Kristof_06128_old.gif&#34; alt=&#34;Old Mr Calvo&#34; /&gt;&lt;/p&gt;
 &lt;/center&gt;
 &lt;p&gt;And it seems some are still missing 😒.&lt;/p&gt;
-&lt;p&gt;Whose pics did were additionally obtained?&lt;/p&gt;
+&lt;p&gt;Whose pics were additionally obtained?&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;new &amp;lt;- list.files(&amp;quot;./data/190417/down_1&amp;quot;)
 old &amp;lt;- list.files(&amp;quot;./data/190417/down_2&amp;quot;)
 new_pics &amp;lt;- setdiff(old, new)
@@ -306,7 +306,7 @@ new_pics&lt;/code&gt;&lt;/pre&gt;
 ## [15] &amp;quot;Van Hoof Els.gif&amp;quot;         &amp;quot;Van Peteghem Vincent.gif&amp;quot;
 ## [17] &amp;quot;Vanden Burre Gilles.gif&amp;quot;  &amp;quot;Vuye Hendrik.gif&amp;quot;        
 ## [19] &amp;quot;Wilmès Sophie.gif&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Nice guy, Georges.&lt;/p&gt;
+&lt;p&gt;Nice guy, Georges. Recently became grandfather again.&lt;/p&gt;
 &lt;p&gt;So are we missing some?&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;fileslist &amp;lt;- list.files(&amp;quot;./data/190417&amp;quot;)
 fileslist &amp;lt;-grep(&amp;quot;.gif&amp;quot;,fileslist,value=TRUE)
@@ -316,7 +316,7 @@ length(fileslist)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;names_list &amp;lt;- gsub(&amp;quot;.gif&amp;quot;,&amp;quot;&amp;quot;,fileslist)
 setdiff(names_list, names$ln_fn)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## character(0)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;🆒&lt;/p&gt;
+&lt;p&gt;🆒 we have a picture of all of them.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dir.create(&amp;quot;./data/190417/cols&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Warning in dir.create(&amp;quot;./data/190417/cols&amp;quot;): &amp;#39;.\data\190417\cols&amp;#39; already
 ## exists&lt;/code&gt;&lt;/pre&gt;
@@ -364,7 +364,7 @@ getwd()&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unlink(&amp;quot;./data/190417/patch&amp;quot;, recursive = TRUE) # don&amp;#39;t need those anymore&lt;/code&gt;&lt;/pre&gt;
 &lt;center&gt;
 &lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;/img/20190417/2019-04-17-faces_of_54.jpg&#34; alt=&#34;Old Mr Calvo&#34; width=&#34;650&#34; height=&#34;900&#34; /&gt;
+&lt;img src=&#34;/img/20190417/2019-04-17-faces_of_54.jpg&#34; alt=&#34;Old Mr Calvo&#34; width=&#34;750&#34; height=&#34;900&#34; /&gt;
 &lt;p class=&#34;caption&#34;&gt;Old Mr Calvo&lt;/p&gt;
 &lt;/div&gt;
 &lt;/center&gt;
