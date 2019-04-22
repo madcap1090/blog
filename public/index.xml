@@ -251,7 +251,7 @@ download_gifs &amp;lt;- function (name, id){
 }
 
 #download_gifs(&amp;quot;test&amp;quot;,&amp;quot;01203&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data :rotating lights:, shame on you webmaster 😉.&lt;/p&gt;
+&lt;p&gt;So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data 🚨, shame on you webmaster 😉.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#table_ids %&amp;gt;% 
 #  map2(.x = name, .y = id, .f = download_gifs)
 
@@ -364,19 +364,14 @@ getwd()&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unlink(&amp;quot;./data/190417/patch&amp;quot;, recursive = TRUE) # don&amp;#39;t need those anymore&lt;/code&gt;&lt;/pre&gt;
 &lt;center&gt;
 &lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;/img/20190417/2019-04-17-faces_of_54.jpg&#34; alt=&#34;Old Mr Calvo&#34; width=&#34;500&#34; height=&#34;900&#34; /&gt;
+&lt;img src=&#34;/img/20190417/2019-04-17-faces_of_54.jpg&#34; alt=&#34;Old Mr Calvo&#34; width=&#34;650&#34; height=&#34;900&#34; /&gt;
 &lt;p class=&#34;caption&#34;&gt;Old Mr Calvo&lt;/p&gt;
 &lt;/div&gt;
 &lt;/center&gt;
-&lt;div class=&#34;figure&#34;&gt;
-&lt;img src=&#34;img/20190417/2019-04-17-faces_of_54.jpg&#34; alt=&#34;Old Mr Calvo&#34; width=&#34;300&#34; height=&#34;900&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;Old Mr Calvo&lt;/p&gt;
-&lt;/div&gt;
-&lt;p&gt;ghhh&lt;/p&gt;
-&lt;p&gt;So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But that is indeed a very small sample of Belgians.&lt;/p&gt;
+&lt;p&gt;So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those are indeed two very small samples of Belgians, and they are from different generations.&lt;/p&gt;
 &lt;p&gt;What I can says is that given my age, gender and skin color, I would fit right in.&lt;/p&gt;
 &lt;p&gt;Wondering what the 55 legislature will look like. Will keep you posted.&lt;/p&gt;
-&lt;p&gt;Wait a minute. Did I say belgian national soccer teams? Hold my beer.&lt;/p&gt;
+&lt;p&gt;But wait a minute. Did I say belgian national soccer teams? Hold my beer.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# for(i in (1:10000)){
 # print(i)
 # url_pic &amp;lt;- glue(&amp;quot;https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg&amp;quot;)

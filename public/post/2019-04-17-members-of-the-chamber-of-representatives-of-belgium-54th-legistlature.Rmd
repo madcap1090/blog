@@ -234,7 +234,7 @@ download_gifs <- function (name, id){
 #download_gifs("test","01203")
 ```
 
-So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :rotating lights:, shame on you webmaster :wink:. 
+So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :rotating_light:, shame on you webmaster :wink:. 
 
 
 ```{r}
@@ -428,23 +428,18 @@ unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
 ```
 
 <center>
-![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=500px height=900px} 
+![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=650px height=900px} 
 
 </center>
 
 
-![Old Mr Calvo](img/20190417/2019-04-17-faces_of_54.jpg){width=300px height=900px} 
-
-ghhh
-
-
-So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But that is indeed a very small sample of Belgians. 
+So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those are indeed two very small samples of Belgians, and they are from different generations. 
 
 What I can says is that given my age, gender and skin color, I would fit right in. 
 
 Wondering what the 55 legislature will look like. Will keep you posted.
 
-Wait a minute. Did I say belgian national soccer teams? Hold my beer.
+But wait a minute. Did I say belgian national soccer teams? Hold my beer.
 
 ```{r}
 

@@ -241,7 +241,7 @@ download_gifs &lt;- function (name, id){
 }
 
 #download_gifs(&quot;test&quot;,&quot;01203&quot;)</code></pre>
-<p>So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data :rotating lights:, shame on you webmaster :wink:.</p>
+<p>So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data :rotating_light:, shame on you webmaster :wink:.</p>
 <pre class="r"><code>#table_ids %&gt;% 
 #  map2(.x = name, .y = id, .f = download_gifs)
 
@@ -354,19 +354,14 @@ getwd()</code></pre>
 <pre class="r"><code>unlink(&quot;./data/190417/patch&quot;, recursive = TRUE) # don&#39;t need those anymore</code></pre>
 <center>
 <div class="figure">
-<img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="Old Mr Calvo" width="500" height="900" />
+<img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="Old Mr Calvo" width="650" height="900" />
 <p class="caption">Old Mr Calvo</p>
 </div>
 </center>
-<div class="figure">
-<img src="img/20190417/2019-04-17-faces_of_54.jpg" alt="Old Mr Calvo" width="300" height="900" />
-<p class="caption">Old Mr Calvo</p>
-</div>
-<p>ghhh</p>
-<p>So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But that is indeed a very small sample of Belgians.</p>
+<p>So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those are indeed two very small samples of Belgians, and they are from different generations.</p>
 <p>What I can says is that given my age, gender and skin color, I would fit right in.</p>
 <p>Wondering what the 55 legislature will look like. Will keep you posted.</p>
-<p>Wait a minute. Did I say belgian national soccer teams? Hold my beer.</p>
+<p>But wait a minute. Did I say belgian national soccer teams? Hold my beer.</p>
 <pre class="r"><code># for(i in (1:10000)){
 # print(i)
 # url_pic &lt;- glue(&quot;https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg&quot;)
