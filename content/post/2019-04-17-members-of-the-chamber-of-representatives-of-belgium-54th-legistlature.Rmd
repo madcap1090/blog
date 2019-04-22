@@ -9,6 +9,7 @@ tags:
   - Belgian politics
   - magick
   - purrr
+  - handeling files
 ---
 
 For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments? 
@@ -432,7 +433,6 @@ unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
 
 </center>
 
-
 So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those are indeed two very small samples of Belgians, and they are from different generations. 
 
 What I can says is that given my age, gender and skin color, I would fit right in. 
@@ -441,13 +441,157 @@ Wondering what the 55 legislature will look like. Will keep you posted.
 
 But wait a minute. Did I say belgian national soccer teams? Hold my beer.
 
-```{r}
+Analysing the Red Devil's website code, it appears the pictures are to be found in an aws bucket s3 folder. 
 
-# for(i in (1:10000)){
-# print(i)
-# url_pic <- glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
-# safely(download.file(url_pic, destfile = glue("./content/post/data/190417/{i}.jpeg", mode = "wb")),otherwise = NULL)
-# }
+![Inspecting the code of the webpage](/img/20190417/Eden.png)
+
+Downloadng the pictures of the men:
+
+```{r eval=FALSE, include=FALSE}
+
+for(i in (1:7000)){
+  
+  url_pic <-glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
+  
+  res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_1/{i}.jpg"), mode = "wb"))
+  if(inherits(res, "try-error"))
+  {
+    
+    next
+  }
+  download.file(url_pic, destfile = glue("./content/post/data/190417down_1/{i}.jpg"), mode = "wb")
+  
+  }
+
+
+# clean the folder of empty files:
+
+all_files <- dir("./content/post/data/190417down_1/", recursive = TRUE, full.names = TRUE)
+erase <- all_files[file.info(all_fiels)[["size"]]< 4200]
+length(all_files)-length(erase)
+file.info(all_fiels[5])[["size"]]
+## Remove empty files
+unlink(erase, recursive=TRUE, force=FALSE)
 
 ```
+
+Next is downloadng the pictures of the women:
+
+```{r}
+
+for(i in (1:7000)){
+  
+  url_pic <-glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/women/{i}.jpg")
+  
+  res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_2/{i}.jpg"), mode = "wb"))
+  if(inherits(res, "try-error"))
+  {
+    
+    next
+  }
+  download.file(url_pic, destfile = glue("./content/post/data/190417down_2/{i}.jpg"), mode = "wb")
+  
+}
+
+# clean the folder of empty files:
+
+all_files <- dir("./content/post/data/190417down_2/", recursive = TRUE, full.names = TRUE)
+erase <- all_files[file.info(all_files)[["size"]]< 4200]
+## Remove empty files
+unlink(erase, recursive=TRUE, force=FALSE)
+
+```
+
+There are 978 pictures of national soccer players; 709 men and 269 women. Most of these pictures seem to be recent, but there is no date tag or something similar. On the other hand the site only publishes currently selected players, so this inticates the pictures overall, are fairly recent.  
+
+Sampeling 176 of them:
+
+```{r message=FALSE}
+# renaming files, so we do not have the same file names between men and women
+
+setwd("./data/190417down_1/")
+length(list.files())
+file.rename(list.files(), 
+            paste0("m_", 1:709,".jpg"))
+```
+```{r}
+
+setwd("./data/190417down_2/")
+length(list.files())
+file.rename(list.files(), 
+            paste0("w_", 1:269,".jpg"))
+```
+
+
+
+```{r}
+men_files <- list.files("./data/190417down_1/", recursive = TRUE, full.names = TRUE)
+women_files <- list.files("./data/190417down_2/", recursive = TRUE, full.names = TRUE)
+
+player_files <- c(men_files, women_files)
+set.seed(42)
+sampled_files <- sample(player_files, 176)
+
+```
+
+Making the same patchwork
+
+```{r}
+
+dir.create("./data/190417/patch")
+
+# lapply(sampled_files, function(x) file.copy(paste ("./data/190417", x , sep = "/"),
+#                                         paste("./data/190417/patch",x, sep = "/"), 
+#                                         recursive = FALSE,  copy.mode = TRUE))
+
+lapply(sampled_files, function(x) file.copy(x,
+                                        paste("./data/190417/patch",basename(x), sep = "/"), 
+                                        recursive = FALSE,  copy.mode = TRUE))
+
+
+```
+```{r}
+dir.create("./data/190417/cols")
+
+getwd()
+files <- dir("data/190417/patch", full.names = TRUE)
+set.seed(1)
+files <- sample(files, length(files))
+gmp::factorize(length(files))
+
+no_rows <- 11
+no_cols <- 16
+
+make_column <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("cols/", i, ".jpg"))
+}
+
+
+fun <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("./data/190417/cols/", i, ".jpg"))
+}
+
+# could not really make wal function ;-(
+
+for(i in (0:(no_cols-1))) {
+fun(i, files, no_rows)
+}
+
+```
+
+```{r}
+getwd()
+
+x <- image_read(dir(".data/190417/cols/", full.names = TRUE))
+
+img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
+image_append(stack = FALSE) 
+
+setwd("./files/20190417")
+getwd()
+image_write(img,"2019-04-17-faces_of_devils.jpg")
 
