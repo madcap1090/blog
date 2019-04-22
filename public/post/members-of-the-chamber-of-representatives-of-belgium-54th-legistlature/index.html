@@ -11,7 +11,7 @@
 We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them.'>
 <meta property='og:url' content='/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/'>
 <meta property='og:site_name' content='bad to the code'>
-<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='Scraping'><meta property='article:tag' content='Belgian Politics'><meta property='article:tag' content='Twitter'><meta property='article:published_time' content='2019-04-17T00:00:00Z'/><meta property='article:modified_time' content='2019-04-17T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='Scraping'><meta property='article:tag' content='Belgian Politics'><meta property='article:tag' content='magick'><meta property='article:tag' content='purrr'><meta property='article:published_time' content='2019-04-17T00:00:00Z'/><meta property='article:modified_time' content='2019-04-17T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
 
 
 <link href="/index.xml" rel="alternate" type="application/rss+xml" title="bad to the code" />
@@ -104,7 +104,9 @@ We also love our politicians, so we want to have lots of them. I also like them 
   
   | <a class="subtitle is-6" href="/tags/belgian-politics">#Belgian Politics</a>
   
-  | <a class="subtitle is-6" href="/tags/twitter">#Twitter</a>
+  | <a class="subtitle is-6" href="/tags/magick">#magick</a>
+  
+  | <a class="subtitle is-6" href="/tags/purrr">#purrr</a>
   
 
       
@@ -118,11 +120,13 @@ We also love our politicians, so we want to have lots of them. I also like them 
 
 <p>For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments?</p>
 <p>We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? We elected them to represent us all at the national level after all.</p>
-<p><a href="https://www.dekamer.be" class="uri">https://www.dekamer.be</a> is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature follwing the 2014 elections.</p>
+<p><a href="https://www.dekamer.be" class="uri">https://www.dekamer.be</a> is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature following the 2014 elections.</p>
 <p>Let’s scrape them.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
 library(&quot;rvest&quot;)
-library(&quot;XML&quot;)</code></pre>
+library(&quot;XML&quot;)
+library(&quot;glue&quot;)
+library(&quot;magick&quot;)</code></pre>
 <pre class="r"><code>url &lt;- &quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm&quot;
 
 table &lt;- url %&gt;% 
@@ -241,10 +245,8 @@ for(i in 1:nrow(table_54)){
 }
 
 table_ids &lt;- urls %&gt;%
-  mutate(url = paste0(&quot;http://www.dekamer.be/kvvcr/&quot;, url)) %&gt;%    # constructing the url
-  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url)) %&gt;%           # extract their id from the url
-  mutate(id = gsub(&#39;O&#39;,&#39;0&#39;,id))                                    # some of them have O instead of 0
-
+  mutate(url = paste0(&quot;http://www.dekamer.be/kvvcr/&quot;, url))   # constructing the url
+  
 head(table_ids)</code></pre>
 <pre><code>##                 name
 ## 1      Almaci Meyrem
@@ -259,21 +261,222 @@ head(table_ids)</code></pre>
 ## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01190&amp;lactivity=54
 ## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01149&amp;lactivity=54
 ## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06592&amp;lactivity=54
-## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06647&amp;lactivity=54
-##      id
-## 1 01189
-## 2 00757
-## 3 01190
-## 4 01149
-## 5 06592
-## 6 06647</code></pre>
+## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06647&amp;lactivity=54</code></pre>
+<p>But there is a problem with matching the names and the ids.</p>
+<pre class="r"><code>x &lt;- table_ids
+
+names &lt;- tibble()
+
+for (i in (1:nrow(x))){
+  url &lt;- x$url[i]
+  fn_ln &lt;- url %&gt;%
+    read_html() %&gt;%
+    html_nodes(xpath=  &#39;//*[@id=&quot;myform&quot;]/center/h2&#39;) %&gt;% 
+    html_text() %&gt;% 
+    as.data.frame()
+  info &lt;- cbind(fn_ln, url)
+  names &lt;- rbind(names, info)
+}
+
+names(names) &lt;- c(&quot;fn_ln&quot;,&quot;url&quot;)
+
+names &lt;- names %&gt;% 
+  mutate(fn_ln =(str_replace_all(fn_ln,&quot;  +&quot;,&quot; &quot;)))
+
+head(names)</code></pre>
+<pre><code>##                fn_ln
+## 1      Meyrem Almaci
+## 2 Daniel Bacquelaine
+## 3         Sonja Becq
+## 4       Wouter Beke 
+## 5       Rita Bellens
+## 6    Nawal Ben Hamou
+##                                                                                                            url
+## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01189&amp;lactivity=54
+## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=00757&amp;lactivity=54
+## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01190&amp;lactivity=54
+## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01149&amp;lactivity=54
+## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06592&amp;lactivity=54
+## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06647&amp;lactivity=54</code></pre>
+<p>So we need to correct that the ids and fn_ln are correct so? so build a key based on the letters in the name of the person</p>
+<pre class="r"><code>str_sort &lt;- function(x)
+  sapply(lapply(strsplit(x, NULL), sort), paste, collapse=&quot;&quot;)
+
+w_key &lt;- table_ids %&gt;% 
+  mutate(key = tolower(str_replace_all(name,&quot; &quot;,&quot;&quot;))) %&gt;% 
+  mutate(key = str_sort(key)) %&gt;% 
+  select(-url)
+
+names_w_key &lt;- names %&gt;% 
+  mutate(key = tolower(str_replace_all(fn_ln,&quot; &quot;,&quot;&quot;))) %&gt;% 
+  mutate(key = str_sort(key))
+
+names &lt;- names_w_key %&gt;% 
+  left_join(w_key) %&gt;% 
+  rename(&quot;ln_fn&quot; = &quot;name&quot;)
+
+names %&gt;% 
+  select(-url) %&gt;% 
+  head()</code></pre>
+<pre><code>##                fn_ln               key              ln_fn
+## 1      Meyrem Almaci      aaceeilmmmry      Almaci Meyrem
+## 2 Daniel Bacquelaine aaabcdeeeiillnnqu Bacquelaine Daniel
+## 3         Sonja Becq         abcejnoqs         Becq Sonja
+## 4       Wouter Beke         beeekortuw        Beke Wouter
+## 5       Rita Bellens       abeeillnrst       Bellens Rita
+## 6    Nawal Ben Hamou     aaabehlmnnouw    Ben Hamou Nawal</code></pre>
+<p>Seems to work. Names are clean. Now the id code is needed.</p>
+<pre class="r"><code># correct id
+
+names &lt;- names %&gt;%
+  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url))               # extract their id from the url
+  #mutate(id = gsub(&#39;O&#39;,&#39;0&#39;,id))      # some of them have O instead of 0 but we need to keep them</code></pre>
 <p>So now we have in ‘urls’ the name and links to the personal webpage of the representatives on the chamber’s website. Notice their id at the end of the url after ‘cfm?key=’ and before ‘&amp;lat’.</p>
 <p>Let’s get their mugshots.</p>
 <div class="figure">
-<img src="/img/20190417/inspect.png" alt="Finding the image url" />
-<p class="caption">Finding the image url</p>
+<img src="/img/20190417/inspect.png" alt="Inspecting the code of the webpage" />
+<p class="caption">Inspecting the code of the webpage</p>
 </div>
 <p>So the images are in <a href="http://www.dekamer.be/site/wwwroot/images/cv/" class="uri">http://www.dekamer.be/site/wwwroot/images/cv/</a></p>
+<pre class="r"><code># let&#39;s try purrr again
+
+download_gifs &lt;- function (name, id){
+  url_pic &lt;- glue(&quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/190417/{name}.gif&quot;), mode = &quot;wb&quot;)
+}
+
+#download_gifs(&quot;test&quot;,&quot;01203&quot;)</code></pre>
+<p>So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data :rotating light:, shame on you webmaster 😉.</p>
+<pre class="r"><code>#table_ids %&gt;% 
+#  map2(.x = name, .y = id, .f = download_gifs)
+
+# 
+# table_ids$id[table_ids$id == &quot;00902&quot;] &lt;- 902
+# table_ids$id[table_ids$id == &quot;06918&quot;] &lt;- 6918
+# table_ids$id[table_ids$id == &quot;06536&quot;] &lt;- 6536
+# table_ids$id[table_ids$id == &quot;00951&quot;] &lt;- 951
+# table_ids$id[table_ids$id == &quot;06325&quot;] &lt;- 6325
+# table_ids$id[table_ids$id == &quot;06885&quot;] &lt;- 6885
+# table_ids$id[table_ids$id == &quot;06665&quot;] &lt;- 6665
+# table_ids$id[table_ids$id == &quot;01123&quot;] &lt;- 1123
+# table_ids$id[table_ids$id == &quot;06843&quot;] &lt;- 6843
+
+map2(.x = table_ids$name, .y = table_ids$id, .f = download_gifs)</code></pre>
+<pre><code>## list()</code></pre>
+<p>So sometimes the 0 is used and sometimes it is just the value withhout leading 0. One possible solution is to enhance the ‘download_gifs’ function.</p>
+<pre class="r"><code>download_gifs_with_0 &lt;- function (name, id){
+  url_pic &lt;- glue(&quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/190417/down_1/{name}.gif&quot;), mode = &quot;wb&quot;)
+}
+
+download_gifs_no_0 &lt;- function (name, id){
+  id &lt;- as.numeric(id)
+  url_pic &lt;- glue(&quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/190417/down_2/{name}.gif&quot;), mode = &quot;wb&quot;)
+}</code></pre>
+<p>Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work &amp; presentation at the RUser2018 conference in Budapest.</p>
+<p>So using ‘safely’ the error are being skipped and we managed to download how many files?</p>
+<pre class="r"><code>length(list.files(&quot;./data/190417/down_1&quot;))</code></pre>
+<pre><code>## [1] 160</code></pre>
+<p>Only few missing. Let’s use the other function.</p>
+<pre class="r"><code>length(list.files(&quot;./data/190417/down_2&quot;))</code></pre>
+<pre><code>## [1] 96</code></pre>
+Hmm so now we have too many pictures (and the ones with no leading 0 seem older). See the aging of Mr Calvo:
+<center>
+<p><img src="/img/20190417/Calvo%20Kristof_young.gif" alt="Young Mr Calvo" /> <img src="/img/20190417/Calvo%20Kristof_06128_old.gif" alt="Old Mr Calvo" /></p>
+</center>
+<p>And it seems some are still missing 😒.</p>
+<p>Whose pics did were additionally obtained?</p>
+<pre class="r"><code>new &lt;- list.files(&quot;./data/190417/down_1&quot;)
+old &lt;- list.files(&quot;./data/190417/down_2&quot;)
+new_pics &lt;- setdiff(old, new)
+new_pics</code></pre>
+<pre><code>##  [1] &quot;Chabot Jacques.gif&quot;       &quot;Claerhout Sarah.gif&quot;     
+##  [3] &quot;Crusnière Stéphane.gif&quot;   &quot;Dallemagne Georges.gif&quot;  
+##  [5] &quot;Devin Laurent.gif&quot;        &quot;Gabriëls Katja.gif&quot;      
+##  [7] &quot;Galant Isabelle.gif&quot;      &quot;Gustin Luc.gif&quot;          
+##  [9] &quot;Hufkens Renate.gif&quot;       &quot;Janssens Dirk.gif&quot;       
+## [11] &quot;Klaps Johan.gif&quot;          &quot;Miller Richard.gif&quot;      
+## [13] &quot;Raskin Wouter.gif&quot;        &quot;Scourneau Vincent.gif&quot;   
+## [15] &quot;Van Hoof Els.gif&quot;         &quot;Van Peteghem Vincent.gif&quot;
+## [17] &quot;Vanden Burre Gilles.gif&quot;  &quot;Vuye Hendrik.gif&quot;        
+## [19] &quot;Wilmès Sophie.gif&quot;</code></pre>
+<p>Nice guy, Georges.</p>
+<p>So are we missing some?</p>
+<pre class="r"><code>fileslist &lt;- list.files(&quot;./data/190417&quot;)
+fileslist &lt;-grep(&quot;.gif&quot;,fileslist,value=TRUE)
+length(fileslist)</code></pre>
+<pre><code>## [1] 179</code></pre>
+<p>Looks promising. But double checking can not harm.</p>
+<pre class="r"><code>names_list &lt;- gsub(&quot;.gif&quot;,&quot;&quot;,fileslist)
+setdiff(names_list, names$ln_fn)</code></pre>
+<pre><code>## character(0)</code></pre>
+<p>🆒</p>
+<pre class="r"><code>dir.create(&quot;./data/190417/cols&quot;)</code></pre>
+<pre><code>## Warning in dir.create(&quot;./data/190417/cols&quot;): &#39;.\data\190417\cols&#39; already
+## exists</code></pre>
+<pre class="r"><code>getwd()</code></pre>
+<pre><code>## [1] &quot;C:/Users/William/Documents/R/blog/content/post&quot;</code></pre>
+<pre class="r"><code>files &lt;- dir(&quot;data/190417/patch&quot;, full.names = TRUE)
+set.seed(1)
+files &lt;- sample(files, length(files))
+gmp::factorize(length(files))</code></pre>
+<pre><code>## Big Integer (&#39;bigz&#39;) :
+## [1] 179</code></pre>
+<pre class="r"><code>no_rows &lt;- 11
+no_cols &lt;- 16
+
+make_column &lt;- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
+  image_append(stack = TRUE) %&gt;%
+    image_write(paste0(&quot;cols/&quot;, i, &quot;.jpg&quot;))
+}
+
+
+fun &lt;- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
+  image_append(stack = TRUE) %&gt;%
+    image_write(paste0(&quot;./data/190417/cols/&quot;, i, &quot;.jpg&quot;))
+}
+
+# could not really make wal function ;-(
+
+for(i in (0:(no_cols-1))) {
+fun(i, files, no_rows)
+}</code></pre>
+<p>So we have the columns. Still need to bind them together.</p>
+<pre class="r"><code>getwd()</code></pre>
+<pre><code>## [1] &quot;C:/Users/William/Documents/R/blog/content/post&quot;</code></pre>
+<pre class="r"><code>x &lt;- image_read(dir(&quot;.data/190417/cols/&quot;, full.names = TRUE))
+
+img &lt;- image_read(dir(&quot;data/190417/cols/&quot;, full.names = TRUE)) %&gt;%
+image_append(stack = FALSE) 
+
+setwd(&quot;./files/20190417&quot;)
+getwd()</code></pre>
+<pre><code>## [1] &quot;C:/Users/William/Documents/R/blog/content/post/files/20190417&quot;</code></pre>
+<pre class="r"><code>image_write(img,&quot;2019-04-17-faces_of_54.jpg&quot;)</code></pre>
+<pre class="r"><code>unlink(&quot;./data/190417/patch&quot;, recursive = TRUE) # don&#39;t need those anymore</code></pre>
+<center>
+<div class="figure">
+<img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="Old Mr Calvo" width="300" height="900" />
+<p class="caption">Old Mr Calvo</p>
+</div>
+</center>
+<div class="figure">
+<img src="img/20190417/2019-04-17-faces_of_54.jpg" alt="Old Mr Calvo" width="300" height="900" />
+<p class="caption">Old Mr Calvo</p>
+</div>
+<p>ghhh</p>
+<p>So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But that is indeed a very small sample of Belgians.</p>
+<p>What I can says is that given my age, gender and skin color, I would fit right in.</p>
+<p>Wondering what the 55 legislature will look like. Will keep you posted.</p>
+<p>Wait a minute. Did I say belgian national soccer teams? Hold my beer.</p>
+<pre class="r"><code># for(i in (1:10000)){
+# print(i)
+# url_pic &lt;- glue(&quot;https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg&quot;)
+# safely(download.file(url_pic, destfile = glue(&quot;./content/post/data/190417/{i}.jpeg&quot;, mode = &quot;wb&quot;)),otherwise = NULL)
+# }</code></pre>
 
       
       <div class="related">

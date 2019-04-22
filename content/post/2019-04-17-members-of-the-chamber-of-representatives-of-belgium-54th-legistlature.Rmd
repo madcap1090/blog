@@ -231,10 +231,10 @@ download_gifs <- function (name, id){
   download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
 }
 
-download_gifs("test","01203")
+#download_gifs("test","01203")
 ```
 
-So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :alarm:, shame on you webmaster :wink:. 
+So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :rotating lights:, shame on you webmaster :wink:. 
 
 
 ```{r}
@@ -298,14 +298,16 @@ map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_no_0, otherwise 
 length(list.files("./data/190417/down_2"))
 ```
 
-Hmm so now we have too many pictures (and the ones with na leading 0 seem older). And it seems some are still missing :unamused:.
+Hmm so now we have too many pictures (and the ones with no leading 0 seem older). See the aging of Mr Calvo: 
+<center>
+![Young Mr Calvo](/img/20190417/Calvo Kristof_young.gif) ![Old Mr Calvo](/img/20190417/Calvo Kristof_06128_old.gif)
+
+</center>
 
 
-![Old Mr Calvo](/img/20190417/Calvo Kristof_06128_old.gif)
+And it seems some are still missing :unamused:.
 
-![Young Mr Calvo](/img/20190417/Calvo Kristof_young.gif)
-
-Which new pics were obtained?
+Whose pics did were additionally obtained?
 
 ```{r}
 new <- list.files("./data/190417/down_1")
@@ -425,19 +427,32 @@ image_write(img,"2019-04-17-faces_of_54.jpg")
 unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
 ```
 
+<center>
+![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=500px height=900px} 
+
+</center>
+
+
+![Old Mr Calvo](img/20190417/2019-04-17-faces_of_54.jpg){width=300px height=900px} 
+
+ghhh
+
+
 So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But that is indeed a very small sample of Belgians. 
 
 What I can says is that given my age, gender and skin color, I would fit right in. 
 
 Wondering what the 55 legislature will look like. Will keep you posted.
 
+Wait a minute. Did I say belgian national soccer teams? Hold my beer.
+
 ```{r}
 
-for(i in (1:10000)){
-print(i)
-url_pic <- glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
-safely(download.file(url_pic, destfile = glue("./content/post/data/190417/{i}.jpeg", mode = "wb")),otherwise = NULL)
-}
+# for(i in (1:10000)){
+# print(i)
+# url_pic <- glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
+# safely(download.file(url_pic, destfile = glue("./content/post/data/190417/{i}.jpeg", mode = "wb")),otherwise = NULL)
+# }
 
 ```
 
