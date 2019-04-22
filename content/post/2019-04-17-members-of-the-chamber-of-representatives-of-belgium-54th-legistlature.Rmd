@@ -13,7 +13,7 @@ tags:
 
 For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments? 
 
-We also love our politicians, so we want to have lots of them. I also like them so I decided to do some NLP on their tweets. But there are so many of them that I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? We elected them to represent us all at the national level after all.
+We also love politicians, so we want to have a lot of them. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of them I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.
 
 https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature following the 2014 elections. 
 
@@ -307,7 +307,7 @@ Hmm so now we have too many pictures (and the ones with no leading 0 seem older)
 
 And it seems some are still missing :unamused:.
 
-Whose pics did were additionally obtained?
+Whose pics were additionally obtained?
 
 ```{r}
 new <- list.files("./data/190417/down_1")
@@ -317,7 +317,7 @@ new_pics
 
 ```
 
-Nice guy, Georges. 
+Nice guy, Georges. Recently became grandfather again.
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # copy the old and new to 'permanent' folder
@@ -350,7 +350,7 @@ names_list <- gsub(".gif","",fileslist)
 setdiff(names_list, names$ln_fn)
 ```
 
-:cool:
+:cool: we have a picture of all of them.
 
 
 ```{r include=FALSE}
@@ -428,7 +428,7 @@ unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
 ```
 
 <center>
-![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=650px height=900px} 
+![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=750px height=900px} 
 
 </center>
 
