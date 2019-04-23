@@ -364,6 +364,8 @@ dir.create("./data/190417/patch")
 lapply(fileslist, function(x) file.copy(paste ("./data/190417", x , sep = "/"),
                                         paste("./data/190417/patch",x, sep = "/"), 
                                         recursive = FALSE,  copy.mode = TRUE))
+unlink("./data/190417/patch/Scourneau Vincent.gif") # his picture does not comply
+
 ```
 
 
@@ -372,7 +374,22 @@ getwd()
 setwd("./data/190417/patch")
 length(list.files())
 file.rename(list.files(), 
-            paste0("g_", 1:112,".gif"))
+            paste0("g_", 1:178,".gif"))
+```
+
+Let's resize them for good measure. 
+
+```{r message=FALSE}
+
+resize_player <- function(x){
+  img <- image_scale(image_read(x), "145x190!")
+  image_write(img, x)        
+}
+
+player_pics <- list.files("./data/190417/patch/", full.names = TRUE)
+
+map(player_pics, resize_player)
+
 ```
 
 
@@ -383,8 +400,8 @@ dir.create("./data/190417/cols")
 getwd()
 files <- dir("data/190417/patch", full.names = TRUE)
 set.seed(1)
-files <- sample(files, length(files))
-gmp::factorize(length(files))
+files <- sample(files, length(files)-2) # 176 will mahe a nices patch
+gmp::factorize(length(files)-2)
 
 no_rows <- 11
 no_cols <- 16
@@ -402,11 +419,11 @@ fun <- function(i, files, no_rows){
     image_write(paste0("./data/190417/cols/", i, ".jpg"))
 }
 
-# could not really make wal function ;-(
+ #could not really make map function ;-(
 
-# for(i in (0:(no_cols-1))) {
-# fun(i, files, no_rows)
-# }
+ for(i in (0:(no_cols-1))) {
+ fun(i, files, no_rows)
+ }
 
 ```
 
@@ -427,6 +444,7 @@ image_write(img,"2019-04-17-faces_of_54.jpg")
 ```
 ```{r}
 unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
+unlink("./data/190417/cols", recursive = TRUE) # don't need those anymore
 ```
 
 <center>
