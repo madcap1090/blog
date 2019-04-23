@@ -26,6 +26,7 @@ library("rvest")
 library("XML")
 library("glue")
 library("magick")
+
 ```
 
 ```{r echo=TRUE}
@@ -550,6 +551,25 @@ lapply(sampled_files, function(x) file.copy(x,
 
 
 ```
+
+And the pictures need to have the same size (170x250 pixel)
+
+
+```{r message=FALSE}
+
+resize_player <- function(x){
+  img <- image_scale(image_read(x), "170x250!")
+  image_write(img, x)        
+}
+
+player_pics <- list.files("./data/190417/patch/", full.names = TRUE)
+
+map(player_pics, resize_player)
+
+```
+
+
+
 ```{r}
 dir.create("./data/190417/cols")
 
@@ -567,15 +587,6 @@ make_column <- function(i, files, no_rows){
   image_append(stack = TRUE) %>%
     image_write(paste0("cols/", i, ".jpg"))
 }
-```
-
-ok so it is a bit messy above, but below the thing we have to do is image scale
-
-
-```{r}
-
-
-  image_scale(170*250) %>% 
 ```
 
 
@@ -608,4 +619,16 @@ image_append(stack = FALSE)
 setwd("./files/20190417")
 getwd()
 image_write(img,"2019-04-17-faces_of_devils.jpg")
+
+
 ```
+
+Cleaning
+
+```{r}
+unlink("./data/190417/cols",  recursive = TRUE)
+unlink("./data/190417/patch",  recursive = TRUE)
+#unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
+
+```
+
