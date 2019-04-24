@@ -9,13 +9,14 @@ tags:
   - Belgian politics
   - magick
   - purrr
+  - handeling files
 ---
 
 For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments? 
 
 We also love politicians, so we want to have a lot of them. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of them I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.
 
-https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current membres, the other one the complete list of members that at one moment or another were part of the parlaiment during the 54th legistlature following the 2014 elections. 
+https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections. 
 
 Let's scrape them.
 
@@ -25,9 +26,10 @@ library("rvest")
 library("XML")
 library("glue")
 library("magick")
+
 ```
 
-```{r}
+```{r echo=TRUE}
 url <- "http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm"
 
 table <- url %>% 
@@ -59,7 +61,7 @@ table$ln_fn <- trimws(table$ln_fn, which = "both") # for good measure
 nrow(table)
 ```
 
-150 members today with their current polical party. I'm goin to save that data, because after the elections of next month it will not be available for a long time.
+150 members today with their current political party. I'm going to save that data, because after the elections of next month it will not be available for a long time.
 
 ```{r}
 saveRDS(table, "~/R/blog/content/post/data/190417/reps_54_190417.rds")
@@ -75,7 +77,7 @@ table %>%
 
 ```
 
-We can also scrape the complete list of members of the 54th legistlature. 
+We can also scrape the complete list of members of the 54th legislature. 
 
 ```{r}
 url <- "https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=cvlist54.cfm?legis=54&today=n"
@@ -114,11 +116,11 @@ table_54 %>%
 
 ```
 
-So indeed 29 representatives. But some left to work in the government and then came back when their party decided to leave government because of a city in northen Africa. Go figure. 
+So indeed 29 representatives. But some left to work in the government and then came back when their party decided to leave government because of a city in northern Africa. Go figure. 
 
-But it does make the identification of a tweet as a tweet being sent by a member of parlaiment a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hardcoding also.
+But it does make the identification of a tweet as a tweet being sent by a member of parliament a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hard coding also.
 
-Let's have some fun first. Looking at the page of the current members of parlaiment, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the xpath is known its is relatively easy to extract the indivdual member's webpage url. 
+Let's have some fun first. Looking at the page of the current members of parliament, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the xpath is known its is relatively easy to extract the individual member's webpage url. 
 
 ```{r}
 url <- "http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm"
@@ -223,7 +225,7 @@ Let's get their mugshots.
 So the images are in http://www.dekamer.be/site/wwwroot/images/cv/
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # let's try purrr again
 
 download_gifs <- function (name, id){
@@ -237,7 +239,7 @@ download_gifs <- function (name, id){
 So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data :rotating_light:, shame on you webmaster :wink:. 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #table_ids %>% 
 #  map2(.x = name, .y = id, .f = download_gifs)
 
@@ -258,7 +260,7 @@ map2(.x = table_ids$name, .y = table_ids$id, .f = download_gifs)
 
 ```
 
-So sometimes the 0 is used and sometimes it is just the value withhout leading 0. One possible solution is to enhance the 'download_gifs' function.
+So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to enhance the 'download_gifs' function.
 
 ```{r}
 download_gifs_with_0 <- function (name, id){
@@ -276,20 +278,20 @@ download_gifs_no_0 <- function (name, id){
 
 Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work & presentation at the RUser2018 conference in Budapest.
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 dir.create("./data/190417/down_1")
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_with_0, otherwise = NULL))
 ```
 
 So using 'safely' the error are being skipped and we managed to download how many files?
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 length(list.files("./data/190417/down_1"))
 ```
 
 Only few missing. Let's use the other function.
 
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 dir.create("./data/190417/down_2")
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_no_0, otherwise = NULL))
 ```
@@ -353,7 +355,7 @@ setdiff(names_list, names$ln_fn)
 :cool: we have a picture of all of them.
 
 
-```{r include=FALSE}
+```{r message=FALSE, include=FALSE}
 # code for a patch work
 # https://masalmon.eu/2017/03/19/facesofr/
 
@@ -362,6 +364,8 @@ dir.create("./data/190417/patch")
 lapply(fileslist, function(x) file.copy(paste ("./data/190417", x , sep = "/"),
                                         paste("./data/190417/patch",x, sep = "/"), 
                                         recursive = FALSE,  copy.mode = TRUE))
+unlink("./data/190417/patch/Scourneau Vincent.gif") # his picture does not comply
+
 ```
 
 
@@ -370,7 +374,216 @@ getwd()
 setwd("./data/190417/patch")
 length(list.files())
 file.rename(list.files(), 
-            paste0("g_", 1:179,".gif"))
+            paste0("g_", 1:178,".gif"))
+```
+
+Let's resize them for good measure. 
+
+```{r message=FALSE, include=FALSE}
+
+resize_player <- function(x){
+  img <- image_scale(image_read(x), "145x190!")
+  image_write(img, x)        
+}
+
+player_pics <- list.files("./data/190417/patch/", full.names = TRUE)
+
+map(player_pics, resize_player)
+
+```
+
+
+
+```{r}
+dir.create("./data/190417/cols")
+
+getwd()
+files <- dir("data/190417/patch", full.names = TRUE)
+set.seed(1)
+files <- sample(files, length(files)-2) # 176 will mahe a nices patch
+gmp::factorize(length(files)-2)
+
+no_rows <- 11
+no_cols <- 16
+
+make_column <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("cols/", i, ".jpg"))
+}
+
+
+fun <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("./data/190417/cols/", i, ".jpg"))
+}
+
+ #could not really make map function ;-(
+
+ for(i in (0:(no_cols-1))) {
+ fun(i, files, no_rows)
+ }
+
+```
+
+So we have the columns. Still need to bind them together.
+
+```{r eval=FALSE, include=FALSE}
+getwd()
+
+x <- image_read(dir(".data/190417/cols/", full.names = TRUE))
+
+img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
+image_append(stack = FALSE) 
+
+setwd("./files/20190417")
+getwd()
+image_write(img,"2019-04-17-faces_of_54.jpg")
+
+```
+```{r}
+unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
+unlink("./data/190417/cols", recursive = TRUE) # don't need those anymore
+```
+
+<center>
+![reps 54](/img/20190417/2019-04-17-faces_of_54.jpg){width=800px height=850px} 
+
+</center>
+
+So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those are indeed two very small samples of Belgians, and they are from different generations. 
+
+What I can says is that given my age, gender and skin color, I would fit right in. 
+
+Wondering what the 55 legislature will look like. Will keep you posted.
+
+But wait a minute. Did I say Belgian national soccer teams? Hold my beer.
+
+Analyzing the Red Devil's website code, it appears the pictures are to be found in an aws bucket s3 folder. 
+
+![Inspecting the code of the webpage](/img/20190417/Eden.png)
+
+Downloading the pictures of the men:
+
+```{r eval=FALSE, include=FALSE}
+
+for(i in (1:7000)){
+  
+  url_pic <-glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
+  
+  res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_1/{i}.jpg"), mode = "wb"))
+  if(inherits(res, "try-error"))
+  {
+    
+    next
+  }
+  download.file(url_pic, destfile = glue("./content/post/data/190417down_1/{i}.jpg"), mode = "wb")
+  
+  }
+
+
+# clean the folder of empty files:
+
+all_files <- dir("./content/post/data/190417down_1/", recursive = TRUE, full.names = TRUE)
+erase <- all_files[file.info(all_fiels)[["size"]]< 4200]
+length(all_files)-length(erase)
+file.info(all_fiels[5])[["size"]]
+## Remove empty files
+unlink(erase, recursive=TRUE, force=FALSE)
+
+```
+
+Next is downloading the pictures of the women:
+
+```{r eval=FALSE, include=FALSE}
+
+for(i in (1:7000)){
+  
+  url_pic <-glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/women/{i}.jpg")
+  
+  res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_2/{i}.jpg"), mode = "wb"))
+  if(inherits(res, "try-error"))
+  {
+    
+    next
+  }
+  download.file(url_pic, destfile = glue("./content/post/data/190417down_2/{i}.jpg"), mode = "wb")
+  
+}
+
+# clean the folder of empty files:
+
+all_files <- dir("./content/post/data/190417down_2/", recursive = TRUE, full.names = TRUE)
+erase <- all_files[file.info(all_files)[["size"]]< 4200]
+## Remove empty files
+unlink(erase, recursive=TRUE, force=FALSE)
+
+```
+
+There are now 784 pictures of national soccer players; 612 men and 172 women. Most of these pictures seem to be recent, but there is no date tag or something similar. On the other hand the site only publishes currently selected players, so this indicates the pictures overall, are fairly recent.  
+
+Sampling 176 of them:
+
+```{r message=FALSE, include=FALSE}
+# renaming files, so we do not have the same file names between men and women
+
+setwd("./data/190417down_1/")
+length(list.files())
+file.rename(list.files(), 
+            paste0("m_", 1:612,".jpg"))
+```
+```{r include=FALSE}
+
+setwd("./data/190417down_2/")
+length(list.files())
+file.rename(list.files(), 
+            paste0("w_", 1:172,".jpg"))
+```
+
+
+
+```{r}
+men_files <- list.files("./data/190417down_1/", recursive = TRUE, full.names = TRUE)
+women_files <- list.files("./data/190417down_2/", recursive = TRUE, full.names = TRUE)
+
+player_files <- c(men_files, women_files)
+set.seed(42)
+sampled_files <- sample(player_files, 176)
+
+```
+
+Making the same patchwork
+
+```{r message=FALSE, include=FALSE}
+
+dir.create("./data/190417/patch")
+
+# lapply(sampled_files, function(x) file.copy(paste ("./data/190417", x , sep = "/"),
+#                                         paste("./data/190417/patch",x, sep = "/"), 
+#                                         recursive = FALSE,  copy.mode = TRUE))
+
+lapply(sampled_files, function(x) file.copy(x,
+                                        paste("./data/190417/patch",basename(x), sep = "/"), 
+                                        recursive = FALSE,  copy.mode = TRUE))
+
+
+```
+
+And the pictures need to have the same size (170x250 pixel)
+
+
+```{r message=FALSE, include=FALSE}
+
+resize_player <- function(x){
+  img <- image_scale(image_read(x), "170x250!")
+  image_write(img, x)        
+}
+
+player_pics <- list.files("./data/190417/patch/", full.names = TRUE)
+
+map(player_pics, resize_player)
+
 ```
 
 
@@ -392,15 +605,17 @@ make_column <- function(i, files, no_rows){
   image_append(stack = TRUE) %>%
     image_write(paste0("cols/", i, ".jpg"))
 }
+```
 
 
+
+```{r}
 fun <- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
   image_append(stack = TRUE) %>%
     image_write(paste0("./data/190417/cols/", i, ".jpg"))
 }
 
-# could not really make wal function ;-(
 
 for(i in (0:(no_cols-1))) {
 fun(i, files, no_rows)
@@ -408,46 +623,38 @@ fun(i, files, no_rows)
 
 ```
 
-So we have the columns. Still need to bind them together.
 
 ```{r}
 getwd()
 
-x <- image_read(dir(".data/190417/cols/", full.names = TRUE))
+x <- image_read(dir(".data/190417/cols/", full.names = TRUE))  
+
 
 img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
 image_append(stack = FALSE) 
 
 setwd("./files/20190417")
 getwd()
-image_write(img,"2019-04-17-faces_of_54.jpg")
+image_write(img,"2019-04-17-faces_of_devils.jpg")
+
 
 ```
+
+Cleaning
+
 ```{r}
-unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
+unlink("./data/190417/cols",  recursive = TRUE)
+unlink("./data/190417/patch",  recursive = TRUE)
+#unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
+
 ```
+
 
 <center>
-![Old Mr Calvo](/img/20190417/2019-04-17-faces_of_54.jpg){width=750px height=900px} 
+![devils](/img/20190417/2019-04-17-faces_of_devils.jpg)
 
 </center>
 
+So give my tepid beer back. Here's a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let's hope). Both groups are not a representative sample of the Belgian population imho. In some way both are very special. Both represent in a way casts of the country. 
 
-So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those are indeed two very small samples of Belgians, and they are from different generations. 
-
-What I can says is that given my age, gender and skin color, I would fit right in. 
-
-Wondering what the 55 legislature will look like. Will keep you posted.
-
-But wait a minute. Did I say belgian national soccer teams? Hold my beer.
-
-```{r}
-
-# for(i in (1:10000)){
-# print(i)
-# url_pic <- glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
-# safely(download.file(url_pic, destfile = glue("./content/post/data/190417/{i}.jpeg", mode = "wb")),otherwise = NULL)
-# }
-
-```
-
+Let's get back to the parliamentarians tweets in the next post. 
