@@ -14,7 +14,7 @@ tags:
 
 For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for 6 governments, their administration and their parliaments? 
 
-We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to get a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.
+We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.
 
 https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections. 
 
@@ -279,12 +279,7 @@ download_gifs_no_0 <- function (name, id){
 
 Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work & presentation at the RUser2018 conference in Budapest.
 
-```{r}
-getwd()
-```
-
-
-```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r eval=FALSE, message=FALSE}
 dir.create("./data/190417/down_1")
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_with_0, otherwise = NULL))
 ```
@@ -297,7 +292,7 @@ length(list.files("./data/190417/down_1"))
 
 160. Only few missing. Let's use the other function.
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 dir.create("./data/190417/down_2")
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_no_0, otherwise = NULL))
 ```
@@ -333,13 +328,12 @@ lapply(new, function(x) file.copy(paste ("./data/190417/down_1", x , sep = "/"),
 lapply(new_pics, function(x) file.copy(paste ("./data/190417/down_2", x , sep = "/"),  
                                         paste ("./data/190417",x, sep = "/"), recursive = FALSE,  copy.mode = TRUE))
 
-unlink("./data/190417/down_1", recursive = TRUE) # don't need those anymore
-unlink("./data/190417/down_2", recursive = TRUE) # don't need those anymore
 
 ```
 So are we missing some?
 
 ```{r}
+fileslist <- list.files("./data/190417/", pattern = "*.gif")
 names_list <- gsub(".gif","",fileslist)
 setdiff(names_list, names$ln_fn)
 ```
@@ -352,46 +346,45 @@ A collage of their pictures will give us a nice overview.
 # code for a patch work
 # https://masalmon.eu/2017/03/19/facesofr/
 
-dir.create("./data/190417/patch")
+dir.create("./data/190417/patch_rep")
 fileslist <- list.files("./data/190417/", pattern = "*.gif")
 lapply(fileslist, function(x) file.copy(paste ("./data/190417", x , sep = "/"),
-                                        paste("./data/190417/patch",x, sep = "/"), 
+                                        paste("./data/190417/patch_rep",x, sep = "/"), 
                                         recursive = FALSE,  copy.mode = TRUE))
-unlink("./data/190417/patch/Scourneau Vincent.gif") # his picture does not comply
+unlink("./data/190417/patch/Scourneau Vincent.gif") # his picture does not comply ;)
 
 ```
 
+Need to rename them for the magick package.
 
-```{r include=FALSE}
-getwd()
-setwd("./data/190417/patch")
-length(list.files())
+```{r eval=FALSE}
+setwd("./data/190417/patch_rep")
 file.rename(list.files(), 
-            paste0("g_", 1:178,".gif"))
+            paste0("g_", 1:179,".gif"))
 ```
 
 Let's resize them for good measure. 
 
-```{r message=FALSE, include=FALSE}
+```{r, eval=FALSE}
 
 resize_player <- function(x){
   img <- image_scale(image_read(x), "145x190!")
   image_write(img, x)        
 }
 
-player_pics <- list.files("./data/190417/patch/", full.names = TRUE)
+player_pics <- list.files("./data/190417/patch_rep/", full.names = TRUE)
 
 map(player_pics, resize_player)
 
 ```
 
+Create columns
 
-
-```{r include=FALSE}
-dir.create("./data/190417/cols")
+```{r eval=FALSE}
+dir.create("./data/190417/cols_rep")
 
 getwd()
-files <- dir("data/190417/patch", full.names = TRUE)
+files <- dir("data/190417/patch_rep", full.names = TRUE)
 set.seed(1)
 files <- sample(files, length(files)-2) # 176 will mahe a nices patch
 gmp::factorize(length(files)-2)
@@ -409,7 +402,7 @@ make_column <- function(i, files, no_rows){
 fun <- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
   image_append(stack = TRUE) %>%
-    image_write(paste0("./data/190417/cols/", i, ".jpg"))
+    image_write(paste0("./data/190417/cols_rep/", i, ".jpg"))
 }
 
  #could not really make map function ;-(
@@ -422,12 +415,12 @@ fun <- function(i, files, no_rows){
 
 So we have the columns. Still need to bind them together.
 
-```{r include=FALSE}
+```{r eval=FALSE}
 getwd()
 
-x <- image_read(dir(".data/190417/cols/", full.names = TRUE))
+x <- image_read(dir(".data/190417/cols_rep/", full.names = TRUE))
 
-img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
+img <- image_read(dir("data/190417/cols_rep/", full.names = TRUE)) %>%
 image_append(stack = FALSE) 
 
 setwd("./files/20190417")
@@ -439,8 +432,8 @@ image_write(img,"2019-04-17-faces_of_54.jpg")
 Clean up a bit.
 
 ```{r}
-unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
-unlink("./data/190417/cols", recursive = TRUE) # don't need those anymore
+unlink("./data/190417/patch_rep", recursive = TRUE) # don't need those anymore
+unlink("./data/190417/cols_rep", recursive = TRUE) # don't need those anymore
 ```
 
 <center>
@@ -448,9 +441,8 @@ unlink("./data/190417/cols", recursive = TRUE) # don't need those anymore
 </center>
 
 
-So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those are indeed two very small samples of Belgians, and they are from different generations. 
 
-What I can says is that given my age, gender and skin color, I would fit right in. 
+So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those two groups are indeed two very small samples of Belgians. What I can says is that given my age, gender and skin color, I would fit right in. 
 
 Wondering what the 55 legislature will look like. Will keep you posted.
 
@@ -464,7 +456,7 @@ Analyzing the Red Devil's website code, it appears the pictures are to be found 
 
 Downloading the pictures of the men:
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r, eval=FALSE}
 
 for(i in (1:7000)){
   
@@ -473,20 +465,17 @@ for(i in (1:7000)){
   res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_m/{i}.jpg"), mode = "wb"))
   if(inherits(res, "try-error"))
   {
-    
     next
   }
   download.file(url_pic, destfile = glue("./content/post/data/190417down_m/{i}.jpg"), mode = "wb")
-  
   }
 
 
 # clean the folder of empty files:
 
 all_files <- dir("./content/post/data/190417down_m/", recursive = TRUE, full.names = TRUE)
-erase <- all_files[file.info(all_fiels)[["size"]]< 4200]
-length(all_files)-length(erase)
-file.info(all_fiels[5])[["size"]]
+erase <- all_files[file.info(all_files)[["size"]]< 4200]
+
 ## Remove empty files
 unlink(erase, recursive=TRUE, force=FALSE)
 
@@ -494,7 +483,7 @@ unlink(erase, recursive=TRUE, force=FALSE)
 
 Next is downloading the pictures of the women:
 
-```{r include=FALSE}
+```{r, eval=FALSE}
 
 for(i in (1:7000)){
   
@@ -503,14 +492,12 @@ for(i in (1:7000)){
   res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_w/{i}.jpg"), mode = "wb"))
   if(inherits(res, "try-error"))
   {
-    
     next
   }
   download.file(url_pic, destfile = glue("./content/post/data/190417down_w/{i}.jpg"), mode = "wb")
-  
-}
+  }
 
-# clean the folder of empty files:
+# clean the folder of smaller files:
 
 all_files <- dir("./content/post/data/190417down_w/", recursive = TRUE, full.names = TRUE)
 erase <- all_files[file.info(all_files)[["size"]]< 4200]
@@ -519,24 +506,23 @@ unlink(erase, recursive=TRUE, force=FALSE)
 
 ```
 
-There are now 784 pictures of national soccer players; 612 men and 172 women. Most of these pictures seem to be recent, but there is no date tag or something similar. On the other hand the site only publishes currently selected players, so this indicates the pictures overall, are fairly recent.  
+There are now 687 pictures of national soccer players; 418 men and 269 women. Most of these pictures seem to be recent, but there is no date tag or something similar. Overall, are seem fairly recent.  
 
 Sampling 176 of them:
 
-```{r echo=TRUE, message=FALSE}
+```{r eval=FALSE}
 # renaming files, so we do not have the same file names between men and women
 
 setwd("./data/190417down_m/")
 length(list.files())
-file.rename(list.files(), 
-            paste0("m_", 1:612,".jpg"))
+file.rename(list.files(), paste0("m_", 1:418,".jpg"))
 ```
 ```{r eval=FALSE, include=FALSE}
 
 setwd("./data/190417down_w/")
 length(list.files())
 file.rename(list.files(), 
-            paste0("w_", 1:172,".jpg"))
+            paste0("w_", 1:269,".jpg"))
 ```
 
 Merging men and women.
@@ -553,7 +539,7 @@ sampled_files <- sample(player_files, 176)
 
 Making the same patchwork
 
-```{r echo=TRUE, message=FALSE}
+```{r eval=FALSE}
 
 dir.create("./data/190417/patch")
 
@@ -571,7 +557,7 @@ lapply(sampled_files, function(x) file.copy(x,
 And the pictures need to have the same size (170x250 pixel)
 
 
-```{r message=FALSE, include=FALSE}
+```{r eval=FALSE}
 
 resize_player <- function(x){
   img <- image_scale(image_read(x), "170x250!")
@@ -586,7 +572,7 @@ map(player_pics, resize_player)
 
 Create the columns.
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 dir.create("./data/190417/cols")
 
 getwd()
@@ -607,7 +593,7 @@ make_column <- function(i, files, no_rows){
 
 
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 fun <- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
   image_append(stack = TRUE) %>%
@@ -622,7 +608,7 @@ fun(i, files, no_rows)
 ```
 
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 
 img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
 image_append(stack = FALSE) 
@@ -634,7 +620,7 @@ image_write(img,"2019-04-17-faces_of_devils.jpg")
 
 ```
 
-Cleaning
+
 
 ```{r eval=FALSE, include=FALSE}
 unlink("./data/190417/cols",  recursive = TRUE)
@@ -643,12 +629,15 @@ unlink("./data/190417/patch",  recursive = TRUE)
 
 ```
 
-
+So here is the patchwork of soccer players.
 <center>
 ![devils](/img/20190417/2019-04-17-faces_of_devils.jpg)
 
 </center>
 
-So give me my tepid beer back. Here's a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let's hope). 
+
+So give me my tepid beer back. Here's a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let's hope). They also do not wear glasses.
+
+Why do they seem so different? Is it because of a generational difference? A cast difference? A class difference?
 
 Let's get back to the parliamentarians tweets in the next post. 
