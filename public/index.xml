@@ -1,56 +1,886 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>bad to the code</title>
     <link>/</link>
     <description>Recent content on bad to the code</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo - gohugo.io</generator>
     <language>en</language>
-    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Wed, 17 Apr 2019 00:00:00 +0000</lastBuildDate>
+    <contact>madcap1090@gmail.com</contact>
+    <copyright>&copy; <a href="https://github.com/madcap1090">William Bourgeois</a> 2019</copyright>
     
-	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+        <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>members of the chamber of representatives of Belgium, 54th legistlature</title>
       <link>/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/</link>
       <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/</guid>
-      <description>For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for 6 governments, their administration and their parliaments?
-We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to get a subset.</description>
+      <description></description>
+      
+      <content>
+
+
+&lt;p&gt;For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for 6 governments, their administration and their parliaments?&lt;/p&gt;
+&lt;p&gt;We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to get a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.dekamer.be&#34; class=&#34;uri&#34;&gt;https://www.dekamer.be&lt;/a&gt; is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections.&lt;/p&gt;
+&lt;p&gt;Let’s scrape them.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;tidyverse&amp;quot;)
+library(&amp;quot;rvest&amp;quot;)
+library(&amp;quot;XML&amp;quot;)
+library(&amp;quot;glue&amp;quot;)
+library(&amp;quot;magick&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;url &amp;lt;- &amp;quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=/site/wwwcfm/depute/cvlist54.cfm&amp;quot;
+
+table &amp;lt;- url %&amp;gt;% 
+  read_html() %&amp;gt;% 
+  html_nodes(&amp;quot;#story &amp;gt; table&amp;quot;) %&amp;gt;% 
+  html_table()
+
+table &amp;lt;- table[[1]] # extracting the dataframe
+
+names(table) &amp;lt;- c(&amp;quot;ln_fn&amp;quot;, &amp;quot;party&amp;quot;, &amp;quot;d1&amp;quot;, &amp;quot;d2&amp;quot;)
+table &amp;lt;- table %&amp;gt;% 
+  select(ln_fn, party) %&amp;gt;% 
+  arrange(ln_fn)
+
+head(table)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##                                  ln_fn       party
+## 1                        Almaci Meyrem Ecolo-Groen
+## 2                           Becq Sonja        CD&amp;amp;V
+## 3 Beke                          Wouter        CD&amp;amp;V
+## 4                         Bellens Rita        N-VA
+## 5                      Ben Hamou Nawal          PS
+## 6                   Blanchart Philippe          PS&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Funny that all the white spaces between “Beke” and “Wouter” cannot be seen. But they need to be cleaned.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;table &amp;lt;- table %&amp;gt;%
+  mutate(ln_fn = (str_replace_all(ln_fn,&amp;quot;  +&amp;quot;,&amp;quot; &amp;quot;)),
+         ln_fn = trimws(table$ln_fn, which = &amp;quot;both&amp;quot;))
+
+table$ln_fn &amp;lt;- str_replace_all(table$ln_fn,&amp;quot;  +&amp;quot;,&amp;quot; &amp;quot;)
+table$ln_fn &amp;lt;- trimws(table$ln_fn, which = &amp;quot;both&amp;quot;) # for good measure
+nrow(table)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 150&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;150 members today with their current political party. I’m going to save that data, because after the elections of next month it will not be available for a long time.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;saveRDS(table, &amp;quot;~/R/blogs/content/post/data/190417/reps_54_190417.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And the parties are:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;table %&amp;gt;% 
+  group_by(party) %&amp;gt;% 
+  summarise(members=n()) %&amp;gt;% 
+  arrange(desc(members))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 14 x 2
+##    party        members
+##    &amp;lt;chr&amp;gt;          &amp;lt;int&amp;gt;
+##  1 N-VA              31
+##  2 PS                23
+##  3 MR                20
+##  4 CD&amp;amp;V              17
+##  5 Open Vld          14
+##  6 sp.a              13
+##  7 Ecolo-Groen       12
+##  8 cdH                9
+##  9 VB                 3
+## 10 DéFI               2
+## 11 PTB-GO!            2
+## 12 Vuye&amp;amp;Wouters       2
+## 13 ONAFH              1
+## 14 PP                 1&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can also scrape the complete list of members of the 54th legislature.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;url &amp;lt;- &amp;quot;https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvlist54.cfm?legis=54&amp;amp;today=n&amp;quot;
+
+table_54 &amp;lt;- url %&amp;gt;% 
+  read_html() %&amp;gt;% 
+  html_nodes(&amp;quot;#story &amp;gt; table&amp;quot;) %&amp;gt;% 
+  html_table()
+
+table_54 &amp;lt;- table_54[[1]] # extracting the dataframe
+
+names(table_54) &amp;lt;- c(&amp;quot;ln_fn&amp;quot;, &amp;quot;d1&amp;quot;, &amp;quot;d2&amp;quot;, &amp;quot;d3&amp;quot;)  
+table_54 &amp;lt;- table_54 %&amp;gt;% 
+  select(ln_fn) %&amp;gt;% 
+  arrange(ln_fn)
+
+table_54 &amp;lt;- table_54 %&amp;gt;%
+  mutate(ln_fn = (str_replace_all(ln_fn,&amp;quot;  +&amp;quot;,&amp;quot; &amp;quot;)),
+         ln_fn = trimws(ln_fn, which = &amp;quot;both&amp;quot;))
+
+table$ln_fn &amp;lt;- str_replace_all(table$ln_fn,&amp;quot;  +&amp;quot;,&amp;quot; &amp;quot;)
+table$ln_fn &amp;lt;- trimws(table$ln_fn, which = &amp;quot;both&amp;quot;) # for good measure&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This table does not mention the party, which is a pity because some members have changed since 2014.&lt;/p&gt;
+&lt;p&gt;Who has left ?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;table_54 %&amp;gt;% 
+  anti_join(table) %&amp;gt;% 
+  unlist() %&amp;gt;% 
+  unname()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;Bacquelaine Daniel&amp;quot;      &amp;quot;Claerhout Sarah&amp;quot;        
+##  [3] &amp;quot;Crusnière Stéphane&amp;quot;      &amp;quot;De Block Maggie&amp;quot;        
+##  [5] &amp;quot;De Crem Pieter&amp;quot;          &amp;quot;De Croo Alexander&amp;quot;      
+##  [7] &amp;quot;Demeyer Willy&amp;quot;           &amp;quot;Ducarme Denis&amp;quot;          
+##  [9] &amp;quot;Flahaut André&amp;quot;           &amp;quot;Fremault Céline&amp;quot;        
+## [11] &amp;quot;Geens Koen&amp;quot;              &amp;quot;Gerkens Muriel&amp;quot;         
+## [13] &amp;quot;Hellings Benoit&amp;quot;         &amp;quot;Hufkens Renate&amp;quot;         
+## [15] &amp;quot;Khattabi Zakia&amp;quot;          &amp;quot;Klaps Johan&amp;quot;            
+## [17] &amp;quot;Lahaye-Battheu Sabien&amp;quot;   &amp;quot;Marghem Marie-Christine&amp;quot;
+## [19] &amp;quot;Massin Eric&amp;quot;             &amp;quot;Michel Charles&amp;quot;         
+## [21] &amp;quot;Poncelet Isabelle&amp;quot;       &amp;quot;Raskin Wouter&amp;quot;          
+## [23] &amp;quot;Reynders Didier&amp;quot;         &amp;quot;Turtelboom Annemie&amp;quot;     
+## [25] &amp;quot;Van der Donckt Wim&amp;quot;      &amp;quot;Vande Lanotte Johan&amp;quot;    
+## [27] &amp;quot;Vanheste Ann&amp;quot;            &amp;quot;Wathelet Melchior&amp;quot;      
+## [29] &amp;quot;Wilmès Sophie&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So indeed 29 representatives. But some left to work in the government and then came back when their party decided to leave government because of a city in northern Africa. Go figure.&lt;/p&gt;
+&lt;p&gt;But it does make the identification of a tweet as a tweet being sent by a member of parliament a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hard coding also.&lt;/p&gt;
+&lt;p&gt;Let’s have some fun first. Looking at the page of the current members of parliament, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the xpath is known its is relatively easy to extract the individual member’s webpage url.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;url &amp;lt;- &amp;quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=/site/wwwcfm/depute/cvlist54.cfm&amp;quot;
+url &amp;lt;- &amp;quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvlist54.cfm?legis=54&amp;amp;today=n&amp;quot;
+page &amp;lt;- url %&amp;gt;% 
+  read_html() %&amp;gt;% 
+  html_nodes(xpath=  &amp;#39;//*[@id=&amp;quot;story&amp;quot;]/table&amp;#39;) 
+
+# loop to get urls
+urls &amp;lt;- tibble()
+
+for(i in 1:nrow(table_54)){
+  url &amp;lt;- xml_attrs(xml_child(xml_child(xml_child(page[[1]], i), 1), 1))
+  url &amp;lt;- unname(url)
+  name &amp;lt;- table_54$ln_fn[i]
+  url &amp;lt;- cbind(name, url)
+  urls &amp;lt;- rbind(urls, url)
+}
+
+table_ids &amp;lt;- urls %&amp;gt;%
+  mutate(url = paste0(&amp;quot;http://www.dekamer.be/kvvcr/&amp;quot;, url))   # constructing the url
+  
+head(table_ids)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##                 name
+## 1      Almaci Meyrem
+## 2 Bacquelaine Daniel
+## 3         Becq Sonja
+## 4        Beke Wouter
+## 5       Bellens Rita
+## 6    Ben Hamou Nawal
+##                                                                                                            url
+## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01189&amp;amp;lactivity=54
+## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=00757&amp;amp;lactivity=54
+## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01190&amp;amp;lactivity=54
+## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01149&amp;amp;lactivity=54
+## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=06592&amp;amp;lactivity=54
+## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=06647&amp;amp;lactivity=54&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;But there is a problem with matching the names and the ids.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;x &amp;lt;- table_ids
+
+names &amp;lt;- tibble()
+
+for (i in (1:nrow(x))){
+  url &amp;lt;- x$url[i]
+  fn_ln &amp;lt;- url %&amp;gt;%
+    read_html() %&amp;gt;%
+    html_nodes(xpath=  &amp;#39;//*[@id=&amp;quot;myform&amp;quot;]/center/h2&amp;#39;) %&amp;gt;% 
+    html_text() %&amp;gt;% 
+    as.data.frame()
+  info &amp;lt;- cbind(fn_ln, url)
+  names &amp;lt;- rbind(names, info)
+}
+
+names(names) &amp;lt;- c(&amp;quot;fn_ln&amp;quot;,&amp;quot;url&amp;quot;)
+
+names &amp;lt;- names %&amp;gt;% 
+  mutate(fn_ln =(str_replace_all(fn_ln,&amp;quot;  +&amp;quot;,&amp;quot; &amp;quot;)))
+
+head(names)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##                fn_ln
+## 1      Meyrem Almaci
+## 2 Daniel Bacquelaine
+## 3         Sonja Becq
+## 4       Wouter Beke 
+## 5       Rita Bellens
+## 6    Nawal Ben Hamou
+##                                                                                                            url
+## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01189&amp;amp;lactivity=54
+## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=00757&amp;amp;lactivity=54
+## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01190&amp;amp;lactivity=54
+## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01149&amp;amp;lactivity=54
+## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=06592&amp;amp;lactivity=54
+## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=06647&amp;amp;lactivity=54&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So we need to correct that the ids and fn_ln are correct so? so build a key based on the letters in the name of the person&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;str_sort &amp;lt;- function(x)
+  sapply(lapply(strsplit(x, NULL), sort), paste, collapse=&amp;quot;&amp;quot;)
+
+w_key &amp;lt;- table_ids %&amp;gt;% 
+  mutate(key = tolower(str_replace_all(name,&amp;quot; &amp;quot;,&amp;quot;&amp;quot;))) %&amp;gt;% 
+  mutate(key = str_sort(key)) %&amp;gt;% 
+  select(-url)
+
+names_w_key &amp;lt;- names %&amp;gt;% 
+  mutate(key = tolower(str_replace_all(fn_ln,&amp;quot; &amp;quot;,&amp;quot;&amp;quot;))) %&amp;gt;% 
+  mutate(key = str_sort(key))
+
+names &amp;lt;- names_w_key %&amp;gt;% 
+  left_join(w_key) %&amp;gt;% 
+  rename(&amp;quot;ln_fn&amp;quot; = &amp;quot;name&amp;quot;)
+
+names %&amp;gt;% 
+  select(-url) %&amp;gt;% 
+  head()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##                fn_ln               key              ln_fn
+## 1      Meyrem Almaci      aaceeilmmmry      Almaci Meyrem
+## 2 Daniel Bacquelaine aaabcdeeeiillnnqu Bacquelaine Daniel
+## 3         Sonja Becq         abcejnoqs         Becq Sonja
+## 4       Wouter Beke         beeekortuw        Beke Wouter
+## 5       Rita Bellens       abeeillnrst       Bellens Rita
+## 6    Nawal Ben Hamou     aaabehlmnnouw    Ben Hamou Nawal&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Seems to work. Names are clean. Now the id code is needed.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# correct id
+
+names &amp;lt;- names %&amp;gt;%
+  mutate(id = gsub(&amp;#39;^.*key=*|\\s*&amp;amp;lact.*$&amp;#39;,&amp;#39;&amp;#39;, url))               # extract their id from the url
+  #mutate(id = gsub(&amp;#39;O&amp;#39;,&amp;#39;0&amp;#39;,id))      # some of them have O instead of 0 but we need to keep them&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So now we have in ‘urls’ the name and links to the personal webpage of the representatives on the chamber’s website. Notice their id at the end of the url after ‘cfm?key=’ and before ‘&amp;amp;lat’.&lt;/p&gt;
+&lt;p&gt;Let’s get their mugshots.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/20190417/inspect.png&#34; alt=&#34;Inspecting the code of the webpage&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Inspecting the code of the webpage&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;So the images are in &lt;a href=&#34;http://www.dekamer.be/site/wwwroot/images/cv/&#34; class=&#34;uri&#34;&gt;http://www.dekamer.be/site/wwwroot/images/cv/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data 🚨, shame on you webmaster 😉.&lt;/p&gt;
+&lt;p&gt;So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to enhance the ‘download_gifs’ function.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;download_gifs_with_0 &amp;lt;- function (name, id){
+  url_pic &amp;lt;- glue(&amp;quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&amp;quot;)
+  download.file(url_pic, destfile = glue(&amp;quot;./data/190417/down_1/{name}.gif&amp;quot;), mode = &amp;quot;wb&amp;quot;)
+}
+
+download_gifs_no_0 &amp;lt;- function (name, id){
+  id &amp;lt;- as.numeric(id)
+  url_pic &amp;lt;- glue(&amp;quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&amp;quot;)
+  download.file(url_pic, destfile = glue(&amp;quot;./data/190417/down_2/{name}.gif&amp;quot;), mode = &amp;quot;wb&amp;quot;)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work &amp;amp; presentation at the RUser2018 conference in Budapest.&lt;/p&gt;
+&lt;p&gt;So using ‘safely’ the error are being skipped and we managed to download how many files?&lt;/p&gt;
+&lt;ol start=&#34;160&#34; style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;Only few missing. Let’s use the other function.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(list.files(&amp;quot;./data/190417/down_2&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0&lt;/code&gt;&lt;/pre&gt;
+&lt;ol start=&#34;96&#34; style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;Hmm so now we have too many pictures (and the ones with no leading 0 seem older). See the aging of Mr Calvo:
+&lt;center&gt;
+&lt;img src=&#34;/img/20190417/Calvo%20Kristof_young.gif&#34; alt=&#34;Young Mr Calvo&#34; /&gt; &lt;img src=&#34;/img/20190417/Calvo%20Kristof_06128_old.gif&#34; alt=&#34;Old Mr Calvo&#34; /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/center&gt;
+&lt;p&gt;And it seems some are still missing 😒.&lt;/p&gt;
+&lt;p&gt;Whose pics were additionally obtained?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;new &amp;lt;- list.files(&amp;quot;./data/190417/down_1&amp;quot;)
+old &amp;lt;- list.files(&amp;quot;./data/190417/down_2&amp;quot;)
+new_pics &amp;lt;- setdiff(old, new)
+new_pics&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## character(0)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Nice guy, Georges. Recently became grandfather again.&lt;/p&gt;
+&lt;p&gt;So are we missing some?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;fileslist &amp;lt;- list.files(&amp;quot;./data/190417&amp;quot;)
+fileslist &amp;lt;-grep(&amp;quot;.gif&amp;quot;,fileslist,value=TRUE)
+length(fileslist)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 179&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Looks promising. But double checking can not harm.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;names_list &amp;lt;- gsub(&amp;quot;.gif&amp;quot;,&amp;quot;&amp;quot;,fileslist)
+setdiff(names_list, names$ln_fn)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## character(0)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;🆒 we have a picture of all of them.&lt;/p&gt;
+&lt;p&gt;Let’s resize them for good measure.&lt;/p&gt;
+&lt;p&gt;So we have the columns. Still need to bind them together.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unlink(&amp;quot;./data/190417/patch&amp;quot;, recursive = TRUE) # don&amp;#39;t need those anymore
+unlink(&amp;quot;./data/190417/cols&amp;quot;, recursive = TRUE) # don&amp;#39;t need those anymore&lt;/code&gt;&lt;/pre&gt;
+&lt;center&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/20190417/2019-04-17-faces_of_54.jpg&#34; alt=&#34;reps 54&#34; width=&#34;800&#34; height=&#34;850&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;reps 54&lt;/p&gt;
+&lt;/div&gt;
+&lt;/center&gt;
+&lt;p&gt;So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those are indeed two very small samples of Belgians, and they are from different generations.&lt;/p&gt;
+&lt;p&gt;What I can says is that given my age, gender and skin color, I would fit right in.&lt;/p&gt;
+&lt;p&gt;Wondering what the 55 legislature will look like. Will keep you posted.&lt;/p&gt;
+&lt;p&gt;But wait a minute. Did I say Belgian national soccer teams? Hold my beer.&lt;/p&gt;
+&lt;p&gt;Analyzing the Red Devil’s website code, it appears the pictures are to be found in an aws bucket s3 folder.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/20190417/Eden.png&#34; alt=&#34;Inspecting the code of the webpage&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Inspecting the code of the webpage&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Downloading the pictures of the men:&lt;/p&gt;
+&lt;p&gt;Next is downloading the pictures of the women:&lt;/p&gt;
+&lt;p&gt;There are now 784 pictures of national soccer players; 612 men and 172 women. Most of these pictures seem to be recent, but there is no date tag or something similar. On the other hand the site only publishes currently selected players, so this indicates the pictures overall, are fairly recent.&lt;/p&gt;
+&lt;p&gt;Sampling 176 of them:&lt;/p&gt;
+&lt;p&gt;Making the same patchwork&lt;/p&gt;
+&lt;p&gt;And the pictures need to have the same size (170x250 pixel)&lt;/p&gt;
+&lt;p&gt;Create the columns.&lt;/p&gt;
+&lt;p&gt;Cleaning&lt;/p&gt;
+&lt;center&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/20190417/2019-04-17-faces_of_devils.jpg&#34; alt=&#34;devils&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;devils&lt;/p&gt;
+&lt;/div&gt;
+&lt;/center&gt;
+&lt;p&gt;So give me my tepid beer back. Here’s a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let’s hope).&lt;/p&gt;
+&lt;p&gt;And the soccer players smile less. Maybe soccer is a more serious game than politics. And maybe politicians want us to like them more. Don’t really know why, but the parlemantairians smile more.&lt;/p&gt;
+&lt;p&gt;Both groups are not a representative sample of the Belgian population. In some way both are very special. Both represent in a way casts of the country.&lt;/p&gt;
+&lt;p&gt;Let’s get back to the parliamentarians tweets in the next post.&lt;/p&gt;
+</content>
+      
     </item>
     
     <item>
       <title>am I getting slower going to work?</title>
       <link>/post/am-i-getting-slower-going-to-work/</link>
       <pubDate>Sat, 13 Apr 2019 00:00:00 +0000</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/post/am-i-getting-slower-going-to-work/</guid>
-      <description>I got a bit distracted writing the last post. What I want to find out is, based on my Google location history, how fast I bike to work and if this has changed over time.
-Attaching libraries
-library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;lubridate&amp;quot;)library(&amp;quot;glue&amp;quot;)library(&amp;quot;purrr&amp;quot;)library(&amp;quot;ggmap&amp;quot;)library(&amp;quot;ggplot2&amp;quot;); theme_set(theme_minimal())And loading the data
-# the code to convert your location data to a data frame:# see last post too# data &amp;lt;- fromJSON(&amp;quot;./data/Location History.</description>
+      <description></description>
+      
+      <content>
+
+
+&lt;p&gt;I got a bit distracted writing the last post. What I want to find out is, based on my Google location history, how fast I bike to work and if this has changed over time.&lt;/p&gt;
+&lt;p&gt;Attaching libraries&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;tidyverse&amp;quot;)
+library(&amp;quot;lubridate&amp;quot;)
+library(&amp;quot;glue&amp;quot;)
+library(&amp;quot;purrr&amp;quot;)
+library(&amp;quot;ggmap&amp;quot;)
+library(&amp;quot;ggplot2&amp;quot;); theme_set(theme_minimal())&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And loading the data&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# the code to convert your location data to a data frame:
+# see last post too
+# data &amp;lt;- fromJSON(&amp;quot;./data/Location History.json&amp;quot;) # extracts a list
+# locations &amp;lt;- data$locations # and the list contains a dataframe
+
+location &amp;lt;- readRDS(&amp;quot;~/R/blog/content/post/data/location.rds&amp;quot;)
+
+df &amp;lt;- location %&amp;gt;% 
+  mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &amp;quot;1970-01-01&amp;quot;)) 
+
+df &amp;lt;- df %&amp;gt;% 
+  mutate(lat   = latitudeE7/1e7,
+         lon   = longitudeE7/1e7,
+         time  = strftime(datetime, format = &amp;quot;%H:%M:%S&amp;quot;),
+         date  = date(datetime),
+         year  = year(datetime),
+         month = month(datetime),
+         wday  = wday(datetime))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So what do we have here?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;nrow(df)                   # rows&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 522770&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(unique(df$date))    # days&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 1249&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;min(unique(df$date))       # first day&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;2014-01-14&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;max(unique(df$date))       # last day&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;2018-10-15&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Plotted:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(data = df, aes(x = datetime, y = lat))+
+ geom_line()+
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+    labs(title=&amp;quot;commuting slower?&amp;quot;,
+       subtitle = &amp;quot;latitude tracking 2014 - 2018&amp;quot;,
+       x = &amp;quot;days&amp;quot;,
+       y = &amp;quot;latitude&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;I changed jobs in September 2014, my first working day at my current job was 15/09/2014.&lt;/p&gt;
+&lt;p&gt;Let’s see which days I was working there. The dataframe “work”, then contains all the data points from where I am at work.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;work &amp;lt;- df %&amp;gt;% 
+  filter(date &amp;gt; &amp;quot;2014-09-14&amp;quot;) %&amp;gt;%
+  filter(round(lat,3) == 50.557) %&amp;gt;% 
+  filter(round(lon,2) == 5.18) %&amp;gt;% # a little less accuracy on the longitude
+  mutate(homework = &amp;quot;work&amp;quot;) %&amp;gt;% 
+  mutate(am_pm = case_when(am(datetime) ~ &amp;quot;am&amp;quot;,
+                           TRUE ~ &amp;quot;pm&amp;quot;))
+
+length(unique(work$date)) &lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 406&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(data = work, aes(x = datetime, y = lat))+
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;lattitude between home and work by day&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So that would mean that in my data set I have 406 working days and the data that comes along with it.
+Since at this point I am not interested in the data from days I was not working, these can be filtered out.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;home &amp;lt;- df %&amp;gt;%
+  filter(round(lat,3) != 50.557) %&amp;gt;% 
+  filter(round(lon,2) != 5.18) %&amp;gt;%
+  mutate(homework = &amp;quot;not_work&amp;quot;) %&amp;gt;% 
+  filter(date %in%(unique(work$date))) %&amp;gt;% 
+  mutate(am_pm = case_when(am(datetime) ~ &amp;quot;am&amp;quot;,
+                           TRUE ~ &amp;quot;pm&amp;quot;))
+
+home_work &amp;lt;- rbind(home, work) %&amp;gt;% 
+  arrange(datetime)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;What days at work got tracked?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(unique(home_work$date)) # workdays&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 406&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;min(unique(home_work$date))    # first day&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;2014-09-15&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;max(unique(home_work$date))    # last day&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;2018-07-03&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;To calculate the time of my daily commute I have to find the time between I last was at home and the time I arrived at work.&lt;/p&gt;
+&lt;p&gt;The latitude changes during a typical working day look like this (although this one is particularly boring 😒).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- df %&amp;gt;% 
+  filter(date == &amp;quot;2014-12-23&amp;quot;) 
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;23/12/2014 - another day at the office&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-9-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;And if we look at the first hours of the day and arriving at work:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- df %&amp;gt;% 
+  filter(date == &amp;quot;2014-12-23&amp;quot;) %&amp;gt;% 
+  filter(time &amp;gt; &amp;quot;07:00:00&amp;quot;,
+         time &amp;lt; &amp;quot;09:30:00&amp;quot;)
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;23/12/2014 - zooming in on arriving at work&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So the time spent in the commute is the time first at around 50.560 latitude (itw) minus the last time at around 50.580 latitude (oth), and that for the time period of let’s say between 7am and 9.30am.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;oth &amp;lt;- day %&amp;gt;% 
+  filter(lat &amp;lt; 50.5756) %&amp;gt;% 
+  filter(time == min(time)) %&amp;gt;% 
+  select(time) %&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+itw &amp;lt;- day %&amp;gt;% 
+  filter(lat &amp;lt; 50.558) %&amp;gt;% 
+  filter(time == min(time)) %&amp;gt;% 
+  select(time)%&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+commute_time &amp;lt;- difftime(itw$time,oth$time, units = c(&amp;quot;mins&amp;quot;)) #9.93 minutes
+class(commute_time)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;difftime&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;as.numeric(commute_time)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 2.083333&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2 minutes is a bit too fast. The problem is that the first time out of the house, on that particular date, is recorded pretty late. So the last time in the house (ith) is the one that is needed. Also because starting around 30/01/2016 a strange pattern is emerging&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- home_work %&amp;gt;%
+  filter(date == &amp;quot;2018-07-03&amp;quot;) %&amp;gt;% 
+  filter(time &amp;gt; &amp;quot;08:00:00&amp;quot;,
+         time &amp;lt; &amp;quot;09:30:00&amp;quot;)
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line() +
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;&amp;#39;bilocation&amp;#39; pattern&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;And that pattern did not happen before February 2016. For instance “2016-01-08” gives.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- home_work %&amp;gt;%
+  filter(date == &amp;quot;2016-01-08&amp;quot;) %&amp;gt;% 
+  filter(time &amp;gt; &amp;quot;07:30:00&amp;quot;,
+         time &amp;lt; &amp;quot;09:30:00&amp;quot;)
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line()+
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;before February 2016&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;A collegue came up with the hypothesis that it was my computer at home that was messing up my phone location data, which was a great idea, but in fact it was my tablet.&lt;/p&gt;
+&lt;p&gt;I bought it on 30/01/2016, and both it’s location data and my phone location data are merged ever since. Which is kind of surprising or rather dissapointing.&lt;/p&gt;
+&lt;p&gt;Google is serving us dirty data in the location history. I cannot imagine it does not distinguish between my devises.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;oth &amp;lt;- day %&amp;gt;% 
+  filter(lat &amp;lt; 50.5756) %&amp;gt;% 
+  filter(time == min(time)) %&amp;gt;% 
+  select(time) %&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+# the last time in the house
+ith &amp;lt;- day %&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;)) %&amp;gt;% 
+  filter(time &amp;lt; oth$time) %&amp;gt;% 
+  filter(time == max(time))%&amp;gt;% 
+  select(time) %&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+
+itw &amp;lt;- day %&amp;gt;% 
+  filter(lat &amp;lt; 50.557) %&amp;gt;% 
+  filter(time == min(time)) %&amp;gt;% 
+  select(time)%&amp;gt;% 
+  mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+
+commute_time &amp;lt;- difftime(itw$time,ith$time, units = c(&amp;quot;mins&amp;quot;)) #9.93 minutes
+class(commute_time)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;difftime&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;as.numeric(commute_time)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 44.48333&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;17 minutes on the other hand seems a lot. But the data and calculations look correct to me. One explanation could be that sometimes there is a big delay in reporting the arrival time. Like on April 17 2015, where arrival was recorded after 12am.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;day &amp;lt;- df %&amp;gt;% 
+  filter(date == &amp;quot;2015-04-17&amp;quot;) 
+
+ggplot(data = day, aes(x = datetime, y = lat)) +
+  geom_line() + 
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(y = &amp;quot;latitude&amp;quot;, 
+    title = &amp;quot;April 17 2015&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-15-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So it’s time to do some more data cleaning, and select dates that have data from both work and home between 7 and 9:30am.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;keep_dates &amp;lt;- home_work %&amp;gt;% 
+  filter(time &amp;gt; &amp;quot;07:00:00&amp;quot;,
+         time &amp;lt; &amp;quot;09:30:00&amp;quot;) %&amp;gt;%
+  plyr::count(c(&amp;#39;date&amp;#39;, &amp;#39;homework&amp;#39;)) %&amp;gt;% 
+  spread(homework, freq) %&amp;gt;% 
+  filter(work &amp;gt; 0) %&amp;gt;% 
+  select(date)
+glue(&amp;quot;so there are now {nrow(keep_dates)} days to be analysed&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## so there are now 336 days to be analysed&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s define a function to do it.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# building the function
+get_time &amp;lt;- function(x_date){
+  day &amp;lt;- home_work %&amp;gt;%
+    filter(date ==  x_date) %&amp;gt;% 
+    filter(time &amp;gt; &amp;quot;07:30:00&amp;quot;,
+           time &amp;lt; &amp;quot;09:30:00&amp;quot;)
+  oth &amp;lt;- day %&amp;gt;% 
+    filter(lat &amp;lt; 50.5756) %&amp;gt;% 
+    filter(time == min(time)) %&amp;gt;% 
+    select(time) %&amp;gt;% 
+    mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;)) %&amp;gt;% 
+    slice(1) # making sure one value is returned
+  
+  ith &amp;lt;- day %&amp;gt;% 
+    mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;)) %&amp;gt;% 
+    filter(time &amp;lt; oth$time) %&amp;gt;% 
+    filter(time == max(time))%&amp;gt;% 
+    select(time) %&amp;gt;% 
+    mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))
+  
+  if(nrow(ith) == 0) {ith &amp;lt;- oth} 
+  
+  itw &amp;lt;- day %&amp;gt;% 
+    filter(lat &amp;lt; 50.558) %&amp;gt;% 
+    filter(time == min(time)) %&amp;gt;% 
+    select(time)%&amp;gt;% 
+    mutate(time = as.POSIXct(time, format = &amp;quot;%H:%M:%S&amp;quot;))%&amp;gt;% 
+    slice(1) # making sure one value is returned
+  
+  x &amp;lt;- difftime(itw$time,ith$time, units = c(&amp;quot;mins&amp;quot;))
+  x &amp;lt;- round(as.numeric(x),2)
+  return(x)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I had a struggle with purrr’s map_df() , but map_dbl() also does the trick&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;result &amp;lt;- map_dbl(keep_dates$date, get_time) %&amp;gt;% 
+  as.data.frame() %&amp;gt;% 
+  rename(&amp;quot;minutes&amp;quot; = &amp;quot;.&amp;quot;) %&amp;gt;% 
+  cbind(keep_dates) %&amp;gt;% 
+  select(date, minutes)
+
+head(result)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##         date minutes
+## 1 2014-09-16   18.53
+## 2 2014-09-18   10.45
+## 3 2014-09-24   28.02
+## 4 2014-09-26   32.77
+## 5 2014-09-30    9.30
+## 6 2014-10-01   20.92&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;max(result$minutes)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 100.95&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;min(result$minutes)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.13&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(result, aes(x = date, y = minutes)) +
+  geom_bar(stat = &amp;quot;identity&amp;quot;)+ 
+  scale_y_continuous(limits = c(0, 65)) +
+  labs(y = &amp;quot;minutes to work&amp;quot;, 
+    title = &amp;quot;2015 - 2018&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;2018 seems to have the cleanest data at this point. I sometimes walk to work or take the bus or the car. All of these take me more time than biking to work. There are five trafic lights on the way and I tend to stop for trafic lights when they are red. So the trafic ligths might explain much of the variance.&lt;/p&gt;
+&lt;p&gt;A bike ride would not take more than twenty minutes, and surely not less than 5.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;r_2018 &amp;lt;- result %&amp;gt;% 
+  filter(year(date) == 2018) %&amp;gt;% 
+  filter(minutes &amp;lt; 20,
+         minutes &amp;gt; 5)
+
+ggplot(r_2018, aes(x = date, y = minutes)) +
+  geom_bar(stat = &amp;quot;identity&amp;quot;) +
+  labs(y = &amp;quot;minutes to work&amp;quot;, 
+    title = &amp;quot;2018&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-21-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;round(mean(r_2018$minutes),2)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 12.18&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So that would then be around 12 minutes. I still need to time my current commutes for a while to see if I got slower.&lt;/p&gt;
+&lt;p&gt;I hoped for a bit cleaner data and the possibility to easyly compare the evolution of the time spent commuting over several years. But I’ll take the 12.18 minutes for now.&lt;/p&gt;
+&lt;p&gt;Finally I wanted to share the “patés” with you. Not often enough part of the team takes a break and walks around the office block, and those we call doing a “paté” (= block). They say walking meetings are in these days.&lt;/p&gt;
+&lt;p&gt;I was looking to see how many of them we are doing, but as you will see below the datapoints are mostly centered on our office building itself. And I cannot see how I can construct a pattern around it representing the “patés”.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;secrets &amp;lt;- readRDS(&amp;quot;~/R/geo/secret/secrets.rds&amp;quot;)
+key &amp;lt;- secrets$key[1]
+register_google(key = key)
+
+zoom &amp;lt;- get_map(location = c(lon = 4.306, lat = 50.8545), zoom = 19, maptype = &amp;quot;satellite&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/staticmap?center=50.8545,4.306&amp;amp;zoom=19&amp;amp;size=640x640&amp;amp;scale=2&amp;amp;maptype=satellite&amp;amp;language=en-EN&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- readRDS(&amp;quot;~/R/blog/content/post/data/location_509.rds&amp;quot;) %&amp;gt;% 
+  filter(year != 2017)
+
+ggmap(zoom) + 
+  geom_point(data = df, aes(x = lon, y = lat),
+             alpha = 0.7, color = &amp;quot;#FC4E07&amp;quot;, size = .8) + 
+  facet_wrap(~year) +
+  theme(legend.position = &amp;quot;right&amp;quot;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;always happy @work&amp;quot;,
+    caption = &amp;quot;\n removed 2017 because there were few data points.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-04-13-am-i-getting-slower-going-to-work_files/figure-html/unnamed-chunk-24-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It seems to me all the data is a bit off. 2014 to 2016 a bit or a lot shifted to the left, and 2018 just a tad too much to the left.&lt;/p&gt;
+&lt;p&gt;But still. Welcome to the panopticon.&lt;/p&gt;
+</content>
+      
     </item>
     
     <item>
       <title>google location tracking</title>
       <link>/post/google-location-tracking/</link>
       <pubDate>Sat, 30 Mar 2019 00:00:00 +0000</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/post/google-location-tracking/</guid>
-      <description>Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a regular user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
-So I downloaded the data, that comes in json format, and had a go at it. You can download your Google location data from your Google account.</description>
+      <description></description>
+      
+      <content>
+
+
+&lt;p&gt;Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a regular user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.&lt;/p&gt;
+&lt;p&gt;So I downloaded the data, that comes in json format, and had a go at it. You can &lt;a href=&#34;https://takeout.google.com/settings/takeout&#34;&gt;download&lt;/a&gt; your Google location data from your Google account.&lt;/p&gt;
+&lt;p&gt;Let’s load the data and attach the libraries that are needed.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;jsonlite&amp;quot;)
+library(&amp;quot;tidyverse&amp;quot;)
+library(&amp;quot;lubridate&amp;quot;)
+library(&amp;quot;ggplot2&amp;quot;)
+library(&amp;quot;ggmap&amp;quot;)      # devtools::install_github(&amp;quot;dkahle/ggmap&amp;quot;)
+library(&amp;quot;glue&amp;quot;)
+library(&amp;quot;emo&amp;quot;)        # devtools::install_github(&amp;quot;hadley/emo&amp;quot;)
+library(&amp;quot;viridis&amp;quot;)    # install.packages(&amp;quot;viridis&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;data &amp;lt;- fromJSON(&amp;quot;./data/Location History.json&amp;quot;) # extracts a list
+locations &amp;lt;- data$locations # and the list contains a dataframe
+rm(data)  # no need for this anymore&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This &lt;a href=&#34;https://shiring.github.io/maps/2016/12/30/Standortverlauf_post&#34;&gt;blogpost&lt;/a&gt; from Shirin Glander was super useful and I am shamelessly stealing some of her great ideas. The time stamp needs to be converted to be readable.
+The field heading seems to be in degrees, is velocity in mph? And I don’t know where the altitude reading comes from (maybe not a pressure sensor but gps triangulation?, ground elevation?).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- locations %&amp;gt;% 
+  mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &amp;quot;1970-01-01&amp;quot;)) 
+
+sort(unique(df$heading)) #naught to 360&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   [1]   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+##  [18]  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33
+##  [35]  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50
+##  [52]  51  52  53  54  55  56  57  58  59  60  61  62  63  64  65  66  67
+##  [69]  68  69  70  71  72  73  74  75  76  77  78  79  80  81  82  83  84
+##  [86]  85  86  87  88  89  90  91  92  93  94  95  96  97  98  99 100 101
+## [103] 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118
+## [120] 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135
+## [137] 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150 151 152
+## [154] 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169
+## [171] 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186
+## [188] 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203
+## [205] 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220
+## [222] 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237
+## [239] 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254
+## [256] 255 256 257 258 259 260 261 262 263 264 265 266 267 268 269 270 271
+## [273] 272 273 274 275 276 277 278 279 280 281 282 283 284 285 286 287 288
+## [290] 289 290 291 292 293 294 295 296 297 298 299 300 301 302 303 304 305
+## [307] 306 307 308 309 310 311 312 313 314 315 316 317 318 319 320 321 322
+## [324] 323 324 325 326 327 328 329 330 331 332 333 334 335 336 337 338 339
+## [341] 340 341 342 343 344 345 346 347 348 349 350 351 352 353 354 355 356
+## [358] 357 358 359&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Is the velocity in miles per hour ?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unique(df$velocity)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] NA  0  1  3  5 14 28  2  4  7  8 25 29 15 16 19 10  6  9 11 13 12 21
+## [24] 24 20 17 26 27 30 23 22 18 31 33 32 34 35 36 82 83 77 74 67 37&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Does that mean that I ever broke the speed limit? We’re not supposed to drive faster than 120 km/h in Belgium 🚓!&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;fine &amp;lt;- paste(round(max(unique(df$velocity), na.rm = TRUE)*1.609344,0),&amp;quot;km!&amp;quot;)
+
+glue(&amp;quot;{fine} 😱 😱 😱&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 134 km! 😱 😱 😱&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Could this information get me fined? Or will this type information be used in the future to determine guilt?
+Are the police allowed to access this type of Google data to for instance find perps of hit &amp;amp; runs?&lt;/p&gt;
+&lt;p&gt;The data frame also contains lists with times stamps and estimations of activity at that time stamp.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;str(df$activity[80])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## List of 1
+##  $ :&amp;#39;data.frame&amp;#39;:    1 obs. of  2 variables:
+##   ..$ timestampMs: chr &amp;quot;1395248054966&amp;quot;
+##   ..$ activity   :List of 1
+##   .. ..$ :&amp;#39;data.frame&amp;#39;:  5 obs. of  2 variables:
+##   .. .. ..$ type      : chr [1:5] &amp;quot;ON_FOOT&amp;quot; &amp;quot;STILL&amp;quot; &amp;quot;IN_VEHICLE&amp;quot; &amp;quot;UNKNOWN&amp;quot; ...
+##   .. .. ..$ confidence: int [1:5] 49 20 16 10 2&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So if I read this correctly this object is a list of one, containing a dataframe with another two objects, a timestamp and another list of one, that contains a dataframe with 5 observations and two variables: the type of activity and the probability calculated for it. So on timestamp “1395248054966” (= 2014-03-19 17:54:14 CET) I had a 49% probability to be on foot.&lt;/p&gt;
+&lt;p&gt;And then there is also a measure of altitude. Is it in feet or meters, and where do the negative numbers come from? Maybe these data points should be analysed a bit later.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;glimpse(unique(df$altitude)) # ? what sensor does it use?&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  int [1:633] NA 27 41 38 42 60 16 57 63 49 ...&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;summary(unique(df$altitude))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&amp;#39;s 
+## -1299.0   108.8   266.5   274.0   435.2  2983.0       1&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let’s plot some data on maps.&lt;/p&gt;
+&lt;p&gt;First some additional date prep.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- df %&amp;gt;% 
+  mutate(lat   = latitudeE7/1e7,
+         lon   = longitudeE7/1e7,
+         time  = strftime(datetime, format = &amp;quot;%H:%M:%S&amp;quot;),
+         date  = date(datetime),
+         year  = year(datetime),
+         month = month(datetime),
+         wday  = wday(datetime))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Working with ggmap is pretty straightforward, but you need to obtain an api key from google and enable billing. More info &lt;a href=&#34;https://developers.google.com/maps/documentation/embed/get-api-key&#34;&gt;here&lt;/a&gt;. For obvious reasons you need to keep your key secret and safe, but additionally you can restrict the calls to your &lt;a href=&#34;https://console.developers.google.com/apis/credentials?project=grounded-block-178714&amp;amp;folder&amp;amp;organizationId&#34;&gt;IP&lt;/a&gt;. Will have a go at OSM in a future post, promised.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;secrets &amp;lt;- readRDS(&amp;quot;~/R/geo/secret/secrets.rds&amp;quot;)
+key &amp;lt;- secrets$key[1]
+register_google(key = key)
+
+belgium &amp;lt;- get_map(location = &amp;#39;Belgium&amp;#39;, zoom = 8, maptype = &amp;quot;terrain-lines&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The map coverage is called the bounding box of the map and it is an attribute of the ggmap object.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(belgium, &amp;quot;bb&amp;quot;)
+bb&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##          ll.lat  ll.lon ur.lat   ur.lon
+## bottom 49.37082 2.71487 51.607 6.230495&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;x &amp;lt;- df %&amp;gt;% 
+  filter(lat &amp;lt; 51.607 &amp;amp; lat &amp;gt; 49.37082,
+         lon &amp;gt; 2.71487 &amp;amp; lon &amp;lt; 6.20495)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(belgium, maptype = &amp;quot;terrain-lines&amp;quot;) + 
+  geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.1, color = &amp;quot;#FC4E07&amp;quot;, size = .65) + 
+  theme(legend.position = &amp;quot;right&amp;quot;) + 
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;Location history data points in Belgium&amp;quot;,
+    caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Orange lines are my movements. A rock festival to the east of Antwerp, some visits to the coast, to my home city Ghent, a marriage in the west, biking and text mining in Leuven, and hikes in the woods of the south. Looks about right. And yes, I live and work in Brussels.&lt;/p&gt;
+&lt;p&gt;So let’s take a closer look at Brussels.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;brussels &amp;lt;- get_map(location = &amp;#39;Brussels&amp;#39;, zoom = 12, maptype = &amp;quot;terrain-lines&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(brussels, &amp;quot;bb&amp;quot;)
+bb&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##          ll.lat   ll.lon   ur.lat   ur.lon
+## bottom 50.78082 4.242029 50.91955 4.461756&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# just keeping data from brussels
+
+x &amp;lt;- df %&amp;gt;% 
+  filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
+         lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(brussels) + 
+  geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.5, color = &amp;quot;#FC4E07&amp;quot;, size = .65) + 
+  theme(legend.position = &amp;quot;right&amp;quot;) + 
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;Location history data points in Brussels&amp;quot;,
+    caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Let’s see to how we can zoom in.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;zoom &amp;lt;- get_map(location = c(lon = 4.349078, lat = 50.850586), zoom = 16, maptype = &amp;quot;satellite&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(zoom, &amp;quot;bb&amp;quot;)
+x &amp;lt;- df %&amp;gt;% 
+  filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
+         lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggmap(zoom) + 
+ geom_point(data = x, aes(x = lon, y = lat),
+             alpha = 0.7, color = &amp;quot;#FC4E07&amp;quot;, size = .85) + 
+  theme(legend.position = &amp;quot;right&amp;quot;) + 
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;Location history data points in central Brussels&amp;quot;,
+    caption = &amp;quot;\n favorite haunts.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;864&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So that is pretty consistent with my favorite downtown haunts. Let’s pan out and add the number of seconds from 6 am in the day to the dataframe.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;period_to_seconds(hms(&amp;quot;06:00:00&amp;quot;)) # seconds at 6am&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 21600&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;period_to_seconds(hms(&amp;quot;23:59:59&amp;quot;)) # seconds just before midnight&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 86399&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- df %&amp;gt;% 
+  mutate(from_dawn = 
+           case_when((period_to_seconds(hms(time)) &amp;gt; 21600) ~ 
+                       (period_to_seconds(hms(time))-21600),
+                     TRUE ~ (period_to_seconds(hms(time))+64799)))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So now there is a value (from_dawn) that is equal to 0 at six am and continues to increase until just before six. Easy to convert to hours starting from six am. Values seem higher in the center of the city. “It’s six o’clock in the morning, do you know where your parents are?” 🌔&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;options(stringsAsFactors = T)
+
+bb &amp;lt;- attr(brussels, &amp;quot;bb&amp;quot;)
+x &amp;lt;- df %&amp;gt;% 
+  filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
+         lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon) %&amp;gt;% 
+  mutate(hours = from_dawn/3600)
+
+ggmap(brussels) + 
+  stat_summary_2d(geom = &amp;quot;tile&amp;quot;, bins = 100, data = x, 
+                  aes(x = lon, y = lat, z = hours), alpha = 0.7) + 
+  scale_fill_gradientn(colors  =  viridis(4), 
+                       guide = guide_legend(title = &amp;quot;hours since 6am&amp;quot;)) +
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;Location history data points around Brussels&amp;quot;,
+    subtitle = &amp;quot;Color scale shows accuracy (low: blue, high: red)&amp;quot;,
+    caption = &amp;quot;\nThis bin plot shows recorded positions 
+    and their time of day&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-23-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Looking at it by year.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bb &amp;lt;- attr(brussels, &amp;quot;bb&amp;quot;)
+x &amp;lt;- df %&amp;gt;%
+  filter(lat &amp;lt; bb$ur.lat &amp;amp; lat &amp;gt; bb$ll.lat,
+         lon &amp;gt; bb$ll.lon &amp;amp; lon &amp;lt; bb$ur.lon,
+         year &amp;gt; 2014)
+
+ggmap(brussels) + facet_wrap(~year) +
+geom_point(data = x, aes(x = lon, y = lat), alpha = 0.5, color = &amp;quot;#FC4E07&amp;quot;, size = .8) + 
+  theme(legend.position = &amp;quot;right&amp;quot;) + 
+  labs(
+    x = &amp;quot;Longitude&amp;quot;, 
+    y = &amp;quot;Latitude&amp;quot;, 
+    title = &amp;quot;Location history data points in Brussels - by year &amp;quot;,
+    caption = &amp;quot;\nA simple point plot shows recorded positions.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-24-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;It would seem that I moved a lot in 2016 compared to the other years, but to that extent it does not look right. Let’s dig a little deeper in the data.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(data = x, aes(x = datetime, y = lat))+
+  geom_line()+
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-25-1.png&#34; width=&#34;960&#34; /&gt;
+So clearly 2015 and 2017 have much less data. In 2017 it looks like I only used location services to three or four specific places in Brussels, but it is intriguing that there seems to be data throughout the year. And this in contrast with the end of 2018 when I switched the location tracking off.&lt;/p&gt;
+&lt;p&gt;Whether Google still keeps track of my whereabouts is of course another matter.&lt;/p&gt;
+&lt;p&gt;I still don’t know if my commute has gotten longer. I will try to find out in a next blog post.&lt;/p&gt;
+</content>
+      
     </item>
     
     <item>
       <title>About</title>
       <link>/about/</link>
       <pubDate>Thu, 05 May 2016 21:48:51 -0700</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/about/</guid>
-      <description>This is a &amp;ldquo;hello world&amp;rdquo; example website for the blogdown package. The theme was forked from @jrutheiser/hugo-lithium-theme and modified by Yihui Xie.</description>
+      <description></description>
+      
+      <content>&lt;p&gt;This is a &amp;ldquo;hello world&amp;rdquo; example website for the &lt;a href=&#34;https://github.com/rstudio/blogdown&#34; target=&#34;_blank&#34;&gt;&lt;strong&gt;blogdown&lt;/strong&gt;&lt;/a&gt; package. The theme was forked from &lt;a href=&#34;https://github.com/jrutheiser/hugo-lithium-theme&#34; target=&#34;_blank&#34;&gt;@jrutheiser/hugo-lithium-theme&lt;/a&gt; and modified by &lt;a href=&#34;https://github.com/yihui/hugo-lithium&#34; target=&#34;_blank&#34;&gt;Yihui Xie&lt;/a&gt;.&lt;/p&gt;
+</content>
+      
     </item>
     
   </channel>
