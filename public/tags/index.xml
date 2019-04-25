@@ -13,11 +13,47 @@
     
     
     <item>
-      <title>Belgian Politics</title>
+      <title>Belgian politics</title>
       <link>/tags/belgian-politics/</link>
       <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/belgian-politics/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>handeling files</title>
+      <link>/tags/handeling-files/</link>
+      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/handeling-files/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>magick</title>
+      <link>/tags/magick/</link>
+      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/magick/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>purrr</title>
+      <link>/tags/purrr/</link>
+      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/purrr/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>scraping</title>
+      <link>/tags/scraping/</link>
+      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/scraping/</guid>
       <description></description>
     </item>
     
@@ -40,47 +76,11 @@
     </item>
     
     <item>
-      <title>Handeling Files</title>
-      <link>/tags/handeling-files/</link>
-      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/handeling-files/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Magick</title>
-      <link>/tags/magick/</link>
-      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/magick/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Purrr</title>
-      <link>/tags/purrr/</link>
-      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/purrr/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>R Markdown</title>
       <link>/tags/r-markdown/</link>
       <pubDate>Sat, 30 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/r-markdown/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Scraping</title>
-      <link>/tags/scraping/</link>
-      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/scraping/</guid>
       <description></description>
     </item>
     
