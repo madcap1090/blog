@@ -261,7 +261,7 @@ map2(.x = table_ids$name, .y = table_ids$id, .f = download_gifs)
 
 ```
 
-So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to enhance the 'download_gifs' function.
+So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to split the download_gifs function in two.
 
 ```{r}
 download_gifs_with_0 <- function (name, id){
@@ -629,7 +629,7 @@ unlink("./data/190417/patch",  recursive = TRUE)
 
 ```
 
-So here is the patchwork of soccer players.
+So here is the patchwork of the national soccer players.
 <center>
 ![devils](/img/20190417/2019-04-17-faces_of_devils.jpg)
 

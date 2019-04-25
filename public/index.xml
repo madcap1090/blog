@@ -245,7 +245,7 @@ names &amp;lt;- names %&amp;gt;%
 &lt;/center&gt;
 &lt;p&gt;So the images are in &lt;a href=&#34;http://www.dekamer.be/site/wwwroot/images/cv/&#34; class=&#34;uri&#34;&gt;http://www.dekamer.be/site/wwwroot/images/cv/&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data alert 🚨, shame on you webmaster 😉.&lt;/p&gt;
-&lt;p&gt;So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to enhance the ‘download_gifs’ function.&lt;/p&gt;
+&lt;p&gt;So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to split the download_gifs function in two.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;download_gifs_with_0 &amp;lt;- function (name, id){
   url_pic &amp;lt;- glue(&amp;quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&amp;quot;)
   download.file(url_pic, destfile = glue(&amp;quot;./data/190417/down_1/{name}.gif&amp;quot;), mode = &amp;quot;wb&amp;quot;)
@@ -471,7 +471,7 @@ image_append(stack = FALSE)
 setwd(&amp;quot;./files/20190417&amp;quot;)
 getwd()
 image_write(img,&amp;quot;2019-04-17-faces_of_devils.jpg&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-So here is the patchwork of soccer players.
+So here is the patchwork of the national soccer players.
 &lt;center&gt;
 &lt;div class=&#34;figure&#34;&gt;
 &lt;img src=&#34;/img/20190417/2019-04-17-faces_of_devils.jpg&#34; alt=&#34;devils&#34; /&gt;

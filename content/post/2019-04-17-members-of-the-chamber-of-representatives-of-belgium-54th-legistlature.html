@@ -237,7 +237,7 @@ names &lt;- names %&gt;%
 </center>
 <p>So the images are in <a href="http://www.dekamer.be/site/wwwroot/images/cv/" class="uri">http://www.dekamer.be/site/wwwroot/images/cv/</a></p>
 <p>So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data alert :rotating_light:, shame on you webmaster :wink:.</p>
-<p>So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to enhance the ‘download_gifs’ function.</p>
+<p>So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to split the download_gifs function in two.</p>
 <pre class="r"><code>download_gifs_with_0 &lt;- function (name, id){
   url_pic &lt;- glue(&quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
   download.file(url_pic, destfile = glue(&quot;./data/190417/down_1/{name}.gif&quot;), mode = &quot;wb&quot;)
@@ -463,7 +463,7 @@ image_append(stack = FALSE)
 setwd(&quot;./files/20190417&quot;)
 getwd()
 image_write(img,&quot;2019-04-17-faces_of_devils.jpg&quot;)</code></pre>
-So here is the patchwork of soccer players.
+So here is the patchwork of the national soccer players.
 <center>
 <div class="figure">
 <img src="/img/20190417/2019-04-17-faces_of_devils.jpg" alt="devils" />
