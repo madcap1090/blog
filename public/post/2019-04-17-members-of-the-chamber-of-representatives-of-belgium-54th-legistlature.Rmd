@@ -12,9 +12,9 @@ tags:
   - handeling files
 ---
 
-For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments? 
+For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for 6 governments, their administration and their parliaments? 
 
-We also love politicians, so we want to have a lot of them. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of them I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.
+We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to get a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.
 
 https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections. 
 
@@ -64,7 +64,7 @@ nrow(table)
 150 members today with their current political party. I'm going to save that data, because after the elections of next month it will not be available for a long time.
 
 ```{r}
-saveRDS(table, "~/R/blog/content/post/data/190417/reps_54_190417.rds")
+saveRDS(table, "~/R/blogs/content/post/data/190417/reps_54_190417.rds")
 ```
 
 And the parties are:
@@ -289,7 +289,7 @@ So using 'safely' the error are being skipped and we managed to download how man
 length(list.files("./data/190417/down_1"))
 ```
 
-Only few missing. Let's use the other function.
+160. Only few missing. Let's use the other function.
 
 ```{r eval=FALSE, include=FALSE}
 dir.create("./data/190417/down_2")
@@ -300,12 +300,11 @@ map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_no_0, otherwise 
 length(list.files("./data/190417/down_2"))
 ```
 
-Hmm so now we have too many pictures (and the ones with no leading 0 seem older). See the aging of Mr Calvo: 
+96. Hmm so now we have too many pictures (and the ones with no leading 0 seem older). See the aging of Mr Calvo: 
 <center>
 ![Young Mr Calvo](/img/20190417/Calvo Kristof_young.gif) ![Old Mr Calvo](/img/20190417/Calvo Kristof_06128_old.gif)
 
 </center>
-
 
 And it seems some are still missing :unamused:.
 
@@ -355,7 +354,7 @@ setdiff(names_list, names$ln_fn)
 :cool: we have a picture of all of them.
 
 
-```{r message=FALSE, include=FALSE}
+```{r eval=FALSE, message=FALSE, include=FALSE}
 # code for a patch work
 # https://masalmon.eu/2017/03/19/facesofr/
 
@@ -369,7 +368,7 @@ unlink("./data/190417/patch/Scourneau Vincent.gif") # his picture does not compl
 ```
 
 
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 getwd()
 setwd("./data/190417/patch")
 length(list.files())
@@ -394,7 +393,7 @@ map(player_pics, resize_player)
 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 dir.create("./data/190417/cols")
 
 getwd()
@@ -525,7 +524,7 @@ There are now 784 pictures of national soccer players; 612 men and 172 women. Mo
 
 Sampling 176 of them:
 
-```{r message=FALSE, include=FALSE}
+```{r eval=FALSE, message=FALSE, include=FALSE}
 # renaming files, so we do not have the same file names between men and women
 
 setwd("./data/190417down_1/")
@@ -533,7 +532,7 @@ length(list.files())
 file.rename(list.files(), 
             paste0("m_", 1:612,".jpg"))
 ```
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 
 setwd("./data/190417down_2/")
 length(list.files())
@@ -543,7 +542,7 @@ file.rename(list.files(),
 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 men_files <- list.files("./data/190417down_1/", recursive = TRUE, full.names = TRUE)
 women_files <- list.files("./data/190417down_2/", recursive = TRUE, full.names = TRUE)
 
@@ -555,7 +554,7 @@ sampled_files <- sample(player_files, 176)
 
 Making the same patchwork
 
-```{r message=FALSE, include=FALSE}
+```{r eval=FALSE, message=FALSE, include=FALSE}
 
 dir.create("./data/190417/patch")
 
@@ -586,9 +585,9 @@ map(player_pics, resize_player)
 
 ```
 
+Create the columns.
 
-
-```{r}
+```{r eval=FALSE, include=FALSE}
 dir.create("./data/190417/cols")
 
 getwd()
@@ -609,7 +608,7 @@ make_column <- function(i, files, no_rows){
 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 fun <- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
   image_append(stack = TRUE) %>%
@@ -624,11 +623,7 @@ fun(i, files, no_rows)
 ```
 
 
-```{r}
-getwd()
-
-x <- image_read(dir(".data/190417/cols/", full.names = TRUE))  
-
+```{r eval=FALSE, include=FALSE}
 
 img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
 image_append(stack = FALSE) 
@@ -642,7 +637,7 @@ image_write(img,"2019-04-17-faces_of_devils.jpg")
 
 Cleaning
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 unlink("./data/190417/cols",  recursive = TRUE)
 unlink("./data/190417/patch",  recursive = TRUE)
 #unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore

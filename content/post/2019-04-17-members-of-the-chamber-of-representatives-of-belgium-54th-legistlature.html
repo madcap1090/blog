@@ -14,8 +14,8 @@ tags:
 
 
 
-<p>For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for all of them, their administration and their parliaments?</p>
-<p>We also love politicians, so we want to have a lot of them. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of them I searched for an objective criteria to subset them. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.</p>
+<p>For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for 6 governments, their administration and their parliaments?</p>
+<p>We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to get a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.</p>
 <p><a href="https://www.dekamer.be" class="uri">https://www.dekamer.be</a> is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections.</p>
 <p>Let’s scrape them.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
@@ -55,7 +55,7 @@ table$ln_fn &lt;- trimws(table$ln_fn, which = &quot;both&quot;) # for good measu
 nrow(table)</code></pre>
 <pre><code>## [1] 150</code></pre>
 <p>150 members today with their current political party. I’m going to save that data, because after the elections of next month it will not be available for a long time.</p>
-<pre class="r"><code>saveRDS(table, &quot;~/R/blog/content/post/data/190417/reps_54_190417.rds&quot;)</code></pre>
+<pre class="r"><code>saveRDS(table, &quot;~/R/blogs/content/post/data/190417/reps_54_190417.rds&quot;)</code></pre>
 <p>And the parties are:</p>
 <pre class="r"><code>table %&gt;% 
   group_by(party) %&gt;% 
@@ -248,12 +248,16 @@ download_gifs_no_0 &lt;- function (name, id){
 }</code></pre>
 <p>Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work &amp; presentation at the RUser2018 conference in Budapest.</p>
 <p>So using ‘safely’ the error are being skipped and we managed to download how many files?</p>
-<p>Only few missing. Let’s use the other function.</p>
+<ol start="160" style="list-style-type: decimal">
+<li>Only few missing. Let’s use the other function.</li>
+</ol>
 <pre class="r"><code>length(list.files(&quot;./data/190417/down_2&quot;))</code></pre>
 <pre><code>## [1] 0</code></pre>
-Hmm so now we have too many pictures (and the ones with no leading 0 seem older). See the aging of Mr Calvo:
+<ol start="96" style="list-style-type: decimal">
+<li>Hmm so now we have too many pictures (and the ones with no leading 0 seem older). See the aging of Mr Calvo:
 <center>
-<p><img src="/img/20190417/Calvo%20Kristof_young.gif" alt="Young Mr Calvo" /> <img src="/img/20190417/Calvo%20Kristof_06128_old.gif" alt="Old Mr Calvo" /></p>
+<img src="/img/20190417/Calvo%20Kristof_young.gif" alt="Young Mr Calvo" /> <img src="/img/20190417/Calvo%20Kristof_06128_old.gif" alt="Old Mr Calvo" /></li>
+</ol>
 </center>
 <p>And it seems some are still missing :unamused:.</p>
 <p>Whose pics were additionally obtained?</p>
@@ -274,37 +278,6 @@ setdiff(names_list, names$ln_fn)</code></pre>
 <pre><code>## character(0)</code></pre>
 <p>:cool: we have a picture of all of them.</p>
 <p>Let’s resize them for good measure.</p>
-<pre class="r"><code>dir.create(&quot;./data/190417/cols&quot;)
-
-getwd()</code></pre>
-<pre><code>## [1] &quot;C:/Users/William/Documents/R/blog/content/post&quot;</code></pre>
-<pre class="r"><code>files &lt;- dir(&quot;data/190417/patch&quot;, full.names = TRUE)
-set.seed(1)
-files &lt;- sample(files, length(files)-2) # 176 will mahe a nices patch
-gmp::factorize(length(files)-2)</code></pre>
-<pre><code>## Big Integer (&#39;bigz&#39;) object of length 3:
-## [1] 2  3  29</code></pre>
-<pre class="r"><code>no_rows &lt;- 11
-no_cols &lt;- 16
-
-make_column &lt;- function(i, files, no_rows){
-  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
-  image_append(stack = TRUE) %&gt;%
-    image_write(paste0(&quot;cols/&quot;, i, &quot;.jpg&quot;))
-}
-
-
-fun &lt;- function(i, files, no_rows){
-  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
-  image_append(stack = TRUE) %&gt;%
-    image_write(paste0(&quot;./data/190417/cols/&quot;, i, &quot;.jpg&quot;))
-}
-
- #could not really make map function ;-(
-
- for(i in (0:(no_cols-1))) {
- fun(i, files, no_rows)
- }</code></pre>
 <p>So we have the columns. Still need to bind them together.</p>
 <pre class="r"><code>unlink(&quot;./data/190417/patch&quot;, recursive = TRUE) # don&#39;t need those anymore
 unlink(&quot;./data/190417/cols&quot;, recursive = TRUE) # don&#39;t need those anymore</code></pre>
@@ -327,58 +300,10 @@ unlink(&quot;./data/190417/cols&quot;, recursive = TRUE) # don&#39;t need those 
 <p>Next is downloading the pictures of the women:</p>
 <p>There are now 784 pictures of national soccer players; 612 men and 172 women. Most of these pictures seem to be recent, but there is no date tag or something similar. On the other hand the site only publishes currently selected players, so this indicates the pictures overall, are fairly recent.</p>
 <p>Sampling 176 of them:</p>
-<pre class="r"><code>men_files &lt;- list.files(&quot;./data/190417down_1/&quot;, recursive = TRUE, full.names = TRUE)
-women_files &lt;- list.files(&quot;./data/190417down_2/&quot;, recursive = TRUE, full.names = TRUE)
-
-player_files &lt;- c(men_files, women_files)
-set.seed(42)
-sampled_files &lt;- sample(player_files, 176)</code></pre>
 <p>Making the same patchwork</p>
 <p>And the pictures need to have the same size (170x250 pixel)</p>
-<pre class="r"><code>dir.create(&quot;./data/190417/cols&quot;)
-
-getwd()</code></pre>
-<pre><code>## [1] &quot;C:/Users/William/Documents/R/blog/content/post&quot;</code></pre>
-<pre class="r"><code>files &lt;- dir(&quot;data/190417/patch&quot;, full.names = TRUE)
-set.seed(1)
-files &lt;- sample(files, length(files))
-gmp::factorize(length(files))</code></pre>
-<pre><code>## Big Integer (&#39;bigz&#39;) object of length 5:
-## [1] 2  2  2  2  11</code></pre>
-<pre class="r"><code>no_rows &lt;- 11
-no_cols &lt;- 16
-
-make_column &lt;- function(i, files, no_rows){
-  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
-  image_append(stack = TRUE) %&gt;%
-    image_write(paste0(&quot;cols/&quot;, i, &quot;.jpg&quot;))
-}</code></pre>
-<pre class="r"><code>fun &lt;- function(i, files, no_rows){
-  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
-  image_append(stack = TRUE) %&gt;%
-    image_write(paste0(&quot;./data/190417/cols/&quot;, i, &quot;.jpg&quot;))
-}
-
-
-for(i in (0:(no_cols-1))) {
-fun(i, files, no_rows)
-}</code></pre>
-<pre class="r"><code>getwd()</code></pre>
-<pre><code>## [1] &quot;C:/Users/William/Documents/R/blog/content/post&quot;</code></pre>
-<pre class="r"><code>x &lt;- image_read(dir(&quot;.data/190417/cols/&quot;, full.names = TRUE))  
-
-
-img &lt;- image_read(dir(&quot;data/190417/cols/&quot;, full.names = TRUE)) %&gt;%
-image_append(stack = FALSE) 
-
-setwd(&quot;./files/20190417&quot;)
-getwd()</code></pre>
-<pre><code>## [1] &quot;C:/Users/William/Documents/R/blog/content/post/files/20190417&quot;</code></pre>
-<pre class="r"><code>image_write(img,&quot;2019-04-17-faces_of_devils.jpg&quot;)</code></pre>
+<p>Create the columns.</p>
 <p>Cleaning</p>
-<pre class="r"><code>unlink(&quot;./data/190417/cols&quot;,  recursive = TRUE)
-unlink(&quot;./data/190417/patch&quot;,  recursive = TRUE)
-#unlink(&quot;./data/190417/patch&quot;, recursive = TRUE) # don&#39;t need those anymore</code></pre>
 <center>
 <div class="figure">
 <img src="/img/20190417/2019-04-17-faces_of_devils.jpg" alt="devils" />
