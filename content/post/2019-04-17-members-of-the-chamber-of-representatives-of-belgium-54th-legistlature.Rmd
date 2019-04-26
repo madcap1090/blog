@@ -14,7 +14,7 @@ tags:
 
 For a country as small as Belgium 6 governments is a lot. It's maybe because we Belgians like to be governed and governed well. Why else would we want to pay for 6 governments, their administration and their parliaments? 
 
-We also love politicians, so we want to have many. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level and their tweets should somehow in some way be representative also..
+We also love politicians, so we want to have many. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level and their tweets should somehow in some way be representative also.
 
 https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections. 
 
@@ -383,7 +383,7 @@ dir.create("./data/190417/cols_rep")
 getwd()
 files <- dir("data/190417/patch_rep", full.names = TRUE)
 set.seed(1)
-files <- sample(files, length(files)-2) # 176 will make a nices patch
+files <- sample(files, length(files)-2) # 176 will make a nice patch
 gmp::factorize(length(files)-2)
 
 no_rows <- 11
