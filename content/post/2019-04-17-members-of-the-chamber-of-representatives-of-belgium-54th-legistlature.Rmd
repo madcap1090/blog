@@ -175,7 +175,7 @@ names %>%
 
 ```
 
-The tables are sorted differently so there are wrong ids attributed to some parlementarians (like Christophe D'Haese).
+The tables are sorted differently so there are wrong ids attributed to some parliamentarians (like Christophe D'Haese).
 
 We need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.
 
@@ -383,7 +383,7 @@ dir.create("./data/190417/cols_rep")
 getwd()
 files <- dir("data/190417/patch_rep", full.names = TRUE)
 set.seed(1)
-files <- sample(files, length(files)-2) # 176 will mahe a nices patch
+files <- sample(files, length(files)-2) # 176 will make a nices patch
 gmp::factorize(length(files)-2)
 
 no_rows <- 11
@@ -619,7 +619,7 @@ So here is the patchwork of the national soccer players.
 </center>
 
 
-So give me my tepid beer back. Here's a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let's hope). They also do not wear glasses (on the picture). And yes, I found an easter egg. :-)
+So give me my tepid beer back. Here's a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let's hope). They also do not wear glasses (on the picture). And yes, I found an Easter egg. :-)
 
 
 Let's get back to the parliamentarians tweets in the next post. 
