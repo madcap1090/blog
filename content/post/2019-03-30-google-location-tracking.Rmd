@@ -30,6 +30,7 @@ library("viridis")    # install.packages("viridis")
 ```
 
 ```{r}
+getwd()
 data <- fromJSON("./data/20190330/Location History.json") # extracts a list
 locations <- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore
