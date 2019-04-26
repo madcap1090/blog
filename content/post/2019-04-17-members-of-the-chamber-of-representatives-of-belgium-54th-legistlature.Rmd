@@ -12,21 +12,19 @@ tags:
   - handeling files
 ---
 
-For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for 6 governments, their administration and their parliaments? 
+For a country as small as Belgium 6 governments is a lot. It's maybe because we Belgians like to be governed and governed well. Why else would we want to pay for 6 governments, their administration and their parliaments? 
 
-We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.
+We also love politicians, so we want to have a lots. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level and their tweets should somehow in some way be representative also..
 
 https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections. 
 
 Let's scrape them.
-
 ```{r message=FALSE}
 library("tidyverse")
 library("rvest")
 library("XML")
 library("glue")
 library("magick")
-
 ```
 
 ```{r echo=TRUE}
@@ -49,26 +47,17 @@ head(table)
 
 ```
 
-Funny that all the white spaces between "Beke" and "Wouter" cannot be seen. But they need to be cleaned.
+The white spaces between the last name and first some of some, like Wouter Beke need to be cleaned.
 
 ```{r}
 
 table <- table %>%
-  mutate(ln_fn = (str_replace_all(ln_fn,"  +"," ")),
-         ln_fn = trimws(table$ln_fn, which = "both"))
+  mutate(ln_fn = str_replace_all(ln_fn,"  +"," "))
 
-table$ln_fn <- str_replace_all(table$ln_fn,"  +"," ")
-table$ln_fn <- trimws(table$ln_fn, which = "both") # for good measure
 nrow(table)
 ```
 
-150 members today with their current political party. I'm going to save that data, because after the elections of next month it will not be available for a long.
-
-```{r}
-saveRDS(table, "~/R/blogs/content/post/data/190417/reps_54_190417.rds")
-```
-
-And the parties are:
+150 members today with their current political party. And the parties and number of seats are:
 
 ```{r}
 table %>% 
@@ -97,11 +86,8 @@ table_54 <- table_54 %>%
   arrange(ln_fn)
 
 table_54 <- table_54 %>%
-  mutate(ln_fn = (str_replace_all(ln_fn,"  +"," ")),
-         ln_fn = trimws(ln_fn, which = "both"))
+  mutate(ln_fn = str_replace_all(ln_fn,"  +"," "))
 
-table$ln_fn <- str_replace_all(table$ln_fn,"  +"," ")
-table$ln_fn <- trimws(table$ln_fn, which = "both") # for good measure
 
 ```
 
@@ -120,11 +106,11 @@ table_54 %>%
 
 So indeed 29 representatives. But some left to work in the government and then came back when their party decided to leave government because of a city in northern Africa. Go figure. 
 
-But it does make the identification of a tweet as a tweet being sent by a member of parliament a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hard coding...
+But it does make the identification of a tweet as a tweet being sent by a member of parliament a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hard coding. :weary:
 
 Let's have some fun first. 
 
-Looking at the page of the current members of parliament, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the xpath is known its is relatively easy to extract the individual member's webpage url. 
+Looking at the page of the current members of parliament, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the [xpath](https://www.w3schools.com/xml/xml_xpath.asp) is known it is relatively easy to extract the individual member's webpage url. 
 
 ```{r}
 url <- paste0("http://www.dekamer.be/kvvcr/showpage.cfm?section",
@@ -144,19 +130,23 @@ for(i in 1:nrow(table_54)){
   urls <- rbind(urls, url)
 }
 
+# constructing the url
 table_ids <- urls %>%
-  mutate(url = paste0("http://www.dekamer.be/kvvcr/", url))   # constructing the url
+  mutate(url = paste0("http://www.dekamer.be/kvvcr/", url))   
   
-head(table_ids)
+table_ids %>%
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url)) %>%
+  mutate(row = rownames(.)) %>% 
+  select(row, name, id) %>% 
+  slice(29:39) %>% 
+  head()
 
 ```
 
 But there is a problem with matching the names and the ids.
 
 ```{r}
-
 x <- table_ids
-
 names <- tibble()
 
 for (i in (1:nrow(x))){
@@ -175,11 +165,19 @@ names(names) <- c("fn_ln","url")
 names <- names %>% 
   mutate(fn_ln =(str_replace_all(fn_ln,"  +"," ")))
 
-head(names)
+names %>%
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url)) %>%
+  mutate(row = rownames(.)) %>% 
+  select(row, fn_ln, id) %>% 
+  slice(57:65) %>% 
+  head()
+  
 
 ```
 
-So we need to correct that the ids and fn_ln are correct so? so build a key based on the letters in the name of the person
+The tables are sorted differently so there are wrong ids attributed to some parlementarians (like Christophe D'Haese).
+
+So we need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.
 
 ```{r message=FALSE}
 
@@ -209,15 +207,13 @@ Seems to work. Names are clean. Now the id code is needed.
 
 ```{r}
 # correct id
-
+# extract their id from the url
 names <- names %>%
-  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url))               # extract their id from the url
-  #mutate(id = gsub('O','0',id))      # some of them have O instead of 0 but we need to keep them
-
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url))   
 ```
 
 
-So now we have in 'urls' the name and links to the personal webpage of the representatives on the chamber's website. Notice their id at the end of the url after 'cfm?key=' and before '&lat'. 
+Now we have in 'urls' the name and links to the personal webpage of the representatives on the chamber's website. Notice their id at the end of the url after 'cfm?key=' and before '&lat'. 
 
 Let's get their mugshots. 
 
@@ -225,15 +221,16 @@ Let's get their mugshots.
 ![Inspecting the code of the webpage](/img/20190417/inspect.png)
 </center>
 
-So the images are in http://www.dekamer.be/site/wwwroot/images/cv/
+The images are in folder: http://www.dekamer.be/site/wwwroot/images/cv/
 
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 # let's try purrr again
 
 download_gifs <- function (name, id){
   url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
-  download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), mode = "wb")
+  download.file(url_pic, destfile = glue("./data/190417/{name}.gif"), 
+                mode = "wb")
 }
 
 #download_gifs("test","01203")
@@ -266,18 +263,20 @@ So sometimes the 0 is used and sometimes it is just the value without leading 0.
 ```{r}
 download_gifs_with_0 <- function (name, id){
   url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
-  download.file(url_pic, destfile = glue("./data/190417/down_1/{name}.gif"), mode = "wb")
+  download.file(url_pic, destfile = glue("./data/190417/down_1/{name}.gif"), 
+                mode = "wb")
 }
 
 download_gifs_no_0 <- function (name, id){
   id <- as.numeric(id)
   url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
-  download.file(url_pic, destfile = glue("./data/190417/down_2/{name}.gif"), mode = "wb")
+  download.file(url_pic, destfile = glue("./data/190417/down_2/{name}.gif"), 
+                mode = "wb")
 }
 
 ```
 
-Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work & presentation at the RUser2018 conference in Budapest.
+Trying to simplify the use of the purrr function 'safely', by Lionel Henry who I thank for his work & [presentation](https://www.youtube.com/watch?v=-v1tp41kizk) at the UseR2018 conference in Budapest.
 
 ```{r eval=FALSE, message=FALSE}
 dir.create("./data/190417/down_1")
@@ -377,9 +376,7 @@ player_pics <- list.files("./data/190417/patch_rep/", full.names = TRUE)
 map(player_pics, resize_player)
 
 ```
-
 Create columns
-
 ```{r eval=FALSE}
 dir.create("./data/190417/cols_rep")
 
@@ -398,7 +395,6 @@ make_column <- function(i, files, no_rows){
     image_write(paste0("cols/", i, ".jpg"))
 }
 
-
 fun <- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
   image_append(stack = TRUE) %>%
@@ -410,11 +406,8 @@ fun <- function(i, files, no_rows){
  for(i in (0:(no_cols-1))) {
  fun(i, files, no_rows)
  }
-
 ```
-
 So we have the columns. Still need to bind them together.
-
 ```{r eval=FALSE}
 getwd()
 
@@ -429,20 +422,12 @@ image_write(img,"2019-04-17-faces_of_54.jpg")
 
 ```
 
-Clean up a bit.
-
-```{r}
-unlink("./data/190417/patch_rep", recursive = TRUE) # don't need those anymore
-unlink("./data/190417/cols_rep", recursive = TRUE) # don't need those anymore
-```
-
 <center>
-![reps 54](/img/20190417/2019-04-17-faces_of_54.jpg){width=800px height=850px} 
+![reps 54](/img/20190417/2019-04-17-faces_of_54.jpg){width=700px height=800px} 
 </center>
 
 
-
-So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those two groups are indeed two very small samples of Belgians. What I can says is that given my age, gender and skin color, I would fit right in. 
+So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those two groups are indeed two very small and different samples of Belgians. 
 
 Wondering what the 55 legislature will look like. Will keep you posted.
 
@@ -460,20 +445,25 @@ Downloading the pictures of the men:
 
 for(i in (1:7000)){
   
-  url_pic <-glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
+  url_pic <-glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/",
+                 "s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg")
   
-  res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_m/{i}.jpg"), mode = "wb"))
+  res <- try(download.file(url_pic, 
+                           destfile = glue("./content/post/data/190417down_m/{i}.jpg"), 
+                           mode = "wb"))
   if(inherits(res, "try-error"))
   {
     next
   }
-  download.file(url_pic, destfile = glue("./content/post/data/190417down_m/{i}.jpg"), mode = "wb")
+  download.file(url_pic, destfile = glue("./content/post/data/190417down_m/{i}.jpg"), 
+                mode = "wb")
   }
 
 
 # clean the folder of empty files:
 
-all_files <- dir("./content/post/data/190417down_m/", recursive = TRUE, full.names = TRUE)
+all_files <- dir("./content/post/data/190417down_m/", 
+                 recursive = TRUE, full.names = TRUE)
 erase <- all_files[file.info(all_files)[["size"]]< 4200]
 
 ## Remove empty files
@@ -487,14 +477,17 @@ Next is downloading the pictures of the women:
 
 for(i in (1:7000)){
   
-  url_pic <-glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/women/{i}.jpg")
+  url_pic <-glue("https://belgianfootball.s3.eu-central-1.amazonaws.com/",
+                 "s3fs-public/rbfa/img/players/internationals/football/women/{i}.jpg")
   
-  res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_w/{i}.jpg"), mode = "wb"))
+  res <- try(download.file(url_pic, destfile = glue("./content/post/data/190417down_w/{i}.jpg"), 
+                           mode = "wb"))
   if(inherits(res, "try-error"))
   {
     next
   }
-  download.file(url_pic, destfile = glue("./content/post/data/190417down_w/{i}.jpg"), mode = "wb")
+  download.file(url_pic, destfile = glue("./content/post/data/190417down_w/{i}.jpg"), 
+                mode = "wb")
   }
 
 # clean the folder of smaller files:
@@ -506,7 +499,7 @@ unlink(erase, recursive=TRUE, force=FALSE)
 
 ```
 
-There are now 687 pictures of national soccer players; 418 men and 269 women. Most of these pictures seem to be recent, but there is no date tag or something similar. Overall, are seem fairly recent.  
+There are now 687 pictures of national soccer players; 418 men and 269 women. Most of these pictures seem to be recent, but there is no date tag or something similar. Overall, they seem fairly recent.  
 
 Sampling 176 of them:
 
@@ -543,12 +536,9 @@ Making the same patchwork
 
 dir.create("./data/190417/patch")
 
-# lapply(sampled_files, function(x) file.copy(paste ("./data/190417", x , sep = "/"),
-#                                         paste("./data/190417/patch",x, sep = "/"), 
-#                                         recursive = FALSE,  copy.mode = TRUE))
-
 lapply(sampled_files, function(x) file.copy(x,
-                                        paste("./data/190417/patch",basename(x), sep = "/"), 
+                                        paste("./data/190417/patch",basename(x), 
+                                              sep = "/"), 
                                         recursive = FALSE,  copy.mode = TRUE))
 
 
@@ -600,24 +590,19 @@ fun <- function(i, files, no_rows){
     image_write(paste0("./data/190417/cols/", i, ".jpg"))
 }
 
-
 for(i in (0:(no_cols-1))) {
 fun(i, files, no_rows)
 }
-
 ```
 
 
 ```{r eval=FALSE}
-
 img <- image_read(dir("data/190417/cols/", full.names = TRUE)) %>%
 image_append(stack = FALSE) 
 
 setwd("./files/20190417")
 getwd()
 image_write(img,"2019-04-17-faces_of_devils.jpg")
-
-
 ```
 
 
@@ -625,18 +610,14 @@ image_write(img,"2019-04-17-faces_of_devils.jpg")
 ```{r eval=FALSE, include=FALSE}
 unlink("./data/190417/cols",  recursive = TRUE)
 unlink("./data/190417/patch",  recursive = TRUE)
-#unlink("./data/190417/patch", recursive = TRUE) # don't need those anymore
-
 ```
 
 So here is the patchwork of the national soccer players.
 <center>
 ![devils](/img/20190417/2019-04-17-faces_of_devils.jpg)
-
 </center>
 
-
-So give me my tepid beer back. Here's a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let's hope). They also do not wear glasses.
+So give me my tepid beer back. Here's a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let's hope). They also do not wear glasses (on the picture). And yes, I found an easter egg. :-)
 
 Why do they seem so different? Is it because of a generational difference? A cast difference? A class difference?
 
