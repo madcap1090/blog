@@ -7,8 +7,8 @@
 <title>members of the chamber of representatives of Belgium, 54th legistlature | bad to the code</title>
 
 <meta property='og:title' content='members of the chamber of representatives of Belgium, 54th legistlature - bad to the code'>
-<meta property='og:description' content='For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for 6 governments, their administration and their parliaments?
-We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset.'>
+<meta property='og:description' content='For a country as small as Belgium 6 governments is a lot. It’s maybe because we Belgians like to be governed and governed well. Why else would we want to pay for 6 governments, their administration and their parliaments?
+We also love politicians, so we want to have many. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset.'>
 <meta property='og:url' content='/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/'>
 <meta property='og:site_name' content='bad to the code'>
 <meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='scraping'><meta property='article:tag' content='Belgian politics'><meta property='article:tag' content='magick'><meta property='article:tag' content='purrr'><meta property='article:tag' content='handeling files'><meta property='article:published_time' content='2019-04-17T00:00:00Z'/><meta property='article:modified_time' content='2019-04-17T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
@@ -120,8 +120,8 @@ We also love politicians, so we want to have a lots. I also like politicians so 
       
 
 
-<p>For a country as small as Belgium 6 governments is a lot. Its maybe because we Belgians like to be governed and governed well. Why else would we pay for 6 governments, their administration and their parliaments?</p>
-<p>We also love politicians, so we want to have a lots. I also like politicians so I decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level after all.</p>
+<p>For a country as small as Belgium 6 governments is a lot. It’s maybe because we Belgians like to be governed and governed well. Why else would we want to pay for 6 governments, their administration and their parliaments?</p>
+<p>We also love politicians, so we want to have many. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level and their tweets should somehow in some way be representative also..</p>
 <p><a href="https://www.dekamer.be" class="uri">https://www.dekamer.be</a> is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections.</p>
 <p>Let’s scrape them.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
@@ -152,18 +152,13 @@ head(table)</code></pre>
 ## 4                         Bellens Rita        N-VA
 ## 5                      Ben Hamou Nawal          PS
 ## 6                   Blanchart Philippe          PS</code></pre>
-<p>Funny that all the white spaces between “Beke” and “Wouter” cannot be seen. But they need to be cleaned.</p>
+<p>The white spaces between the last name and first some of some, like Wouter Beke need to be cleaned.</p>
 <pre class="r"><code>table &lt;- table %&gt;%
-  mutate(ln_fn = (str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;)),
-         ln_fn = trimws(table$ln_fn, which = &quot;both&quot;))
+  mutate(ln_fn = str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;))
 
-table$ln_fn &lt;- str_replace_all(table$ln_fn,&quot;  +&quot;,&quot; &quot;)
-table$ln_fn &lt;- trimws(table$ln_fn, which = &quot;both&quot;) # for good measure
 nrow(table)</code></pre>
 <pre><code>## [1] 150</code></pre>
-<p>150 members today with their current political party. I’m going to save that data, because after the elections of next month it will not be available for a long.</p>
-<pre class="r"><code>saveRDS(table, &quot;~/R/blogs/content/post/data/190417/reps_54_190417.rds&quot;)</code></pre>
-<p>And the parties are:</p>
+<p>150 members today with their current political party. And the parties and number of seats are:</p>
 <pre class="r"><code>table %&gt;% 
   group_by(party) %&gt;% 
   summarise(members=n()) %&gt;% 
@@ -202,11 +197,7 @@ table_54 &lt;- table_54 %&gt;%
   arrange(ln_fn)
 
 table_54 &lt;- table_54 %&gt;%
-  mutate(ln_fn = (str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;)),
-         ln_fn = trimws(ln_fn, which = &quot;both&quot;))
-
-table$ln_fn &lt;- str_replace_all(table$ln_fn,&quot;  +&quot;,&quot; &quot;)
-table$ln_fn &lt;- trimws(table$ln_fn, which = &quot;both&quot;) # for good measure</code></pre>
+  mutate(ln_fn = str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;))</code></pre>
 <p>This table does not mention the party, which is a pity because some members have changed since 2014.</p>
 <p>Who has left ?</p>
 <pre class="r"><code>table_54 %&gt;% 
@@ -229,9 +220,9 @@ table$ln_fn &lt;- trimws(table$ln_fn, which = &quot;both&quot;) # for good measu
 ## [27] &quot;Vanheste Ann&quot;            &quot;Wathelet Melchior&quot;      
 ## [29] &quot;Wilmès Sophie&quot;</code></pre>
 <p>So indeed 29 representatives. But some left to work in the government and then came back when their party decided to leave government because of a city in northern Africa. Go figure.</p>
-<p>But it does make the identification of a tweet as a tweet being sent by a member of parliament a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hard coding…</p>
+<p>But it does make the identification of a tweet as a tweet being sent by a member of parliament a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hard coding. 😩</p>
 <p>Let’s have some fun first.</p>
-<p>Looking at the page of the current members of parliament, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the xpath is known its is relatively easy to extract the individual member’s webpage url.</p>
+<p>Looking at the page of the current members of parliament, and more specifically at the url leading to the members page, their identifier can be discovered. For instance Mrs Almaci has id 01189 for the website. So once the <a href="https://www.w3schools.com/xml/xml_xpath.asp">xpath</a> is known it is relatively easy to extract the individual member’s webpage url.</p>
 <pre class="r"><code>url &lt;- paste0(&quot;http://www.dekamer.be/kvvcr/showpage.cfm?section&quot;,
               &quot;=/depute&amp;language=nl&amp;cfm=cvlist54.cfm?legis=54&amp;today=n&quot;)
 page &lt;- url %&gt;% 
@@ -249,27 +240,25 @@ for(i in 1:nrow(table_54)){
   urls &lt;- rbind(urls, url)
 }
 
+# constructing the url
 table_ids &lt;- urls %&gt;%
-  mutate(url = paste0(&quot;http://www.dekamer.be/kvvcr/&quot;, url))   # constructing the url
+  mutate(url = paste0(&quot;http://www.dekamer.be/kvvcr/&quot;, url))   
   
-head(table_ids)</code></pre>
-<pre><code>##                 name
-## 1      Almaci Meyrem
-## 2 Bacquelaine Daniel
-## 3         Becq Sonja
-## 4        Beke Wouter
-## 5       Bellens Rita
-## 6    Ben Hamou Nawal
-##                                                                                                            url
-## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01189&amp;lactivity=54
-## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=00757&amp;lactivity=54
-## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01190&amp;lactivity=54
-## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01149&amp;lactivity=54
-## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06592&amp;lactivity=54
-## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06647&amp;lactivity=54</code></pre>
+table_ids %&gt;%
+  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url)) %&gt;%
+  mutate(row = rownames(.)) %&gt;% 
+  select(row, name, id) %&gt;% 
+  slice(29:39) %&gt;% 
+  head()</code></pre>
+<pre><code>##   row               name    id
+## 1  29  D&#39;Haese Christoph 06731
+## 2  30   Daerden Frédéric 00951
+## 3  31 Dallemagne Georges 00895
+## 4  32    De Block Maggie 01183
+## 5  33    De Coninck Inez 06842
+## 6  34  De Coninck Monica 06286</code></pre>
 <p>But there is a problem with matching the names and the ids.</p>
 <pre class="r"><code>x &lt;- table_ids
-
 names &lt;- tibble()
 
 for (i in (1:nrow(x))){
@@ -288,22 +277,21 @@ names(names) &lt;- c(&quot;fn_ln&quot;,&quot;url&quot;)
 names &lt;- names %&gt;% 
   mutate(fn_ln =(str_replace_all(fn_ln,&quot;  +&quot;,&quot; &quot;)))
 
-head(names)</code></pre>
-<pre><code>##                fn_ln
-## 1      Meyrem Almaci
-## 2 Daniel Bacquelaine
-## 3         Sonja Becq
-## 4       Wouter Beke 
-## 5       Rita Bellens
-## 6    Nawal Ben Hamou
-##                                                                                                            url
-## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01189&amp;lactivity=54
-## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=00757&amp;lactivity=54
-## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01190&amp;lactivity=54
-## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01149&amp;lactivity=54
-## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06592&amp;lactivity=54
-## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06647&amp;lactivity=54</code></pre>
-<p>So we need to correct that the ids and fn_ln are correct so? so build a key based on the letters in the name of the person</p>
+names %&gt;%
+  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url)) %&gt;%
+  mutate(row = rownames(.)) %&gt;% 
+  select(row, fn_ln, id) %&gt;% 
+  slice(57:65) %&gt;% 
+  head()</code></pre>
+<pre><code>##   row             fn_ln    id
+## 1  57 Christoph D&#39;Haese 06907
+## 2  58      Leen Dierick 01201
+## 3  59      Elio Di Rupo 00439
+## 4  60      Benoît Dispa 06435
+## 5  61     Denis Ducarme 01056
+## 6  62     Daphné Dumery 06086</code></pre>
+<p>The tables are sorted differently so there are wrong ids attributed to some parlementarians (like Christophe D’Haese).</p>
+<p>We need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.</p>
 <pre class="r"><code>str_sort &lt;- function(x)
   sapply(lapply(strsplit(x, NULL), sort), paste, collapse=&quot;&quot;)
 
@@ -332,29 +320,39 @@ names %&gt;%
 ## 6    Nawal Ben Hamou     aaabehlmnnouw    Ben Hamou Nawal</code></pre>
 <p>Seems to work. Names are clean. Now the id code is needed.</p>
 <pre class="r"><code># correct id
-
+# extract their id from the url
 names &lt;- names %&gt;%
-  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url))               # extract their id from the url
-  #mutate(id = gsub(&#39;O&#39;,&#39;0&#39;,id))      # some of them have O instead of 0 but we need to keep them</code></pre>
-<p>So now we have in ‘urls’ the name and links to the personal webpage of the representatives on the chamber’s website. Notice their id at the end of the url after ‘cfm?key=’ and before ‘&amp;lat’.</p>
+  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url))   </code></pre>
+<p>Now we have in ‘urls’ the name and links to the personal webpage of the representatives on the chamber’s website. Notice their id at the end of the url after ‘cfm?key=’ and before ‘&amp;lat’.</p>
 <p>Let’s get their mugshots.</p>
 <center>
 <img src="/img/20190417/inspect.png" alt="Inspecting the code of the webpage" />
 </center>
-<p>So the images are in <a href="http://www.dekamer.be/site/wwwroot/images/cv/" class="uri">http://www.dekamer.be/site/wwwroot/images/cv/</a></p>
-<p>So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data alert 🚨, shame on you webmaster 😉.</p>
+<p>The images are in folder: <a href="http://www.dekamer.be/site/wwwroot/images/cv/" class="uri">http://www.dekamer.be/site/wwwroot/images/cv/</a></p>
+<pre class="r"><code># let&#39;s try purrr again
+
+download_gifs &lt;- function (name, id){
+  url_pic &lt;- glue(&quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/190417/{name}.gif&quot;), 
+                mode = &quot;wb&quot;)
+}
+
+#download_gifs(&quot;test&quot;,&quot;01203&quot;)</code></pre>
+<p>That seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member “00902” does not have a “00902.gif” his is “902.gif”. Dirty data alert 🚨, shame on you webmaster 😉.</p>
 <p>So sometimes the 0 is used and sometimes it is just the value without leading 0. One possible solution is to split the download_gifs function in two.</p>
 <pre class="r"><code>download_gifs_with_0 &lt;- function (name, id){
   url_pic &lt;- glue(&quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
-  download.file(url_pic, destfile = glue(&quot;./data/190417/down_1/{name}.gif&quot;), mode = &quot;wb&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/190417/down_1/{name}.gif&quot;), 
+                mode = &quot;wb&quot;)
 }
 
 download_gifs_no_0 &lt;- function (name, id){
   id &lt;- as.numeric(id)
   url_pic &lt;- glue(&quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
-  download.file(url_pic, destfile = glue(&quot;./data/190417/down_2/{name}.gif&quot;), mode = &quot;wb&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/190417/down_2/{name}.gif&quot;), 
+                mode = &quot;wb&quot;)
 }</code></pre>
-<p>Trying to simplify the use of the purrr function safely, by Lionel Henry who I thank for his work &amp; presentation at the RUser2018 conference in Budapest.</p>
+<p>Trying to simplify the use of the purrr function ‘safely’, by Lionel Henry who I thank for his work &amp; <a href="https://www.youtube.com/watch?v=-v1tp41kizk">presentation</a> at the UseR2018 conference in Budapest.</p>
 <pre class="r"><code>dir.create(&quot;./data/190417/down_1&quot;)
 map2(.x = names$ln_fn, .y = names$id, safely(.f = download_gifs_with_0, otherwise = NULL))</code></pre>
 <p>So using ‘safely’ the error are being skipped and we managed to download how many files?</p>
@@ -427,7 +425,6 @@ make_column &lt;- function(i, files, no_rows){
     image_write(paste0(&quot;cols/&quot;, i, &quot;.jpg&quot;))
 }
 
-
 fun &lt;- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
   image_append(stack = TRUE) %&gt;%
@@ -450,13 +447,10 @@ image_append(stack = FALSE)
 setwd(&quot;./files/20190417&quot;)
 getwd()
 image_write(img,&quot;2019-04-17-faces_of_54.jpg&quot;)</code></pre>
-<p>Clean up a bit.</p>
-<pre class="r"><code>unlink(&quot;./data/190417/patch_rep&quot;, recursive = TRUE) # don&#39;t need those anymore
-unlink(&quot;./data/190417/cols_rep&quot;, recursive = TRUE) # don&#39;t need those anymore</code></pre>
 <center>
-<img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="reps 54" width="800" height="850" />
+<img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="reps 54" width="800" height="800" />
 </center>
-<p>So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those two groups are indeed two very small samples of Belgians. What I can says is that given my age, gender and skin color, I would fit right in.</p>
+<p>Looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those two groups are indeed two very small and different samples of Belgians.</p>
 <p>Wondering what the 55 legislature will look like. Will keep you posted.</p>
 <p>But wait a minute. Did I say Belgian national soccer teams? Hold my beer.</p>
 <p>Analyzing the Red Devil’s website code, it appears the pictures are to be found in an aws bucket s3 folder.</p>
@@ -466,20 +460,25 @@ unlink(&quot;./data/190417/cols_rep&quot;, recursive = TRUE) # don&#39;t need th
 <p>Downloading the pictures of the men:</p>
 <pre class="r"><code>for(i in (1:7000)){
   
-  url_pic &lt;-glue(&quot;https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg&quot;)
+  url_pic &lt;-glue(&quot;https://belgianfootball.s3.eu-central-1.amazonaws.com/&quot;,
+                 &quot;s3fs-public/rbfa/img/players/internationals/football/men/{i}.jpg&quot;)
   
-  res &lt;- try(download.file(url_pic, destfile = glue(&quot;./content/post/data/190417down_m/{i}.jpg&quot;), mode = &quot;wb&quot;))
+  res &lt;- try(download.file(url_pic, 
+                           destfile = glue(&quot;./content/post/data/190417down_m/{i}.jpg&quot;), 
+                           mode = &quot;wb&quot;))
   if(inherits(res, &quot;try-error&quot;))
   {
     next
   }
-  download.file(url_pic, destfile = glue(&quot;./content/post/data/190417down_m/{i}.jpg&quot;), mode = &quot;wb&quot;)
+  download.file(url_pic, destfile = glue(&quot;./content/post/data/190417down_m/{i}.jpg&quot;), 
+                mode = &quot;wb&quot;)
   }
 
 
 # clean the folder of empty files:
 
-all_files &lt;- dir(&quot;./content/post/data/190417down_m/&quot;, recursive = TRUE, full.names = TRUE)
+all_files &lt;- dir(&quot;./content/post/data/190417down_m/&quot;, 
+                 recursive = TRUE, full.names = TRUE)
 erase &lt;- all_files[file.info(all_files)[[&quot;size&quot;]]&lt; 4200]
 
 ## Remove empty files
@@ -487,14 +486,17 @@ unlink(erase, recursive=TRUE, force=FALSE)</code></pre>
 <p>Next is downloading the pictures of the women:</p>
 <pre class="r"><code>for(i in (1:7000)){
   
-  url_pic &lt;-glue(&quot;https://belgianfootball.s3.eu-central-1.amazonaws.com/s3fs-public/rbfa/img/players/internationals/football/women/{i}.jpg&quot;)
+  url_pic &lt;-glue(&quot;https://belgianfootball.s3.eu-central-1.amazonaws.com/&quot;,
+                 &quot;s3fs-public/rbfa/img/players/internationals/football/women/{i}.jpg&quot;)
   
-  res &lt;- try(download.file(url_pic, destfile = glue(&quot;./content/post/data/190417down_w/{i}.jpg&quot;), mode = &quot;wb&quot;))
+  res &lt;- try(download.file(url_pic, destfile = glue(&quot;./content/post/data/190417down_w/{i}.jpg&quot;), 
+                           mode = &quot;wb&quot;))
   if(inherits(res, &quot;try-error&quot;))
   {
     next
   }
-  download.file(url_pic, destfile = glue(&quot;./content/post/data/190417down_w/{i}.jpg&quot;), mode = &quot;wb&quot;)
+  download.file(url_pic, destfile = glue(&quot;./content/post/data/190417down_w/{i}.jpg&quot;), 
+                mode = &quot;wb&quot;)
   }
 
 # clean the folder of smaller files:
@@ -503,7 +505,7 @@ all_files &lt;- dir(&quot;./content/post/data/190417down_w/&quot;, recursive = T
 erase &lt;- all_files[file.info(all_files)[[&quot;size&quot;]]&lt; 4200]
 ## Remove empty files
 unlink(erase, recursive=TRUE, force=FALSE)</code></pre>
-<p>There are now 687 pictures of national soccer players; 418 men and 269 women. Most of these pictures seem to be recent, but there is no date tag or something similar. Overall, are seem fairly recent.</p>
+<p>There are now 687 pictures of national soccer players; 418 men and 269 women. Most of these pictures seem to be recent, but there is no date tag or something similar. Overall, they seem fairly recent.</p>
 <p>Sampling 176 of them:</p>
 <pre class="r"><code># renaming files, so we do not have the same file names between men and women
 
@@ -520,12 +522,9 @@ sampled_files &lt;- sample(player_files, 176)</code></pre>
 <p>Making the same patchwork</p>
 <pre class="r"><code>dir.create(&quot;./data/190417/patch&quot;)
 
-# lapply(sampled_files, function(x) file.copy(paste (&quot;./data/190417&quot;, x , sep = &quot;/&quot;),
-#                                         paste(&quot;./data/190417/patch&quot;,x, sep = &quot;/&quot;), 
-#                                         recursive = FALSE,  copy.mode = TRUE))
-
 lapply(sampled_files, function(x) file.copy(x,
-                                        paste(&quot;./data/190417/patch&quot;,basename(x), sep = &quot;/&quot;), 
+                                        paste(&quot;./data/190417/patch&quot;,basename(x), 
+                                              sep = &quot;/&quot;), 
                                         recursive = FALSE,  copy.mode = TRUE))</code></pre>
 <p>And the pictures need to have the same size (170x250 pixel)</p>
 <pre class="r"><code>resize_player &lt;- function(x){
@@ -559,7 +558,6 @@ make_column &lt;- function(i, files, no_rows){
     image_write(paste0(&quot;./data/190417/cols/&quot;, i, &quot;.jpg&quot;))
 }
 
-
 for(i in (0:(no_cols-1))) {
 fun(i, files, no_rows)
 }</code></pre>
@@ -569,15 +567,11 @@ image_append(stack = FALSE)
 setwd(&quot;./files/20190417&quot;)
 getwd()
 image_write(img,&quot;2019-04-17-faces_of_devils.jpg&quot;)</code></pre>
-So here is the patchwork of the national soccer players.
+<p>So here is the patchwork of the national soccer players.</p>
 <center>
-<div class="figure">
 <img src="/img/20190417/2019-04-17-faces_of_devils.jpg" alt="devils" />
-<p class="caption">devils</p>
-</div>
 </center>
-<p>So give me my tepid beer back. Here’s a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let’s hope). They also do not wear glasses.</p>
-<p>Why do they seem so different? Is it because of a generational difference? A cast difference? A class difference?</p>
+<p>So give me my tepid beer back. Here’s a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let’s hope). They also do not wear glasses (on the picture). And yes, I found an easter egg. :-)</p>
 <p>Let’s get back to the parliamentarians tweets in the next post.</p>
 
       

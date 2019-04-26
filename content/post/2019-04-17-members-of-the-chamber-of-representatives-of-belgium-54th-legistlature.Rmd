@@ -14,7 +14,7 @@ tags:
 
 For a country as small as Belgium 6 governments is a lot. It's maybe because we Belgians like to be governed and governed well. Why else would we want to pay for 6 governments, their administration and their parliaments? 
 
-We also love politicians, so we want to have a lots. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level and their tweets should somehow in some way be representative also..
+We also love politicians, so we want to have many. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level and their tweets should somehow in some way be representative also..
 
 https://www.dekamer.be is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections. 
 
@@ -64,8 +64,8 @@ table %>%
   group_by(party) %>% 
   summarise(members=n()) %>% 
   arrange(desc(members))
-
 ```
+
 
 We can also scrape the complete list of members of the 54th legislature. 
 
@@ -177,7 +177,7 @@ names %>%
 
 The tables are sorted differently so there are wrong ids attributed to some parlementarians (like Christophe D'Haese).
 
-So we need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.
+We need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.
 
 ```{r message=FALSE}
 
@@ -236,7 +236,7 @@ download_gifs <- function (name, id){
 #download_gifs("test","01203")
 ```
 
-So that seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data alert :rotating_light:, shame on you webmaster :wink:. 
+That seems to work. Unfortunately while scraping it is not infrequent to encounter coding inconsistencies. For instance member "00902" does not have a "00902.gif" his is "902.gif". Dirty data alert :rotating_light:, shame on you webmaster :wink:. 
 
 
 ```{r eval=FALSE, include=FALSE}
@@ -423,11 +423,11 @@ image_write(img,"2019-04-17-faces_of_54.jpg")
 ```
 
 <center>
-![reps 54](/img/20190417/2019-04-17-faces_of_54.jpg){width=700px height=800px} 
+![reps 54](/img/20190417/2019-04-17-faces_of_54.jpg){width=800px height=800px} 
 </center>
 
 
-So looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those two groups are indeed two very small and different samples of Belgians. 
+Looking at the picture I will let you judge how diverse the picture looks. Less diverse than our national soccer team, that is for sure. But those two groups are indeed two very small and different samples of Belgians. 
 
 Wondering what the 55 legislature will look like. Will keep you posted.
 
@@ -613,12 +613,13 @@ unlink("./data/190417/patch",  recursive = TRUE)
 ```
 
 So here is the patchwork of the national soccer players.
+
 <center>
 ![devils](/img/20190417/2019-04-17-faces_of_devils.jpg)
 </center>
 
+
 So give me my tepid beer back. Here's a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let's hope). They also do not wear glasses (on the picture). And yes, I found an easter egg. :-)
 
-Why do they seem so different? Is it because of a generational difference? A cast difference? A class difference?
 
 Let's get back to the parliamentarians tweets in the next post. 
