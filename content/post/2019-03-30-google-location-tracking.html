@@ -24,7 +24,9 @@ library(&quot;ggmap&quot;)      # devtools::install_github(&quot;dkahle/ggmap&qu
 library(&quot;glue&quot;)
 library(&quot;emo&quot;)        # devtools::install_github(&quot;hadley/emo&quot;)
 library(&quot;viridis&quot;)    # install.packages(&quot;viridis&quot;)</code></pre>
-<pre class="r"><code>data &lt;- fromJSON(&quot;./data/Location History.json&quot;) # extracts a list
+<pre class="r"><code>getwd()</code></pre>
+<pre><code>## [1] &quot;C:/Users/William/Documents/R/blogs/content/post&quot;</code></pre>
+<pre class="r"><code>data &lt;- fromJSON(&quot;./data/20190330/Location History.json&quot;) # extracts a list
 locations &lt;- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore</code></pre>
 <p>This <a href="https://shiring.github.io/maps/2016/12/30/Standortverlauf_post">blogpost</a> from Shirin Glander was super useful and I am shamelessly stealing some of her great ideas. The time stamp needs to be converted to be readable.
@@ -138,7 +140,7 @@ x &lt;- df %&gt;%
     title = &quot;Location history data points in Brussels&quot;,
     caption = &quot;\nA simple point plot shows recorded positions.&quot;)</code></pre>
 <p><img src="/post/2019-03-30-google-location-tracking_files/figure-html/unnamed-chunk-17-1.png" width="960" /></p>
-<p>Let’s see to how we can zoom in.</p>
+<p>Let’s see how much we can zoom in.</p>
 <pre class="r"><code>zoom &lt;- get_map(location = c(lon = 4.349078, lat = 50.850586), zoom = 16, maptype = &quot;satellite&quot;)</code></pre>
 <pre class="r"><code>bb &lt;- attr(zoom, &quot;bb&quot;)
 x &lt;- df %&gt;% 
