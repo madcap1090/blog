@@ -121,7 +121,7 @@ We also love politicians, so we want to have many. I also like politicians and d
 
 
 <p>For a country as small as Belgium 6 governments is a lot. It’s maybe because we Belgians like to be governed and governed well. Why else would we want to pay for 6 governments, their administration and their parliaments?</p>
-<p>We also love politicians, so we want to have many. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level and their tweets should somehow in some way be representative also..</p>
+<p>We also love politicians, so we want to have many. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset. What better selection then the members of the national chamber of representatives? They were elected to represent us all at the national level and their tweets should somehow in some way be representative also.</p>
 <p><a href="https://www.dekamer.be" class="uri">https://www.dekamer.be</a> is the official website of the chamber. Two lists are interesting here. One has the current members, the other one the complete list of members that at one moment or another were part of the parliament during the 54th legislature following the 2014 elections.</p>
 <p>Let’s scrape them.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
@@ -290,7 +290,7 @@ names %&gt;%
 ## 4  60      Benoît Dispa 06435
 ## 5  61     Denis Ducarme 01056
 ## 6  62     Daphné Dumery 06086</code></pre>
-<p>The tables are sorted differently so there are wrong ids attributed to some parlementarians (like Christophe D’Haese).</p>
+<p>The tables are sorted differently so there are wrong ids attributed to some parliamentarians (like Christophe D’Haese).</p>
 <p>We need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.</p>
 <pre class="r"><code>str_sort &lt;- function(x)
   sapply(lapply(strsplit(x, NULL), sort), paste, collapse=&quot;&quot;)
@@ -413,7 +413,7 @@ map(player_pics, resize_player)</code></pre>
 getwd()
 files &lt;- dir(&quot;data/190417/patch_rep&quot;, full.names = TRUE)
 set.seed(1)
-files &lt;- sample(files, length(files)-2) # 176 will mahe a nices patch
+files &lt;- sample(files, length(files)-2) # 176 will make a nice patch
 gmp::factorize(length(files)-2)
 
 no_rows &lt;- 11
@@ -571,7 +571,7 @@ image_write(img,&quot;2019-04-17-faces_of_devils.jpg&quot;)</code></pre>
 <center>
 <img src="/img/20190417/2019-04-17-faces_of_devils.jpg" alt="devils" />
 </center>
-<p>So give me my tepid beer back. Here’s a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let’s hope). They also do not wear glasses (on the picture). And yes, I found an easter egg. :-)</p>
+<p>So give me my tepid beer back. Here’s a sample of our national soccer players. To contrast with our parliamentarian representatives. They are obviously younger, more diverse and fitter (let’s hope). They also do not wear glasses (on the picture). And yes, I found an Easter egg. :-)</p>
 <p>Let’s get back to the parliamentarians tweets in the next post.</p>
 
       

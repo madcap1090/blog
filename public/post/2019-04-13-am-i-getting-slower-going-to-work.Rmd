@@ -397,6 +397,6 @@ ggmap(zoom) +
 
 ```
 
-It seems to me all the data is a bit off. 2014 to 2016 a bit or a lot shifted to the left, and 2018 just a tad too much to the left. 
+It seems to me all the data is a bit off. 2014 to 2016 a bit or a lot shifted to the left, and 2018 just a tad too much to the right. 
 
 But still. Welcome to the panopticon. 

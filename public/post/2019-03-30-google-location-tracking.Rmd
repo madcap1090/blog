@@ -30,7 +30,8 @@ library("viridis")    # install.packages("viridis")
 ```
 
 ```{r}
-data <- fromJSON("./data/Location History.json") # extracts a list
+getwd()
+data <- fromJSON("./data/20190330/Location History.json") # extracts a list
 locations <- data$locations # and the list contains a dataframe
 rm(data)  # no need for this anymore
 
@@ -188,7 +189,7 @@ ggmap(brussels) +
 
 ```
 
-Let's see to how we can zoom in.
+Let's see how much we can zoom in.
 
 ```{r message=FALSE}
 
