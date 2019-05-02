@@ -19,7 +19,7 @@
       
       <guid>/post/belgian-parliamentarians-twitter-accounts/</guid>
       <description>Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too.
-Let’s start by reconstructing the list. Then we can search Twitter for their Twitter accounts. So a bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.
+Let’s start by reconstructing the list. Then we can search Twitter for their Twitter accounts. A bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.
 Starting with attaching libraries, and in particular ‘rtweet’.
 #librarieslibrary(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;rvest&amp;quot;)library(&amp;quot;glue&amp;quot;)library(&amp;quot;rtweet&amp;quot;)library(&amp;quot;purrr&amp;quot;)# the ones seating currently, with their (current) partyurl &amp;lt;- paste0(&amp;quot;http://www.</description>
     </item>

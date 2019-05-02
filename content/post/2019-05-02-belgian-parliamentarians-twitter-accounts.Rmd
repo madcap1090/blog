@@ -11,7 +11,7 @@ tags:
 
 Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too. 
 
-Let's start by reconstructing the list. Then we can search Twitter for their Twitter accounts. So a bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians' tweets soonish. 
+Let's start by reconstructing the list. Then we can search Twitter for their Twitter accounts. A bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians' tweets soonish. 
 
 Starting with attaching libraries, and in particular 'rtweet'. 
 
@@ -100,7 +100,7 @@ search <- function(x){print (x)
 
 Using the function 'possibly' a data frame can be created without stopping or including errors.
 
-```{r echo=TRUE, message=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE, results=FALSE}
 twitter_users <- map_df(table$ln_fn,possibly(.f= search, otherwise = NULL))
 ```
 
