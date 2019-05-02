@@ -12,6 +12,175 @@
     
     
     <item>
+      <title>Begian parliamentarians twitter accounts</title>
+      <link>/post/begian-parliamentarians-twitter-accounts/</link>
+      <pubDate>Thu, 02 May 2019 00:00:00 +0000</pubDate>
+      <author>William Bourgeois</author>
+      <guid>/post/begian-parliamentarians-twitter-accounts/</guid>
+      <description></description>
+      
+      <content>
+
+
+&lt;p&gt;Now that we can scrape the names of the parlemaintarians of the 54th legistlature, we can try to find their Twitter accounts too.&lt;/p&gt;
+&lt;p&gt;Let’s start by reconstruct the list.&lt;/p&gt;
+&lt;p&gt;How many do we have?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;nrow(table)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 179&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Ok, did not loose any along the way. So now there is a dataframe with the last name and first name of the 179 persons who wo seated in the 54th legislature (by now there will be no changes).&lt;/p&gt;
+&lt;p&gt;Next the twitter API credentials are needed to use the rtweet package. Documentation can be found (here)[&lt;a href=&#34;https://rtweet.info/#api-authorization&#34; class=&#34;uri&#34;&gt;https://rtweet.info/#api-authorization&lt;/a&gt;]&lt;/p&gt;
+&lt;p&gt;Once authenticated, based on our parlemenatairian’s name and using the ‘search_users’ function we can try to find their twitter accounts. I had some succes using a for loop in the past, but will try to use the purrr package this time around.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# so tweak the function, because it tries to find by default 100 users
+# and because we want to keep track of who we searched for in the results
+# take only first result for now
+
+search &amp;lt;- function(x){print (x)
+  search_users(x, n=1) %&amp;gt;% 
+    mutate(ln_fn = x)} # keep track of who we searched for&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Using the function ‘possibly’ a dataframe can be created without stopping or including errors.&lt;/p&gt;
+&lt;p&gt;The nice thing about it is that a lot of information can be collected using the Twitter API. Have look yourself:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;names(twitter_users)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;user_id&amp;quot;                 &amp;quot;status_id&amp;quot;              
+##  [3] &amp;quot;created_at&amp;quot;              &amp;quot;screen_name&amp;quot;            
+##  [5] &amp;quot;text&amp;quot;                    &amp;quot;source&amp;quot;                 
+##  [7] &amp;quot;display_text_width&amp;quot;      &amp;quot;reply_to_status_id&amp;quot;     
+##  [9] &amp;quot;reply_to_user_id&amp;quot;        &amp;quot;reply_to_screen_name&amp;quot;   
+## [11] &amp;quot;is_quote&amp;quot;                &amp;quot;is_retweet&amp;quot;             
+## [13] &amp;quot;favorite_count&amp;quot;          &amp;quot;retweet_count&amp;quot;          
+## [15] &amp;quot;hashtags&amp;quot;                &amp;quot;symbols&amp;quot;                
+## [17] &amp;quot;urls_url&amp;quot;                &amp;quot;urls_t.co&amp;quot;              
+## [19] &amp;quot;urls_expanded_url&amp;quot;       &amp;quot;media_url&amp;quot;              
+## [21] &amp;quot;media_t.co&amp;quot;              &amp;quot;media_expanded_url&amp;quot;     
+## [23] &amp;quot;media_type&amp;quot;              &amp;quot;ext_media_url&amp;quot;          
+## [25] &amp;quot;ext_media_t.co&amp;quot;          &amp;quot;ext_media_expanded_url&amp;quot; 
+## [27] &amp;quot;ext_media_type&amp;quot;          &amp;quot;mentions_user_id&amp;quot;       
+## [29] &amp;quot;mentions_screen_name&amp;quot;    &amp;quot;lang&amp;quot;                   
+## [31] &amp;quot;quoted_status_id&amp;quot;        &amp;quot;quoted_text&amp;quot;            
+## [33] &amp;quot;quoted_created_at&amp;quot;       &amp;quot;quoted_source&amp;quot;          
+## [35] &amp;quot;quoted_favorite_count&amp;quot;   &amp;quot;quoted_retweet_count&amp;quot;   
+## [37] &amp;quot;quoted_user_id&amp;quot;          &amp;quot;quoted_screen_name&amp;quot;     
+## [39] &amp;quot;quoted_name&amp;quot;             &amp;quot;quoted_followers_count&amp;quot; 
+## [41] &amp;quot;quoted_friends_count&amp;quot;    &amp;quot;quoted_statuses_count&amp;quot;  
+## [43] &amp;quot;quoted_location&amp;quot;         &amp;quot;quoted_description&amp;quot;     
+## [45] &amp;quot;quoted_verified&amp;quot;         &amp;quot;retweet_status_id&amp;quot;      
+## [47] &amp;quot;retweet_text&amp;quot;            &amp;quot;retweet_created_at&amp;quot;     
+## [49] &amp;quot;retweet_source&amp;quot;          &amp;quot;retweet_favorite_count&amp;quot; 
+## [51] &amp;quot;retweet_retweet_count&amp;quot;   &amp;quot;retweet_user_id&amp;quot;        
+## [53] &amp;quot;retweet_screen_name&amp;quot;     &amp;quot;retweet_name&amp;quot;           
+## [55] &amp;quot;retweet_followers_count&amp;quot; &amp;quot;retweet_friends_count&amp;quot;  
+## [57] &amp;quot;retweet_statuses_count&amp;quot;  &amp;quot;retweet_location&amp;quot;       
+## [59] &amp;quot;retweet_description&amp;quot;     &amp;quot;retweet_verified&amp;quot;       
+## [61] &amp;quot;place_url&amp;quot;               &amp;quot;place_name&amp;quot;             
+## [63] &amp;quot;place_full_name&amp;quot;         &amp;quot;place_type&amp;quot;             
+## [65] &amp;quot;country&amp;quot;                 &amp;quot;country_code&amp;quot;           
+## [67] &amp;quot;geo_coords&amp;quot;              &amp;quot;coords_coords&amp;quot;          
+## [69] &amp;quot;bbox_coords&amp;quot;             &amp;quot;status_url&amp;quot;             
+## [71] &amp;quot;name&amp;quot;                    &amp;quot;location&amp;quot;               
+## [73] &amp;quot;description&amp;quot;             &amp;quot;url&amp;quot;                    
+## [75] &amp;quot;protected&amp;quot;               &amp;quot;followers_count&amp;quot;        
+## [77] &amp;quot;friends_count&amp;quot;           &amp;quot;listed_count&amp;quot;           
+## [79] &amp;quot;statuses_count&amp;quot;          &amp;quot;favourites_count&amp;quot;       
+## [81] &amp;quot;account_created_at&amp;quot;      &amp;quot;verified&amp;quot;               
+## [83] &amp;quot;profile_url&amp;quot;             &amp;quot;profile_expanded_url&amp;quot;   
+## [85] &amp;quot;account_lang&amp;quot;            &amp;quot;profile_banner_url&amp;quot;     
+## [87] &amp;quot;profile_background_url&amp;quot;  &amp;quot;profile_image_url&amp;quot;      
+## [89] &amp;quot;ln_fn&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Some of the fields, like “hastags” contain lists.&lt;/p&gt;
+&lt;p&gt;Arranging columns:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users &amp;lt;- twitter_users %&amp;gt;% 
+  select(ln_fn, everything())&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;These names return an error using the “twitter_user” function. But these politicans do not tweet, so we can skip them.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;list_no_twitter &amp;lt;- c(&amp;quot;Detiège Maya&amp;quot;, &amp;quot;Mathot Alain&amp;quot;, &amp;quot;Pivin Philippe&amp;quot;, &amp;quot;Wilrycx Frank&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We now have a dataframe with 152 users for our 175 politicians.&lt;/p&gt;
+&lt;p&gt;We need to find the right user ids or twitter handles, by looking at key fields in the dataframe returned by the ‘search_user’ function. (Sullarised in a smaller dataframe)&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;inspect &amp;lt;- twitter_users %&amp;gt;%
+  select(ln_fn, name, screen_name, description, text)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Luckily most often the first result is the correct one. Although there are also sometimes surprises. At least these do not seem like descriptions of Belgian parlementairians.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;descriptions &amp;lt;- inspect %&amp;gt;% 
+  filter(ln_fn == &amp;quot;Bracke Siegfried&amp;quot; 
+         | ln_fn == &amp;quot;Top Alain&amp;quot;
+         | ln_fn == &amp;quot;Miller Richard&amp;quot; 
+         | ln_fn == &amp;quot;Henry Olivier&amp;quot;
+         | ln_fn == &amp;quot;Casier Youro&amp;quot;) %&amp;gt;% 
+  select(ln_fn, description)
+
+descriptions&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 5 x 2
+##   ln_fn          description                                               
+##   &amp;lt;chr&amp;gt;          &amp;lt;chr&amp;gt;                                                     
+## 1 Bracke Siegfr~ Als er niet kan worden gelachen, is het niet ernstig. Lin~
+## 2 Casier Youro   Gewoon Youro.Sociaal,Empatisch en een klein beetje gek. M~
+## 3 Henry Olivier  Actor• Singer• Songwriter• Olivier winner• Dog lover &amp;lt;U+2796&amp;gt;&amp;lt;U+2796&amp;gt;&amp;lt;U+2796&amp;gt;&amp;lt;U+2796&amp;gt;~
+## 4 Miller Richard &amp;quot;Founder Miller-Klein Associates Ltd.\nInnovation, Sustai~
+## 5 Top Alain      Legacy Miami Top 40 Under 40 | HACCOF Top 20 Under 40 | C~&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So the last three are obviously wrong. What would the complete list look like?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;find_again &amp;lt;- tibble(&amp;quot;ln_fn&amp;quot; = c(&amp;quot;Bonte Hans&amp;quot;,&amp;quot;Ceysens Patricia&amp;quot;,&amp;quot;Chabot Jacques&amp;quot;,
+                                 &amp;quot;Fernandez Fernandez Julie&amp;quot;,&amp;quot;Geerts David&amp;quot;,
+                                 &amp;quot;Henry Olivier&amp;quot;,&amp;quot;Janssen Werner&amp;quot;, &amp;quot;Janssens Dirk&amp;quot;,
+                                 &amp;quot;Matz Vanessa&amp;quot;, &amp;quot;Metsu Koen&amp;quot;, &amp;quot;Miller Richard&amp;quot;,
+                                 &amp;quot;Pehlivan Fatma&amp;quot;,&amp;quot;Smeyers Sarah&amp;quot;,&amp;quot;Top Alain&amp;quot;,
+                                 &amp;quot;Van de Velde Robert&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Would they be first 10 of the search result ?&lt;/p&gt;
+&lt;p&gt;So a new batch can easily identified and added to the first batch.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users &amp;lt;- twitter_users %&amp;gt;% 
+  filter(!ln_fn %in% find_again$ln_fn) %&amp;gt;% 
+  rbind(twitter_users_2 %&amp;gt;% 
+  slice(13, 23, 30, 45, 51, 71, 76 , 99, 113))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We are still missing these:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;setdiff(setdiff(table$ln_fn, twitter_users$ln_fn), list_no_twitter)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;Bonte Hans&amp;quot;                &amp;quot;Brotcorne Christian&amp;quot;      
+##  [3] &amp;quot;Cassart-Mailleux Caroline&amp;quot; &amp;quot;Ceysens Patricia&amp;quot;         
+##  [5] &amp;quot;Cheron Marcel&amp;quot;             &amp;quot;D&amp;#39;Haese Christoph&amp;quot;        
+##  [7] &amp;quot;de Coster-Bauchau Sybille&amp;quot; &amp;quot;Delannois Paul-Olivier&amp;quot;   
+##  [9] &amp;quot;Delpérée Francis&amp;quot;          &amp;quot;Devin Laurent&amp;quot;            
+## [11] &amp;quot;Dierick Leen&amp;quot;              &amp;quot;Frédéric André&amp;quot;           
+## [13] &amp;quot;Galant Isabelle&amp;quot;           &amp;quot;Goffinet Anne-Catherine&amp;quot;  
+## [15] &amp;quot;Gustin Luc&amp;quot;                &amp;quot;Janssens Dirk&amp;quot;            
+## [17] &amp;quot;Miller Richard&amp;quot;            &amp;quot;Muylle Nathalie&amp;quot;          
+## [19] &amp;quot;Pehlivan Fatma&amp;quot;            &amp;quot;Pirlot Sébastian&amp;quot;         
+## [21] &amp;quot;Van de Velde Robert&amp;quot;       &amp;quot;Van den Bergh Jef&amp;quot;        
+## [23] &amp;quot;Van Quickenborne Vincent&amp;quot;  &amp;quot;Van Rompuy Eric&amp;quot;          
+## [25] &amp;quot;Vanvelthoven Peter&amp;quot;        &amp;quot;Gerkens Muriel&amp;quot;           
+## [27] &amp;quot;Marghem Marie-Christine&amp;quot;   &amp;quot;Vande Lanotte Johan&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So at least some of these surely have a twitter account, so more searching is needed, to find:&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;citation&#34;&gt;@CarolineCassart&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@patriciaceysens&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@podelannois&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@leendierick&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@dirkjanssens19&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@millerrichardmr&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@nathaliemuylle&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@jefvandenbergh&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@VincentVQ&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@VvelthovenPeter&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@pehlivan_fatma&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@FrankWilrycx&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@McMarghem&lt;/span&gt;
+&lt;span class=&#34;citation&#34;&gt;@robvandevelde&lt;/span&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;more &amp;lt;- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois, leendierick,
+                                  dirkjanssens19, millerrichardmr, nathaliemuylle,jefvandenbergh,
+                                  VincentVQ, VvelthovenPeter, pehlivan_fatma, FrankWilrycx,  McMarghem),
+               ln_fn = c(&amp;quot;Cassart-Mailleux Caroline&amp;quot;, &amp;quot;Ceysens Patricia&amp;quot;,&amp;quot;Delannois Paul-Olivier&amp;quot;, 
+                         &amp;quot;Dierick Leen&amp;quot;, &amp;quot;Janssens Dirk&amp;quot;, &amp;quot;Miller Richard&amp;quot;, &amp;quot;Muylle Nathalie&amp;quot;, 
+                         &amp;quot;Van den Bergh Jef&amp;quot;, &amp;quot;Van Quickenborne Vincent&amp;quot;, &amp;quot;Vanvelthoven Peter&amp;quot;, 
+                         &amp;quot;Pehlivan Fatma&amp;quot; , &amp;quot;Wilrycx Frank&amp;quot;, &amp;quot;Marghem Marie-Christine&amp;quot;))
+
+more_1 &amp;lt;- more %&amp;gt;% 
+  filter(handle !=&amp;quot;pehlivan_fatma&amp;quot;,
+         handle !=&amp;quot;FrankWilrycx&amp;quot;)
+
+more_2 &amp;lt;- more %&amp;gt;% 
+  filter(handle ==&amp;quot;pehlivan_fatma&amp;quot; |
+         handle ==&amp;quot;FrankWilrycx&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Still problems with the last two. “FrankWilrycx” probably because he has not tweeted yet. And “pehlivan_fatma” was a bit harder too find&lt;/p&gt;
+&lt;p&gt;So now there are 159 Twitter handles, out of 179 parlemantarians.&lt;/p&gt;
+&lt;p&gt;(if you want to have fun with the profile pics they are in &lt;a href=&#34;https://twitter.com/%7Bhandle%7D/photo&#34; class=&#34;uri&#34;&gt;https://twitter.com/{handle}/photo&lt;/a&gt;)&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;saveRDS(twitter_users, &amp;quot;./data/20190502/twitter_users.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+</content>
+      
+    </item>
+    
+    <item>
       <title>members of the chamber of representatives of Belgium, 54th legistlature</title>
       <link>/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/</link>
       <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>

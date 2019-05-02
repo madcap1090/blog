@@ -7,10 +7,22 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Wed, 17 Apr 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 02 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Begian parliamentarians twitter accounts</title>
+      <link>/post/begian-parliamentarians-twitter-accounts/</link>
+      <pubDate>Thu, 02 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/begian-parliamentarians-twitter-accounts/</guid>
+      <description>Now that we can scrape the names of the parlemaintarians of the 54th legistlature, we can try to find their Twitter accounts too.
+Let’s start by reconstruct the list.
+How many do we have?
+nrow(table)## [1] 179Ok, did not loose any along the way. So now there is a dataframe with the last name and first name of the 179 persons who wo seated in the 54th legislature (by now there will be no changes).</description>
+    </item>
     
     <item>
       <title>members of the chamber of representatives of Belgium, 54th legistlature</title>
