@@ -1,0 +1,466 @@
+---
+title: Belgian parliamentarians Twitter accounts
+author: William Bourgeois
+date: '2019-05-02'
+slug: belgian-parliamentarians-twitter-accounts
+categories: []
+tags:
+  - Belgian politics
+  - Twitter
+---
+
+
+
+<p>Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too.</p>
+<p>Let’s start by reconstructing the list. Then we can search Twitter for their Twitter accounts. So a bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.</p>
+<p>Starting with attaching libraries, and in particular ‘rtweet’.</p>
+<pre class="r"><code>#libraries
+library(&quot;tidyverse&quot;)
+library(&quot;rvest&quot;)
+library(&quot;glue&quot;)
+library(&quot;rtweet&quot;)
+library(&quot;purrr&quot;)
+
+# the ones seating currently, with their (current) party
+
+url &lt;- paste0(&quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=&quot;,
+              &quot;/depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm&quot;)
+
+table &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(&quot;#story &gt; table&quot;) %&gt;% 
+  html_table()
+
+table &lt;- table[[1]]
+
+names(table) &lt;- c(&quot;ln_fn&quot;, &quot;party&quot;, &quot;d1&quot;, &quot;d2&quot;) # ln_fn is last name, first name
+table &lt;- table %&gt;% 
+  select(ln_fn, party)
+
+table &lt;- table %&gt;%
+  mutate(ln_fn = str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;))
+
+# the ones that have left (without party)
+
+url &lt;- paste0(&quot;https://www.dekamer.be/kvvcr/showpage.cfm?section&quot;,
+              &quot;=/depute&amp;language=nl&amp;cfm=cvlist54.cfm?legis=54&amp;today=n&quot;)
+
+table_54 &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(&quot;#story &gt; table&quot;) %&gt;% 
+  html_table()
+
+table_54 &lt;- table_54[[1]] # extracting the dataframe
+
+names(table_54) &lt;- c(&quot;ln_fn&quot;, &quot;d1&quot;, &quot;d2&quot;, &quot;d3&quot;)  
+table_54 &lt;- table_54 %&gt;% 
+  select(ln_fn) %&gt;% 
+  arrange(ln_fn)
+
+table_54 &lt;- table_54 %&gt;%
+  mutate(ln_fn = str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;))
+
+old_members &lt;- table_54 %&gt;% 
+  anti_join(table) %&gt;% 
+  mutate(party = &quot;tbd&quot;)
+
+table &lt;- rbind(table, old_members)
+
+saveRDS(table, &quot;./data/20190502/table.rds&quot;)
+
+rm(old_members)
+rm(table_54)
+rm(url)</code></pre>
+<p>How many do we have?</p>
+<pre class="r"><code>nrow(table)</code></pre>
+<pre><code>## [1] 179</code></pre>
+<p>Ok, did not lose any along the way. Now we have a data frame with the last name and first name of the 179 persons who seated in the 54th legislature (by now there will be few or no changes, since we are so close to this month’s elections).</p>
+<p>Next the twitter API credentials are needed to use the rtweet package. Documentation can be found <a href="https://rtweet.info/#api-authorization">here</a></p>
+<p>Once authenticated, based on our parliamentarian’s name and using the ‘search_users’ function we can find their twitter accounts. I had some success using a for loop in the past, but will try to use the purrr package this time around.</p>
+<pre class="r"><code># so tweak the function, because it tries to find by default 100 users
+# and because we want to keep track of who we searched for in the results
+# take only first result for now
+
+search &lt;- function(x){print (x)
+  search_users(x, n=1) %&gt;% # only return one line per name
+    mutate(ln_fn = x)} # keep track of who we searched for</code></pre>
+<p>Using the function ‘possibly’ a data frame can be created without stopping or including errors.</p>
+<pre class="r"><code>twitter_users &lt;- map_df(table$ln_fn,possibly(.f= search, otherwise = NULL))</code></pre>
+<pre><code>## [1] &quot;Almaci Meyrem&quot;
+## [1] &quot;Becq Sonja&quot;
+## [1] &quot;Beke Wouter&quot;
+## [1] &quot;Bellens Rita&quot;
+## [1] &quot;Ben Hamou Nawal&quot;
+## [1] &quot;Blanchart Philippe&quot;
+## [1] &quot;Bogaert Hendrik&quot;
+## [1] &quot;Bonte Hans&quot;
+## [1] &quot;Bracke Siegfried&quot;
+## [1] &quot;Brotcorne Christian&quot;
+## [1] &quot;Burton Emmanuel&quot;
+## [1] &quot;Buysrogge Peter&quot;
+## [1] &quot;Calomne Gautier&quot;
+## [1] &quot;Calvo Kristof&quot;
+## [1] &quot;Capoen An&quot;
+## [1] &quot;Caprasse Véronique&quot;
+## [1] &quot;Carcaci Aldo&quot;
+## [1] &quot;Casier Youro&quot;
+## [1] &quot;Cassart-Mailleux Caroline&quot;
+## [1] &quot;Ceysens Patricia&quot;
+## [1] &quot;Chabot Jacques&quot;
+## [1] &quot;Chastel Olivier&quot;
+## [1] &quot;Cheron Marcel&quot;
+## [1] &quot;Clarinval David&quot;
+## [1] &quot;Corthouts Michel&quot;
+## [1] &quot;D&#39;Haese Christoph&quot;
+## [1] &quot;Daerden Frédéric&quot;
+## [1] &quot;Dallemagne Georges&quot;
+## [1] &quot;De Coninck Monica&quot;
+## [1] &quot;De Coninck Inez&quot;
+## [1] &quot;de Coster-Bauchau Sybille&quot;
+## [1] &quot;De Crom Sandrine&quot;
+## [1] &quot;de Lamotte Michel&quot;
+## [1] &quot;De Roover Peter&quot;
+## [1] &quot;De Vriendt Wouter&quot;
+## [1] &quot;De Wever Bart&quot;
+## [1] &quot;De Wit Sophie&quot;
+## [1] &quot;Dedecker Peter&quot;
+## [1] &quot;Dedry Anne&quot;
+## [1] &quot;Degroote Koenraad&quot;
+## [1] &quot;Delannois Paul-Olivier&quot;
+## [1] &quot;Delizée Jean-Marc&quot;
+## [1] &quot;Delpérée Francis&quot;
+## [1] &quot;Demir Zuhal&quot;
+## [1] &quot;Demon Franky&quot;
+## [1] &quot;Deseyn Roel&quot;
+## [1] &quot;Detiège Maya&quot;
+## [1] &quot;Devin Laurent&quot;
+## [1] &quot;Dewael Patrick&quot;
+## [1] &quot;Dewinter Filip&quot;
+## [1] &quot;Di Rupo Elio&quot;
+## [1] &quot;Dierick Leen&quot;
+## [1] &quot;Dispa Benoît&quot;
+## [1] &quot;Dumery Daphné&quot;
+## [1] &quot;Fernandez Fernandez Julie&quot;
+## [1] &quot;Flahaux Jean-Jacques&quot;
+## [1] &quot;Fonck Catherine&quot;
+## [1] &quot;Foret Gilles&quot;
+## [1] &quot;Frédéric André&quot;
+## [1] &quot;Francken Theo&quot;
+## [1] &quot;Friart Benoît&quot;
+## [1] &quot;Gabriëls Katja&quot;
+## [1] &quot;Galant Isabelle&quot;
+## [1] &quot;Gantois Rita&quot;
+## [1] &quot;Geerts David&quot;
+## [1] &quot;Gilkinet Georges&quot;
+## [1] &quot;Goffin Philippe&quot;
+## [1] &quot;Goffinet Anne-Catherine&quot;
+## [1] &quot;Grosemans Karolien&quot;
+## [1] &quot;Grovonius Gwenaëlle&quot;
+## [1] &quot;Gustin Luc&quot;
+## [1] &quot;Hedebouw Raoul&quot;
+## [1] &quot;Heeren Veerle&quot;
+## [1] &quot;Henry Olivier&quot;
+## [1] &quot;Jadin Kattrin&quot;
+## [1] &quot;Jambon Jan&quot;
+## [1] &quot;Janssen Werner&quot;
+## [1] &quot;Janssens Dirk&quot;
+## [1] &quot;Jiroflée Karin&quot;
+## [1] &quot;Kir Emir&quot;
+## [1] &quot;Kitir Meryame&quot;
+## [1] &quot;Laaouej Ahmed&quot;
+## [1] &quot;Lachaert Egbert&quot;
+## [1] &quot;Lalieux Karine&quot;
+## [1] &quot;Lambrecht Annick&quot;
+## [1] &quot;Lanjri Nahima&quot;
+## [1] &quot;Lijnen Nele&quot;
+## [1] &quot;Lutgen Benoît&quot;
+## [1] &quot;Luykx Peter&quot;
+## [1] &quot;Maingain Olivier&quot;
+## [1] &quot;Mathot Alain&quot;
+## [1] &quot;Matz Vanessa&quot;
+## [1] &quot;Metsu Koen&quot;
+## [1] &quot;Miller Richard&quot;
+## [1] &quot;Muylle Nathalie&quot;
+## [1] &quot;Nollet Jean-Marc&quot;
+## [1] &quot;Onkelinx Laurette&quot;
+## [1] &quot;Özen Özlem&quot;
+## [1] &quot;Pas Barbara&quot;
+## [1] &quot;Pehlivan Fatma&quot;
+## [1] &quot;Penris Jan&quot;
+## [1] &quot;Piedboeuf Benoît&quot;
+## [1] &quot;Pirlot Sébastian&quot;
+## [1] &quot;Pivin Philippe&quot;
+## [1] &quot;Schepmans Françoise&quot;
+## [1] &quot;Schlitz Sarah&quot;
+## [1] &quot;Scourneau Vincent&quot;
+## [1] &quot;Senesael Daniel&quot;
+## [1] &quot;Smaers Griet&quot;
+## [1] &quot;Smeyers Sarah&quot;
+## [1] &quot;Somers Ine&quot;
+## [1] &quot;Spooren Jan&quot;
+## [1] &quot;Temmerman Karin&quot;
+## [1] &quot;Terwingen Raf&quot;
+## [1] &quot;Thiébaut Eric&quot;
+## [1] &quot;Thiéry Damien&quot;
+## [1] &quot;Thoron Stéphanie&quot;
+## [1] &quot;Top Alain&quot;
+## [1] &quot;Uyttersprot Goedele&quot;
+## [1] &quot;Van Biesen Luk&quot;
+## [1] &quot;Van Camp Yoleen&quot;
+## [1] &quot;Van Cauter Carina&quot;
+## [1] &quot;Van de Velde Robert&quot;
+## [1] &quot;Van den Bergh Jef&quot;
+## [1] &quot;Van der Maelen Dirk&quot;
+## [1] &quot;Van Hecke Stefaan&quot;
+## [1] &quot;Van Hees Marco&quot;
+## [1] &quot;Van Hoof Els&quot;
+## [1] &quot;Van Mechelen Dirk&quot;
+## [1] &quot;Van Peel Valerie&quot;
+## [1] &quot;Van Peteghem Vincent&quot;
+## [1] &quot;Van Quickenborne Vincent&quot;
+## [1] &quot;Van Rompuy Eric&quot;
+## [1] &quot;Van Vaerenbergh Kristien&quot;
+## [1] &quot;Vanden Burre Gilles&quot;
+## [1] &quot;Vandenput Tim&quot;
+## [1] &quot;Vandeput Steven&quot;
+## [1] &quot;Vanvelthoven Peter&quot;
+## [1] &quot;Vercamer Stefaan&quot;
+## [1] &quot;Vercammen Jan&quot;
+## [1] &quot;Verherstraeten Servais&quot;
+## [1] &quot;Vermeulen Brecht&quot;
+## [1] &quot;Vuye Hendrik&quot;
+## [1] &quot;Waterschoot Véronique&quot;
+## [1] &quot;Willaert Evita&quot;
+## [1] &quot;Wilrycx Frank&quot;
+## [1] &quot;Winckel Fabienne&quot;
+## [1] &quot;Wollants Bert&quot;
+## [1] &quot;Wouters Veerle&quot;
+## [1] &quot;Yüksel Veli&quot;
+## [1] &quot;Bacquelaine Daniel&quot;
+## [1] &quot;Claerhout Sarah&quot;
+## [1] &quot;Crusnière Stéphane&quot;
+## [1] &quot;De Block Maggie&quot;
+## [1] &quot;De Crem Pieter&quot;
+## [1] &quot;De Croo Alexander&quot;
+## [1] &quot;Demeyer Willy&quot;
+## [1] &quot;Ducarme Denis&quot;
+## [1] &quot;Flahaut André&quot;
+## [1] &quot;Fremault Céline&quot;
+## [1] &quot;Geens Koen&quot;
+## [1] &quot;Gerkens Muriel&quot;
+## [1] &quot;Hellings Benoit&quot;
+## [1] &quot;Hufkens Renate&quot;
+## [1] &quot;Khattabi Zakia&quot;
+## [1] &quot;Klaps Johan&quot;
+## [1] &quot;Lahaye-Battheu Sabien&quot;
+## [1] &quot;Marghem Marie-Christine&quot;
+## [1] &quot;Massin Eric&quot;
+## [1] &quot;Michel Charles&quot;
+## [1] &quot;Poncelet Isabelle&quot;
+## [1] &quot;Raskin Wouter&quot;
+## [1] &quot;Reynders Didier&quot;
+## [1] &quot;Turtelboom Annemie&quot;
+## [1] &quot;Van der Donckt Wim&quot;
+## [1] &quot;Vande Lanotte Johan&quot;
+## [1] &quot;Vanheste Ann&quot;
+## [1] &quot;Wathelet Melchior&quot;
+## [1] &quot;Wilmès Sophie&quot;</code></pre>
+<p>The nice thing about it is that a lot of information can be collected using the Twitter API. Have look yourself:</p>
+<pre class="r"><code>names(twitter_users)</code></pre>
+<pre><code>##  [1] &quot;user_id&quot;                 &quot;status_id&quot;              
+##  [3] &quot;created_at&quot;              &quot;screen_name&quot;            
+##  [5] &quot;text&quot;                    &quot;source&quot;                 
+##  [7] &quot;display_text_width&quot;      &quot;reply_to_status_id&quot;     
+##  [9] &quot;reply_to_user_id&quot;        &quot;reply_to_screen_name&quot;   
+## [11] &quot;is_quote&quot;                &quot;is_retweet&quot;             
+## [13] &quot;favorite_count&quot;          &quot;retweet_count&quot;          
+## [15] &quot;hashtags&quot;                &quot;symbols&quot;                
+## [17] &quot;urls_url&quot;                &quot;urls_t.co&quot;              
+## [19] &quot;urls_expanded_url&quot;       &quot;media_url&quot;              
+## [21] &quot;media_t.co&quot;              &quot;media_expanded_url&quot;     
+## [23] &quot;media_type&quot;              &quot;ext_media_url&quot;          
+## [25] &quot;ext_media_t.co&quot;          &quot;ext_media_expanded_url&quot; 
+## [27] &quot;ext_media_type&quot;          &quot;mentions_user_id&quot;       
+## [29] &quot;mentions_screen_name&quot;    &quot;lang&quot;                   
+## [31] &quot;quoted_status_id&quot;        &quot;quoted_text&quot;            
+## [33] &quot;quoted_created_at&quot;       &quot;quoted_source&quot;          
+## [35] &quot;quoted_favorite_count&quot;   &quot;quoted_retweet_count&quot;   
+## [37] &quot;quoted_user_id&quot;          &quot;quoted_screen_name&quot;     
+## [39] &quot;quoted_name&quot;             &quot;quoted_followers_count&quot; 
+## [41] &quot;quoted_friends_count&quot;    &quot;quoted_statuses_count&quot;  
+## [43] &quot;quoted_location&quot;         &quot;quoted_description&quot;     
+## [45] &quot;quoted_verified&quot;         &quot;retweet_status_id&quot;      
+## [47] &quot;retweet_text&quot;            &quot;retweet_created_at&quot;     
+## [49] &quot;retweet_source&quot;          &quot;retweet_favorite_count&quot; 
+## [51] &quot;retweet_retweet_count&quot;   &quot;retweet_user_id&quot;        
+## [53] &quot;retweet_screen_name&quot;     &quot;retweet_name&quot;           
+## [55] &quot;retweet_followers_count&quot; &quot;retweet_friends_count&quot;  
+## [57] &quot;retweet_statuses_count&quot;  &quot;retweet_location&quot;       
+## [59] &quot;retweet_description&quot;     &quot;retweet_verified&quot;       
+## [61] &quot;place_url&quot;               &quot;place_name&quot;             
+## [63] &quot;place_full_name&quot;         &quot;place_type&quot;             
+## [65] &quot;country&quot;                 &quot;country_code&quot;           
+## [67] &quot;geo_coords&quot;              &quot;coords_coords&quot;          
+## [69] &quot;bbox_coords&quot;             &quot;status_url&quot;             
+## [71] &quot;name&quot;                    &quot;location&quot;               
+## [73] &quot;description&quot;             &quot;url&quot;                    
+## [75] &quot;protected&quot;               &quot;followers_count&quot;        
+## [77] &quot;friends_count&quot;           &quot;listed_count&quot;           
+## [79] &quot;statuses_count&quot;          &quot;favourites_count&quot;       
+## [81] &quot;account_created_at&quot;      &quot;verified&quot;               
+## [83] &quot;profile_url&quot;             &quot;profile_expanded_url&quot;   
+## [85] &quot;account_lang&quot;            &quot;profile_banner_url&quot;     
+## [87] &quot;profile_background_url&quot;  &quot;profile_image_url&quot;      
+## [89] &quot;ln_fn&quot;</code></pre>
+<p>Some of the fields, like “hashstags” contain lists.</p>
+<p>Arranging columns:</p>
+<pre class="r"><code>twitter_users &lt;- twitter_users %&gt;% 
+  select(ln_fn, everything())</code></pre>
+<p>These names return an error using the “twitter_user” function. But these politicians do not tweet. We can skip them.</p>
+<pre class="r"><code>list_no_twitter &lt;- c(&quot;Detiège Maya&quot;, &quot;Mathot Alain&quot;, &quot;Pivin Philippe&quot;, &quot;Wilrycx Frank&quot;)</code></pre>
+<p>We now have a data frame with 152 users for our 175 politicians.</p>
+<p>We need to find the right user ids or twitter handles, by looking at key fields in the data frame returned by the ‘search_user’ function. (summarised in a smaller data frame)</p>
+<pre class="r"><code>inspect &lt;- twitter_users %&gt;%
+  select(ln_fn, name, screen_name, description, text)</code></pre>
+<p>Luckily most often the first result is the correct one. Although there are also sometimes surprises. At least these do not seem like descriptions of Belgian parliamentarians.</p>
+<pre class="r"><code>descriptions &lt;- inspect %&gt;% 
+  filter(ln_fn == &quot;Bracke Siegfried&quot; 
+         | ln_fn == &quot;Fernandez Fernandez Julie&quot;
+         | ln_fn == &quot;Top Alain&quot;
+         | ln_fn == &quot;Bonte Hans&quot;) %&gt;% 
+  select(description)
+
+descriptions</code></pre>
+<pre><code>## # A tibble: 4 x 1
+##   description                                                              
+##   &lt;chr&gt;                                                                    
+## 1 Levensgenieter                                                           
+## 2 Als er niet kan worden gelachen, is het niet ernstig. Links of rechts is~
+## 3 Trusted HR advisor for all things BPO, technology, global payroll and sh~
+## 4 Legacy Miami Top 40 Under 40 | HACCOF Top 20 Under 40 | Caribbean-born C~</code></pre>
+<p>These seem obviously wrong. What would the complete list look like?</p>
+<pre class="r"><code>find_again &lt;- tibble(&quot;ln_fn&quot; = c(&quot;Bonte Hans&quot;,&quot;Ceysens Patricia&quot;,&quot;Chabot Jacques&quot;,
+                                 &quot;Fernandez Fernandez Julie&quot;,&quot;Geerts David&quot;,
+                                 &quot;Henry Olivier&quot;,&quot;Janssen Werner&quot;, &quot;Janssens Dirk&quot;,
+                                 &quot;Matz Vanessa&quot;, &quot;Metsu Koen&quot;, &quot;Miller Richard&quot;,
+                                 &quot;Pehlivan Fatma&quot;,&quot;Smeyers Sarah&quot;,&quot;Top Alain&quot;,
+                                 &quot;Van de Velde Robert&quot;))</code></pre>
+<p>Would they be first 10 of the search result ?</p>
+<pre class="r"><code>search &lt;- function(x){print (x)
+  search_users(x, n=10) %&gt;% 
+    mutate(ln_fn = x)} # keep track of who we searched for
+
+twitter_users_2 &lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise = NULL))</code></pre>
+<pre><code>## [1] &quot;Bonte Hans&quot;
+## [1] &quot;Ceysens Patricia&quot;
+## [1] &quot;Chabot Jacques&quot;
+## [1] &quot;Fernandez Fernandez Julie&quot;
+## [1] &quot;Geerts David&quot;
+## [1] &quot;Henry Olivier&quot;
+## [1] &quot;Janssen Werner&quot;
+## [1] &quot;Janssens Dirk&quot;
+## [1] &quot;Matz Vanessa&quot;
+## [1] &quot;Metsu Koen&quot;
+## [1] &quot;Miller Richard&quot;
+## [1] &quot;Pehlivan Fatma&quot;
+## [1] &quot;Smeyers Sarah&quot;
+## [1] &quot;Top Alain&quot;
+## [1] &quot;Van de Velde Robert&quot;</code></pre>
+<pre class="r"><code>inspect &lt;- twitter_users_2 %&gt;%
+  select(ln_fn, name, screen_name, description, text)</code></pre>
+<p>The new batch can easily be identified and added to the first batch.</p>
+<pre class="r"><code>twitter_users &lt;- twitter_users %&gt;% 
+  filter(!ln_fn %in% find_again$ln_fn) %&gt;% 
+  rbind(twitter_users_2 %&gt;% 
+  slice(13, 23, 30, 45, 51, 71, 76 , 99, 113))</code></pre>
+<p>We are still missing these:</p>
+<pre class="r"><code>setdiff(setdiff(table$ln_fn, twitter_users$ln_fn), list_no_twitter)</code></pre>
+<pre><code>##  [1] &quot;Bonte Hans&quot;                &quot;Brotcorne Christian&quot;      
+##  [3] &quot;Cassart-Mailleux Caroline&quot; &quot;Ceysens Patricia&quot;         
+##  [5] &quot;Cheron Marcel&quot;             &quot;D&#39;Haese Christoph&quot;        
+##  [7] &quot;de Coster-Bauchau Sybille&quot; &quot;Delannois Paul-Olivier&quot;   
+##  [9] &quot;Delpérée Francis&quot;          &quot;Devin Laurent&quot;            
+## [11] &quot;Dierick Leen&quot;              &quot;Frédéric André&quot;           
+## [13] &quot;Galant Isabelle&quot;           &quot;Goffinet Anne-Catherine&quot;  
+## [15] &quot;Gustin Luc&quot;                &quot;Janssens Dirk&quot;            
+## [17] &quot;Miller Richard&quot;            &quot;Muylle Nathalie&quot;          
+## [19] &quot;Pehlivan Fatma&quot;            &quot;Pirlot Sébastian&quot;         
+## [21] &quot;Van de Velde Robert&quot;       &quot;Van den Bergh Jef&quot;        
+## [23] &quot;Van Quickenborne Vincent&quot;  &quot;Van Rompuy Eric&quot;          
+## [25] &quot;Vanvelthoven Peter&quot;        &quot;Gerkens Muriel&quot;           
+## [27] &quot;Marghem Marie-Christine&quot;   &quot;Vande Lanotte Johan&quot;</code></pre>
+<p>Some of these surely have a twitter account. More searching is needed to find:</p>
+<p><span class="citation">@CarolineCassart</span>
+<span class="citation">@patriciaceysens</span>
+<span class="citation">@podelannois</span>
+<span class="citation">@leendierick</span>
+<span class="citation">@dirkjanssens19</span>
+<span class="citation">@millerrichardmr</span>
+<span class="citation">@nathaliemuylle</span>
+<span class="citation">@jefvandenbergh</span>
+<span class="citation">@VincentVQ</span>
+<span class="citation">@VvelthovenPeter</span>
+<span class="citation">@pehlivan_fatma</span>
+<span class="citation">@FrankWilrycx</span>
+<span class="citation">@McMarghem</span>
+<span class="citation">@robvandevelde</span></p>
+<pre class="r"><code>more &lt;- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois, leendierick,
+                                  dirkjanssens19, millerrichardmr, nathaliemuylle,
+                                  jefvandenbergh, VincentVQ, VvelthovenPeter, 
+                                  pehlivan_fatma, FrankWilrycx, McMarghem),
+               ln_fn = c(&quot;Cassart-Mailleux Caroline&quot;, &quot;Ceysens Patricia&quot;,
+                         &quot;Delannois Paul-Olivier&quot;, &quot;Dierick Leen&quot;, &quot;Janssens Dirk&quot;, 
+                         &quot;Miller Richard&quot;, &quot;Muylle Nathalie&quot;, &quot;Van den Bergh Jef&quot;, 
+                         &quot;Van Quickenborne Vincent&quot;, &quot;Vanvelthoven Peter&quot;, 
+                         &quot;Pehlivan Fatma&quot; , &quot;Wilrycx Frank&quot;, &quot;Marghem Marie-Christine&quot;))
+
+more_1 &lt;- more %&gt;% 
+  filter(handle !=&quot;pehlivan_fatma&quot;,
+         handle !=&quot;FrankWilrycx&quot;)
+
+more_2 &lt;- more %&gt;% 
+  filter(handle ==&quot;pehlivan_fatma&quot; |
+         handle ==&quot;FrankWilrycx&quot;)</code></pre>
+<pre class="r"><code>search &lt;- function(x){print (x)
+  search_users(x, n=1)} # keep track of who we searched for
+
+twitter_users_3 &lt;- map_df(more_1$handle,possibly(.f= search, otherwise = NULL)) %&gt;% 
+  cbind(more_1$ln_fn) %&gt;%
+  rename(&quot;ln_fn&quot; = &quot;more_1$ln_fn&quot;) %&gt;% 
+  select(ln_fn, everything())</code></pre>
+<pre><code>## [1] &quot;CarolineCassart&quot;
+## [1] &quot;patriciaceysens&quot;
+## [1] &quot;podelannois&quot;
+## [1] &quot;leendierick&quot;
+## [1] &quot;dirkjanssens19&quot;
+## [1] &quot;millerrichardmr&quot;
+## [1] &quot;nathaliemuylle&quot;
+## [1] &quot;jefvandenbergh&quot;
+## [1] &quot;VincentVQ&quot;
+## [1] &quot;VvelthovenPeter&quot;
+## [1] &quot;McMarghem&quot;</code></pre>
+<pre class="r"><code>twitter_users &lt;- rbind(twitter_users, twitter_users_3)
+
+nrow(twitter_users)</code></pre>
+<pre><code>## [1] 158</code></pre>
+<p>Still problems with the last two. “FrankWilrycx” probably because he has not tweeted yet. And “pehlivan_fatma” was a bit harder to find</p>
+<pre class="r"><code>more_2 &lt;- more %&gt;% 
+  filter(handle ==&quot;pehlivan_fatma&quot;)
+
+search &lt;- function(x){print (x)
+  search_users(x, n=11)} # keep track of who we searched for
+
+twitter_users_4 &lt;- map_df(more_2$handle,possibly(.f= search, otherwise = NULL)) %&gt;% 
+  cbind(more_2$ln_fn) %&gt;%
+  rename(&quot;ln_fn&quot; = &quot;more_2$ln_fn&quot;) %&gt;% 
+  select(ln_fn, everything()) %&gt;% 
+  slice(11)</code></pre>
+<pre><code>## [1] &quot;pehlivan_fatma&quot;</code></pre>
+<pre class="r"><code>twitter_users &lt;- rbind(twitter_users, twitter_users_4)
+
+nrow(twitter_users)</code></pre>
+<pre><code>## [1] 159</code></pre>
+<p>There are 159 Twitter handles, out of 179 parliamentarians.</p>
+<p>(if you want to have fun with the profile pics they are in <a href="https://twitter.com/%7Bhandle%7D/photo" class="uri">https://twitter.com/{handle}/photo</a>)</p>
+<p>We are now ready to extract a considerable amount of their tweets.</p>
+<pre class="r"><code>saveRDS(twitter_users, &quot;./data/20190502/twitter_users.rds&quot;)</code></pre>

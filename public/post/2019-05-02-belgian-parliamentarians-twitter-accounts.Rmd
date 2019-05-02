@@ -1,18 +1,19 @@
 ---
-title: Begian parliamentarians twitter accounts
+title: Belgian parliamentarians Twitter accounts
 author: William Bourgeois
 date: '2019-05-02'
-slug: begian-parliamentarians-twitter-accounts
+slug: belgian-parliamentarians-twitter-accounts
 categories: []
 tags:
   - Belgian politics
   - Twitter
 ---
 
+Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too. 
 
-Now that we can scrape the names of the parlaimentarians of the 54th legistlature, we can try to find their Twitter accounts too. 
+Let's start by reconstructing the list. Then we can search Twitter for their Twitter accounts. So a bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians' tweets soonish. 
 
-Let's start by reconstruct the list. 
+Starting with attaching libraries, and in particular 'rtweet'. 
 
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -27,8 +28,6 @@ library("purrr")
 
 url <- paste0("http://www.dekamer.be/kvvcr/showpage.cfm?section=",
               "/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm")
-
-"#story > table > tbody"
 
 table <- url %>% 
   read_html() %>% 
@@ -82,11 +81,11 @@ How many do we have?
 nrow(table)
 ```
 
-Ok, did not loose any along the way. So now there is a dataframe with the last name and first name of the 179 persons who seated in the 54th legislature (by now there will be no changes). 
+Ok, did not lose any along the way. Now we have a data frame with the last name and first name of the 179 persons who seated in the 54th legislature (by now there will be few or no changes, since we are so close to this month's elections). 
 
-Next the twitter API credentials are needed to use the rtweet package. Documentation can be found (here)[https://rtweet.info/#api-authorization]
+Next the twitter API credentials are needed to use the rtweet package. Documentation can be found [here](https://rtweet.info/#api-authorization)
 
-Once authenticated, based on our parlemenatairian's name and using the 'search_users' function we can try to find their twitter accounts. I had some succes using a for loop in the past, but will try to use the purrr package this time around.
+Once authenticated, based on our parliamentarian's name and using the 'search_users' function we can find their twitter accounts. I had some success using a for loop in the past, but will try to use the purrr package this time around.
 
 ```{r}
 # so tweak the function, because it tries to find by default 100 users
@@ -99,12 +98,10 @@ search <- function(x){print (x)
 
 ```
 
-Using the function 'possibly' a dataframe can be created without stopping or including errors.
+Using the function 'possibly' a data frame can be created without stopping or including errors.
 
-```{r include=FALSE}
-
+```{r echo=TRUE, message=FALSE}
 twitter_users <- map_df(table$ln_fn,possibly(.f= search, otherwise = NULL))
-
 ```
 
 The nice thing about it is that a lot of information can be collected using the Twitter API. Have look yourself: 
@@ -112,7 +109,7 @@ The nice thing about it is that a lot of information can be collected using the 
 names(twitter_users)
 ```
 
-Some of the fields, like "hastags" contain lists.
+Some of the fields, like "hashstags" contain lists.
 
 Arranging columns:
 
@@ -121,38 +118,37 @@ twitter_users <- twitter_users %>%
   select(ln_fn, everything())
 ```
 
-These names return an error using the "twitter_user" function. But these politicans do not tweet, so we can skip them.
+These names return an error using the "twitter_user" function. But these politicians do not tweet. We can skip them.
 
 ```{r}
 list_no_twitter <- c("Detiège Maya", "Mathot Alain", "Pivin Philippe", "Wilrycx Frank")
 ```
 
-We now have a dataframe with 152 users for our 175 politicians. 
+We now have a data frame with 152 users for our 175 politicians. 
 
-We need to find the right user ids or twitter handles, by looking at key fields in the dataframe returned by the 'search_user' function. (Sullarised in a smaller dataframe)
+We need to find the right user ids or twitter handles, by looking at key fields in the data frame returned by the 'search_user' function. (summarised in a smaller data frame)
 
 ```{r}
 inspect <- twitter_users %>%
   select(ln_fn, name, screen_name, description, text)
 ```
 
-Luckily most often the first result is the correct one. Although there are also sometimes surprises. At least these do not seem like descriptions of Belgian parlementairians.
+Luckily most often the first result is the correct one. Although there are also sometimes surprises. At least these do not seem like descriptions of Belgian parliamentarians.
 
 ```{r}
 
 descriptions <- inspect %>% 
   filter(ln_fn == "Bracke Siegfried" 
+         | ln_fn == "Fernandez Fernandez Julie"
          | ln_fn == "Top Alain"
-         | ln_fn == "Miller Richard" 
-         | ln_fn == "Henry Olivier"
-         | ln_fn ==	"Casier Youro") %>% 
-  select(ln_fn, description)
+         | ln_fn == "Bonte Hans") %>% 
+  select(description)
 
 descriptions
 
 ```
 
-So the last three are obviously wrong. What would the complete list look like?
+These seem obviously wrong. What would the complete list look like?
 
 ```{r}
 
@@ -165,7 +161,7 @@ find_again <- tibble("ln_fn" = c("Bonte Hans","Ceysens Patricia","Chabot Jacques
 ```
 
 Would they be first 10 of the search result ?
-```{r include=FALSE}
+```{r message=FALSE}
 search <- function(x){print (x)
   search_users(x, n=10) %>% 
     mutate(ln_fn = x)} # keep track of who we searched for
@@ -177,7 +173,7 @@ inspect <- twitter_users_2 %>%
 
 ```
 
-So a new batch can easily identified and added to the first batch.
+The new batch can easily be identified and added to the first batch.
 
 ```{r}
 twitter_users <- twitter_users %>% 
@@ -192,7 +188,7 @@ We are still missing these:
 setdiff(setdiff(table$ln_fn, twitter_users$ln_fn), list_no_twitter)
 ```
 
-So at least some of these surely have a twitter account, so more searching is needed, to find: 
+Some of these surely have a twitter account. More searching is needed to find: 
 
 @CarolineCassart
 @patriciaceysens
@@ -211,11 +207,13 @@ So at least some of these surely have a twitter account, so more searching is ne
 
 ```{r}
 more <- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois, leendierick,
-                                  dirkjanssens19, millerrichardmr, nathaliemuylle,jefvandenbergh,
-                                  VincentVQ, VvelthovenPeter, pehlivan_fatma, FrankWilrycx,  McMarghem),
-               ln_fn = c("Cassart-Mailleux Caroline", "Ceysens Patricia","Delannois Paul-Olivier", 
-                         "Dierick Leen", "Janssens Dirk", "Miller Richard", "Muylle Nathalie", 
-                         "Van den Bergh Jef", "Van Quickenborne Vincent", "Vanvelthoven Peter", 
+                                  dirkjanssens19, millerrichardmr, nathaliemuylle,
+                                  jefvandenbergh, VincentVQ, VvelthovenPeter, 
+                                  pehlivan_fatma, FrankWilrycx, McMarghem),
+               ln_fn = c("Cassart-Mailleux Caroline", "Ceysens Patricia",
+                         "Delannois Paul-Olivier", "Dierick Leen", "Janssens Dirk", 
+                         "Miller Richard", "Muylle Nathalie", "Van den Bergh Jef", 
+                         "Van Quickenborne Vincent", "Vanvelthoven Peter", 
                          "Pehlivan Fatma" , "Wilrycx Frank", "Marghem Marie-Christine"))
 
 more_1 <- more %>% 
@@ -230,7 +228,7 @@ more_2 <- more %>%
 
 
 
-```{r include=FALSE}
+```{r message=FALSE}
 search <- function(x){print (x)
   search_users(x, n=1)} # keep track of who we searched for
 
@@ -245,10 +243,10 @@ nrow(twitter_users)
 
 ```
 
-Still problems with the last two. "FrankWilrycx" probably because he has not tweeted yet. And "pehlivan_fatma" was a bit harder too find
+Still problems with the last two. "FrankWilrycx" probably because he has not tweeted yet. And "pehlivan_fatma" was a bit harder to find
 
 
-```{r include=FALSE}
+```{r echo=TRUE, message=FALSE}
 
 more_2 <- more %>% 
   filter(handle =="pehlivan_fatma")
@@ -269,9 +267,11 @@ nrow(twitter_users)
 ```
 
 
-So now there are 159 Twitter handles, out of 179 parlemantarians. 
+There are 159 Twitter handles, out of 179 parliamentarians. 
 
 (if you want to have fun with the profile pics they are in https://twitter.com/{handle}/photo)
+
+We are now ready to extract a considerable amount of their tweets. 
 
 ```{r}
 

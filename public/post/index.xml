@@ -13,15 +13,15 @@
     
     
     <item>
-      <title>Begian parliamentarians twitter accounts</title>
-      <link>/post/begian-parliamentarians-twitter-accounts/</link>
+      <title>Belgian parliamentarians Twitter accounts</title>
+      <link>/post/belgian-parliamentarians-twitter-accounts/</link>
       <pubDate>Thu, 02 May 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/begian-parliamentarians-twitter-accounts/</guid>
-      <description>Now that we can scrape the names of the parlemaintarians of the 54th legistlature, we can try to find their Twitter accounts too.
-Let’s start by reconstruct the list.
-How many do we have?
-nrow(table)## [1] 179Ok, did not loose any along the way. So now there is a dataframe with the last name and first name of the 179 persons who wo seated in the 54th legislature (by now there will be no changes).</description>
+      <guid>/post/belgian-parliamentarians-twitter-accounts/</guid>
+      <description>Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too.
+Let’s start by reconstructing the list. Then we can search Twitter for their Twitter accounts. So a bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.
+Starting with attaching libraries, and in particular ‘rtweet’.
+#librarieslibrary(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;rvest&amp;quot;)library(&amp;quot;glue&amp;quot;)library(&amp;quot;rtweet&amp;quot;)library(&amp;quot;purrr&amp;quot;)# the ones seating currently, with their (current) partyurl &amp;lt;- paste0(&amp;quot;http://www.</description>
     </item>
     
     <item>
