@@ -291,7 +291,7 @@ names %&gt;%
 ## 5  61     Denis Ducarme 01056
 ## 6  62     Daphné Dumery 06086</code></pre>
 <p>The tables are sorted differently so there are wrong ids attributed to some parliamentarians (like Christophe D’Haese).</p>
-<p>We need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.</p>
+<p>We need to correct that. Since the fn_ln are correct, we can build a key based on the letters in the name of the person.</p>
 <pre class="r"><code>str_sort &lt;- function(x)
   sapply(lapply(strsplit(x, NULL), sort), paste, collapse=&quot;&quot;)
 
@@ -324,6 +324,45 @@ names %&gt;%
 names &lt;- names %&gt;%
   mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url))   </code></pre>
 <p>Now we have in ‘urls’ the name and links to the personal webpage of the representatives on the chamber’s website. Notice their id at the end of the url after ‘cfm?key=’ and before ‘&amp;lat’.</p>
+<p>On their personal space there is more information like their parliament email, their personal website and a short cv.</p>
+<p>Let’s only scrape their language for now.</p>
+<pre class="r"><code>get_language &lt;- function (url){
+  as.character(url) %&gt;% 
+  read_html() %&gt;% 
+  html_node(&quot;td &gt; p &quot;) %&gt;% 
+  html_text() %&gt;% 
+  str_extract(&#39;(?&lt;=Taal:\\s)\\w+&#39;) 
+ }
+
+names &lt;- map_chr(names$url, get_language) %&gt;% 
+  cbind(names) 
+
+names &lt;- rename(names, language = .)
+
+saveRDS(names, &quot;./data/190417/names.rds&quot;)
+
+head(names)</code></pre>
+<pre><code>##     language              fn_ln
+## 1 Nederlands      Meyrem Almaci
+## 2       &lt;NA&gt; Daniel Bacquelaine
+## 3 Nederlands         Sonja Becq
+## 4 Nederlands       Wouter Beke 
+## 5 Nederlands       Rita Bellens
+## 6      Frans    Nawal Ben Hamou
+##                                                                                                            url
+## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01189&amp;lactivity=54
+## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=00757&amp;lactivity=54
+## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01190&amp;lactivity=54
+## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01149&amp;lactivity=54
+## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06592&amp;lactivity=54
+## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06647&amp;lactivity=54
+##                 key              ln_fn    id
+## 1      aaceeilmmmry      Almaci Meyrem 01189
+## 2 aaabcdeeeiillnnqu Bacquelaine Daniel 00757
+## 3         abcejnoqs         Becq Sonja 01190
+## 4        beeekortuw        Beke Wouter 01149
+## 5       abeeillnrst       Bellens Rita 06592
+## 6     aaabehlmnnouw    Ben Hamou Nawal 06647</code></pre>
 <p>Let’s get their mugshots.</p>
 <center>
 <img src="/img/20190417/inspect.png" alt="Inspecting the code of the webpage" />

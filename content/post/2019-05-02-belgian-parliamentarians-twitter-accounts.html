@@ -12,8 +12,8 @@ tags:
 
 
 <p>Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too.</p>
-<p>Let’s start by reconstructing the list. Then we can search Twitter for their Twitter accounts. A bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.</p>
-<p>Starting with attaching libraries, and in particular ‘rtweet’.</p>
+<p>Let’s start by reconstructing the list. Then we can search Twitter for their accounts handles. A bit of grunt work and no visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.</p>
+<p>Starting with attaching libraries, and in particular <a href="https://rtweet.info/">‘rtweet’</a>.</p>
 <pre class="r"><code>#libraries
 library(&quot;tidyverse&quot;)
 library(&quot;rvest&quot;)
@@ -138,7 +138,8 @@ search &lt;- function(x){print (x)
 <pre class="r"><code>twitter_users &lt;- twitter_users %&gt;% 
   select(ln_fn, everything())</code></pre>
 <p>These names return an error using the “twitter_user” function. But these politicians do not tweet. We can skip them.</p>
-<pre class="r"><code>list_no_twitter &lt;- c(&quot;Detiège Maya&quot;, &quot;Mathot Alain&quot;, &quot;Pivin Philippe&quot;, &quot;Wilrycx Frank&quot;)</code></pre>
+<pre class="r"><code>list_no_twitter &lt;- c(&quot;Detiège Maya&quot;, &quot;Mathot Alain&quot;, &quot;Pivin Philippe&quot;,
+                     &quot;Wilrycx Frank&quot;)</code></pre>
 <p>We now have a data frame with 152 users for our 175 politicians.</p>
 <p>We need to find the right user ids or twitter handles, by looking at key fields in the data frame returned by the ‘search_user’ function. (summarised in a smaller data frame)</p>
 <pre class="r"><code>inspect &lt;- twitter_users %&gt;%
@@ -159,7 +160,7 @@ descriptions</code></pre>
 ## 2 Als er niet kan worden gelachen, is het niet ernstig. Links of rechts is~
 ## 3 Trusted HR advisor for all things BPO, technology, global payroll and sh~
 ## 4 Legacy Miami Top 40 Under 40 | HACCOF Top 20 Under 40 | Caribbean-born C~</code></pre>
-<p>These seem obviously wrong. What would the complete list look like?</p>
+<p>These seem obviously wrong.</p>
 <pre class="r"><code>find_again &lt;- tibble(&quot;ln_fn&quot; = c(&quot;Bonte Hans&quot;,&quot;Ceysens Patricia&quot;,&quot;Chabot Jacques&quot;,
                                  &quot;Fernandez Fernandez Julie&quot;,&quot;Geerts David&quot;,
                                  &quot;Henry Olivier&quot;,&quot;Janssen Werner&quot;, &quot;Janssens Dirk&quot;,
@@ -171,7 +172,8 @@ descriptions</code></pre>
   search_users(x, n=10) %&gt;% 
     mutate(ln_fn = x)} # keep track of who we searched for
 
-twitter_users_2 &lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise = NULL))</code></pre>
+twitter_users_2 &lt;- map_df(find_again$ln_fn,
+                          possibly(.f= search, otherwise = NULL))</code></pre>
 <pre><code>## [1] &quot;Bonte Hans&quot;
 ## [1] &quot;Ceysens Patricia&quot;
 ## [1] &quot;Chabot Jacques&quot;
@@ -193,7 +195,7 @@ twitter_users_2 &lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise = N
 <pre class="r"><code>twitter_users &lt;- twitter_users %&gt;% 
   filter(!ln_fn %in% find_again$ln_fn) %&gt;% 
   rbind(twitter_users_2 %&gt;% 
-  slice(13, 23, 30, 45, 51, 71, 76 , 99, 113))</code></pre>
+  slice(13, 21, 30, 45, 51, 71, 76 , 99, 113))</code></pre>
 <p>We are still missing these:</p>
 <pre class="r"><code>setdiff(setdiff(table$ln_fn, twitter_users$ln_fn), list_no_twitter)</code></pre>
 <pre><code>##  [1] &quot;Bonte Hans&quot;                &quot;Brotcorne Christian&quot;      
@@ -201,15 +203,15 @@ twitter_users_2 &lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise = N
 ##  [5] &quot;Cheron Marcel&quot;             &quot;D&#39;Haese Christoph&quot;        
 ##  [7] &quot;de Coster-Bauchau Sybille&quot; &quot;Delannois Paul-Olivier&quot;   
 ##  [9] &quot;Delpérée Francis&quot;          &quot;Devin Laurent&quot;            
-## [11] &quot;Dierick Leen&quot;              &quot;Frédéric André&quot;           
-## [13] &quot;Galant Isabelle&quot;           &quot;Goffinet Anne-Catherine&quot;  
-## [15] &quot;Gustin Luc&quot;                &quot;Janssens Dirk&quot;            
-## [17] &quot;Miller Richard&quot;            &quot;Muylle Nathalie&quot;          
-## [19] &quot;Pehlivan Fatma&quot;            &quot;Pirlot Sébastian&quot;         
-## [21] &quot;Van de Velde Robert&quot;       &quot;Van den Bergh Jef&quot;        
-## [23] &quot;Van Quickenborne Vincent&quot;  &quot;Van Rompuy Eric&quot;          
-## [25] &quot;Vanvelthoven Peter&quot;        &quot;Gerkens Muriel&quot;           
-## [27] &quot;Marghem Marie-Christine&quot;   &quot;Vande Lanotte Johan&quot;</code></pre>
+## [11] &quot;Dierick Leen&quot;              &quot;Galant Isabelle&quot;          
+## [13] &quot;Goffinet Anne-Catherine&quot;   &quot;Gustin Luc&quot;               
+## [15] &quot;Janssens Dirk&quot;             &quot;Miller Richard&quot;           
+## [17] &quot;Muylle Nathalie&quot;           &quot;Pehlivan Fatma&quot;           
+## [19] &quot;Pirlot Sébastian&quot;          &quot;Van de Velde Robert&quot;      
+## [21] &quot;Van den Bergh Jef&quot;         &quot;Van Quickenborne Vincent&quot; 
+## [23] &quot;Van Rompuy Eric&quot;           &quot;Vanvelthoven Peter&quot;       
+## [25] &quot;Gerkens Muriel&quot;            &quot;Marghem Marie-Christine&quot;  
+## [27] &quot;Vande Lanotte Johan&quot;</code></pre>
 <p>Some of these surely have a twitter account. More searching is needed to find:</p>
 <p><span class="citation">@CarolineCassart</span>
 <span class="citation">@patriciaceysens</span>
@@ -225,15 +227,17 @@ twitter_users_2 &lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise = N
 <span class="citation">@FrankWilrycx</span>
 <span class="citation">@McMarghem</span>
 <span class="citation">@robvandevelde</span></p>
-<pre class="r"><code>more &lt;- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois, leendierick,
-                                  dirkjanssens19, millerrichardmr, nathaliemuylle,
-                                  jefvandenbergh, VincentVQ, VvelthovenPeter, 
-                                  pehlivan_fatma, FrankWilrycx, McMarghem),
+<pre class="r"><code>more &lt;- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois,
+                                  leendierick,dirkjanssens19, millerrichardmr,
+                                  nathaliemuylle, jefvandenbergh, VincentVQ,
+                                  VvelthovenPeter, pehlivan_fatma, FrankWilrycx,
+                                  McMarghem),
                ln_fn = c(&quot;Cassart-Mailleux Caroline&quot;, &quot;Ceysens Patricia&quot;,
-                         &quot;Delannois Paul-Olivier&quot;, &quot;Dierick Leen&quot;, &quot;Janssens Dirk&quot;, 
-                         &quot;Miller Richard&quot;, &quot;Muylle Nathalie&quot;, &quot;Van den Bergh Jef&quot;, 
-                         &quot;Van Quickenborne Vincent&quot;, &quot;Vanvelthoven Peter&quot;, 
-                         &quot;Pehlivan Fatma&quot; , &quot;Wilrycx Frank&quot;, &quot;Marghem Marie-Christine&quot;))
+                         &quot;Delannois Paul-Olivier&quot;, &quot;Dierick Leen&quot;, 
+                         &quot;Janssens Dirk&quot;, &quot;Miller Richard&quot;, &quot;Muylle Nathalie&quot;, 
+                         &quot;Van den Bergh Jef&quot;, &quot;Van Quickenborne Vincent&quot;, 
+                         &quot;Vanvelthoven Peter&quot;, &quot;Pehlivan Fatma&quot; , 
+                         &quot;Wilrycx Frank&quot;, &quot;Marghem Marie-Christine&quot;))
 
 more_1 &lt;- more %&gt;% 
   filter(handle !=&quot;pehlivan_fatma&quot;,
@@ -263,7 +267,7 @@ twitter_users_3 &lt;- map_df(more_1$handle,possibly(.f= search, otherwise = NULL
 <pre class="r"><code>twitter_users &lt;- rbind(twitter_users, twitter_users_3)
 
 nrow(twitter_users)</code></pre>
-<pre><code>## [1] 158</code></pre>
+<pre><code>## [1] 159</code></pre>
 <p>Still problems with the last two. “FrankWilrycx” probably because he has not tweeted yet. And “pehlivan_fatma” was a bit harder to find</p>
 <pre class="r"><code>more_2 &lt;- more %&gt;% 
   filter(handle ==&quot;pehlivan_fatma&quot;)
@@ -271,7 +275,9 @@ nrow(twitter_users)</code></pre>
 search &lt;- function(x){print (x)
   search_users(x, n=11)} # keep track of who we searched for
 
-twitter_users_4 &lt;- map_df(more_2$handle,possibly(.f= search, otherwise = NULL)) %&gt;% 
+twitter_users_4 &lt;- map_df(more_2$handle,
+                          possibly(.f= search, 
+                                   otherwise = NULL)) %&gt;% 
   cbind(more_2$ln_fn) %&gt;%
   rename(&quot;ln_fn&quot; = &quot;more_2$ln_fn&quot;) %&gt;% 
   select(ln_fn, everything()) %&gt;% 
@@ -280,7 +286,7 @@ twitter_users_4 &lt;- map_df(more_2$handle,possibly(.f= search, otherwise = NULL
 <pre class="r"><code>twitter_users &lt;- rbind(twitter_users, twitter_users_4)
 
 nrow(twitter_users)</code></pre>
-<pre><code>## [1] 159</code></pre>
+<pre><code>## [1] 160</code></pre>
 <p>There are 159 Twitter handles, out of 179 parliamentarians.</p>
 <p>(if you want to have fun with the profile pics they are in <a href="https://twitter.com/%7Bhandle%7D/photo" class="uri">https://twitter.com/{handle}/photo</a>)</p>
 <p>We are now ready to extract a considerable amount of their tweets.</p>

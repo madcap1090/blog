@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Thu, 02 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 03 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/belgian-politics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Belgian parliamentarians tweets</title>
+      <link>/post/belgian-parliamentarians-tweets/</link>
+      <pubDate>Fri, 03 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/belgian-parliamentarians-tweets/</guid>
+      <description>In the last post we were pretty successful in getting our parliamentarians Twitter handles. We can now use these to download their tweets.
+The twitter API allows to download 3200 tweets per handle. This means that we will not be able to download all tweets of all parliamentarians from the last five years, because some of them tweeted more than 3200 during that time period. But there will be a fair amount.</description>
+    </item>
     
     <item>
       <title>Belgian parliamentarians Twitter accounts</title>
@@ -19,7 +29,7 @@
       
       <guid>/post/belgian-parliamentarians-twitter-accounts/</guid>
       <description>Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too.
-Let’s start by reconstructing the list. Then we can search Twitter for their Twitter accounts. A bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.
+Let’s start by reconstructing the list. Then we can search Twitter for their accounts handles. A bit of grunt work and no visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.
 Starting with attaching libraries, and in particular ‘rtweet’.
 #librarieslibrary(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;rvest&amp;quot;)library(&amp;quot;glue&amp;quot;)library(&amp;quot;rtweet&amp;quot;)library(&amp;quot;purrr&amp;quot;)# the ones seating currently, with their (current) partyurl &amp;lt;- paste0(&amp;quot;http://www.</description>
     </item>

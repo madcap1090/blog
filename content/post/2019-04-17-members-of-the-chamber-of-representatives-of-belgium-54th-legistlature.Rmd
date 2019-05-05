@@ -177,7 +177,7 @@ names %>%
 
 The tables are sorted differently so there are wrong ids attributed to some parliamentarians (like Christophe D'Haese).
 
-We need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.
+We need to correct that. Since the fn_ln are correct, we can build a key based on the letters in the name of the person.
 
 ```{r message=FALSE}
 
@@ -214,6 +214,30 @@ names <- names %>%
 
 
 Now we have in 'urls' the name and links to the personal webpage of the representatives on the chamber's website. Notice their id at the end of the url after 'cfm?key=' and before '&lat'. 
+
+On their personal space there is more information like their parliament email, their personal website and a short cv. 
+
+Let's only scrape their language for now.
+
+```{r}
+
+get_language <- function (url){
+  as.character(url) %>% 
+  read_html() %>% 
+  html_node("td > p ") %>% 
+  html_text() %>% 
+  str_extract('(?<=Taal:\\s)\\w+') 
+ }
+
+names <- map_chr(names$url, get_language) %>% 
+  cbind(names) 
+
+names <- rename(names, language = .)
+
+saveRDS(names, "./data/190417/names.rds")
+
+head(names)
+```
 
 Let's get their mugshots. 
 

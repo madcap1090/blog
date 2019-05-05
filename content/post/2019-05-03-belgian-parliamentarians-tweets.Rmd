@@ -1,0 +1,144 @@
+---
+title: Belgian parliamentarians tweets
+author: William Bourgeois
+date: '2019-05-03'
+slug: belgian-parliamentarians-tweets
+categories: []
+tags:
+  - Belgian politics
+  - Twitter
+---
+
+In the last post we were pretty successful in getting our parliamentarians Twitter handles. We can now use these to download their tweets. 
+
+The twitter API allows to download 3200 tweets per handle. This means that we will not be able to download all tweets of all parliamentarians from the last five years, because some of them tweeted more than 3200 during that time period. But there will be a fair amount. 
+
+These tweets will also have to be 'cleaned' of special characters like emojis and links in order to analyse them further without the different packages choking on them. 
+
+As usually first the libraries and options:
+
+```{r message=FALSE, warning=TRUE, results=FALSE}
+library("tidyverse")
+library("gmp")
+library("glue")
+library("rtweet")
+library("cld2") 
+library("textcat")
+library("qdapRegex")
+
+# options 
+
+options(scipen=999)
+stringAsFactors = FALSE
+```
+And here is the function to get the tweets (for now just 1 for testing, because 3200 tweets takes a while):
+
+```{r}
+get_handle_tweets <- function(handle) {
+  tweets_handle <<- get_timeline(handle, n=1)
+  n <- nrow(tweets_handle)
+    print(glue("{handle} {n} tweets added"))
+}
+
+```
+
+And a function to clean the tweets:
+
+```{r}
+to_byte <- function (x) {
+  Encoding(x) <- "latin1"
+  iconv(x, "latin1", "ASCII", "byte")
+}
+
+```
+
+Here are the handles:
+
+```{r}
+
+twitter_users <- readRDS("~/R/blogs/content/post/data/20190502/twitter_users.rds")
+
+```
+A test
+
+```{r}
+twitter_users$screen_name[3]
+```
+
+It's not stictly needed since we already know the correspondence between name and handle ('screen_name'), but it's fun to try map2_df. A test with two tweets:
+
+```{r message=FALSE, warning=FALSE}
+get_handle_tweets <- function(screen_name, ln_fn) {
+  get_timeline(screen_name, n=2) %>% 
+    mutate(ln_fn = ln_fn)
+}
+
+tweets <- map2_df(twitter_users$screen_name,twitter_users$ln_fn, 
+             possibly(get_handle_tweets, otherwise = NULL))
+dim(tweets)
+```
+
+Now might be a good time to talk about rate limits. We are limited to go 3200 tweets in the past per handle, but we have also temporary limits to the calls we can do with the API. 
+
+```{r}
+limits <- rate_limits()
+head(limits)
+```
+
+In total there are 149 limits, we can access, amongst other things, how much remains and when the limit will be reset. Here are some of the limits:
+
+```{r}
+head(limits$query, 20)
+
+```
+
+At this point we need to keep an eye on limits tweets (#49) and limits queries (#11).
+
+```{r}
+limits %>% select(limit, query, remaining, reset) %>% 
+  filter(query ==  "application/rate_limit_status"|
+          query ==  "statuses/user_timeline") %>% 
+  mutate(reset = round(reset, 2))
+
+```
+
+We are searching 160 users and the rate limit for searching user timelines is 900, so we should be fine. But be aware that your limit searches are limited also (180 searches counted by individual limit in batches of 15 minutes). 
+
+At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interuptions.
+
+How well did our test go? Did we get tweets from everyone?
+
+```{r}
+setdiff(twitter_users$ln_fn, tweets$ln_fn)
+```
+Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some :badminton: 
+
+
+```{r}
+twitter_users <- twitter_users %>% 
+  arrange(screen_name) %>% 
+  distinct(screen_name, .keep_all = TRUE) # removing doubles if present
+
+get_handle_tweets <- function(screen_name, ln_fn) {
+  # print(screen_name) this can be used to see the advancement
+  get_timeline(screen_name, n=3200) %>% 
+    mutate(ln_fn = ln_fn)
+}
+
+system.time(tweets <- map2_df(twitter_users$screen_name,twitter_users$ln_fn, 
+             possibly(get_handle_tweets, otherwise = NULL)))
+dim(tweets)
+
+```
+
+```{r}
+saveRDS(tweets, "./data/20190503/tweets.rds")
+```
+
+Cool, so about 260K tweets. 
+
+But as already mentioned these are some of the tweets from people who at some time were in the 54th legistlature. They are not always a tweet from a person actually seating in parliament.
+
+This wikipedia [page](https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)#Lijst_van_volksvertegenwoordigers) has a good overview of the changes that occured since May 2014.  
+
+

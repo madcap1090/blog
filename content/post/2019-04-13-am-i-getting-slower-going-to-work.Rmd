@@ -31,7 +31,7 @@ And loading the data
 # data <- fromJSON("./data/Location History.json") # extracts a list
 # locations <- data$locations # and the list contains a dataframe
 
-location <- readRDS("~/R/blog/content/post/data/location.rds")
+location <- readRDS("./data/location.rds")
 
 df <- location %>% 
   mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = "1970-01-01")) 
@@ -364,7 +364,7 @@ Finally I wanted to share the "patés" with you. Not often enough part of the te
 
 I was looking to see how many of them we are doing, but as you will see below the datapoints are mostly centered on our office building itself. And I cannot see how I can construct a pattern around it representing the "patés". 
 
-```{r}
+```{r,  results=FALSE}
 secrets <- readRDS("~/R/geo/secret/secrets.rds")
 key <- secrets$key[1]
 register_google(key = key)
@@ -375,7 +375,7 @@ zoom <- get_map(location = c(lon = 4.306, lat = 50.8545), zoom = 19, maptype = "
 
 
 ```{r fig.height=10, fig.width=10}
-df <- readRDS("~/R/blog/content/post/data/location_509.rds") %>% 
+df <- readRDS("./data/location_509.rds") %>% 
   filter(year != 2017)
 
 ggmap(zoom) + 

@@ -11,9 +11,9 @@ tags:
 
 Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too. 
 
-Let's start by reconstructing the list. Then we can search Twitter for their Twitter accounts. A bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians' tweets soonish. 
+Let's start by reconstructing the list. Then we can search Twitter for their accounts handles.  A bit of grunt work and no visuals in this post, but it is needed to harvest parlaimentarians' tweets soonish. 
 
-Starting with attaching libraries, and in particular 'rtweet'. 
+Starting with attaching libraries, and in particular ['rtweet'](https://rtweet.info/). 
 
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -121,7 +121,8 @@ twitter_users <- twitter_users %>%
 These names return an error using the "twitter_user" function. But these politicians do not tweet. We can skip them.
 
 ```{r}
-list_no_twitter <- c("Detiège Maya", "Mathot Alain", "Pivin Philippe", "Wilrycx Frank")
+list_no_twitter <- c("Detiège Maya", "Mathot Alain", "Pivin Philippe",
+                     "Wilrycx Frank")
 ```
 
 We now have a data frame with 152 users for our 175 politicians. 
@@ -148,7 +149,7 @@ descriptions
 
 ```
 
-These seem obviously wrong. What would the complete list look like?
+These seem obviously wrong. 
 
 ```{r}
 
@@ -166,7 +167,8 @@ search <- function(x){print (x)
   search_users(x, n=10) %>% 
     mutate(ln_fn = x)} # keep track of who we searched for
 
-twitter_users_2 <- map_df(find_again$ln_fn,possibly(.f= search, otherwise = NULL))
+twitter_users_2 <- map_df(find_again$ln_fn,
+                          possibly(.f= search, otherwise = NULL))
 
 inspect <- twitter_users_2 %>%
   select(ln_fn, name, screen_name, description, text)
@@ -179,7 +181,7 @@ The new batch can easily be identified and added to the first batch.
 twitter_users <- twitter_users %>% 
   filter(!ln_fn %in% find_again$ln_fn) %>% 
   rbind(twitter_users_2 %>% 
-  slice(13, 23, 30, 45, 51, 71, 76 , 99, 113))
+  slice(13, 21, 30, 45, 51, 71, 76 , 99, 113))
 ```
 
 We are still missing these:
@@ -206,15 +208,17 @@ Some of these surely have a twitter account. More searching is needed to find:
 @robvandevelde
 
 ```{r}
-more <- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois, leendierick,
-                                  dirkjanssens19, millerrichardmr, nathaliemuylle,
-                                  jefvandenbergh, VincentVQ, VvelthovenPeter, 
-                                  pehlivan_fatma, FrankWilrycx, McMarghem),
+more <- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois,
+                                  leendierick,dirkjanssens19, millerrichardmr,
+                                  nathaliemuylle, jefvandenbergh, VincentVQ,
+                                  VvelthovenPeter, pehlivan_fatma, FrankWilrycx,
+                                  McMarghem),
                ln_fn = c("Cassart-Mailleux Caroline", "Ceysens Patricia",
-                         "Delannois Paul-Olivier", "Dierick Leen", "Janssens Dirk", 
-                         "Miller Richard", "Muylle Nathalie", "Van den Bergh Jef", 
-                         "Van Quickenborne Vincent", "Vanvelthoven Peter", 
-                         "Pehlivan Fatma" , "Wilrycx Frank", "Marghem Marie-Christine"))
+                         "Delannois Paul-Olivier", "Dierick Leen", 
+                         "Janssens Dirk", "Miller Richard", "Muylle Nathalie", 
+                         "Van den Bergh Jef", "Van Quickenborne Vincent", 
+                         "Vanvelthoven Peter", "Pehlivan Fatma" , 
+                         "Wilrycx Frank", "Marghem Marie-Christine"))
 
 more_1 <- more %>% 
   filter(handle !="pehlivan_fatma",
@@ -254,7 +258,9 @@ more_2 <- more %>%
 search <- function(x){print (x)
   search_users(x, n=11)} # keep track of who we searched for
 
-twitter_users_4 <- map_df(more_2$handle,possibly(.f= search, otherwise = NULL)) %>% 
+twitter_users_4 <- map_df(more_2$handle,
+                          possibly(.f= search, 
+                                   otherwise = NULL)) %>% 
   cbind(more_2$ln_fn) %>%
   rename("ln_fn" = "more_2$ln_fn") %>% 
   select(ln_fn, everything()) %>% 

@@ -12,6 +12,680 @@
     
     
     <item>
+      <title>Belgian parliamentarians tweets</title>
+      <link>/post/belgian-parliamentarians-tweets/</link>
+      <pubDate>Fri, 03 May 2019 00:00:00 +0000</pubDate>
+      <author>William Bourgeois</author>
+      <guid>/post/belgian-parliamentarians-tweets/</guid>
+      <description></description>
+      
+      <content>
+
+
+&lt;p&gt;In the last post we were pretty successful in getting our parliamentarians Twitter handles. We can now use these to download their tweets.&lt;/p&gt;
+&lt;p&gt;The twitter API allows to download 3200 tweets per handle. This means that we will not be able to download all tweets of all parliamentarians from the last five years, because some of them tweeted more than 3200 during that time period. But there will be a fair amount.&lt;/p&gt;
+&lt;p&gt;These tweets will also have to be ‘cleaned’ of special characters like emojis and links in order to analyse them further without the different packages choking on them.&lt;/p&gt;
+&lt;p&gt;As usually first the libraries and options:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;tidyverse&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## -- Attaching packages ---------------------------------------------------------- tidyverse 1.2.1 --&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## v ggplot2 3.1.1       v purrr   0.3.1  
+## v tibble  2.0.1       v dplyr   0.8.0.1
+## v tidyr   0.8.3       v stringr 1.4.0  
+## v readr   1.3.1       v forcats 0.3.0&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## -- Conflicts ------------------------------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;gmp&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Attaching package: &amp;#39;gmp&amp;#39;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## The following objects are masked from &amp;#39;package:base&amp;#39;:
+## 
+##     %*%, apply, crossprod, matrix, tcrossprod&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;glue&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Attaching package: &amp;#39;glue&amp;#39;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## The following object is masked from &amp;#39;package:dplyr&amp;#39;:
+## 
+##     collapse&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;rtweet&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Attaching package: &amp;#39;rtweet&amp;#39;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## The following object is masked from &amp;#39;package:purrr&amp;#39;:
+## 
+##     flatten&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;cld2&amp;quot;) 
+library(&amp;quot;textcat&amp;quot;)
+library(&amp;quot;qdapRegex&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Attaching package: &amp;#39;qdapRegex&amp;#39;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## The following object is masked from &amp;#39;package:dplyr&amp;#39;:
+## 
+##     explain&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## The following object is masked from &amp;#39;package:ggplot2&amp;#39;:
+## 
+##     %+%&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# options 
+
+options(scipen=999)
+stringAsFactors = FALSE&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And here is the function to get the tweets (for now just 1 for testing, because 3200 tweets takes a while):&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;get_handle_tweets &amp;lt;- function(handle) {
+  tweets_handle &amp;lt;&amp;lt;- get_timeline(handle, n=1)
+  n &amp;lt;- nrow(tweets_handle)
+    print(glue(&amp;quot;{handle} {n} tweets added&amp;quot;))
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And a function to clean the tweets:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;to_byte &amp;lt;- function (x) {
+  Encoding(x) &amp;lt;- &amp;quot;latin1&amp;quot;
+  iconv(x, &amp;quot;latin1&amp;quot;, &amp;quot;ASCII&amp;quot;, &amp;quot;byte&amp;quot;)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Here are the handles:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users &amp;lt;- readRDS(&amp;quot;~/R/blogs/content/post/data/20190502/twitter_users.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;A test&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users$screen_name[3]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;wbeke&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;names(twitter_users$screen_name[3])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## NULL&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It’s not stictly needed since we already know the correspondence between name and handle (‘screen_name’), but it’s fun to try map2_df.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;get_handle_tweets &amp;lt;- function(screen_name, ln_fn) {
+  get_timeline(screen_name, n=2) %&amp;gt;% 
+    mutata(ln_fn = ln_fn)
+}
+
+tweets &amp;lt;- map2_df(twitter_users$screen_name,twitter_users$ln_fn, 
+             possibly(get_handle_tweets, otherwise = NULL))
+dim(tweets)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0 0&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now might be a good time to talk about rate limits. We are limited to go 3200 tweets in the past per handle, but we have also temporary limits to the calls we can do with the API.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;limits &amp;lt;- rate_limits()
+limits&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 149 x 7
+##    query limit remaining reset reset_at            timestamp          
+##    &amp;lt;chr&amp;gt; &amp;lt;int&amp;gt;     &amp;lt;int&amp;gt; &amp;lt;tim&amp;gt; &amp;lt;dttm&amp;gt;              &amp;lt;dttm&amp;gt;             
+##  1 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+##  2 list~    75        75 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+##  3 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+##  4 list~   900       900 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+##  5 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+##  6 list~    75        75 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+##  7 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+##  8 list~   180       180 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+##  9 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+## 10 list~   900       900 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
+## # ... with 139 more rows, and 1 more variable: app &amp;lt;chr&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In total there are 149 limits, we can access, amongst other things, how much remains and when the limit will be reset. Here are the limits:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;limits$query&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   [1] &amp;quot;lists/list&amp;quot;                                                      
+##   [2] &amp;quot;lists/memberships&amp;quot;                                               
+##   [3] &amp;quot;lists/subscribers/show&amp;quot;                                          
+##   [4] &amp;quot;lists/members&amp;quot;                                                   
+##   [5] &amp;quot;lists/subscriptions&amp;quot;                                             
+##   [6] &amp;quot;lists/show&amp;quot;                                                      
+##   [7] &amp;quot;lists/ownerships&amp;quot;                                                
+##   [8] &amp;quot;lists/subscribers&amp;quot;                                               
+##   [9] &amp;quot;lists/members/show&amp;quot;                                              
+##  [10] &amp;quot;lists/statuses&amp;quot;                                                  
+##  [11] &amp;quot;application/rate_limit_status&amp;quot;                                   
+##  [12] &amp;quot;mutes/users/list&amp;quot;                                                
+##  [13] &amp;quot;mutes/users/ids&amp;quot;                                                 
+##  [14] &amp;quot;live_video_stream/status/:id&amp;quot;                                    
+##  [15] &amp;quot;friendships/outgoing&amp;quot;                                            
+##  [16] &amp;quot;friendships/list&amp;quot;                                                
+##  [17] &amp;quot;friendships/no_retweets/ids&amp;quot;                                     
+##  [18] &amp;quot;friendships/lookup&amp;quot;                                              
+##  [19] &amp;quot;friendships/incoming&amp;quot;                                            
+##  [20] &amp;quot;friendships/show&amp;quot;                                                
+##  [21] &amp;quot;guide&amp;quot;                                                           
+##  [22] &amp;quot;auth/csrf_token&amp;quot;                                                 
+##  [23] &amp;quot;blocks/list&amp;quot;                                                     
+##  [24] &amp;quot;blocks/ids&amp;quot;                                                      
+##  [25] &amp;quot;geo/similar_places&amp;quot;                                              
+##  [26] &amp;quot;geo/id/:place_id&amp;quot;                                                
+##  [27] &amp;quot;geo/reverse_geocode&amp;quot;                                             
+##  [28] &amp;quot;geo/search&amp;quot;                                                      
+##  [29] &amp;quot;users/report_spam&amp;quot;                                               
+##  [30] &amp;quot;users/contributors/pending&amp;quot;                                      
+##  [31] &amp;quot;users/show/:id&amp;quot;                                                  
+##  [32] &amp;quot;users/search&amp;quot;                                                    
+##  [33] &amp;quot;users/suggestions/:slug&amp;quot;                                         
+##  [34] &amp;quot;users/contributees/pending&amp;quot;                                      
+##  [35] &amp;quot;users/derived_info&amp;quot;                                              
+##  [36] &amp;quot;users/profile_banner&amp;quot;                                            
+##  [37] &amp;quot;users/suggestions/:slug/members&amp;quot;                                 
+##  [38] &amp;quot;users/lookup&amp;quot;                                                    
+##  [39] &amp;quot;users/suggestions&amp;quot;                                               
+##  [40] &amp;quot;followers/ids&amp;quot;                                                   
+##  [41] &amp;quot;followers/list&amp;quot;                                                  
+##  [42] &amp;quot;collections/list&amp;quot;                                                
+##  [43] &amp;quot;collections/entries&amp;quot;                                             
+##  [44] &amp;quot;collections/show&amp;quot;                                                
+##  [45] &amp;quot;statuses/retweeters/ids&amp;quot;                                         
+##  [46] &amp;quot;statuses/retweets_of_me&amp;quot;                                         
+##  [47] &amp;quot;statuses/home_timeline&amp;quot;                                          
+##  [48] &amp;quot;statuses/show/:id&amp;quot;                                               
+##  [49] &amp;quot;statuses/user_timeline&amp;quot;                                          
+##  [50] &amp;quot;statuses/friends&amp;quot;                                                
+##  [51] &amp;quot;statuses/retweets/:id&amp;quot;                                           
+##  [52] &amp;quot;statuses/mentions_timeline&amp;quot;                                      
+##  [53] &amp;quot;statuses/oembed&amp;quot;                                                 
+##  [54] &amp;quot;statuses/lookup&amp;quot;                                                 
+##  [55] &amp;quot;custom_profiles/list&amp;quot;                                            
+##  [56] &amp;quot;custom_profiles/show&amp;quot;                                            
+##  [57] &amp;quot;webhooks/subscriptions/direct_messages&amp;quot;                          
+##  [58] &amp;quot;webhooks&amp;quot;                                                        
+##  [59] &amp;quot;contacts/uploaded_by&amp;quot;                                            
+##  [60] &amp;quot;contacts/users&amp;quot;                                                  
+##  [61] &amp;quot;contacts/addressbook&amp;quot;                                            
+##  [62] &amp;quot;contacts/users_and_uploaded_by&amp;quot;                                  
+##  [63] &amp;quot;contacts/delete/status&amp;quot;                                          
+##  [64] &amp;quot;labs/:version/users&amp;quot;                                             
+##  [65] &amp;quot;labs/:version/tweets&amp;quot;                                            
+##  [66] &amp;quot;i/config&amp;quot;                                                        
+##  [67] &amp;quot;tweet_prompts/report_interaction&amp;quot;                                
+##  [68] &amp;quot;tweet_prompts/show&amp;quot;                                              
+##  [69] &amp;quot;moments/statuses/update&amp;quot;                                         
+##  [70] &amp;quot;moments/permissions&amp;quot;                                             
+##  [71] &amp;quot;help/tos&amp;quot;                                                        
+##  [72] &amp;quot;help/configuration&amp;quot;                                              
+##  [73] &amp;quot;help/privacy&amp;quot;                                                    
+##  [74] &amp;quot;help/settings&amp;quot;                                                   
+##  [75] &amp;quot;help/languages&amp;quot;                                                  
+##  [76] &amp;quot;feedback/show/:id&amp;quot;                                               
+##  [77] &amp;quot;feedback/events&amp;quot;                                                 
+##  [78] &amp;quot;business_experience/dashboard_settings/destroy&amp;quot;                  
+##  [79] &amp;quot;business_experience/dashboard_features&amp;quot;                          
+##  [80] &amp;quot;business_experience/keywords&amp;quot;                                    
+##  [81] &amp;quot;business_experience/dashboard_settings/update&amp;quot;                   
+##  [82] &amp;quot;business_experience/dashboard_settings/show&amp;quot;                     
+##  [83] &amp;quot;graphql&amp;amp;POST&amp;quot;                                                    
+##  [84] &amp;quot;friends/following/ids&amp;quot;                                           
+##  [85] &amp;quot;friends/following/list&amp;quot;                                          
+##  [86] &amp;quot;friends/list&amp;quot;                                                    
+##  [87] &amp;quot;friends/ids&amp;quot;                                                     
+##  [88] &amp;quot;sandbox/account_activity/webhooks/:id/subscriptions&amp;quot;             
+##  [89] &amp;quot;drafts/statuses/update&amp;quot;                                          
+##  [90] &amp;quot;drafts/statuses/destroy&amp;quot;                                         
+##  [91] &amp;quot;drafts/statuses/ids&amp;quot;                                             
+##  [92] &amp;quot;drafts/statuses/list&amp;quot;                                            
+##  [93] &amp;quot;drafts/statuses/show&amp;quot;                                            
+##  [94] &amp;quot;drafts/statuses/create&amp;quot;                                          
+##  [95] &amp;quot;direct_messages/sent&amp;quot;                                            
+##  [96] &amp;quot;direct_messages/broadcasts/list&amp;quot;                                 
+##  [97] &amp;quot;direct_messages/subscribers/lists/members/show&amp;quot;                  
+##  [98] &amp;quot;direct_messages/mark_read&amp;quot;                                       
+##  [99] &amp;quot;direct_messages/subscribers/ids&amp;quot;                                 
+## [100] &amp;quot;direct_messages/sent_and_received&amp;quot;                               
+## [101] &amp;quot;direct_messages/broadcasts/statuses/list&amp;quot;                        
+## [102] &amp;quot;direct_messages&amp;quot;                                                 
+## [103] &amp;quot;direct_messages/subscribers/lists/members/ids&amp;quot;                   
+## [104] &amp;quot;direct_messages/subscribers/show&amp;quot;                                
+## [105] &amp;quot;direct_messages/broadcasts/show&amp;quot;                                 
+## [106] &amp;quot;direct_messages/broadcasts/statuses/show&amp;quot;                        
+## [107] &amp;quot;direct_messages/subscribers/lists/list&amp;quot;                          
+## [108] &amp;quot;direct_messages/show&amp;quot;                                            
+## [109] &amp;quot;direct_messages/events/list&amp;quot;                                     
+## [110] &amp;quot;direct_messages/subscribers/lists/show&amp;quot;                          
+## [111] &amp;quot;direct_messages/events/show&amp;quot;                                     
+## [112] &amp;quot;media/upload&amp;quot;                                                    
+## [113] &amp;quot;traffic/map&amp;quot;                                                     
+## [114] &amp;quot;account_activity/all/webhooks&amp;quot;                                   
+## [115] &amp;quot;account_activity/all/:instance_name/subscriptions&amp;quot;               
+## [116] &amp;quot;account_activity/direct_messages/webhooks&amp;quot;                       
+## [117] &amp;quot;account_activity/webhooks/:id/subscriptions/direct_messages/list&amp;quot;
+## [118] &amp;quot;account_activity/webhooks/:id/subscriptions/all&amp;quot;                 
+## [119] &amp;quot;account_activity/direct_messages/:instance_name/webhooks&amp;quot;        
+## [120] &amp;quot;account_activity/webhooks/:id/subscriptions/all/list&amp;quot;            
+## [121] &amp;quot;account_activity/webhooks/:id/subscriptions/direct_messages&amp;quot;     
+## [122] &amp;quot;account_activity/webhooks&amp;quot;                                       
+## [123] &amp;quot;account_activity/direct_messages/:instance_name/subscriptions&amp;quot;   
+## [124] &amp;quot;account_activity/webhooks/:id/subscriptions&amp;quot;                     
+## [125] &amp;quot;account_activity/all/:instance_name/webhooks&amp;quot;                    
+## [126] &amp;quot;account/login_verification_enrollment&amp;quot;                           
+## [127] &amp;quot;account/update_profile&amp;quot;                                          
+## [128] &amp;quot;account/verify_credentials&amp;quot;                                      
+## [129] &amp;quot;account/settings&amp;quot;                                                
+## [130] &amp;quot;safety/detection_feedback&amp;quot;                                       
+## [131] &amp;quot;favorites/list&amp;quot;                                                  
+## [132] &amp;quot;device/token&amp;quot;                                                    
+## [133] &amp;quot;tweets/stream/filter/rules&amp;quot;                                      
+## [134] &amp;quot;tweets/stream/filter/:instance_name&amp;quot;                             
+## [135] &amp;quot;tweets/search/:product/:label&amp;quot;                                   
+## [136] &amp;quot;tweets/search/:product/:instance/counts&amp;quot;                         
+## [137] &amp;quot;tweets/stream/filter/rules/:instance_name/validation&amp;amp;POST&amp;quot;       
+## [138] &amp;quot;tweets/stream/filter/rules/:instance_name&amp;amp;POST&amp;quot;                  
+## [139] &amp;quot;tweets/stream/filter/rules/:instance_name&amp;amp;DELETE&amp;quot;                
+## [140] &amp;quot;tweets/stream/filter/rules/:instance_name/:rule_id&amp;quot;              
+## [141] &amp;quot;saved_searches/destroy/:id&amp;quot;                                      
+## [142] &amp;quot;saved_searches/show/:id&amp;quot;                                         
+## [143] &amp;quot;saved_searches/list&amp;quot;                                             
+## [144] &amp;quot;oauth/invalidate_token&amp;quot;                                          
+## [145] &amp;quot;search/tweets&amp;quot;                                                   
+## [146] &amp;quot;trends/closest&amp;quot;                                                  
+## [147] &amp;quot;trends/available&amp;quot;                                                
+## [148] &amp;quot;trends/place&amp;quot;                                                    
+## [149] &amp;quot;live_pipeline/events&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;At this point we need to keep an eye on limits tweets (#49) and limits queries (#11).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;limits %&amp;gt;% select(limit, query, remaining, reset) %&amp;gt;% 
+  filter(query ==  &amp;quot;application/rate_limit_status&amp;quot;|
+          query ==  &amp;quot;statuses/user_timeline&amp;quot;) %&amp;gt;% 
+  mutate(reset = round(reset, 2))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 2 x 4
+##   limit query                         remaining reset     
+##   &amp;lt;int&amp;gt; &amp;lt;chr&amp;gt;                             &amp;lt;int&amp;gt; &amp;lt;time&amp;gt;    
+## 1   180 application/rate_limit_status        19 13.62 mins
+## 2   900 statuses/user_timeline              740 13.62 mins&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We are searching 160 users and the rate limit for searching user timelines is 900, so we should be fine. But be aware that your limit searches are limited also (180 searches counted by individual limit in batches of 15 minutes).&lt;/p&gt;
+&lt;p&gt;At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interuptions.&lt;/p&gt;
+&lt;p&gt;How well did our test go? Did we get tweets from everyone?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;setdiff(twitter_users$ln_fn, tweets$ln_fn)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Unknown or uninitialised column: &amp;#39;ln_fn&amp;#39;.&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   [1] &amp;quot;Almaci Meyrem&amp;quot;             &amp;quot;Becq Sonja&amp;quot;               
+##   [3] &amp;quot;Beke Wouter&amp;quot;               &amp;quot;Bellens Rita&amp;quot;             
+##   [5] &amp;quot;Ben Hamou Nawal&amp;quot;           &amp;quot;Blanchart Philippe&amp;quot;       
+##   [7] &amp;quot;Bogaert Hendrik&amp;quot;           &amp;quot;Bracke Siegfried&amp;quot;         
+##   [9] &amp;quot;Burton Emmanuel&amp;quot;           &amp;quot;Buysrogge Peter&amp;quot;          
+##  [11] &amp;quot;Calomne Gautier&amp;quot;           &amp;quot;Calvo Kristof&amp;quot;            
+##  [13] &amp;quot;Capoen An&amp;quot;                 &amp;quot;Caprasse Véronique&amp;quot;       
+##  [15] &amp;quot;Carcaci Aldo&amp;quot;              &amp;quot;Casier Youro&amp;quot;             
+##  [17] &amp;quot;Chastel Olivier&amp;quot;           &amp;quot;Clarinval David&amp;quot;          
+##  [19] &amp;quot;Corthouts Michel&amp;quot;          &amp;quot;Daerden Frédéric&amp;quot;         
+##  [21] &amp;quot;Dallemagne Georges&amp;quot;        &amp;quot;De Coninck Monica&amp;quot;        
+##  [23] &amp;quot;De Coninck Inez&amp;quot;           &amp;quot;De Crom Sandrine&amp;quot;         
+##  [25] &amp;quot;de Lamotte Michel&amp;quot;         &amp;quot;De Roover Peter&amp;quot;          
+##  [27] &amp;quot;De Vriendt Wouter&amp;quot;         &amp;quot;De Wever Bart&amp;quot;            
+##  [29] &amp;quot;De Wit Sophie&amp;quot;             &amp;quot;Dedecker Peter&amp;quot;           
+##  [31] &amp;quot;Dedry Anne&amp;quot;                &amp;quot;Degroote Koenraad&amp;quot;        
+##  [33] &amp;quot;Delizée Jean-Marc&amp;quot;         &amp;quot;Demir Zuhal&amp;quot;              
+##  [35] &amp;quot;Demon Franky&amp;quot;              &amp;quot;Deseyn Roel&amp;quot;              
+##  [37] &amp;quot;Dewael Patrick&amp;quot;            &amp;quot;Dewinter Filip&amp;quot;           
+##  [39] &amp;quot;Di Rupo Elio&amp;quot;              &amp;quot;Dispa Benoît&amp;quot;             
+##  [41] &amp;quot;Dumery Daphné&amp;quot;             &amp;quot;Flahaux Jean-Jacques&amp;quot;     
+##  [43] &amp;quot;Fonck Catherine&amp;quot;           &amp;quot;Foret Gilles&amp;quot;             
+##  [45] &amp;quot;Frédéric André&amp;quot;            &amp;quot;Francken Theo&amp;quot;            
+##  [47] &amp;quot;Friart Benoît&amp;quot;             &amp;quot;Gabriëls Katja&amp;quot;           
+##  [49] &amp;quot;Gantois Rita&amp;quot;              &amp;quot;Gilkinet Georges&amp;quot;         
+##  [51] &amp;quot;Goffin Philippe&amp;quot;           &amp;quot;Grosemans Karolien&amp;quot;       
+##  [53] &amp;quot;Grovonius Gwenaëlle&amp;quot;       &amp;quot;Hedebouw Raoul&amp;quot;           
+##  [55] &amp;quot;Heeren Veerle&amp;quot;             &amp;quot;Jadin Kattrin&amp;quot;            
+##  [57] &amp;quot;Jambon Jan&amp;quot;                &amp;quot;Jiroflée Karin&amp;quot;           
+##  [59] &amp;quot;Kir Emir&amp;quot;                  &amp;quot;Kitir Meryame&amp;quot;            
+##  [61] &amp;quot;Laaouej Ahmed&amp;quot;             &amp;quot;Lachaert Egbert&amp;quot;          
+##  [63] &amp;quot;Lalieux Karine&amp;quot;            &amp;quot;Lambrecht Annick&amp;quot;         
+##  [65] &amp;quot;Lanjri Nahima&amp;quot;             &amp;quot;Lijnen Nele&amp;quot;              
+##  [67] &amp;quot;Lutgen Benoît&amp;quot;             &amp;quot;Luykx Peter&amp;quot;              
+##  [69] &amp;quot;Maingain Olivier&amp;quot;          &amp;quot;Nollet Jean-Marc&amp;quot;         
+##  [71] &amp;quot;Onkelinx Laurette&amp;quot;         &amp;quot;Özen Özlem&amp;quot;               
+##  [73] &amp;quot;Pas Barbara&amp;quot;               &amp;quot;Penris Jan&amp;quot;               
+##  [75] &amp;quot;Piedboeuf Benoît&amp;quot;          &amp;quot;Schepmans Françoise&amp;quot;      
+##  [77] &amp;quot;Schlitz Sarah&amp;quot;             &amp;quot;Scourneau Vincent&amp;quot;        
+##  [79] &amp;quot;Senesael Daniel&amp;quot;           &amp;quot;Smaers Griet&amp;quot;             
+##  [81] &amp;quot;Somers Ine&amp;quot;                &amp;quot;Spooren Jan&amp;quot;              
+##  [83] &amp;quot;Temmerman Karin&amp;quot;           &amp;quot;Terwingen Raf&amp;quot;            
+##  [85] &amp;quot;Thiébaut Eric&amp;quot;             &amp;quot;Thiéry Damien&amp;quot;            
+##  [87] &amp;quot;Thoron Stéphanie&amp;quot;          &amp;quot;Uyttersprot Goedele&amp;quot;      
+##  [89] &amp;quot;Van Biesen Luk&amp;quot;            &amp;quot;Van Camp Yoleen&amp;quot;          
+##  [91] &amp;quot;Van Cauter Carina&amp;quot;         &amp;quot;Van der Maelen Dirk&amp;quot;      
+##  [93] &amp;quot;Van Hecke Stefaan&amp;quot;         &amp;quot;Van Hees Marco&amp;quot;           
+##  [95] &amp;quot;Van Hoof Els&amp;quot;              &amp;quot;Van Mechelen Dirk&amp;quot;        
+##  [97] &amp;quot;Van Peel Valerie&amp;quot;          &amp;quot;Van Peteghem Vincent&amp;quot;     
+##  [99] &amp;quot;Van Vaerenbergh Kristien&amp;quot;  &amp;quot;Vanden Burre Gilles&amp;quot;      
+## [101] &amp;quot;Vandenput Tim&amp;quot;             &amp;quot;Vandeput Steven&amp;quot;          
+## [103] &amp;quot;Vercamer Stefaan&amp;quot;          &amp;quot;Vercammen Jan&amp;quot;            
+## [105] &amp;quot;Verherstraeten Servais&amp;quot;    &amp;quot;Vermeulen Brecht&amp;quot;         
+## [107] &amp;quot;Vuye Hendrik&amp;quot;              &amp;quot;Waterschoot Véronique&amp;quot;    
+## [109] &amp;quot;Willaert Evita&amp;quot;            &amp;quot;Winckel Fabienne&amp;quot;         
+## [111] &amp;quot;Wollants Bert&amp;quot;             &amp;quot;Wouters Veerle&amp;quot;           
+## [113] &amp;quot;Yüksel Veli&amp;quot;               &amp;quot;Bacquelaine Daniel&amp;quot;       
+## [115] &amp;quot;Claerhout Sarah&amp;quot;           &amp;quot;Crusnière Stéphane&amp;quot;       
+## [117] &amp;quot;De Block Maggie&amp;quot;           &amp;quot;De Crem Pieter&amp;quot;           
+## [119] &amp;quot;De Croo Alexander&amp;quot;         &amp;quot;Demeyer Willy&amp;quot;            
+## [121] &amp;quot;Ducarme Denis&amp;quot;             &amp;quot;Flahaut André&amp;quot;            
+## [123] &amp;quot;Fremault Céline&amp;quot;           &amp;quot;Geens Koen&amp;quot;               
+## [125] &amp;quot;Hellings Benoit&amp;quot;           &amp;quot;Hufkens Renate&amp;quot;           
+## [127] &amp;quot;Khattabi Zakia&amp;quot;            &amp;quot;Klaps Johan&amp;quot;              
+## [129] &amp;quot;Lahaye-Battheu Sabien&amp;quot;     &amp;quot;Massin Eric&amp;quot;              
+## [131] &amp;quot;Michel Charles&amp;quot;            &amp;quot;Poncelet Isabelle&amp;quot;        
+## [133] &amp;quot;Raskin Wouter&amp;quot;             &amp;quot;Reynders Didier&amp;quot;          
+## [135] &amp;quot;Turtelboom Annemie&amp;quot;        &amp;quot;Van der Donckt Wim&amp;quot;       
+## [137] &amp;quot;Vanheste Ann&amp;quot;              &amp;quot;Wathelet Melchior&amp;quot;        
+## [139] &amp;quot;Wilmès Sophie&amp;quot;             &amp;quot;Chabot Jacques&amp;quot;           
+## [141] &amp;quot;Fernandez Fernandez Julie&amp;quot; &amp;quot;Geerts David&amp;quot;             
+## [143] &amp;quot;Henry Olivier&amp;quot;             &amp;quot;Janssen Werner&amp;quot;           
+## [145] &amp;quot;Matz Vanessa&amp;quot;              &amp;quot;Metsu Koen&amp;quot;               
+## [147] &amp;quot;Smeyers Sarah&amp;quot;             &amp;quot;Top Alain&amp;quot;                
+## [149] &amp;quot;Cassart-Mailleux Caroline&amp;quot; &amp;quot;Ceysens Patricia&amp;quot;         
+## [151] &amp;quot;Delannois Paul-Olivier&amp;quot;    &amp;quot;Dierick Leen&amp;quot;             
+## [153] &amp;quot;Janssens Dirk&amp;quot;             &amp;quot;Miller Richard&amp;quot;           
+## [155] &amp;quot;Muylle Nathalie&amp;quot;           &amp;quot;Van den Bergh Jef&amp;quot;        
+## [157] &amp;quot;Van Quickenborne Vincent&amp;quot;  &amp;quot;Vanvelthoven Peter&amp;quot;       
+## [159] &amp;quot;Marghem Marie-Christine&amp;quot;   &amp;quot;Pehlivan Fatma&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some 🎾 🏸&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users &amp;lt;- twitter_users %&amp;gt;% 
+  arrange(screen_name) %&amp;gt;% 
+  distinct(screen_name, .keep_all = TRUE) # removing doubles if present
+
+get_handle_tweets &amp;lt;- function(screen_name, ln_fn) {
+  print(screen_name)
+  get_timeline(screen_name, n=3200) %&amp;gt;% 
+    mutate(ln_fn = ln_fn)
+}
+
+system.time(tweets &amp;lt;- map2_df(twitter_users$screen_name,twitter_users$ln_fn, 
+             possibly(get_handle_tweets, otherwise = NULL)))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;AhmedLaaouej&amp;quot;
+## [1] &amp;quot;AlainTop27&amp;quot;
+## [1] &amp;quot;alexanderdecroo&amp;quot;
+## [1] &amp;quot;ancapoen&amp;quot;
+## [1] &amp;quot;andreflahaut&amp;quot;
+## [1] &amp;quot;annededry&amp;quot;
+## [1] &amp;quot;AnnVanheste&amp;quot;
+## [1] &amp;quot;ATurtelboom&amp;quot;
+## [1] &amp;quot;Barbara_Pas&amp;quot;
+## [1] &amp;quot;Bart_DeWever&amp;quot;
+## [1] &amp;quot;BellensRita&amp;quot;
+## [1] &amp;quot;Benoitbp59&amp;quot;
+## [1] &amp;quot;BenoitDispa&amp;quot;
+## [1] &amp;quot;BenoitFriart&amp;quot;
+## [1] &amp;quot;BenoitHellings&amp;quot;
+## [1] &amp;quot;BenoitLutgen&amp;quot;
+## [1] &amp;quot;BertWollants&amp;quot;
+## [1] &amp;quot;BurtonEmmanuel&amp;quot;
+## [1] &amp;quot;carcaci49&amp;quot;
+## [1] &amp;quot;CarinaVanCauter&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;CarolineCassart&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;CasierYouro&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;catherinefonck&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;celinefremault&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;CharlesMichel&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;DamienThiery&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;DanBacquelaine&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;danielsenesael&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;DavidClarinval&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;ddumery&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;DeWitSophie&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;dirkjanssens19&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;DirkVanMechele1&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;dirkvdmaelen&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;dreynders&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;ducarmedenis&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;egbertlachaert&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;eliodirupo&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;ElsVanHoofcdenv&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;emir_kir&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;EricMassin&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;EricThiebaut&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;EvitaWillaert&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;FabienneWinckel&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;FDW_VB&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;FlahauxMRI&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;FranckenTheo&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;FrankyDemon&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;FredericDaerden&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;FredericLeChat&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;fschepmans&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;G_Dallemagne&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;G_Uyttersprot&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;GautierCalomne&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;GeertsDavid&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;GeorgesGilkinet&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Gilles_VDB&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;gillesforet&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Gwengrovonius&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;hendrikbogaert&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;HendrikVuye&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;IneSomers&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;inez_deconinck&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;isabellepon&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;jacques_chabot&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;JanJambon&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;JanPenris&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;JanVercammenNVA&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;jefvandenbergh&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;jmdelizee&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;jmnollet&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;JohanKlaps&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;juliee710&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;karinelalieux&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;KarinJiroflee&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;karintemmerman&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;KaroGrosemans&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;katja_gabriels&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;KattrinJadin&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Koen_Geens1&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;koenraaddegroo1&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;kris10vanvaer&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;kristofcalvo&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;LambrechtAnnick&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;leendierick&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;LijnenNele&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;LOnkelinx&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;LukVanBiesen&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Maggie_DeBlock&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Marco_VanHees&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;McMarghem&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;MeryameKitir&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;MeyremAlmaci&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;MicheldeLamotte&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;millerrichardmr&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;MonicaDeConinck&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;NahimaLanjri&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;nathaliemuylle&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;nawalbenhamou&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;OChastel&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Olihen&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;OlivierMaingain&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;OzlemOzen1&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;patriciaceysens&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;PatrickDewael&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;peerlux&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;pehlivan_fatma&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;PeterBuysrogge&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;peterdedecker&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;PeterDeRoover1&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Phgoffin&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;PhilBlanchart&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;pieterdecrem&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;podelannois&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Rafterwingen&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;RaoulHedebouw&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;RaskinWouter&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;RenateHufkens&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;RitaGantois1&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;roeldeseyn&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;sandrinedecrom&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Sarah_Claerhout&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;SarahSchlitz&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;SBattheu&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;scourneau&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;ServaisV&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;sky39119&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;SmaersGriet&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;smeyers1994&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;SonjaBecq&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Sophie_Wilmes&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;SoVandeWoestyne&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;SpoorenJan&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Stefaanvercamer&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Steph_Crusniere&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;sthbracke&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;svandeput&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;SVHecke&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;ThoronStephanie&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;TimVandenput&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Univers80&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;valerievanpeel&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;vanderdoncktwim&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;VanessaMatz24&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;VCaprasse&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Veerle_Wouters&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;veerleheeren&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;veliyuksel&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;VermeulenBrecht&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;VeroWaterschoot&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;vincent_v_p&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;VincentVQ&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;VvelthovenPeter&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;wbeke&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;WernerJanssen00&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Willy_Demeyer&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;WouterDeVriendt&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;YoleenVanCamp&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;ZakiaKhattabi&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Zu_Demir&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning: Rate limit exceeded - 88&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##    user  system elapsed 
+##   73.25    0.97  167.22&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dim(tweets)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 27237    89&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;saveRDS(tweets, &amp;quot;./data/20190503/tweets.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Cool, so about 260K tweets.&lt;/p&gt;
+&lt;p&gt;But as already mentioned these are some of the tweets from people who at some time were in the 54th legistlature. They are not always a tweet from a person actually seating in parliament.&lt;/p&gt;
+&lt;p&gt;This wikipedia &lt;a href=&#34;https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)#Lijst_van_volksvertegenwoordigers&#34;&gt;page&lt;/a&gt; has a good overview of the changes that occured since May 2014.&lt;/p&gt;
+</content>
+      
+    </item>
+    
+    <item>
       <title>Belgian parliamentarians Twitter accounts</title>
       <link>/post/belgian-parliamentarians-twitter-accounts/</link>
       <pubDate>Thu, 02 May 2019 00:00:00 +0000</pubDate>
@@ -23,8 +697,8 @@
 
 
 &lt;p&gt;Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too.&lt;/p&gt;
-&lt;p&gt;Let’s start by reconstructing the list. Then we can search Twitter for their Twitter accounts. A bit of grunt work and no nice visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.&lt;/p&gt;
-&lt;p&gt;Starting with attaching libraries, and in particular ‘rtweet’.&lt;/p&gt;
+&lt;p&gt;Let’s start by reconstructing the list. Then we can search Twitter for their accounts handles. A bit of grunt work and no visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.&lt;/p&gt;
+&lt;p&gt;Starting with attaching libraries, and in particular &lt;a href=&#34;https://rtweet.info/&#34;&gt;‘rtweet’&lt;/a&gt;.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#libraries
 library(&amp;quot;tidyverse&amp;quot;)
 library(&amp;quot;rvest&amp;quot;)
@@ -149,7 +823,8 @@ search &amp;lt;- function(x){print (x)
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users &amp;lt;- twitter_users %&amp;gt;% 
   select(ln_fn, everything())&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;These names return an error using the “twitter_user” function. But these politicians do not tweet. We can skip them.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;list_no_twitter &amp;lt;- c(&amp;quot;Detiège Maya&amp;quot;, &amp;quot;Mathot Alain&amp;quot;, &amp;quot;Pivin Philippe&amp;quot;, &amp;quot;Wilrycx Frank&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;list_no_twitter &amp;lt;- c(&amp;quot;Detiège Maya&amp;quot;, &amp;quot;Mathot Alain&amp;quot;, &amp;quot;Pivin Philippe&amp;quot;,
+                     &amp;quot;Wilrycx Frank&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;We now have a data frame with 152 users for our 175 politicians.&lt;/p&gt;
 &lt;p&gt;We need to find the right user ids or twitter handles, by looking at key fields in the data frame returned by the ‘search_user’ function. (summarised in a smaller data frame)&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;inspect &amp;lt;- twitter_users %&amp;gt;%
@@ -170,7 +845,7 @@ descriptions&lt;/code&gt;&lt;/pre&gt;
 ## 2 Als er niet kan worden gelachen, is het niet ernstig. Links of rechts is~
 ## 3 Trusted HR advisor for all things BPO, technology, global payroll and sh~
 ## 4 Legacy Miami Top 40 Under 40 | HACCOF Top 20 Under 40 | Caribbean-born C~&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;These seem obviously wrong. What would the complete list look like?&lt;/p&gt;
+&lt;p&gt;These seem obviously wrong.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;find_again &amp;lt;- tibble(&amp;quot;ln_fn&amp;quot; = c(&amp;quot;Bonte Hans&amp;quot;,&amp;quot;Ceysens Patricia&amp;quot;,&amp;quot;Chabot Jacques&amp;quot;,
                                  &amp;quot;Fernandez Fernandez Julie&amp;quot;,&amp;quot;Geerts David&amp;quot;,
                                  &amp;quot;Henry Olivier&amp;quot;,&amp;quot;Janssen Werner&amp;quot;, &amp;quot;Janssens Dirk&amp;quot;,
@@ -182,7 +857,8 @@ descriptions&lt;/code&gt;&lt;/pre&gt;
   search_users(x, n=10) %&amp;gt;% 
     mutate(ln_fn = x)} # keep track of who we searched for
 
-twitter_users_2 &amp;lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise = NULL))&lt;/code&gt;&lt;/pre&gt;
+twitter_users_2 &amp;lt;- map_df(find_again$ln_fn,
+                          possibly(.f= search, otherwise = NULL))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Bonte Hans&amp;quot;
 ## [1] &amp;quot;Ceysens Patricia&amp;quot;
 ## [1] &amp;quot;Chabot Jacques&amp;quot;
@@ -204,7 +880,7 @@ twitter_users_2 &amp;lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users &amp;lt;- twitter_users %&amp;gt;% 
   filter(!ln_fn %in% find_again$ln_fn) %&amp;gt;% 
   rbind(twitter_users_2 %&amp;gt;% 
-  slice(13, 23, 30, 45, 51, 71, 76 , 99, 113))&lt;/code&gt;&lt;/pre&gt;
+  slice(13, 21, 30, 45, 51, 71, 76 , 99, 113))&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;We are still missing these:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;setdiff(setdiff(table$ln_fn, twitter_users$ln_fn), list_no_twitter)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;Bonte Hans&amp;quot;                &amp;quot;Brotcorne Christian&amp;quot;      
@@ -212,15 +888,15 @@ twitter_users_2 &amp;lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise
 ##  [5] &amp;quot;Cheron Marcel&amp;quot;             &amp;quot;D&amp;#39;Haese Christoph&amp;quot;        
 ##  [7] &amp;quot;de Coster-Bauchau Sybille&amp;quot; &amp;quot;Delannois Paul-Olivier&amp;quot;   
 ##  [9] &amp;quot;Delpérée Francis&amp;quot;          &amp;quot;Devin Laurent&amp;quot;            
-## [11] &amp;quot;Dierick Leen&amp;quot;              &amp;quot;Frédéric André&amp;quot;           
-## [13] &amp;quot;Galant Isabelle&amp;quot;           &amp;quot;Goffinet Anne-Catherine&amp;quot;  
-## [15] &amp;quot;Gustin Luc&amp;quot;                &amp;quot;Janssens Dirk&amp;quot;            
-## [17] &amp;quot;Miller Richard&amp;quot;            &amp;quot;Muylle Nathalie&amp;quot;          
-## [19] &amp;quot;Pehlivan Fatma&amp;quot;            &amp;quot;Pirlot Sébastian&amp;quot;         
-## [21] &amp;quot;Van de Velde Robert&amp;quot;       &amp;quot;Van den Bergh Jef&amp;quot;        
-## [23] &amp;quot;Van Quickenborne Vincent&amp;quot;  &amp;quot;Van Rompuy Eric&amp;quot;          
-## [25] &amp;quot;Vanvelthoven Peter&amp;quot;        &amp;quot;Gerkens Muriel&amp;quot;           
-## [27] &amp;quot;Marghem Marie-Christine&amp;quot;   &amp;quot;Vande Lanotte Johan&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+## [11] &amp;quot;Dierick Leen&amp;quot;              &amp;quot;Galant Isabelle&amp;quot;          
+## [13] &amp;quot;Goffinet Anne-Catherine&amp;quot;   &amp;quot;Gustin Luc&amp;quot;               
+## [15] &amp;quot;Janssens Dirk&amp;quot;             &amp;quot;Miller Richard&amp;quot;           
+## [17] &amp;quot;Muylle Nathalie&amp;quot;           &amp;quot;Pehlivan Fatma&amp;quot;           
+## [19] &amp;quot;Pirlot Sébastian&amp;quot;          &amp;quot;Van de Velde Robert&amp;quot;      
+## [21] &amp;quot;Van den Bergh Jef&amp;quot;         &amp;quot;Van Quickenborne Vincent&amp;quot; 
+## [23] &amp;quot;Van Rompuy Eric&amp;quot;           &amp;quot;Vanvelthoven Peter&amp;quot;       
+## [25] &amp;quot;Gerkens Muriel&amp;quot;            &amp;quot;Marghem Marie-Christine&amp;quot;  
+## [27] &amp;quot;Vande Lanotte Johan&amp;quot;&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Some of these surely have a twitter account. More searching is needed to find:&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;citation&#34;&gt;@CarolineCassart&lt;/span&gt;
 &lt;span class=&#34;citation&#34;&gt;@patriciaceysens&lt;/span&gt;
@@ -236,15 +912,17 @@ twitter_users_2 &amp;lt;- map_df(find_again$ln_fn,possibly(.f= search, otherwise
 &lt;span class=&#34;citation&#34;&gt;@FrankWilrycx&lt;/span&gt;
 &lt;span class=&#34;citation&#34;&gt;@McMarghem&lt;/span&gt;
 &lt;span class=&#34;citation&#34;&gt;@robvandevelde&lt;/span&gt;&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;more &amp;lt;- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois, leendierick,
-                                  dirkjanssens19, millerrichardmr, nathaliemuylle,
-                                  jefvandenbergh, VincentVQ, VvelthovenPeter, 
-                                  pehlivan_fatma, FrankWilrycx, McMarghem),
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;more &amp;lt;- tibble(handle = wrapr::qc(CarolineCassart, patriciaceysens, podelannois,
+                                  leendierick,dirkjanssens19, millerrichardmr,
+                                  nathaliemuylle, jefvandenbergh, VincentVQ,
+                                  VvelthovenPeter, pehlivan_fatma, FrankWilrycx,
+                                  McMarghem),
                ln_fn = c(&amp;quot;Cassart-Mailleux Caroline&amp;quot;, &amp;quot;Ceysens Patricia&amp;quot;,
-                         &amp;quot;Delannois Paul-Olivier&amp;quot;, &amp;quot;Dierick Leen&amp;quot;, &amp;quot;Janssens Dirk&amp;quot;, 
-                         &amp;quot;Miller Richard&amp;quot;, &amp;quot;Muylle Nathalie&amp;quot;, &amp;quot;Van den Bergh Jef&amp;quot;, 
-                         &amp;quot;Van Quickenborne Vincent&amp;quot;, &amp;quot;Vanvelthoven Peter&amp;quot;, 
-                         &amp;quot;Pehlivan Fatma&amp;quot; , &amp;quot;Wilrycx Frank&amp;quot;, &amp;quot;Marghem Marie-Christine&amp;quot;))
+                         &amp;quot;Delannois Paul-Olivier&amp;quot;, &amp;quot;Dierick Leen&amp;quot;, 
+                         &amp;quot;Janssens Dirk&amp;quot;, &amp;quot;Miller Richard&amp;quot;, &amp;quot;Muylle Nathalie&amp;quot;, 
+                         &amp;quot;Van den Bergh Jef&amp;quot;, &amp;quot;Van Quickenborne Vincent&amp;quot;, 
+                         &amp;quot;Vanvelthoven Peter&amp;quot;, &amp;quot;Pehlivan Fatma&amp;quot; , 
+                         &amp;quot;Wilrycx Frank&amp;quot;, &amp;quot;Marghem Marie-Christine&amp;quot;))
 
 more_1 &amp;lt;- more %&amp;gt;% 
   filter(handle !=&amp;quot;pehlivan_fatma&amp;quot;,
@@ -274,7 +952,7 @@ twitter_users_3 &amp;lt;- map_df(more_1$handle,possibly(.f= search, otherwise = 
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users &amp;lt;- rbind(twitter_users, twitter_users_3)
 
 nrow(twitter_users)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 158&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 159&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Still problems with the last two. “FrankWilrycx” probably because he has not tweeted yet. And “pehlivan_fatma” was a bit harder to find&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;more_2 &amp;lt;- more %&amp;gt;% 
   filter(handle ==&amp;quot;pehlivan_fatma&amp;quot;)
@@ -282,7 +960,9 @@ nrow(twitter_users)&lt;/code&gt;&lt;/pre&gt;
 search &amp;lt;- function(x){print (x)
   search_users(x, n=11)} # keep track of who we searched for
 
-twitter_users_4 &amp;lt;- map_df(more_2$handle,possibly(.f= search, otherwise = NULL)) %&amp;gt;% 
+twitter_users_4 &amp;lt;- map_df(more_2$handle,
+                          possibly(.f= search, 
+                                   otherwise = NULL)) %&amp;gt;% 
   cbind(more_2$ln_fn) %&amp;gt;%
   rename(&amp;quot;ln_fn&amp;quot; = &amp;quot;more_2$ln_fn&amp;quot;) %&amp;gt;% 
   select(ln_fn, everything()) %&amp;gt;% 
@@ -291,7 +971,7 @@ twitter_users_4 &amp;lt;- map_df(more_2$handle,possibly(.f= search, otherwise = 
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;twitter_users &amp;lt;- rbind(twitter_users, twitter_users_4)
 
 nrow(twitter_users)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 159&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 160&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;There are 159 Twitter handles, out of 179 parliamentarians.&lt;/p&gt;
 &lt;p&gt;(if you want to have fun with the profile pics they are in &lt;a href=&#34;https://twitter.com/%7Bhandle%7D/photo&#34; class=&#34;uri&#34;&gt;https://twitter.com/{handle}/photo&lt;/a&gt;)&lt;/p&gt;
 &lt;p&gt;We are now ready to extract a considerable amount of their tweets.&lt;/p&gt;
@@ -482,7 +1162,7 @@ names %&amp;gt;%
 ## 5  61     Denis Ducarme 01056
 ## 6  62     Daphné Dumery 06086&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;The tables are sorted differently so there are wrong ids attributed to some parliamentarians (like Christophe D’Haese).&lt;/p&gt;
-&lt;p&gt;We need to correct that the ids and since the fn_ln are correct, we can build a key based on the letters in the name of the person.&lt;/p&gt;
+&lt;p&gt;We need to correct that. Since the fn_ln are correct, we can build a key based on the letters in the name of the person.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;str_sort &amp;lt;- function(x)
   sapply(lapply(strsplit(x, NULL), sort), paste, collapse=&amp;quot;&amp;quot;)
 
@@ -515,6 +1195,45 @@ names %&amp;gt;%
 names &amp;lt;- names %&amp;gt;%
   mutate(id = gsub(&amp;#39;^.*key=*|\\s*&amp;amp;lact.*$&amp;#39;,&amp;#39;&amp;#39;, url))   &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Now we have in ‘urls’ the name and links to the personal webpage of the representatives on the chamber’s website. Notice their id at the end of the url after ‘cfm?key=’ and before ‘&amp;amp;lat’.&lt;/p&gt;
+&lt;p&gt;On their personal space there is more information like their parliament email, their personal website and a short cv.&lt;/p&gt;
+&lt;p&gt;Let’s only scrape their language for now.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;get_language &amp;lt;- function (url){
+  as.character(url) %&amp;gt;% 
+  read_html() %&amp;gt;% 
+  html_node(&amp;quot;td &amp;gt; p &amp;quot;) %&amp;gt;% 
+  html_text() %&amp;gt;% 
+  str_extract(&amp;#39;(?&amp;lt;=Taal:\\s)\\w+&amp;#39;) 
+ }
+
+names &amp;lt;- map_chr(names$url, get_language) %&amp;gt;% 
+  cbind(names) 
+
+names &amp;lt;- rename(names, language = .)
+
+saveRDS(names, &amp;quot;./data/190417/names.rds&amp;quot;)
+
+head(names)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##     language              fn_ln
+## 1 Nederlands      Meyrem Almaci
+## 2       &amp;lt;NA&amp;gt; Daniel Bacquelaine
+## 3 Nederlands         Sonja Becq
+## 4 Nederlands       Wouter Beke 
+## 5 Nederlands       Rita Bellens
+## 6      Frans    Nawal Ben Hamou
+##                                                                                                            url
+## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01189&amp;amp;lactivity=54
+## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=00757&amp;amp;lactivity=54
+## 3 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01190&amp;amp;lactivity=54
+## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=01149&amp;amp;lactivity=54
+## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=06592&amp;amp;lactivity=54
+## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;amp;language=nl&amp;amp;cfm=cvview54.cfm?key=06647&amp;amp;lactivity=54
+##                 key              ln_fn    id
+## 1      aaceeilmmmry      Almaci Meyrem 01189
+## 2 aaabcdeeeiillnnqu Bacquelaine Daniel 00757
+## 3         abcejnoqs         Becq Sonja 01190
+## 4        beeekortuw        Beke Wouter 01149
+## 5       abeeillnrst       Bellens Rita 06592
+## 6     aaabehlmnnouw    Ben Hamou Nawal 06647&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Let’s get their mugshots.&lt;/p&gt;
 &lt;center&gt;
 &lt;img src=&#34;/img/20190417/inspect.png&#34; alt=&#34;Inspecting the code of the webpage&#34; /&gt;
@@ -793,7 +1512,7 @@ library(&amp;quot;ggplot2&amp;quot;); theme_set(theme_minimal())&lt;/code&gt;&lt
 # data &amp;lt;- fromJSON(&amp;quot;./data/Location History.json&amp;quot;) # extracts a list
 # locations &amp;lt;- data$locations # and the list contains a dataframe
 
-location &amp;lt;- readRDS(&amp;quot;~/R/blog/content/post/data/location.rds&amp;quot;)
+location &amp;lt;- readRDS(&amp;quot;./data/location.rds&amp;quot;)
 
 df &amp;lt;- location %&amp;gt;% 
   mutate(datetime = as.POSIXct(as.numeric(timestampMs)/1000, origin = &amp;quot;1970-01-01&amp;quot;)) 
@@ -1072,7 +1791,7 @@ register_google(key = key)
 
 zoom &amp;lt;- get_map(location = c(lon = 4.306, lat = 50.8545), zoom = 19, maptype = &amp;quot;satellite&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Source : https://maps.googleapis.com/maps/api/staticmap?center=50.8545,4.306&amp;amp;zoom=19&amp;amp;size=640x640&amp;amp;scale=2&amp;amp;maptype=satellite&amp;amp;language=en-EN&amp;amp;key=xxx&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- readRDS(&amp;quot;~/R/blog/content/post/data/location_509.rds&amp;quot;) %&amp;gt;% 
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df &amp;lt;- readRDS(&amp;quot;./data/location_509.rds&amp;quot;) %&amp;gt;% 
   filter(year != 2017)
 
 ggmap(zoom) + 
