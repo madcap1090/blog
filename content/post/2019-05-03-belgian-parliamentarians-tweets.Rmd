@@ -139,6 +139,95 @@ Cool, so about 260K tweets.
 
 But as already mentioned these are some of the tweets from people who at some time were in the 54th legistlature. They are not always a tweet from a person actually seating in parliament.
 
-This wikipedia [page](https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)#Lijst_van_volksvertegenwoordigers) has a good overview of the changes that occured since May 2014.  
+This wikipedia page https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019) has a good overview of the changes that occured since May 2014.  
 
+
+
+A few have also changed party or became independent. The table that was used to obtain the list of parliamentariens's names, language and party, can be transformed into a reference table that we can join to the tweets for further analysis. 
+
+```{r}
+names <- readRDS("./data/190417/names.rds")
+party_less <- names %>% 
+  filter(is.na(party))
+```
+
+The text on the wikipedia page contains the information that is needed, but I wonder how easy it will be to use. We can try, let's see what we get.
+
+```{r}
+url <- "https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)" 
+
+wiki_table<- url %>% 
+  read_html() %>%
+  html_node(xpath = '//*[@id="mw-content-text"]/div/table[4]')  %>%
+  html_table(fill = TRUE)
+
+head(wiki_table)
+
+```
+
+The nice thing is that additional information like the voting disctrict was obtained. Using the comments ("Opmerkingen"), will probaly be more time consuming than hardcoding the changes, but I think it will be more fun ;-)
+
+```{r}
+#print(wiki_table$Opmerkingen, na.print = "")
+
+wiki_table %>% 
+  filter(!is.na(Opmerkingen)) %>% 
+  select(Opmerkingen)
+
+```
+
+
+'Vervangt' means 'replaces', so these are members that replaced someone who took on another mandate. 'Werd' means 'was', so these were replaced.
+
+```{r}
+x <- wiki_table %>% 
+  filter(!is.na(Opmerkingen)) %>% 
+  select(Opmerkingen) 
+
+x <- x %>% 
+  mutate(first_word = str_extract(Opmerkingen,"(\\w+)"))
+
+
+
+
+```
+
+In the comments there are up to three dates that we need.
+
+```{r}
+
+y <- x %>% 
+  mutate(Opmerkingen = gsub("januari", 1, Opmerkingen),
+         Opmerkingen = gsub("februari", 2, Opmerkingen),
+         Opmerkingen = gsub("maart", 3, Opmerkingen),
+         Opmerkingen = gsub("april", 4, Opmerkingen),
+         Opmerkingen = gsub("mei", 5, Opmerkingen),
+         Opmerkingen = gsub("juni", 6, Opmerkingen),
+         Opmerkingen = gsub("juli", 7, Opmerkingen),
+         Opmerkingen = gsub("augustus", 8, Opmerkingen),
+         Opmerkingen = gsub("september", 9, Opmerkingen),
+         Opmerkingen = gsub("oktober", 10, Opmerkingen),
+         Opmerkingen = gsub("november", 11, Opmerkingen),
+         Opmerkingen = gsub("december", 12, Opmerkingen))
+
+
+z <- y %>% 
+  mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) #+ keeps them togethe
+test <- y %>% 
+  mutate(digits = str_remove_all(Opmerkingen,"([^0-9]+)")) #+ keeps them togethe
+
+gsub(",","",str_extract_all(y$Opmerkingen,"(^[0-9]"))
+
+
+w <- z %>% 
+  mutate(num = paste0(digits, collapse = ""))
+
+```
+
+
+
+```{r}
+out_date <- c("2014-10-14","2016-11-09")
+replaced_by <- ("Luc Gustin", "")
+```
 
