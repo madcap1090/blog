@@ -161,7 +161,7 @@ find_again <- tibble("ln_fn" = c("Bonte Hans","Ceysens Patricia","Chabot Jacques
                                  "Van de Velde Robert"))
 ```
 
-Would they be first 10 of the search result ?
+Would they be first 10 of the search result?
 ```{r message=FALSE}
 search <- function(x){print (x)
   search_users(x, n=10) %>% 
