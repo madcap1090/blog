@@ -215,10 +215,7 @@ y <- x %>%
 
 z <- y %>% 
   mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) #+ keeps them together
-<<<<<<< HEAD
-test <- y %>% 
-  mutate(digits = str_remove_all(Opmerkingen,"([^0-9]+)")) #+ keeps them together
-=======
+
   
 inspect <-z$digits
 inspects <- z$digits[]
@@ -297,7 +294,6 @@ ww <- z %>%
   mutate(date_2 = substr(condate,9,16)) %>% 
   mutate(date_3 = substr(condate,17,24))
 
->>>>>>> 0aa3353eeb810c84685a7ae574a9db90476b83f6
 
 
 
