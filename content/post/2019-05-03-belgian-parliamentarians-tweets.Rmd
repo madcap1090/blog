@@ -215,14 +215,92 @@ y <- x %>%
 
 z <- y %>% 
   mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) #+ keeps them together
+<<<<<<< HEAD
 test <- y %>% 
   mutate(digits = str_remove_all(Opmerkingen,"([^0-9]+)")) #+ keeps them together
+=======
+  
+inspect <-z$digits
+inspects <- z$digits[]
+paste0("0",inspect[[1]])
 
-gsub(",","",str_extract_all(y$Opmerkingen,"(^[0-9]"))
+length(inspect[[1]])
+inspect[[1]]
+
+inspect[[1]][1]
+nchar(inspect[[1]][1])
 
 
-w <- z %>% 
-  mutate(num = paste0(digits, collapse = ""))
+z <- y %>% 
+  filter(first_word != "De") %>% 
+  mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) #+ keeps them together
+  
+inspect <-z$digits
+
+
+for (i in (1:length(inspect))){
+  for (j in (1:length(inspect[[i]]))){
+    if (nchar(inspect[[i]][j]) == 1) {inspect[[i]][j] <- paste0("0",inspect[[i]][j])}
+  }
+  inspect[[i]] <- paste0(inspect[[i]], collapse = "")
+  print(inspect[[i]])
+}
+
+# pure poetry if you ask me
+
+con_dates <- data.frame("condate" = unlist(inspect))
+z <- z %>% 
+  cbind(con_dates) %>% 
+  select(-digits)
+
+
+ww <- z %>% 
+  mutate(date_1 = 
+           ifelse(substr(condate,5,6) == "20",
+                  substr(condate,1,8),
+                  paste0(substr(condate,1,4),
+                    substr(condate,str_locate(condate, "201"),
+                            str_locate(condate, "201") + 3))
+                  )
+         ) 
+
+# adding second date
+
+ww <- z %>% 
+  mutate(date_1 = 
+           ifelse(substr(condate,5,6) == "20",
+                  substr(condate,1,8),
+                  paste0(substr(condate,1,4),
+                    substr(condate,str_locate(condate, "201"),
+                            str_locate(condate, "201") + 3))
+                  )
+         ) %>% 
+   mutate(date_2 = 
+           ifelse(substr(condate,5,6) == "20",
+                  substr(condate,9,16),
+                  paste0(
+                    substr(condate,str_locate(condate, "201")-4,
+                            str_locate(condate, "201") + 3))
+                  )
+         ) %>% 
+   mutate(date_3 = 
+           ifelse(substr(condate,5,6) == "20",
+                  substr(condate,17,24),
+                  "")
+         )
+           
+
+
+
+ww <- z %>% 
+  mutate(date_1 = substr(condate,1,8)) %>% 
+  mutate(date_2 = substr(condate,9,16)) %>% 
+  mutate(date_3 = substr(condate,17,24))
+
+>>>>>>> 0aa3353eeb810c84685a7ae574a9db90476b83f6
+
+
+
 
 ```
 
