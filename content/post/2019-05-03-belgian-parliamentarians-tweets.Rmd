@@ -25,6 +25,8 @@ library("rtweet")
 library("cld2") 
 library("textcat")
 library("qdapRegex")
+library("xml2")
+library("rvest")
 
 # options 
 
@@ -212,9 +214,9 @@ y <- x %>%
 
 
 z <- y %>% 
-  mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) #+ keeps them togethe
+  mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) #+ keeps them together
 test <- y %>% 
-  mutate(digits = str_remove_all(Opmerkingen,"([^0-9]+)")) #+ keeps them togethe
+  mutate(digits = str_remove_all(Opmerkingen,"([^0-9]+)")) #+ keeps them together
 
 gsub(",","",str_extract_all(y$Opmerkingen,"(^[0-9]"))
 
