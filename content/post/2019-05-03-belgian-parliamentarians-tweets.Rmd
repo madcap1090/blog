@@ -27,6 +27,7 @@ library("textcat")
 library("qdapRegex")
 library("xml2")
 library("rvest")
+library("lubridate")
 
 # options 
 
@@ -158,12 +159,12 @@ The text on the wikipedia page contains the information that is needed, but I wo
 ```{r}
 url <- "https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)" 
 
-wiki_table<- url %>% 
+wiki_table_source<- url %>% 
   read_html() %>%
   html_node(xpath = '//*[@id="mw-content-text"]/div/table[4]')  %>%
   html_table(fill = TRUE)
 
-head(wiki_table)
+head(wiki_table_source)
 
 ```
 
@@ -172,7 +173,7 @@ The nice thing is that additional information like the voting disctrict was obta
 ```{r}
 #print(wiki_table$Opmerkingen, na.print = "")
 
-wiki_table %>% 
+wiki_table_source %>% 
   filter(!is.na(Opmerkingen)) %>% 
   select(Opmerkingen)
 
@@ -182,23 +183,15 @@ wiki_table %>%
 'Vervangt' means 'replaces', so these are members that replaced someone who took on another mandate. 'Werd' means 'was', so these were replaced.
 
 ```{r}
-x <- wiki_table %>% 
+wiki_table <- wiki_table_source %>% 
   filter(!is.na(Opmerkingen)) %>% 
-  select(Opmerkingen) 
-
-x <- x %>% 
   mutate(first_word = str_extract(Opmerkingen,"(\\w+)"))
-
-
-
-
 ```
 
-In the comments there are up to three dates that we need.
+In the comments (Opmerkingen) there are up to three dates that we need. A first step would be to change the month names in numbers. And then extract all the numbers into a list.
 
 ```{r}
-
-y <- x %>% 
+wiki_table <- wiki_table %>% 
   mutate(Opmerkingen = gsub("januari", 1, Opmerkingen),
          Opmerkingen = gsub("februari", 2, Opmerkingen),
          Opmerkingen = gsub("maart", 3, Opmerkingen),
@@ -210,31 +203,19 @@ y <- x %>%
          Opmerkingen = gsub("september", 9, Opmerkingen),
          Opmerkingen = gsub("oktober", 10, Opmerkingen),
          Opmerkingen = gsub("november", 11, Opmerkingen),
-         Opmerkingen = gsub("december", 12, Opmerkingen))
+         Opmerkingen = gsub("december", 12, Opmerkingen)) %>%
+    mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) %>% #'+' keeps them together
+  filter(first_word != "De") # this one has no date 
 
 
-z <- y %>% 
-  mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) #+ keeps them together
 
-  
-inspect <-z$digits
-inspects <- z$digits[]
-paste0("0",inspect[[1]])
+inspect <-wiki_table$digits
+inspect[[20]]
 
-length(inspect[[1]])
-inspect[[1]]
+```
+It will be more difficult to handle the digits if days and months smaller than 10 do not have a leading 0. So one needs to be added, before concatenating all the numbers
 
-inspect[[1]][1]
-nchar(inspect[[1]][1])
-
-
-z <- y %>% 
-  filter(first_word != "De") %>% 
-  mutate(digits = str_extract_all(Opmerkingen,"([0-9]+)")) #+ keeps them together
-  
-inspect <-z$digits
-
-
+```{r}
 for (i in (1:length(inspect))){
   for (j in (1:length(inspect[[i]]))){
     if (nchar(inspect[[i]][j]) == 1) {inspect[[i]][j] <- paste0("0",inspect[[i]][j])}
@@ -242,28 +223,25 @@ for (i in (1:length(inspect))){
   inspect[[i]] <- paste0(inspect[[i]], collapse = "")
   print(inspect[[i]])
 }
-
 # pure poetry if you ask me
 
 con_dates <- data.frame("condate" = unlist(inspect))
-z <- z %>% 
+wiki_table <- wiki_table %>% 
   cbind(con_dates) %>% 
   select(-digits)
+```
 
+Now we can extrat the dates, but one problem still remains, on wikipedia some years are not repeated for certain time periods:
 
-ww <- z %>% 
-  mutate(date_1 = 
-           ifelse(substr(condate,5,6) == "20",
-                  substr(condate,1,8),
-                  paste0(substr(condate,1,4),
-                    substr(condate,str_locate(condate, "201"),
-                            str_locate(condate, "201") + 3))
-                  )
-         ) 
+```{r}
+wiki_table$Opmerkingen[28]
+as.character(wiki_table$condate[28])
+```
 
-# adding second date
+A little bit more work is needed.
 
-ww <- z %>% 
+```{r}
+wiki_table <- wiki_table %>% 
   mutate(date_1 = 
            ifelse(substr(condate,5,6) == "20",
                   substr(condate,1,8),
@@ -284,26 +262,77 @@ ww <- z %>%
            ifelse(substr(condate,5,6) == "20",
                   substr(condate,17,24),
                   "")
-         )
-           
+         ) %>% 
+  select(-condate)
 
 
-
-ww <- z %>% 
-  mutate(date_1 = substr(condate,1,8)) %>% 
-  mutate(date_2 = substr(condate,9,16)) %>% 
-  mutate(date_3 = substr(condate,17,24))
-
-
-
-
+wiki_table <- wiki_table %>% 
+  mutate(date_1 = dmy(as.numeric(date_1)),
+         date_2 = dmy(as.numeric(date_2)),
+         date_3 = dmy(as.numeric(date_3)),
+                )
 
 ```
 
+There are other possibilities, but here we will use a table with one line per period a person seated for a party. To later use in the analysis of the tweets collected. In that table there will be one start date and one end date. A good start is assuming everyone started at "2014-06-19" and ended at "2019-05-31", and then making corrections afterwards. 
 
+We can start by consolidating our tables.
 
 ```{r}
-out_date <- c("2014-10-14","2016-11-09")
-replaced_by <- ("Luc Gustin", "")
+setdiff(names(wiki_table),names(wiki_table_source))
+```
+```{r}
+wiki_table <- wiki_table %>% 
+  rbind(wiki_table_source %>% 
+          filter(is.na(Opmerkingen) 
+                 | Volksvertegenwoordiger == "Jadin, Kattrin Kattrin Jadin") %>%
+          mutate(first_word = "",
+                 date_1 = as.Date("2001-01-01"),
+                 date_2 = as.Date("2001-01-01"),
+                 date_3 = as.Date("2001-01-01"))
+                              )
+
 ```
 
+
+Aw, shoot did not see the names are funky.
+
+```{r}
+head(wiki_table$Volksvertegenwoordiger)
+```
+
+Maybe we can join on the concatenation of letters.
+
+```{r}
+x <- wiki_table %>% 
+  mutate(join = str_remove_all(Volksvertegenwoordiger," "),
+         join = str_remove_all(join,","),
+         join = substr(join,1, nchar(join)/2))
+
+y <- names %>% 
+  mutate(join = str_remove_all(ln_fn," "))
+
+z <- y %>% 
+  left_join(x)
+
+```
+```{r}
+
+test <- z %>% 
+  filter(!is.na(Volksvertegenwoordiger)) %>% 
+  mutate(test = "test")
+  
+missing <- wiki_table %>% 
+  left_join(test %>% 
+              select(Volksvertegenwoordiger, test)) %>% 
+  filter(is.na(test))
+
+missing$Volksvertegenwoordiger
+
+```
+
+Yes I've got myself in a pickle again. Three missing. The join field for them should be VandeVeldeRobert, FernandezFernandezJulie and JirofléeKarin
+
+instead of VandeVeldeRob 	JirofléeKarine and Fernandez-FernandezJulie
+
+We can follow how they are spelled on dekamer.be: Robert Van de Velde, Karin Jiroflée, Julie Fernandez Fernandez
