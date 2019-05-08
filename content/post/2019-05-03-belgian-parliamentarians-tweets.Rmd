@@ -231,7 +231,7 @@ wiki_table <- wiki_table %>%
   select(-digits)
 ```
 
-Now we can extrat the dates, but one problem still remains, on wikipedia some years are not repeated for certain time periods:
+Now we can extrat the dates, but one problem still remains, on wikipedia some years are not repeated for certain time periods (so there are only 4 digits for a date):
 
 ```{r}
 wiki_table$Opmerkingen[28]
@@ -273,6 +273,8 @@ wiki_table <- wiki_table %>%
                 )
 
 ```
+
+Ok that looks fine now.
 
 There are other possibilities, but here we will use a table with one line per period a person seated for a party. To later use in the analysis of the tweets collected. In that table there will be one start date and one end date. A good start is assuming everyone started at "2014-06-19" and ended at "2019-05-31", and then making corrections afterwards. 
 
@@ -336,3 +338,27 @@ Yes I've got myself in a pickle again. Three missing. The join field for them sh
 instead of VandeVeldeRob 	JirofléeKarine and Fernandez-FernandezJulie
 
 We can follow how they are spelled on dekamer.be: Robert Van de Velde, Karin Jiroflée, Julie Fernandez Fernandez
+
+And use a case_when for a change
+
+```{r}
+
+xx <- x %>% 
+  mutate(join = case_when(join == "VandeVeldeRob" ~ "VandeVeldeRobert",
+                          join == "JirofléeKarine" ~ "JirofléeKarin",
+                          join == "FernandezFernandezJulie" ~ "Fernandez-FernandezJulie",
+                          TRUE ~ join))
+
+```
+There are 150 persons on the Wikipedia list and 179 parliamentarians in the legistlature. We would need to find the dates these 29 left. For instance, when did Ann Vanheste leave?
+
+
+```{r}
+xx %>% 
+  filter(str_detect(Opmerkingen, "Ann Vanheste")) %>% 
+  select(date_1) %>% 
+  print()
+
+
+```
+
