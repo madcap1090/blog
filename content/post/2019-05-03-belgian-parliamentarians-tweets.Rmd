@@ -331,8 +331,147 @@ missing$Volksvertegenwoordiger
 
 ```
 
-Yes I've got myself in a pickle again. Three missing. The join field for them should be VandeVeldeRobert, FernandezFernandezJulie and JirofléeKarin
-
-instead of VandeVeldeRob 	JirofléeKarine and Fernandez-FernandezJulie
+Yes I've got myself in a pickle again. Three missing. The join field for them should be VandeVeldeRobert, JirofléeKarin and, FernandezFernandezJulie. Instead of VandeVeldeRob, JirofléeKarine and Fernandez-FernandezJulie.
 
 We can follow how they are spelled on dekamer.be: Robert Van de Velde, Karin Jiroflée, Julie Fernandez Fernandez
+
+```{r}
+
+x[x$join == "VandeVeldeRob",]$join <- "VandeVeldeRobert"
+x[x$join == "JirofléeKarine",]$join <- "JirofléeKarin"
+x[x$join == "Fernandez-FernandezJulie",]$join <- "FernandezFernandezJulie"
+
+y <- names %>% 
+  mutate(join = str_remove_all(ln_fn," "))
+
+z <- y %>% 
+  left_join(x)
+
+
+test <- z %>% 
+  filter(!is.na(Volksvertegenwoordiger)) %>% 
+  mutate(test = "test")
+  
+missing <- wiki_table %>% 
+  left_join(test %>% 
+              select(Volksvertegenwoordiger, test)) %>% 
+  filter(is.na(test))
+
+missing$Volksvertegenwoordiger
+
+
+```
+
+Yeah! So now we have em all we can give em a default start date and a default end date.
+
+```{r}
+reps54 <- z %>% 
+  mutate(start_date = as.Date("2014-06-19"),
+         end_date = as.Date("2019-05-31"))
+```
+
+Maybe we can start with those who only have one 'date_1'? Let's have a look.
+
+```{r}
+one_date <- reps54 %>% 
+  filter(!is.na(date_1) &
+           is.na(date_2))
+
+unique(one_date$first_word)
+```
+
+"Voorzitter" is the president of the chamber. Not interested in this for now, so no change to be made. "Vanaf" seems to indicate a change of party and/or party name. What happened to the [FDF](https://en.wikipedia.org/wiki/D%C3%A9FI)? Seems to have been a name change. 
+
+In the data that come from the official website these members are already 'Défi' in the field 'Party'. We can work on the field 'fractie' (party) but I doubt it will be needed. 
+
+```{r}
+
+fdf <- one_date %>% 
+  filter(first_word == "Vanaf") %>% 
+  mutate(end_date = ymd(date_1) -days(1)) %>% 
+  rbind(one_date %>% 
+          filter(first_word == "Vanaf") %>% 
+          mutate(start_date = date_1,
+                 Fractie = "Défi"))
+
+one_date <- one_date %>% 
+  filter(first_word != "Vanaf") %>% 
+  rbind(fdf)
+
+```
+
+So that takes care of 'Vanaf', now for "Vervangt" (replaces). Which looks pretty straightforward. The date_1 just needs to replace the start date.
+```{r}
+replaces <- one_date %>% 
+  filter(first_word == "Vervangt") %>% 
+  mutate(start_date = date_1)
+
+one_date <- one_date %>% 
+  filter(first_word != "Vervangt") %>% 
+  rbind(replaces)
+
+```
+In this case 'Zetelt' means the person became independent. I doubt it will make a big difference to make the change for one person, but for the sake of precision, here is the correction.
+
+```{r}
+zetelt <- one_date %>% 
+  filter(first_word == "Zetelt") %>% 
+  mutate(end_date = ymd(date_1) -days(1)) %>% 
+  rbind(one_date %>% 
+          filter(first_word == "Zetelt") %>% 
+          mutate(start_date = date_1,
+                 Fractie = "ONAFH"))
+
+one_date <- one_date %>% 
+  filter(first_word != "Zetelt") %>% 
+  rbind(zetelt)
+```
+
+Now just need to bind them and go to the next batch.
+
+```{r}
+
+reps54 <- reps54 %>% 
+  filter(is.na(date_1) | date_1 == "2001-01-01"
+         | (date_1 != "2001-01-01" & date_2 != "2001-01-01"))%>% 
+  rbind(one_date)
+
+```
+
+two_dates 
+
+```{r}
+two_dates <- reps54 %>% 
+  filter(!is.na(date_1) &
+           !is.na(date_2) &
+           is.na(date_3))
+
+unique(two_dates$first_word)
+```
+
+There are now three replacements (Vervangt) with two dates in the comment phrase. It is getting complicated, but fortunately they seem to be structured the same way. 
+```{r}
+two_dates %>% filter(first_word == "Vervangt") %>% 
+  select(Opmerkingen)
+
+```
+
+So we are looking at these parliamantarians:
+
+```{r}
+two_dates %>% filter(first_word == "Vervangt") %>% 
+  select(fn_ln)
+```
+
+They just enter the parliament at date_1, that is easy, but there is more information in the remarks. Easy part first (EPF), low hanging fruits, quick impacts and what have you.
+```{r}
+vervangt <- two_dates %>% 
+  filter(first_word == "Vervangt") %>% 
+  mutate(start_date = date_1)
+
+x <- two_dates %>% 
+  filter(first_word != "Vervangt") %>%
+  rbind(vervangt)
+
+```
+
