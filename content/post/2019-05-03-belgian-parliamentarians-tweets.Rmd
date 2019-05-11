@@ -114,16 +114,16 @@ How well did our test go? Did we get tweets from everyone?
 ```{r}
 setdiff(twitter_users$ln_fn, tweets$ln_fn)
 ```
-Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some :badminton: 
+Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some :badminton: and after having waited fifteen minutes to be sure all rate limits were reset. 
 
 
-```{r}
+```{r, avaluate = FALSE}
 twitter_users <- twitter_users %>% 
   arrange(screen_name) %>% 
   distinct(screen_name, .keep_all = TRUE) # removing doubles if present
 
 get_handle_tweets <- function(screen_name, ln_fn) {
-  # print(screen_name) this can be used to see the advancement
+  print(screen_name) # this can be used to see the advancement
   get_timeline(screen_name, n=3200) %>% 
     mutate(ln_fn = ln_fn)
 }
@@ -138,7 +138,7 @@ dim(tweets)
 saveRDS(tweets, "./data/20190503/tweets.rds")
 ```
 
-Cool, so about 260K tweets. 
+Cool, so about 265K tweets. 
 
 But as already mentioned these are some of the tweets from people who at some time were in the 54th legistlature. They are not always a tweet from a person actually seating in parliament.
 
@@ -679,11 +679,106 @@ three_dates <- reps54 %>%
   rbind(reps54 %>% filter(fn_ln == "Annemie Turtelboom") %>% 
           mutate(start_date = ymd(dates$date_3) + days(1)) %>% 
           mutate(end_date = ymd(dates$date_1) - days(1)))
-  
-
-  
-  
 
 
 ```
+
+So let's bring them all together before tackeling missing values.
+
+```{r}
+dim(one_date)
+dim(two_dates)
+dim(three_dates)
+dim(reps54)
+length(unique(reps54$fn_ln))
+
+```
+
+```{r}
+reps54 <- reps54 %>% 
+  filter(!fn_ln %in% one_date) %>% 
+  filter(!fn_ln %in% two_dates) %>% 
+  filter(!fn_ln %in% three_dates) %>% 
+  rbind(one_date) %>% 
+  rbind(two_dates) %>% 
+  rbind(three_dates) %>% 
+  mutate(fn_ln = trimws(fn_ln, c("both")))
+
+length(unique(reps54$fn_ln))
+length(reps54$fn_ln)
+```
+
+Save before cleaning.
+
+```{r}
+saveRDS(reps54, "./data/20190503/reps54_before_cleaning.rds")
+```
+
+```{r}
+empty_spaces <- reps54 %>% 
+  filter(is.na(language)) %>% 
+  arrange(fn_ln)
+```
+
+
+```{r}
+empty_spaces$ln_fn
+```
+
+For now I leave some field incomplete and see if we can have fun finding them with algorythms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language 'role'.
+
+On the other hand if you are familiar with Belgium, you could just make good guesses looking at their first names:
+
+```{r}
+word(empty_spaces$ln_fn,-1)
+```
+
+But looking at the tweets:
+
+```{r}
+tweets <- readRDS("~/R/blogs/content/post/data/20190503/tweets.rds")
+lang <- tweets %>% 
+  filter(ln_fn %in% empty_spaces$ln_fn) %>% 
+  select(ln_fn, lang) %>% 
+  group_by(ln_fn, lang) %>% 
+  summarise(count = n())
+```
+
+
+
+```{r}
+languages_used <- lang %>%
+  group_by(ln_fn)%>%
+  summarise(m = max(count))%>% 
+  left_join(lang) %>% 
+  filter(m == count) %>% 
+  select(-m, -count) %>% 
+  mutate(language = ifelse(lang == "nl", "Nederlands", "Frans")) %>% 
+  select(-lang)
+
+setdiff(empty_spaces$ln_fn, languages_used$ln_fn)
+
+```
+
+So let's add them and end this for now.
+
+```{r}
+to_add <- data.frame("ln_fn" = c("Vande Lanotte Johan","Gerkens Muriel"), 
+                     "language" = c("Nederlands", "Frans")) 
+languages_used <-languages_used %>% 
+  rbind(to_add)
+
+x <- empty_spaces %>% 
+  left_join(languages_used, by = c("ln_fn"))
+
+
+x <- empty_spaces %>% 
+  left_join(languages_used)
+
+
+```
+
+
+
+
 
