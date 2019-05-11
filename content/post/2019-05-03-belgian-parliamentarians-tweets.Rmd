@@ -367,7 +367,8 @@ Yeah! So now we have em all we can give em a default start date and a default en
 ```{r}
 reps54 <- z %>% 
   mutate(start_date = as.Date("2014-06-19"),
-         end_date = as.Date("2019-05-31"))
+         end_date = as.Date("2019-05-31")) %>% 
+  mutate(fn_ln = trimws(fn_ln, c("both")))
 ```
 
 Maybe we can start with those who only have one 'date_1'? Let's have a look.
@@ -469,9 +470,220 @@ vervangt <- two_dates %>%
   filter(first_word == "Vervangt") %>% 
   mutate(start_date = date_1)
 
-x <- two_dates %>% 
+two_dates <- two_dates %>% 
   filter(first_word != "Vervangt") %>%
   rbind(vervangt)
+
+```
+
+Those with "werd" were replaced during a period, so end_date is date_1-1 for their first period, and date_2+1 is the start date of their second period. 
+
+```{r}
+werd_1 <- two_dates %>% 
+  filter(first_word == "Werd") %>% 
+  mutate(end_date = ymd(date_1) - days(1))
+
+werd_2 <- two_dates %>% 
+  filter(first_word == "Werd") %>% 
+  mutate(start_date = ymd(date_2) + days(1))
+
+werd <- rbind(werd_1, werd_2)
+
+two_dates <- two_dates %>%
+  filter(first_word != "Werd") %>%
+  rbind(werd)
+  
+```
+Those with "Zetelt" (seats) changed parties twice. First became independent (from NV&A), then created a new party "Vuye&Wouters". 
+Mr Hendrik Vuye tweets a lot.
+
+```{r}
+
+zetelt<- two_dates %>% 
+  filter(first_word == "Zetelt") 
+
+zetelt$Opmerkingen
+```
+
+```{r}
+nva <- zetelt %>% 
+  mutate(Fractie = "NV&A",
+         end_date = ymd(date_1) - days(1))
+onaf <- zetelt %>% 
+  mutate(Fractie = "ONAFH",
+         start_date = date_1,
+         end_date = date_2)
+vuye <- zetelt %>% 
+  mutate(Fractie = "Vuye&Wouters",
+         start_date = ymd(date_2) + days(1))
+
+two_dates<- two_dates %>% 
+  filter(first_word != "Zetelt") %>% 
+  rbind(nva) %>% 
+  rbind(onaf) %>% 
+  rbind(vuye)
+  
+```
+
+We need to go back to the comments with one days. They indicate the end date of a number of people and in particular of mayors or members of the government. 
+
+```{r}
+one_date %>% 
+  filter(first_word == "Vervangt") %>% 
+  select(Opmerkingen)
+
+```
+
+We could use a regex to extract between the last digit and the , 
+But regexes are always more difficult than they seem. So here it is just easier to use 'substr'.
+
+```{r}
+str_locate(one_date$Opmerkingen[10], "201")[2]+3
+str_locate(one_date$Opmerkingen[10], ",")[1]-1
+substr(one_date$Opmerkingen[10], 26, 42)
+```
+
+```{r}
+end_dates <- one_date %>% 
+  select(date_1, Opmerkingen, first_word) %>% 
+  filter(first_word == "Vervangt") %>%
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, "201")[,2]+3,
+                                str_locate(Opmerkingen, ",")[,1]-1)) %>% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates$fn_ln
+```
+```{r}
+
+new_end <- reps54 %>%
+  filter(fn_ln %in% end_dates$fn_ln)
+
+setdiff(end_dates$fn_ln,new_end$fn_ln)
+```
+
+So we do not have [that](https://nl.wikipedia.org/wiki/Marijke_Dillen) nice young lady because she decided not to go to parliament and gave her seat to the fine young gentleman Jan Penris
+
+```{r}
+
+to_replace <- new_end %>% 
+  left_join(end_dates,  by = c("fn_ln")) %>% 
+  mutate(end_date = date_1.y) %>% 
+  select(-date_1.y) %>% 
+  rename("date_1" = "date_1.x")
+
+reps54<-  reps54 %>%
+  filter(!fn_ln %in% end_dates$fn_ln) %>% 
+  rbind(to_replace)
+
+```
+We can do the same with the comments within 'two_dates'
+
+```{r}
+two_dates %>% 
+  filter(first_word == "Vervangt") %>% 
+  select(Opmerkingen)
+
+```
+
+So here we have for instance Mrs Wilmès who is being replaced on 22/09/2015, but who replaced Mr Reynders on 11/10/2014.
+
+```{r}
+end_dates_two <- two_dates %>% 
+  select(date_1, Opmerkingen, first_word) %>% 
+  filter(first_word == "Vervangt") %>%
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, "201")[,2]+3,
+                                str_locate(Opmerkingen, ",")[,1]-1)) %>% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates_two$fn_ln
+
+```
+
+
+```{r}
+to_replace_two <- reps54 %>%
+  filter(fn_ln %in% end_dates_two$fn_ln) %>%
+  left_join(end_dates_two,  by = c("fn_ln")) %>% 
+  mutate(end_date = date_1.y) %>% 
+  select(-date_1.y) %>% 
+  rename("date_1" = "date_1.x")
+
+reps54 <-  reps54 %>%
+  filter(!fn_ln %in% end_dates_two$fn_ln) %>%
+  rbind(to_replace_two)
+```
+
+
+And then the last three replacements for the end dates of Mr De Crem, Reynders and Flahaut.
+
+```{r}
+
+```
+
+
+```{r}
+end_dates_three <- two_dates %>% 
+  select(date_2, Opmerkingen, first_word) %>% 
+  filter(first_word == "Vervangt") %>%
+  mutate(Opmerkingen = substr(Opmerkingen,str_locate(Opmerkingen, ",")[,1]+3, 100000))%>% 
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, "201")[,2]+3,
+                                str_locate(Opmerkingen, ",")[,1]-1)) %>% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates_three$fn_ln
+```
+
+
+```{r}
+to_replace_three <- reps54 %>%
+  filter(fn_ln %in% end_dates_three$fn_ln) %>%
+  left_join(end_dates_three,  by = c("fn_ln")) %>% 
+  mutate(end_date = date_2.y) %>% 
+  select(-date_2.y) %>% 
+  rename("date_2" = "date_2.x")
+
+reps54 <-  reps54 %>%
+  filter(!fn_ln %in% end_dates_three$fn_ln) %>%
+  rbind(to_replace_three)
+```
+
+Starting to see the end of the tunnel. Still need to arrange the case of Mrs Turtelboom and Mr Frank Wilrycx.
+
+```{r}
+reps54 %>% 
+  filter(fn_ln == "Frank Wilrycx") %>% 
+  select(Opmerkingen)
+```
+
+```{r}
+dates <- reps54 %>% 
+  filter(fn_ln == "Frank Wilrycx") %>% 
+  select(date_1, date_2, date_3)
+dates
+
+
+```
+```{r}
+
+three_dates <- reps54 %>% 
+  filter(fn_ln == "Frank Wilrycx") %>% 
+  mutate(start_date = dates$date_2) %>% 
+  mutate(end_date = dates$date_3) %>% 
+  rbind(reps54 %>% filter(fn_ln == "Frank Wilrycx") %>% 
+        mutate(start_date = dates$date_1)) %>% 
+  rbind(reps54 %>% filter(fn_ln == "Annemie Turtelboom") %>% 
+          mutate(end_date = ymd(dates$date_2) - days(1))) %>% 
+  rbind(reps54 %>% filter(fn_ln == "Annemie Turtelboom") %>% 
+          mutate(start_date = ymd(dates$date_3) + days(1)) %>% 
+          mutate(end_date = ymd(dates$date_1) - days(1)))
+  
+
+  
+  
+
 
 ```
 
