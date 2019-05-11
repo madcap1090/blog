@@ -68,7 +68,7 @@ A test
 twitter_users$screen_name[3]
 ```
 
-It's not stictly needed since we already know the correspondence between name and handle ('screen_name'), but it's fun to try map2_df. A test with two tweets:
+It's not strictly needed since we already know the correspondence between name and handle ('screen_name'), but it's fun to try map2_df. A test with two tweets:
 
 ```{r message=FALSE, warning=FALSE}
 get_handle_tweets <- function(screen_name, ln_fn) {
@@ -88,7 +88,7 @@ limits <- rate_limits()
 head(limits)
 ```
 
-In total there are 149 limits, we can access, amongst other things, how much remains and when the limit will be reset. Here are some of the limits:
+In total there are 149 limits, we can access, among other things, how much remains and when the limit will be reset. Here are some of the limits:
 
 ```{r}
 head(limits$query, 20)
@@ -107,7 +107,7 @@ limits %>% select(limit, query, remaining, reset) %>%
 
 We are searching 160 users and the rate limit for searching user timelines is 900, so we should be fine. But be aware that your limit searches are limited also (180 searches counted by individual limit in batches of 15 minutes). 
 
-At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interuptions.
+At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interruptions.
 
 How well did our test go? Did we get tweets from everyone?
 
@@ -117,7 +117,7 @@ setdiff(twitter_users$ln_fn, tweets$ln_fn)
 Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some :badminton: and after having waited fifteen minutes to be sure all rate limits were reset. 
 
 
-```{r, avaluate = FALSE}
+```{r, eval = FALSE}
 twitter_users <- twitter_users %>% 
   arrange(screen_name) %>% 
   distinct(screen_name, .keep_all = TRUE) # removing doubles if present
@@ -140,13 +140,13 @@ saveRDS(tweets, "./data/20190503/tweets.rds")
 
 Cool, so about 265K tweets. 
 
-But as already mentioned these are some of the tweets from people who at some time were in the 54th legistlature. They are not always a tweet from a person actually seating in parliament.
+But as already mentioned these are some of the tweets from people who at some time were in the 54th legislature. They are not always a tweet from a person actually seating in parliament.
 
-This wikipedia page https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019) has a good overview of the changes that occured since May 2014.  
+This Wikipedia page https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019) has a good overview of the changes that occurred since May 2014.  
 
 
 
-A few have also changed party or became independent. The table that was used to obtain the list of parliamentariens's names, language and party, can be transformed into a reference table that we can join to the tweets for further analysis. 
+A few have also changed party or became independent. The table that was used to obtain the list of parliamentarian's names, language and party, can be transformed into a reference table that we can join to the tweets for further analysis. 
 
 ```{r}
 names <- readRDS("./data/190417/names.rds")
@@ -154,10 +154,10 @@ party_less <- names %>%
   filter(is.na(party))
 ```
 
-The text on the wikipedia page contains the information that is needed, but I wonder how easy it will be to use. We can try, let's see what we get.
+The text on the Wikipedia page contains the information that is needed, but I wonder how easy it will be to use. We can try, let's see what we get.
 
 ```{r}
-url <- "https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)" 
+url <- "https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)" 
 
 wiki_table_source<- url %>% 
   read_html() %>%
@@ -168,11 +168,11 @@ head(wiki_table_source)
 
 ```
 
-The nice thing is that additional information like the voting disctrict was obtained. Using the comments ("Opmerkingen"), will probaly be more time consuming than hardcoding the changes, but I think it will be more fun ;-)
+The nice thing is that additional information like the voting district was obtained. Using the comments ("Opmerkingen"), will probably be more time consuming than hard coding the changes, but I think it will be more fun ;-)
+
+That is if you are interested in data cleaning. If not no need to continue reading this post, because it will be all spring cleaning from now till the end. 
 
 ```{r}
-#print(wiki_table$Opmerkingen, na.print = "")
-
 wiki_table_source %>% 
   filter(!is.na(Opmerkingen)) %>% 
   select(Opmerkingen)
@@ -231,7 +231,7 @@ wiki_table <- wiki_table %>%
   select(-digits)
 ```
 
-Now we can extrat the dates, but one problem still remains, on wikipedia some years are not repeated for certain time periods:
+Now we can extract the dates, but one problem still remains, on Wikipedia some years are not repeated for certain time periods:
 
 ```{r}
 wiki_table$Opmerkingen[28]
@@ -359,7 +359,6 @@ missing <- wiki_table %>%
 
 missing$Volksvertegenwoordiger
 
-
 ```
 
 Yeah! So now we have em all we can give em a default start date and a default end date.
@@ -457,7 +456,7 @@ two_dates %>% filter(first_word == "Vervangt") %>%
 
 ```
 
-So we are looking at these parliamantarians:
+So we are looking at these parliamentarians:
 
 ```{r}
 two_dates %>% filter(first_word == "Vervangt") %>% 
@@ -535,7 +534,7 @@ one_date %>%
 ```
 
 We could use a regex to extract between the last digit and the , 
-But regexes are always more difficult than they seem. So here it is just easier to use 'substr'.
+But regexps are always more difficult than they seem. So here it is just easier to use 'substr'.
 
 ```{r}
 str_locate(one_date$Opmerkingen[10], "201")[2]+3
@@ -555,7 +554,6 @@ end_dates <- one_date %>%
 end_dates$fn_ln
 ```
 ```{r}
-
 new_end <- reps54 %>%
   filter(fn_ln %in% end_dates$fn_ln)
 
@@ -683,7 +681,7 @@ three_dates <- reps54 %>%
 
 ```
 
-So let's bring them all together before tackeling missing values.
+So let's bring them all together before tackling missing values.
 
 ```{r}
 dim(one_date)
@@ -725,7 +723,7 @@ empty_spaces <- reps54 %>%
 empty_spaces$ln_fn
 ```
 
-For now I leave some field incomplete and see if we can have fun finding them with algorythms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language 'role'.
+For now I leave some field incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language 'role'.
 
 On the other hand if you are familiar with Belgium, you could just make good guesses looking at their first names:
 
@@ -747,6 +745,7 @@ lang <- tweets %>%
 
 
 ```{r}
+# this code is sinfull;
 languages_used <- lang %>%
   group_by(ln_fn)%>%
   summarise(m = max(count))%>% 
@@ -768,17 +767,24 @@ to_add <- data.frame("ln_fn" = c("Vande Lanotte Johan","Gerkens Muriel"),
 languages_used <-languages_used %>% 
   rbind(to_add)
 
-x <- empty_spaces %>% 
-  left_join(languages_used, by = c("ln_fn"))
+added_languages <- empty_spaces %>% 
+  left_join(languages_used, by = c("ln_fn")) %>% 
+  mutate(language = language.y) %>% 
+  select(-language.x, -language.y)
 
-
-x <- empty_spaces %>% 
-  left_join(languages_used)
-
-
+reps54 <- reps54 %>% 
+  filter(!is.na(language)) %>% 
+  rbind(added_languages) %>% 
+  arrange(fn_ln)
 ```
 
 
+
+Save after first cleaning.
+
+```{r}
+saveRDS(reps54, "./data/20190503/reps54_after_cleaning.rds")
+```
 
 
 
