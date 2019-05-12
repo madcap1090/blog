@@ -6,7 +6,7 @@ slug: happy-faces-in-a-bucket
 categories: []
 tags:
   - Belgian politics
-  - AWS Recognition
+  - AWS Rekognition
   - Facial analysis
   - Boto3
   - S3
@@ -17,7 +17,7 @@ Remember we downloaded the pictures of our parliamentarians and made a patchwork
 
 I searched for R packages to use Rekognition with, but did not find any. So I tried Python's Boto3 but could not get the authorisation working. So with a little (a very little) help from the new consultants (thank you Fabrice) I set out to use my first scripts on the cloud.
 
-```{r}
+```{r message=TRUE, warning=TRUE}
 # libraries
 library("tidyverse")
 library("aws.s3")
@@ -32,7 +32,7 @@ to_move <- list.files("./data/190417", pattern = "*.gif")
 file.copy(file.path("./data/190417", to_move), "./data/20190511")
 ```
 
-TRUE is good. TRUE will set you free. We can convert them with the magick package. 
+Returns TRUE and TRUE is good. TRUE will set you free. We can convert them with the magick package. 
 
 ```{r}
 convert_ye <- function(gif){
@@ -50,9 +50,7 @@ convert_ye(headens)
 ```
 
 Returns;
-
 Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\Users\William\Documents\R\blogs\content\post\data\20190511\Caprasse VÃ©ronique.gif': No such file or directory @ error/blob.c/OpenBlob/2701
-
 
 In encoding hell again. The headens cannot be converted.  Can't really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for further use. Or we can try to replace it just for the magick package and change it again once we have the jpgs. 
 
@@ -83,36 +81,33 @@ AWSAccessKeyId <- "xxxx"
 AWSSecretKey <- "xxxx"
 region <- "eu-west-3"
 
-
 Sys.setenv("AWS_ACCESS_KEY_ID" = AWSAccessKeyId,
            "AWS_SECRET_ACCESS_KEY" = AWSSecretKey,
            "AWS_DEFAULT_REGION" = region,
            "AWS_SESSION_TOKEN" = "")
-
 ```
 
-Creating a bucket
+Creating a bucket (in Ireland).
 
 ```{r, eval=FALSE}
 put_bucket("reps666", region = "eu-west-1")
 ```
 
-
-
 And then uploading the pictures to a bucket. 
 
 ```{r, eval=FALSE}
 # test
-put_object("./data/20190511/jpg/Almaci Meyrem.jpg", bucket = "reps666", object = "Almaci Meyrem.jpg")
+put_object("./data/20190511/jpg/Almaci Meyrem.jpg", bucket = "reps666", 
+           object = "Almaci Meyrem.jpg")
 ```
 
-TRUE is good, it will set you free.
+Returnes TRUE. TRUE is good, it will set you free.
 
 ```{r,eval=FALSE}
 delete_object(object = "Almaci Meyrem.jpg",bucket = "reps666")
 ```
 
-Repeat after me, TRUE is...
+Rurns TRUE. Repeat after me, TRUE is...
 
 I'm still having problems with encodings, hope you have not, but will change the names to digits and convert them back to names later.
 
@@ -135,12 +130,13 @@ for(i in (1:length(files))){
 
 ```
 
-
 So we have the pictures in a bucket s3 with digits instead of names, or as names, but at least they are there, on our cloud. 
 
 <center>
 ![aws console](/img/20190511/Management Console.jpg)
 
 </center>
+
+
 
 

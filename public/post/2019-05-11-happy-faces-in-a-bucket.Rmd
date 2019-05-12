@@ -17,7 +17,7 @@ Remember we downloaded the pictures of our parliamentarians and made a patchwork
 
 I searched for R packages to use Rekognition with, but did not find any. So I tried Python's Boto3 but could not get the authorisation working. So with a little (a very little) help from the new consultants (thank you Fabrice) I set out to use my first scripts on the cloud.
 
-```{r}
+```{r message=TRUE, warning=TRUE}
 # libraries
 library("tidyverse")
 library("aws.s3")
@@ -32,7 +32,7 @@ to_move <- list.files("./data/190417", pattern = "*.gif")
 file.copy(file.path("./data/190417", to_move), "./data/20190511")
 ```
 
-TRUE is good. TRUE will set you free. We can convert them with the magick package. 
+Returns TRUE and TRUE is good. TRUE will set you free. We can convert them with the magick package. 
 
 ```{r}
 convert_ye <- function(gif){
@@ -103,10 +103,11 @@ And then uploading the pictures to a bucket.
 
 ```{r, eval=FALSE}
 # test
-put_object("./data/20190511/jpg/Almaci Meyrem.jpg", bucket = "reps666", object = "Almaci Meyrem.jpg")
+put_object("./data/20190511/jpg/Almaci Meyrem.jpg", bucket = "reps666", 
+           object = "Almaci Meyrem.jpg")
 ```
 
-TRUE is good, it will set you free.
+Returnes TRUE. TRUE is good, it will set you free.
 
 ```{r,eval=FALSE}
 delete_object(object = "Almaci Meyrem.jpg",bucket = "reps666")
