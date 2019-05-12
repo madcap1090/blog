@@ -134,7 +134,7 @@ dim(tweets)
 
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 saveRDS(tweets, "./data/20190503/tweets.rds")
 ```
 
@@ -172,11 +172,12 @@ The nice thing is that additional information like the voting district was obtai
 
 That is if you are interested in data cleaning. If not no need to continue reading this post, because it will be all spring cleaning from now till the end. 
 
-```{r}
+```{r paged.print=TRUE}
 wiki_table_source %>% 
-  filter(!is.na(Opmerkingen)) %>% 
-  select(Opmerkingen)
-
+  filter(!is.na(Opmerkingen)) %>%
+  mutate(Opmerkingen = substr(Opmerkingen,0,100)) %>% 
+  select(Opmerkingen) %>% 
+  slice(1:7)
 ```
 
 
@@ -451,7 +452,8 @@ unique(two_dates$first_word)
 
 There are now three replacements (Vervangt) with two dates in the comment phrase. It is getting complicated, but fortunately they seem to be structured the same way. 
 ```{r}
-two_dates %>% filter(first_word == "Vervangt") %>% 
+two_dates %>% filter(first_word == "Vervangt") %>%
+  mutate(Opmerkingen = substr(Opmerkingen, 0, 100)) %>% 
   select(Opmerkingen)
 
 ```
@@ -579,7 +581,8 @@ We can do the same with the comments within 'two_dates'
 
 ```{r}
 two_dates %>% 
-  filter(first_word == "Vervangt") %>% 
+  filter(first_word == "Vervangt") %>%
+  mutate(Opmerkingen = substr(Opmerkingen, 0, 100)) %>% 
   select(Opmerkingen)
 
 ```
@@ -615,10 +618,6 @@ reps54 <-  reps54 %>%
 
 
 And then the last three replacements for the end dates of Mr De Crem, Reynders and Flahaut.
-
-```{r}
-
-```
 
 
 ```{r}
@@ -709,13 +708,20 @@ length(reps54$fn_ln)
 Save before cleaning.
 
 ```{r}
-saveRDS(reps54, "./data/20190503/reps54_before_cleaning.rds")
+# saveRDS(reps54, "./data/20190503/reps54_before_cleaning.rds")
 ```
 
+Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
+party and lannguage. Untill it shows that page again, we'll be using the fields obtained from Wikipedia instead.
+
+
 ```{r}
-empty_spaces <- reps54 %>% 
+empty_spaces <- reps54 %>%
+  mutate(language = Taalgroep,
+         party =Fractie) %>% 
   filter(is.na(language)) %>% 
   arrange(fn_ln)
+
 ```
 
 
@@ -781,7 +787,7 @@ reps54 <- reps54 %>%
 Save after first cleaning.
 
 ```{r}
-saveRDS(reps54, "./data/20190503/reps54_after_cleaning.rds")
+# saveRDS(reps54, "./data/20190503/reps54_after_cleaning.rds")
 ```
 
 I'll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from aws.
