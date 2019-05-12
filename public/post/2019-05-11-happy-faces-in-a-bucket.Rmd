@@ -13,11 +13,11 @@ tags:
   - Sagemaker
 ---
 
-Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse for gender, age and skin color. One obvious candidate was Rekognition for AWS if only because the instances that are at my workplace decided to use AWS services. Getting a little bit more familiar with using AWS services seemed like a good choice. 
+Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using AWS services seemed therefore like a good choice. 
 
-I searched for R packages to use Rekognition with, but did not find any. So I tried Python's Boto3 but could not get the authorisation working. So with a little (a very little) help from the new consultants (thank you Fabrice) I set out to use my first scripts on the cloud.
+I searched for R packages to use Rekognition with, but did not find any. So I tried Python's Boto3 but could not get the authorisation working. So with a little (a very little -- promised) help from the new consultants (thank you Fabrice) I set out to use my first scripts on the cloud.
 
-```{r message=TRUE, warning=TRUE}
+```{r message=FALSE, warning=FALSE}
 # libraries
 library("tidyverse")
 library("aws.s3")
@@ -27,7 +27,7 @@ library("jsonlite")
 options(Encoding="UTF-8")
 ```
 
-In the process I found out Recognition did not treat gifs, so the pictures need to be converted first to jpgs.
+In the process I found out Rekognition did not treat gifs, so the pictures need to be converted first to jpgs.
 
 ```{r, eval=FALSE,}
 to_move <- list.files("./data/190417", pattern = "*.gif")
@@ -54,7 +54,7 @@ convert_ye(headens)
 Returns;
 Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\Users\William\Documents\R\blogs\content\post\data\20190511\Caprasse VÃ©ronique.gif': No such file or directory @ error/blob.c/OpenBlob/2701
 
-In encoding hell again. The headens cannot be converted.  Can't really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for further use. Or we can try to replace it just for the magick package and change it again once we have the jpgs. 
+In encoding hell again. The headens cannot be converted.  Can't really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs. 
 
 ```{r, eval=FALSE,}
 headens <- list.files("./data/20190511")
@@ -77,8 +77,8 @@ In comes AWS. We will upload these to a bucket S3. It is important that the buck
 The auhentication can be done like this:
 
 ```{r, eval=FALSE}
-AWSAccessKeyId <- ""
-AWSSecretKey <- ""
+AWSAccessKeyId <- "secret"
+AWSSecretKey <- "secret"
 region <- "eu-west-3"
 
 Sys.setenv("AWS_ACCESS_KEY_ID" = AWSAccessKeyId,
@@ -136,6 +136,7 @@ So we have the pictures in a bucket s3 with digits instead of names, or as names
 ![aws console](/img/20190511/Management Console.jpg)
 
 </center>
+
 
 
 Next we can create a notebook instance on Sagemaker and start it up. 
@@ -210,7 +211,7 @@ str(bucket_content)
 ```
 
 
-```{r}
+```{r, eval=FALSE}
 for (i in (1:nrow(bucket_content))){
   name <- str_remove(bucket_content$Key[i], ".json") 
   #print(name)
@@ -222,13 +223,14 @@ for (i in (1:nrow(bucket_content))){
 
 ```
 
-So the are safe at home. Let's look at one. Hi there Mr 50.
+So the are safe at home. Let's look at one. Hi there Mr N°50.
 
 
 <center>
-![50](/img/20190511/50.gif)
+![Mr N°50](/img/20190511/50.gif)
 
 </center>
+
 
 
 And here is his face analysis data: 
@@ -239,7 +241,7 @@ json_file_sample <- read_json("./data/20190511/json/50.json")
 str(json_file_sample[["FaceDetails"]][[1]])
 ```
 
-Let's put all of them in a data frame
+Let's put all of the json files in a data frame.
 
 ```{r message=FALSE, warning=FALSE}
 setwd("./data/20190511/json/")
@@ -272,5 +274,5 @@ x <- faces_reps %>%
 #saveRDS(faces_reps,"./data/20190511/faces.rds")
 ```
 
-Et voilà. A nice dataframe to have fun with :smile:
+Et voilà. A nice data frame to have fun with :smile:
 

@@ -211,7 +211,7 @@ str(bucket_content)
 ```
 
 
-```{r}
+```{r, eval=FALSE}
 for (i in (1:nrow(bucket_content))){
   name <- str_remove(bucket_content$Key[i], ".json") 
   #print(name)

@@ -18,7 +18,7 @@
       <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/post/happy-faces-in-a-bucket/</guid>
-      <description>Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse for gender, age and skin color. One obvious candidate was Rekognition for AWS if only because the instances that are at my workplace decided to use AWS services. Getting a little bit more familiar with using AWS services seemed like a good choice.
+      <description>Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using AWS services seemed therefore like a good choice.
 I searched for R packages to use Rekognition with, but did not find any.</description>
     </item>
     
