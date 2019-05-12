@@ -145,41 +145,28 @@ table &lt;- table %&gt;%
   arrange(ln_fn)
 
 head(table)</code></pre>
-<pre><code>##                                  ln_fn       party
-## 1                        Almaci Meyrem Ecolo-Groen
-## 2                           Becq Sonja        CD&amp;V
-## 3 Beke                          Wouter        CD&amp;V
-## 4                         Bellens Rita        N-VA
-## 5                      Ben Hamou Nawal          PS
-## 6                   Blanchart Philippe          PS</code></pre>
+<pre><code>##                                  ln_fn party
+## 1                        Almaci Meyrem    NA
+## 2                   Bacquelaine Daniel    NA
+## 3                           Becq Sonja    NA
+## 4 Beke                          Wouter    NA
+## 5                         Bellens Rita    NA
+## 6                      Ben Hamou Nawal    NA</code></pre>
 <p>The white spaces between the last name and first some of some, like Wouter Beke need to be cleaned.</p>
 <pre class="r"><code>table &lt;- table %&gt;%
   mutate(ln_fn = str_replace_all(ln_fn,&quot;  +&quot;,&quot; &quot;))
 
 nrow(table)</code></pre>
-<pre><code>## [1] 150</code></pre>
+<pre><code>## [1] 179</code></pre>
 <p>150 members today with their current political party. And the parties and number of seats are:</p>
 <pre class="r"><code>table %&gt;% 
   group_by(party) %&gt;% 
   summarise(members=n()) %&gt;% 
   arrange(desc(members))</code></pre>
-<pre><code>## # A tibble: 14 x 2
-##    party        members
-##    &lt;chr&gt;          &lt;int&gt;
-##  1 N-VA              31
-##  2 PS                23
-##  3 MR                20
-##  4 CD&amp;V              17
-##  5 Open Vld          14
-##  6 sp.a              13
-##  7 Ecolo-Groen       12
-##  8 cdH                9
-##  9 VB                 3
-## 10 DéFI               2
-## 11 PTB-GO!            2
-## 12 Vuye&amp;Wouters       2
-## 13 ONAFH              1
-## 14 PP                 1</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   party members
+##   &lt;lgl&gt;   &lt;int&gt;
+## 1 NA        179</code></pre>
 <p>We can also scrape the complete list of members of the 54th legislature.</p>
 <pre class="r"><code>url &lt;- paste0(&quot;https://www.dekamer.be/kvvcr/showpage.cfm?section&quot;,
               &quot;=/depute&amp;language=nl&amp;cfm=cvlist54.cfm?legis=54&amp;today=n&quot;)
@@ -204,21 +191,7 @@ table_54 &lt;- table_54 %&gt;%
   anti_join(table) %&gt;% 
   unlist() %&gt;% 
   unname()</code></pre>
-<pre><code>##  [1] &quot;Bacquelaine Daniel&quot;      &quot;Claerhout Sarah&quot;        
-##  [3] &quot;Crusnière Stéphane&quot;      &quot;De Block Maggie&quot;        
-##  [5] &quot;De Crem Pieter&quot;          &quot;De Croo Alexander&quot;      
-##  [7] &quot;Demeyer Willy&quot;           &quot;Ducarme Denis&quot;          
-##  [9] &quot;Flahaut André&quot;           &quot;Fremault Céline&quot;        
-## [11] &quot;Geens Koen&quot;              &quot;Gerkens Muriel&quot;         
-## [13] &quot;Hellings Benoit&quot;         &quot;Hufkens Renate&quot;         
-## [15] &quot;Khattabi Zakia&quot;          &quot;Klaps Johan&quot;            
-## [17] &quot;Lahaye-Battheu Sabien&quot;   &quot;Marghem Marie-Christine&quot;
-## [19] &quot;Massin Eric&quot;             &quot;Michel Charles&quot;         
-## [21] &quot;Poncelet Isabelle&quot;       &quot;Raskin Wouter&quot;          
-## [23] &quot;Reynders Didier&quot;         &quot;Turtelboom Annemie&quot;     
-## [25] &quot;Van der Donckt Wim&quot;      &quot;Vande Lanotte Johan&quot;    
-## [27] &quot;Vanheste Ann&quot;            &quot;Wathelet Melchior&quot;      
-## [29] &quot;Wilmès Sophie&quot;</code></pre>
+<pre><code>## character(0)</code></pre>
 <p>So indeed 29 representatives. But some left to work in the government and then came back when their party decided to leave government because of a city in northern Africa. Go figure.</p>
 <p>But it does make the identification of a tweet as a tweet being sent by a member of parliament a little bit more complicated because we need to match the exact date of the tweet to the periods the politician was seating. I have a feeling this will imply some stupid hard coding. 😩</p>
 <p>Let’s have some fun first.</p>
@@ -323,6 +296,11 @@ names %&gt;%
 # extract their id from the url
 names &lt;- names %&gt;%
   mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url))   </code></pre>
+<p>And let’s join the party where we can</p>
+<pre class="r"><code>names &lt;- names %&gt;% 
+  mutate(ln_fn = as.character(ln_fn)) %&gt;% # transform from factor
+  left_join(table)</code></pre>
+<pre><code>## Joining, by = &quot;ln_fn&quot;</code></pre>
 <p>Now we have in ‘urls’ the name and links to the personal webpage of the representatives on the chamber’s website. Notice their id at the end of the url after ‘cfm?key=’ and before ‘&amp;lat’.</p>
 <p>On their personal space there is more information like their parliament email, their personal website and a short cv.</p>
 <p>Let’s only scrape their language for now.</p>
@@ -342,13 +320,13 @@ names &lt;- rename(names, language = .)
 saveRDS(names, &quot;./data/190417/names.rds&quot;)
 
 head(names)</code></pre>
-<pre><code>##     language              fn_ln
-## 1 Nederlands      Meyrem Almaci
-## 2       &lt;NA&gt; Daniel Bacquelaine
-## 3 Nederlands         Sonja Becq
-## 4 Nederlands       Wouter Beke 
-## 5 Nederlands       Rita Bellens
-## 6      Frans    Nawal Ben Hamou
+<pre><code>##   language              fn_ln
+## 1     &lt;NA&gt;      Meyrem Almaci
+## 2     &lt;NA&gt; Daniel Bacquelaine
+## 3     &lt;NA&gt;         Sonja Becq
+## 4     &lt;NA&gt;       Wouter Beke 
+## 5     &lt;NA&gt;       Rita Bellens
+## 6     &lt;NA&gt;    Nawal Ben Hamou
 ##                                                                                                            url
 ## 1 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01189&amp;lactivity=54
 ## 2 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=00757&amp;lactivity=54
@@ -356,13 +334,13 @@ head(names)</code></pre>
 ## 4 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=01149&amp;lactivity=54
 ## 5 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06592&amp;lactivity=54
 ## 6 http://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvview54.cfm?key=06647&amp;lactivity=54
-##                 key              ln_fn    id
-## 1      aaceeilmmmry      Almaci Meyrem 01189
-## 2 aaabcdeeeiillnnqu Bacquelaine Daniel 00757
-## 3         abcejnoqs         Becq Sonja 01190
-## 4        beeekortuw        Beke Wouter 01149
-## 5       abeeillnrst       Bellens Rita 06592
-## 6     aaabehlmnnouw    Ben Hamou Nawal 06647</code></pre>
+##                 key              ln_fn    id party
+## 1      aaceeilmmmry      Almaci Meyrem 01189    NA
+## 2 aaabcdeeeiillnnqu Bacquelaine Daniel 00757    NA
+## 3         abcejnoqs         Becq Sonja 01190    NA
+## 4        beeekortuw        Beke Wouter 01149    NA
+## 5       abeeillnrst       Bellens Rita 06592    NA
+## 6     aaabehlmnnouw    Ben Hamou Nawal 06647    NA</code></pre>
 <p>Let’s get their mugshots.</p>
 <center>
 <img src="/img/20190417/inspect.png" alt="Inspecting the code of the webpage" />

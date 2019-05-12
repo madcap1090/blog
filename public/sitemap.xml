@@ -3,36 +3,71 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/post/belgian-parliamentarians-tweets/</loc>
-    <lastmod>2019-05-03T00:00:00+00:00</lastmod>
+    <loc>/tags/aws-recognition/</loc>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/belgian-politics/</loc>
-    <lastmod>2019-05-03T00:00:00+00:00</lastmod>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/boto3/</loc>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/facial-analysis/</loc>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2019-05-03T00:00:00+00:00</lastmod>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/s3/</loc>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/sagemaker/</loc>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/</loc>
-    <lastmod>2019-05-03T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/tags/twitter/</loc>
-    <lastmod>2019-05-03T00:00:00+00:00</lastmod>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/</loc>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/post/happy-faces-in-a-bucket/</loc>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/belgian-parliamentarians-tweets/</loc>
+    <lastmod>2019-05-03T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/twitter/</loc>
     <lastmod>2019-05-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>

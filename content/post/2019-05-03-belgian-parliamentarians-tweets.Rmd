@@ -723,7 +723,7 @@ empty_spaces <- reps54 %>%
 empty_spaces$ln_fn
 ```
 
-For now I leave some field incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language 'role'.
+For now I leave some fields incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language 'role'.
 
 On the other hand if you are familiar with Belgium, you could just make good guesses looking at their first names:
 
@@ -745,7 +745,7 @@ lang <- tweets %>%
 
 
 ```{r}
-# this code is sinfull;
+# this code is sinfull, apologies to the tidyverse saints;
 languages_used <- lang %>%
   group_by(ln_fn)%>%
   summarise(m = max(count))%>% 
@@ -778,13 +778,11 @@ reps54 <- reps54 %>%
   arrange(fn_ln)
 ```
 
-
-
 Save after first cleaning.
 
 ```{r}
 saveRDS(reps54, "./data/20190503/reps54_after_cleaning.rds")
 ```
 
-
+I'll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from aws.
 

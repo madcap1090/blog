@@ -212,6 +212,13 @@ names <- names %>%
   mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url))   
 ```
 
+And let's join the party where we can
+
+```{r}
+names <- names %>% 
+  mutate(ln_fn = as.character(ln_fn)) %>% # transform from factor
+  left_join(table)
+```
 
 Now we have in 'urls' the name and links to the personal webpage of the representatives on the chamber's website. Notice their id at the end of the url after 'cfm?key=' and before '&lat'. 
 

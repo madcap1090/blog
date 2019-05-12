@@ -1,0 +1,100 @@
+---
+title: happy faces in a bucket
+author: William Bourgeois
+date: '2019-05-11'
+slug: happy-faces-in-a-bucket
+categories: []
+tags:
+  - Belgian politics
+  - AWS Recognition
+  - Facial analysis
+  - Boto3
+  - S3
+  - Sagemaker
+---
+
+
+
+<p>Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse for gender, age and skin color. One obvious candidate was Rekognition for AWS if only because the instances that are at my workplace decided to use AWS services. Getting a little bit more familiar with using AWS services seemed like a good choice.</p>
+<p>I searched for R packages to use Rekognition with, but did not find any. So I tried Python’s Boto3 but could not get the authorisation working. So with a little (a very little) help from the new consultants (thank you Fabrice) I set out to use my first scripts on the cloud.</p>
+<pre class="r"><code># libraries
+library(&quot;tidyverse&quot;)</code></pre>
+<pre><code>## -- Attaching packages ------------------------------------------------------------ tidyverse 1.2.1 --</code></pre>
+<pre><code>## v ggplot2 3.1.1       v purrr   0.3.1  
+## v tibble  2.0.1       v dplyr   0.8.0.1
+## v tidyr   0.8.3       v stringr 1.4.0  
+## v readr   1.3.1       v forcats 0.3.0</code></pre>
+<pre><code>## -- Conflicts --------------------------------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(&quot;aws.s3&quot;)
+library(&quot;magick&quot;)</code></pre>
+<pre><code>## Linking to ImageMagick 6.9.9.14
+## Enabled features: cairo, freetype, fftw, ghostscript, lcms, pango, rsvg, webp
+## Disabled features: fontconfig, x11</code></pre>
+<pre class="r"><code>options(Encoding=&quot;UTF-8&quot;)</code></pre>
+<p>In the process I found out Recognition did not treat gifs, so the pictures need to be converted first to jpgs.</p>
+<pre class="r"><code>to_move &lt;- list.files(&quot;./data/190417&quot;, pattern = &quot;*.gif&quot;)
+file.copy(file.path(&quot;./data/190417&quot;, to_move), &quot;./data/20190511&quot;)</code></pre>
+<p>TRUE is good. TRUE will set you free. We can convert them with the magick package.</p>
+<pre class="r"><code>convert_ye &lt;- function(gif){
+  pic &lt;- image_read(gif)
+  name &lt;- str_remove(gif,&quot;.gif&quot;)
+  
+  image_write(pic, path = paste0(&quot;./jpg/&quot;,name,&quot;.jpg&quot;), format = &quot;jpg&quot;)
+}
+
+headens &lt;- list.files(&quot;./data/20190511&quot;, pattern = &quot;*.gif&quot;, full.names = TRUE)</code></pre>
+<pre class="r"><code>convert_ye(headens)</code></pre>
+<p>Returns;</p>
+<p>Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\20190511VÃ©ronique.gif’: No such file or directory @ error/blob.c/OpenBlob/2701</p>
+<p>In encoding hell again. The headens cannot be converted. Can’t really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for further use. Or we can try to replace it just for the magick package and change it again once we have the jpgs.</p>
+<pre class="r"><code>headens &lt;- list.files(&quot;./data/20190511&quot;)
+
+setwd(&quot;./data/20190511&quot;)
+dir.create(file.path(&quot;jpg&quot;), showWarnings = FALSE)
+for(i in (1:length(headens))){
+  # print(headens[i])
+  file.rename(from = headens[i], paste0(i,&quot;.gif&quot;))
+  pic &lt;- image_read(paste0(i, &quot;.gif&quot;))
+  name &lt;- str_remove(headens[i],&quot;.gif&quot;)
+  image_write(pic, path = paste0(&quot;./jpg/&quot;,name,&quot;.jpg&quot;), format = &quot;jpg&quot;)
+}</code></pre>
+<p>That seemed to work.</p>
+<p>In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your stagemaker instance. I wrote ‘instance’ because it sounds good, I don’t know if it really means something though. But it sounds like a cloud computing word to use.</p>
+<p>The auhentication can be done like this:</p>
+<pre class="r"><code>AWSAccessKeyId &lt;- &quot;xxxx&quot;
+AWSSecretKey &lt;- &quot;xxxx&quot;
+region &lt;- &quot;eu-west-3&quot;
+
+
+Sys.setenv(&quot;AWS_ACCESS_KEY_ID&quot; = AWSAccessKeyId,
+           &quot;AWS_SECRET_ACCESS_KEY&quot; = AWSSecretKey,
+           &quot;AWS_DEFAULT_REGION&quot; = region,
+           &quot;AWS_SESSION_TOKEN&quot; = &quot;&quot;)</code></pre>
+<p>Creating a bucket</p>
+<pre class="r"><code>put_bucket(&quot;reps666&quot;, region = &quot;eu-west-1&quot;)</code></pre>
+<p>And then uploading the pictures to a bucket.</p>
+<pre class="r"><code># test
+put_object(&quot;./data/20190511/jpg/Almaci Meyrem.jpg&quot;, bucket = &quot;reps666&quot;, object = &quot;Almaci Meyrem.jpg&quot;)</code></pre>
+<p>TRUE is good, it will set you free.</p>
+<pre class="r"><code>delete_object(object = &quot;Almaci Meyrem.jpg&quot;,bucket = &quot;reps666&quot;)</code></pre>
+<p>Repeat after me, TRUE is…</p>
+<p>I’m still having problems with encodings, hope you have not, but will change the names to digits and convert them back to names later.</p>
+<pre class="r"><code>files &lt;- list.files(&quot;./data/20190511/jpg&quot;)
+files_full &lt;- list.files(&quot;./data/20190511/jpg&quot;,full.names = TRUE )
+for(i in (1:length(files))){
+    file.rename(from = files_full[i], paste0(&quot;./data/20190511/jpg/&quot;,i,&quot;.jpg&quot;))
+  }</code></pre>
+<p>And now uploading the files to the bucket.</p>
+<pre class="r"><code>files_full &lt;- list.files(&quot;./data/20190511/jpg&quot;,full.names = TRUE )
+for(i in (1:length(files))){
+    put_object(files_full[i], bucket = &quot;reps666&quot;)
+}</code></pre>
+<p>So we have the pictures in a bucket s3 with digits instead of names, or as names, but at least they are there, on our cloud.</p>
+<center>
+<div class="figure">
+<img src="/img/20190511/Management%20Console.jpg" alt="aws console" />
+<p class="caption">aws console</p>
+</div>
+</center>
