@@ -72,9 +72,9 @@ for(i in (1:length(heathens))){
 
 That seemed to work.
 
-In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your stagemaker instance. I wrote 'instance' because it sounds good, I don't know if it really means something though. But it sounds like a cloud computing word to use.  
+In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your Sagemaker instance. I wrote 'instance' because it sounds good, I don't know if it really means something though. But it sounds like a cloud computing word to use.  
 
-The auhentication can be done like this:
+The authentication can be done like this:
 
 ```{r, eval=FALSE}
 AWSAccessKeyId <- "secret"
@@ -100,7 +100,7 @@ put_object("./data/20190511/jpg/Almaci Meyrem.jpg", bucket = "reps666",
            object = "Almaci Meyrem.jpg")
 ```
 
-Returnes TRUE. TRUE is good, it will set you free.
+Returns TRUE. TRUE is good, it will set you free.
 
 ```{r,eval=FALSE}
 delete_object(object = "Almaci Meyrem.jpg",bucket = "reps666")
@@ -182,10 +182,10 @@ for object in my_bucket.objects.all():
 
 Pardon my python. 
 
-The code goes through the files in the bucket, applies 'detect_faces' from rekognize through boto3, saves the output
+The code goes through the files in the bucket, applies 'detect_faces' from recognize through boto3, saves the output
 (in json) and sends it to another bucket. 
 
-Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the lastets changes to the code and stop the notebook instance on Sagemaker.
+Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the latest changes to the code and stop the notebook instance on Sagemaker.
 
 
 <center>
@@ -222,7 +222,7 @@ for (i in (1:nrow(bucket_content))){
 
 ```
 
-So they landed safely at home on my hardrive. Let's look at one. Hi there Mr N°50.
+So they landed safely at home on my hard drive. Let's look at one. Hi there Mr N°50.
 
 
 <center>

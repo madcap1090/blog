@@ -159,8 +159,8 @@ for(i in (1:length(heathens))){
   image_write(pic, path = paste0(&quot;./jpg/&quot;,name,&quot;.jpg&quot;), format = &quot;jpg&quot;)
 }</code></pre>
 <p>That seemed to work.</p>
-<p>In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your stagemaker instance. I wrote ‘instance’ because it sounds good, I don’t know if it really means something though. But it sounds like a cloud computing word to use.</p>
-<p>The auhentication can be done like this:</p>
+<p>In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your Sagemaker instance. I wrote ‘instance’ because it sounds good, I don’t know if it really means something though. But it sounds like a cloud computing word to use.</p>
+<p>The authentication can be done like this:</p>
 <pre class="r"><code>AWSAccessKeyId &lt;- &quot;secret&quot;
 AWSSecretKey &lt;- &quot;secret&quot;
 region &lt;- &quot;eu-west-3&quot;
@@ -174,7 +174,7 @@ Sys.setenv(&quot;AWS_ACCESS_KEY_ID&quot; = AWSAccessKeyId,
 <p>And then uploading the pictures to a bucket.</p>
 <pre class="r"><code>put_object(&quot;./data/20190511/jpg/Almaci Meyrem.jpg&quot;, bucket = &quot;reps666&quot;, 
            object = &quot;Almaci Meyrem.jpg&quot;)</code></pre>
-<p>Returnes TRUE. TRUE is good, it will set you free.</p>
+<p>Returns TRUE. TRUE is good, it will set you free.</p>
 <pre class="r"><code>delete_object(object = &quot;Almaci Meyrem.jpg&quot;,bucket = &quot;reps666&quot;)</code></pre>
 <p>Returns TRUE. Repeat after me, TRUE is…</p>
 <p>I’m still having problems with encodings, hope you have not, but will change the names to digits and convert them back to names later.</p>
@@ -232,9 +232,9 @@ for object in my_bucket.objects.all():
     .Bucket(&#39;jsonmad&#39;).Object(object.key[0:-4]+&quot;.json&quot;)\
     .upload_file(object.key[0:-4]+&quot;.json&quot;)</code></pre>
 <p>Pardon my python.</p>
-<p>The code goes through the files in the bucket, applies ‘detect_faces’ from rekognize through boto3, saves the output
+<p>The code goes through the files in the bucket, applies ‘detect_faces’ from recognize through boto3, saves the output
 (in json) and sends it to another bucket.</p>
-<p>Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the lastets changes to the code and stop the notebook instance on Sagemaker.</p>
+<p>Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the latest changes to the code and stop the notebook instance on Sagemaker.</p>
 <center>
 <div class="figure">
 <img src="/img/20190511/JupyterLab.jpg" alt="jupyterlab" />
@@ -265,7 +265,7 @@ bucket_content &lt;-readRDS(&quot;./data/20190511/bucket_content.rds&quot;)</cod
               file = paste0(&quot;./data/20190511/json/&quot;,
                             bucket_content$Key[i]))
 }</code></pre>
-<p>So they landed safely at home on my hardrive. Let’s look at one. Hi there Mr N°50.</p>
+<p>So they landed safely at home on my hard drive. Let’s look at one. Hi there Mr N°50.</p>
 <center>
 <div class="figure">
 <img src="/img/20190511/50.gif" alt="Mr N°50" />

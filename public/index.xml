@@ -59,8 +59,8 @@ for(i in (1:length(heathens))){
   image_write(pic, path = paste0(&amp;quot;./jpg/&amp;quot;,name,&amp;quot;.jpg&amp;quot;), format = &amp;quot;jpg&amp;quot;)
 }&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;That seemed to work.&lt;/p&gt;
-&lt;p&gt;In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your stagemaker instance. I wrote ‘instance’ because it sounds good, I don’t know if it really means something though. But it sounds like a cloud computing word to use.&lt;/p&gt;
-&lt;p&gt;The auhentication can be done like this:&lt;/p&gt;
+&lt;p&gt;In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your Sagemaker instance. I wrote ‘instance’ because it sounds good, I don’t know if it really means something though. But it sounds like a cloud computing word to use.&lt;/p&gt;
+&lt;p&gt;The authentication can be done like this:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;AWSAccessKeyId &amp;lt;- &amp;quot;secret&amp;quot;
 AWSSecretKey &amp;lt;- &amp;quot;secret&amp;quot;
 region &amp;lt;- &amp;quot;eu-west-3&amp;quot;
@@ -74,7 +74,7 @@ Sys.setenv(&amp;quot;AWS_ACCESS_KEY_ID&amp;quot; = AWSAccessKeyId,
 &lt;p&gt;And then uploading the pictures to a bucket.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;put_object(&amp;quot;./data/20190511/jpg/Almaci Meyrem.jpg&amp;quot;, bucket = &amp;quot;reps666&amp;quot;, 
            object = &amp;quot;Almaci Meyrem.jpg&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Returnes TRUE. TRUE is good, it will set you free.&lt;/p&gt;
+&lt;p&gt;Returns TRUE. TRUE is good, it will set you free.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;delete_object(object = &amp;quot;Almaci Meyrem.jpg&amp;quot;,bucket = &amp;quot;reps666&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Returns TRUE. Repeat after me, TRUE is…&lt;/p&gt;
 &lt;p&gt;I’m still having problems with encodings, hope you have not, but will change the names to digits and convert them back to names later.&lt;/p&gt;
@@ -132,9 +132,9 @@ for object in my_bucket.objects.all():
     .Bucket(&amp;#39;jsonmad&amp;#39;).Object(object.key[0:-4]+&amp;quot;.json&amp;quot;)\
     .upload_file(object.key[0:-4]+&amp;quot;.json&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Pardon my python.&lt;/p&gt;
-&lt;p&gt;The code goes through the files in the bucket, applies ‘detect_faces’ from rekognize through boto3, saves the output
+&lt;p&gt;The code goes through the files in the bucket, applies ‘detect_faces’ from recognize through boto3, saves the output
 (in json) and sends it to another bucket.&lt;/p&gt;
-&lt;p&gt;Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the lastets changes to the code and stop the notebook instance on Sagemaker.&lt;/p&gt;
+&lt;p&gt;Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the latest changes to the code and stop the notebook instance on Sagemaker.&lt;/p&gt;
 &lt;center&gt;
 &lt;div class=&#34;figure&#34;&gt;
 &lt;img src=&#34;/img/20190511/JupyterLab.jpg&#34; alt=&#34;jupyterlab&#34; /&gt;
@@ -165,7 +165,7 @@ bucket_content &amp;lt;-readRDS(&amp;quot;./data/20190511/bucket_content.rds&amp
               file = paste0(&amp;quot;./data/20190511/json/&amp;quot;,
                             bucket_content$Key[i]))
 }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;So they landed safely at home on my hardrive. Let’s look at one. Hi there Mr N°50.&lt;/p&gt;
+&lt;p&gt;So they landed safely at home on my hard drive. Let’s look at one. Hi there Mr N°50.&lt;/p&gt;
 &lt;center&gt;
 &lt;div class=&#34;figure&#34;&gt;
 &lt;img src=&#34;/img/20190511/50.gif&#34; alt=&#34;Mr N°50&#34; /&gt;
