@@ -13,9 +13,9 @@ tags:
   - Sagemaker
 ---
 
-Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using AWS services seemed therefore like a good choice. 
+Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using these seemed therefore like a good choice. 
 
-I searched for R packages to use Rekognition with, but did not find any. So I tried Python's Boto3 but could not get the authorisation working. So with a little (a very little -- promised) help from the new consultants (thank you Fabrice) I set out to use my first scripts on the cloud.
+I searched for R packages to use Rekognition with, but did not find any. So I tried Python's Boto3 but could not get the authorisation working. So with a little (a very little -- promised) help from the new consultants (thank you Fabrice :thumbsup:) I set out to use my first scripts on the cloud.
 
 ```{r message=FALSE, warning=FALSE}
 # libraries
@@ -44,28 +44,28 @@ convert_ye <- function(gif){
   image_write(pic, path = paste0("./jpg/",name,".jpg"), format = "jpg")
 }
 
-headens <- list.files("./data/20190511", pattern = "*.gif", full.names = TRUE)
+heathens <- list.files("./data/20190511", pattern = "*.gif", full.names = TRUE)
 ```
 
 ```{r, eval=FALSE, warning=FALSE}
-convert_ye(headens)
+convert_ye(heathens)
 ```
 
 Returns;
 Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\Users\William\Documents\R\blogs\content\post\data\20190511\Caprasse VÃ©ronique.gif': No such file or directory @ error/blob.c/OpenBlob/2701
 
-In encoding hell again. The headens cannot be converted.  Can't really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs. 
+In encoding hell again. Ã©Ã©Ã©Ã©! The heathens cannot be converted.  Can't really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs. 
 
 ```{r, eval=FALSE,}
-headens <- list.files("./data/20190511")
+heathens <- list.files("./data/20190511")
 
 setwd("./data/20190511")
 dir.create(file.path("jpg"), showWarnings = FALSE)
-for(i in (1:length(headens))){
+for(i in (1:length(heathens))){
   # print(headens[i])
-  file.rename(from = headens[i], paste0(i,".gif"))
+  file.rename(from = heathens[i], paste0(i,".gif"))
   pic <- image_read(paste0(i, ".gif"))
-  name <- str_remove(headens[i],".gif")
+  name <- str_remove(heathens[i],".gif")
   image_write(pic, path = paste0("./jpg/",name,".jpg"), format = "jpg")
 }
 ```
@@ -96,7 +96,6 @@ put_bucket("reps666", region = "eu-west-1")
 And then uploading the pictures to a bucket. 
 
 ```{r, eval=FALSE}
-# test
 put_object("./data/20190511/jpg/Almaci Meyrem.jpg", bucket = "reps666", 
            object = "Almaci Meyrem.jpg")
 ```
@@ -107,7 +106,7 @@ Returnes TRUE. TRUE is good, it will set you free.
 delete_object(object = "Almaci Meyrem.jpg",bucket = "reps666")
 ```
 
-Rurns TRUE. Repeat after me, TRUE is...
+Returns TRUE. Repeat after me, TRUE is...
 
 I'm still having problems with encodings, hope you have not, but will change the names to digits and convert them back to names later.
 
@@ -148,7 +147,7 @@ Next we can create a notebook instance on Sagemaker and start it up.
 
 
 
-We can use boto3 to apply rekognition to our files (boto3 is python) :
+We can use boto3 to apply rekognition to our files (boto3 is :snake:) :
 
 ```{python, eval = FALSE}
 import boto3
@@ -223,7 +222,7 @@ for (i in (1:nrow(bucket_content))){
 
 ```
 
-So the are safe at home. Let's look at one. Hi there Mr N°50.
+So they landed safely at home on my hardrive. Let's look at one. Hi there Mr N°50.
 
 
 <center>
@@ -274,5 +273,5 @@ x <- faces_reps %>%
 #saveRDS(faces_reps,"./data/20190511/faces.rds")
 ```
 
-Et voilà. A nice data frame to have fun with :smile:
+Et voilà. A nice data frame to have fun with. :smile:
 

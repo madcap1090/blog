@@ -22,8 +22,8 @@
       <content>
 
 
-&lt;p&gt;Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using AWS services seemed therefore like a good choice.&lt;/p&gt;
-&lt;p&gt;I searched for R packages to use Rekognition with, but did not find any. So I tried Python’s Boto3 but could not get the authorisation working. So with a little (a very little – promised) help from the new consultants (thank you Fabrice) I set out to use my first scripts on the cloud.&lt;/p&gt;
+&lt;p&gt;Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using these seemed therefore like a good choice.&lt;/p&gt;
+&lt;p&gt;I searched for R packages to use Rekognition with, but did not find any. So I tried Python’s Boto3 but could not get the authorisation working. So with a little (a very little – promised) help from the new consultants (thank you Fabrice 👍) I set out to use my first scripts on the cloud.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# libraries
 library(&amp;quot;tidyverse&amp;quot;)
 library(&amp;quot;aws.s3&amp;quot;)
@@ -42,20 +42,20 @@ file.copy(file.path(&amp;quot;./data/190417&amp;quot;, to_move), &amp;quot;./dat
   image_write(pic, path = paste0(&amp;quot;./jpg/&amp;quot;,name,&amp;quot;.jpg&amp;quot;), format = &amp;quot;jpg&amp;quot;)
 }
 
-headens &amp;lt;- list.files(&amp;quot;./data/20190511&amp;quot;, pattern = &amp;quot;*.gif&amp;quot;, full.names = TRUE)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;convert_ye(headens)&lt;/code&gt;&lt;/pre&gt;
+heathens &amp;lt;- list.files(&amp;quot;./data/20190511&amp;quot;, pattern = &amp;quot;*.gif&amp;quot;, full.names = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;convert_ye(heathens)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Returns;
 Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\20190511VÃ©ronique.gif’: No such file or directory @ error/blob.c/OpenBlob/2701&lt;/p&gt;
-&lt;p&gt;In encoding hell again. The headens cannot be converted. Can’t really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;headens &amp;lt;- list.files(&amp;quot;./data/20190511&amp;quot;)
+&lt;p&gt;In encoding hell again. Ã©Ã©Ã©Ã©! The heathens cannot be converted. Can’t really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;heathens &amp;lt;- list.files(&amp;quot;./data/20190511&amp;quot;)
 
 setwd(&amp;quot;./data/20190511&amp;quot;)
 dir.create(file.path(&amp;quot;jpg&amp;quot;), showWarnings = FALSE)
-for(i in (1:length(headens))){
+for(i in (1:length(heathens))){
   # print(headens[i])
-  file.rename(from = headens[i], paste0(i,&amp;quot;.gif&amp;quot;))
+  file.rename(from = heathens[i], paste0(i,&amp;quot;.gif&amp;quot;))
   pic &amp;lt;- image_read(paste0(i, &amp;quot;.gif&amp;quot;))
-  name &amp;lt;- str_remove(headens[i],&amp;quot;.gif&amp;quot;)
+  name &amp;lt;- str_remove(heathens[i],&amp;quot;.gif&amp;quot;)
   image_write(pic, path = paste0(&amp;quot;./jpg/&amp;quot;,name,&amp;quot;.jpg&amp;quot;), format = &amp;quot;jpg&amp;quot;)
 }&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;That seemed to work.&lt;/p&gt;
@@ -72,12 +72,11 @@ Sys.setenv(&amp;quot;AWS_ACCESS_KEY_ID&amp;quot; = AWSAccessKeyId,
 &lt;p&gt;Creating a bucket (in Ireland).&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;put_bucket(&amp;quot;reps666&amp;quot;, region = &amp;quot;eu-west-1&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;And then uploading the pictures to a bucket.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# test
-put_object(&amp;quot;./data/20190511/jpg/Almaci Meyrem.jpg&amp;quot;, bucket = &amp;quot;reps666&amp;quot;, 
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;put_object(&amp;quot;./data/20190511/jpg/Almaci Meyrem.jpg&amp;quot;, bucket = &amp;quot;reps666&amp;quot;, 
            object = &amp;quot;Almaci Meyrem.jpg&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Returnes TRUE. TRUE is good, it will set you free.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;delete_object(object = &amp;quot;Almaci Meyrem.jpg&amp;quot;,bucket = &amp;quot;reps666&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Rurns TRUE. Repeat after me, TRUE is…&lt;/p&gt;
+&lt;p&gt;Returns TRUE. Repeat after me, TRUE is…&lt;/p&gt;
 &lt;p&gt;I’m still having problems with encodings, hope you have not, but will change the names to digits and convert them back to names later.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;files &amp;lt;- list.files(&amp;quot;./data/20190511/jpg&amp;quot;)
 files_full &amp;lt;- list.files(&amp;quot;./data/20190511/jpg&amp;quot;,full.names = TRUE )
@@ -103,7 +102,7 @@ for(i in (1:length(files))){
 &lt;p class=&#34;caption&#34;&gt;aws sagemaker&lt;/p&gt;
 &lt;/div&gt;
 &lt;/center&gt;
-&lt;p&gt;We can use boto3 to apply rekognition to our files (boto3 is python) :&lt;/p&gt;
+&lt;p&gt;We can use boto3 to apply rekognition to our files (boto3 is 🐍) :&lt;/p&gt;
 &lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import boto3
 import json
 s3 = boto3.resource(&amp;#39;s3&amp;#39;)
@@ -166,7 +165,7 @@ bucket_content &amp;lt;-readRDS(&amp;quot;./data/20190511/bucket_content.rds&amp
               file = paste0(&amp;quot;./data/20190511/json/&amp;quot;,
                             bucket_content$Key[i]))
 }&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;So the are safe at home. Let’s look at one. Hi there Mr N°50.&lt;/p&gt;
+&lt;p&gt;So they landed safely at home on my hardrive. Let’s look at one. Hi there Mr N°50.&lt;/p&gt;
 &lt;center&gt;
 &lt;div class=&#34;figure&#34;&gt;
 &lt;img src=&#34;/img/20190511/50.gif&#34; alt=&#34;Mr N°50&#34; /&gt;
@@ -386,7 +385,7 @@ x &amp;lt;- faces_reps %&amp;gt;%
   left_join(ln_fn)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Joining, by = &amp;quot;number&amp;quot;&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#saveRDS(faces_reps,&amp;quot;./data/20190511/faces.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Et voilà. A nice data frame to have fun with 😄&lt;/p&gt;
+&lt;p&gt;Et voilà. A nice data frame to have fun with. 😄&lt;/p&gt;
 </content>
       
     </item>
