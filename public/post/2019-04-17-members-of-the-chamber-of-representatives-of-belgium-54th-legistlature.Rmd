@@ -66,6 +66,7 @@ table %>%
   arrange(desc(members))
 ```
 
+Hmm the page we used is down. :dissapointed:
 
 We can also scrape the complete list of members of the 54th legislature. 
 

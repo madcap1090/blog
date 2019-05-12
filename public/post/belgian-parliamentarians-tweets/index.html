@@ -165,12 +165,12 @@ head(limits)</code></pre>
 <pre><code>## # A tibble: 6 x 7
 ##   query limit remaining reset reset_at            timestamp           app  
 ##   &lt;chr&gt; &lt;int&gt;     &lt;int&gt; &lt;tim&gt; &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;
-## 1 list~    15        15 15.0~ 2019-05-12 11:26:00 2019-05-12 11:10:57 madc~
-## 2 list~    75        75 15.0~ 2019-05-12 11:26:00 2019-05-12 11:10:57 madc~
-## 3 list~    15        15 15.0~ 2019-05-12 11:26:00 2019-05-12 11:10:57 madc~
-## 4 list~   900       900 15.0~ 2019-05-12 11:26:00 2019-05-12 11:10:57 madc~
-## 5 list~    15        15 15.0~ 2019-05-12 11:26:00 2019-05-12 11:10:57 madc~
-## 6 list~    75        75 15.0~ 2019-05-12 11:26:00 2019-05-12 11:10:57 madc~</code></pre>
+## 1 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 2 list~    75        75 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 3 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 4 list~   900       900 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 5 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 6 list~    75        75 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~</code></pre>
 <p>In total there are 149 limits, we can access, among other things, how much remains and when the limit will be reset. Here are some of the limits:</p>
 <pre class="r"><code>head(limits$query, 20)</code></pre>
 <pre><code>##  [1] &quot;lists/list&quot;                    &quot;lists/memberships&quot;            
@@ -191,8 +191,8 @@ head(limits)</code></pre>
 <pre><code>## # A tibble: 2 x 4
 ##   limit query                         remaining reset     
 ##   &lt;int&gt; &lt;chr&gt;                             &lt;int&gt; &lt;time&gt;    
-## 1   180 application/rate_limit_status        20 13.75 mins
-## 2   900 statuses/user_timeline              741 13.75 mins</code></pre>
+## 1   180 application/rate_limit_status        20 13.68 mins
+## 2   900 statuses/user_timeline              741 13.68 mins</code></pre>
 <p>We are searching 160 users and the rate limit for searching user timelines is 900, so we should be fine. But be aware that your limit searches are limited also (180 searches counted by individual limit in batches of 15 minutes).</p>
 <p>At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interruptions.</p>
 <p>How well did our test go? Did we get tweets from everyone?</p>
@@ -212,7 +212,6 @@ get_handle_tweets &lt;- function(screen_name, ln_fn) {
 system.time(tweets &lt;- map2_df(twitter_users$screen_name,twitter_users$ln_fn, 
              possibly(get_handle_tweets, otherwise = NULL)))
 dim(tweets)</code></pre>
-<pre class="r"><code>saveRDS(tweets, &quot;./data/20190503/tweets.rds&quot;)</code></pre>
 <p>Cool, so about 265K tweets.</p>
 <p>But as already mentioned these are some of the tweets from people who at some time were in the 54th legislature. They are not always a tweet from a person actually seating in parliament.</p>
 <p>This Wikipedia page <a href="https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)" class="uri">https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)</a> has a good overview of the changes that occurred since May 2014.</p>
@@ -246,44 +245,18 @@ head(wiki_table_source)</code></pre>
 <p>The nice thing is that additional information like the voting district was obtained. Using the comments (“Opmerkingen”), will probably be more time consuming than hard coding the changes, but I think it will be more fun ;-)</p>
 <p>That is if you are interested in data cleaning. If not no need to continue reading this post, because it will be all spring cleaning from now till the end.</p>
 <pre class="r"><code>wiki_table_source %&gt;% 
-  filter(!is.na(Opmerkingen)) %&gt;% 
-  select(Opmerkingen)</code></pre>
-<pre><code>##                                                                                                                                                                                                                                                             Opmerkingen
-## 1                                                                                                                                    Werd van 9 maart 2017 tot 9 december 2018 als staatssecretaris in de federale regering-Michel I vervangen door Wim Van der Donckt.
-## 2                                                                                                                                                Werd van 14 oktober 2014 tot 9 december 2018 als minister in de federale regering-Michel I vervangen door Johan Klaps.
-## 3                                                                                                                                                                                           Vervangt vanaf 19 juni 2014 Marijke Dillen, die beslist om niet te zetelen.
-## 4                                                      Vervangt sinds 3 mei 2018 Annemie Turtelboom, die lid wordt van de Europese Rekenkamer. Eerder verving hij van 30 juli 2014 tot 29 april 2016 Turtelboom toen die minister was in de Vlaamse Regering-Bourgeois.
-## 5                                                                                                                                                                                                                        Voorzitter van de Kamer vanaf 14 oktober 2014.
-## 6                                      Vervangt vanaf 10 november 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij teruggeeft. Claerhout zelf verving 14 oktober 2014 Pieter De Crem, die staatssecretaris in de federale regering-Michel I werd.
-## 7                                                                                                                                                                  Vervangt vanaf 14 oktober 2014 Alexander De Croo, die minister in de federale regering-Michel I werd
-## 8                                                                                                                                                                                                                        Zetelt vanaf 14 maart 2019 als onafhankelijke.
-## 9                                                                                                                                                                     Vervangt vanaf 24 augustus 2017 Denis Ducarme, die minister in de federale Regering-Michel I werd
-## 10                                                                                                                                                                            Vervangt vanaf 24 mei 2018 Eric Massin, die voltijds OCMW-voorzitter van Charleroi wordt.
-## 11                                                                                                                                                           Vervangt vanaf 14 oktober 2014 Marie-Christine Marghem, die minister in de federale regering-Michel I werd
-## 12                                                                                                                                                       Vervangt vanaf 6 december 2018 Sabien Lahaye-Battheu, die gedeputeerde van de provincie West-Vlaanderen wordt.
-## 13                                                                                                                                                                    Vervangt vanaf 12 januari 2017 Johan Vande Lanotte, die voltijds burgemeester van Oostende wordt.
-## 14                                                                                                                                                                          Vervangt vanaf 13 december 2017 Ann Vanheste, die voltijds burgemeester van De Panne wordt.
-## 15                                                                                                                                                                                                                                          Vanaf 19 november 2015 DéFi
-## 16                                                                                                                                                                 Vervangt vanaf 30 juli 2014 Céline Fremault, die minister in de Brusselse regering-Vervoort II wordt
-## 17                                                                                                                                                                                       Vervangt vanaf 6 december 2018 Benoit Hellings, die schepen van Brussel wordt.
-## 18                                                                                                                                                                                     Vervangt vanaf 28 mei 2015 Zakia Khattabi, die partijvoorzitter van Ecolo wordt.
-## 19                                                                                                                                                                                                                                         Vanaf 19 november 2015 DéFi.
-## 20                                                       Vervangt vanaf 22 september 2015 Sophie Wilmès, die minister wordt in de federale regering-Michel I. Wilmès zelf verving vanaf 11 oktober 2014 Didier Reynders, die ook minister in de regering-Michel I werd.
-## 21                                                                                                                                                                              Vervangt vanaf 9 november 2017 Willy Demeyer, die voltijds burgemeester van Luik wordt.
-## 22                                                                                                                                                           Vervangt vanaf 18 oktober 2018 Muriel Gerkens, die zich kandidaat stelt bij de provincieraadsverkiezingen.
-## 23                                                                                                                                                                Vervangt vanaf 14 oktober 2014 Daniel Bacquelaine, die minister in de federale regering-Michel I werd
-## 24                                                                                                                                                                                                           De Duitstalige Jadin behoort tot de Franstalige taalgroep.
-## 25                                                                                                                                                                               Vervangt vanaf 23 april 2015 Melchior Wathelet, die actief wordt in het bedrijfsleven.
-## 26                                                                                                                                            Werd van 14 oktober 2014 tot 9 december 2018 als minister in de federale regering-Michel I vervangen door Renate Hufkens.
-## 27                                                                                                                                                                   Vervangt vanaf 14 oktober 2014 Maggie De Block, die minister in de federale regering-Michel I werd
-## 28                                                                                                                                                                        Vervangt vanaf 14 oktober 2014 Koen Geens, die minister in de federale regering-Michel I werd
-## 29                                                                                                                                                  Zetelt van 22 september tot 27 oktober 2016 als onafhankelijke en vanaf 27 oktober 2016 in de Vuye&amp;Wouters-fractie.
-## 30                                                                                                                                                                                                             Voorzitter van de Kamer van 30 juni tot 14 oktober 2014.
-## 31                                                                                                                                            Werd van 14 oktober 2014 tot 12 november 2018 als minister in de federale regering-Michel I vervangen door Wouter Raskin.
-## 32                                                                                                                                                Zetelt vanaf 22 september tot 27 oktober 2016 als onafhankelijke en vanaf 27 oktober 2016 in de Vuye&amp;Wouters-fractie.
-## 33 Vervangt vanaf 4 oktober 2018 Stéphane Crusnière, die financieel en administratief directeur van de Régie Communale Autonome van Waver wordt. Crusnière verving vanaf 30 juli 2014 André Flahaut, die minister in de regering-Demotte III (Franse Gemeenschap) werd.
-## 34                                                                                                                                                                    Vervangt vanaf 14 oktober 2014 Charles Michel, die minister in de federale regering-Michel I werd
-## 35                                                                                                                                                                                         Vervangt vanaf 20 september 2018 Isabelle Poncelet, die de politiek verlaat.</code></pre>
+  filter(!is.na(Opmerkingen)) %&gt;%
+  mutate(Opmerkingen = substr(Opmerkingen,0,100)) %&gt;% 
+  select(Opmerkingen) %&gt;% 
+  slice(1:7)</code></pre>
+<pre><code>##                                                                                            Opmerkingen
+## 1 Werd van 9 maart 2017 tot 9 december 2018 als staatssecretaris in de federale regering-Michel I verv
+## 2 Werd van 14 oktober 2014 tot 9 december 2018 als minister in de federale regering-Michel I vervangen
+## 3                          Vervangt vanaf 19 juni 2014 Marijke Dillen, die beslist om niet te zetelen.
+## 4 Vervangt sinds 3 mei 2018 Annemie Turtelboom, die lid wordt van de Europese Rekenkamer. Eerder vervi
+## 5                                                       Voorzitter van de Kamer vanaf 14 oktober 2014.
+## 6 Vervangt vanaf 10 november 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij te
+## 7 Vervangt vanaf 14 oktober 2014 Alexander De Croo, die minister in de federale regering-Michel I werd</code></pre>
 <p>‘Vervangt’ means ‘replaces’, so these are members that replaced someone who took on another mandate. ‘Werd’ means ‘was’, so these were replaced.</p>
 <pre class="r"><code>wiki_table &lt;- wiki_table_source %&gt;% 
   filter(!is.na(Opmerkingen)) %&gt;% 
@@ -522,12 +495,13 @@ one_date &lt;- one_date %&gt;%
 unique(two_dates$first_word)</code></pre>
 <pre><code>## [1] &quot;Vervangt&quot;   &quot;Werd&quot;       &quot;Voorzitter&quot; &quot;Zetelt&quot;</code></pre>
 <p>There are now three replacements (Vervangt) with two dates in the comment phrase. It is getting complicated, but fortunately they seem to be structured the same way.</p>
-<pre class="r"><code>two_dates %&gt;% filter(first_word == &quot;Vervangt&quot;) %&gt;% 
+<pre class="r"><code>two_dates %&gt;% filter(first_word == &quot;Vervangt&quot;) %&gt;%
+  mutate(Opmerkingen = substr(Opmerkingen, 0, 100)) %&gt;% 
   select(Opmerkingen)</code></pre>
-<pre><code>##                                                                                                                                                                                                                                                    Opmerkingen
-## 1                                                            Vervangt vanaf 22 9 2015 Sophie Wilmès, die minister wordt in de federale regering-Michel I. Wilmès zelf verving vanaf 11 10 2014 Didier Reynders, die ook minister in de regering-Michel I werd.
-## 2 Vervangt vanaf 4 10 2018 Stéphane Crusnière, die financieel en administratief directeur van de Régie Communale Autonome van Waver wordt. Crusnière verving vanaf 30 7 2014 André Flahaut, die minister in de regering-Demotte III (Franse Gemeenschap) werd.
-## 3                                        Vervangt vanaf 10 11 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij teruggeeft. Claerhout zelf verving 14 10 2014 Pieter De Crem, die staatssecretaris in de federale regering-Michel I werd.</code></pre>
+<pre><code>##                                                                                            Opmerkingen
+## 1 Vervangt vanaf 22 9 2015 Sophie Wilmès, die minister wordt in de federale regering-Michel I. Wilmès 
+## 2 Vervangt vanaf 4 10 2018 Stéphane Crusnière, die financieel en administratief directeur van de Régie
+## 3 Vervangt vanaf 10 11 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij teruggee</code></pre>
 <p>So we are looking at these parliamentarians:</p>
 <pre class="r"><code>two_dates %&gt;% filter(first_word == &quot;Vervangt&quot;) %&gt;% 
   select(fn_ln)</code></pre>
@@ -649,12 +623,13 @@ reps54&lt;-  reps54 %&gt;%
   rbind(to_replace)</code></pre>
 <p>We can do the same with the comments within ‘two_dates’</p>
 <pre class="r"><code>two_dates %&gt;% 
-  filter(first_word == &quot;Vervangt&quot;) %&gt;% 
+  filter(first_word == &quot;Vervangt&quot;) %&gt;%
+  mutate(Opmerkingen = substr(Opmerkingen, 0, 100)) %&gt;% 
   select(Opmerkingen)</code></pre>
-<pre><code>##                                                                                                                                                                                                                                                    Opmerkingen
-## 1                                                            Vervangt vanaf 22 9 2015 Sophie Wilmès, die minister wordt in de federale regering-Michel I. Wilmès zelf verving vanaf 11 10 2014 Didier Reynders, die ook minister in de regering-Michel I werd.
-## 2 Vervangt vanaf 4 10 2018 Stéphane Crusnière, die financieel en administratief directeur van de Régie Communale Autonome van Waver wordt. Crusnière verving vanaf 30 7 2014 André Flahaut, die minister in de regering-Demotte III (Franse Gemeenschap) werd.
-## 3                                        Vervangt vanaf 10 11 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij teruggeeft. Claerhout zelf verving 14 10 2014 Pieter De Crem, die staatssecretaris in de federale regering-Michel I werd.</code></pre>
+<pre><code>##                                                                                            Opmerkingen
+## 1 Vervangt vanaf 22 9 2015 Sophie Wilmès, die minister wordt in de federale regering-Michel I. Wilmès 
+## 2 Vervangt vanaf 4 10 2018 Stéphane Crusnière, die financieel en administratief directeur van de Régie
+## 3 Vervangt vanaf 10 11 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij teruggee</code></pre>
 <p>So here we have for instance Mrs Wilmès who is being replaced on 22/09/2015, but who replaced Mr Reynders on 11/10/2014.</p>
 <pre class="r"><code>end_dates_two &lt;- two_dates %&gt;% 
   select(date_1, Opmerkingen, first_word) %&gt;% 
@@ -746,206 +721,45 @@ length(unique(reps54$fn_ln))</code></pre>
 <pre class="r"><code>length(reps54$fn_ln)</code></pre>
 <pre><code>## [1] 230</code></pre>
 <p>Save before cleaning.</p>
-<pre class="r"><code>saveRDS(reps54, &quot;./data/20190503/reps54_before_cleaning.rds&quot;)</code></pre>
-<pre class="r"><code>empty_spaces &lt;- reps54 %&gt;% 
+<pre class="r"><code># saveRDS(reps54, &quot;./data/20190503/reps54_before_cleaning.rds&quot;)</code></pre>
+<p>Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
+party and lannguage. Untill it shows that page again, we’ll be using the fields obtained from Wikipedia instead.</p>
+<pre class="r"><code>empty_spaces &lt;- reps54 %&gt;%
+  mutate(language = Taalgroep,
+         party =Fractie) %&gt;% 
   filter(is.na(language)) %&gt;% 
   arrange(fn_ln)</code></pre>
 <pre class="r"><code>empty_spaces$ln_fn</code></pre>
-<pre><code>##   [1] &quot;Laaouej Ahmed&quot;             &quot;Mathot Alain&quot;             
-##   [3] &quot;Top Alain&quot;                 &quot;Carcaci Aldo&quot;             
-##   [5] &quot;De Croo Alexander&quot;         &quot;Capoen An&quot;                
-##   [7] &quot;Flahaut André&quot;             &quot;Frédéric André&quot;           
-##   [9] &quot;Vanheste Ann&quot;              &quot;Goffinet Anne-Catherine&quot;  
-##  [11] &quot;Goffinet Anne-Catherine&quot;   &quot;Dedry Anne&quot;               
-##  [13] &quot;Turtelboom Annemie&quot;        &quot;Turtelboom Annemie&quot;       
-##  [15] &quot;Turtelboom Annemie&quot;        &quot;Lambrecht Annick&quot;         
-##  [17] &quot;Lambrecht Annick&quot;          &quot;Pas Barbara&quot;              
-##  [19] &quot;De Wever Bart&quot;             &quot;Dispa Benoît&quot;             
-##  [21] &quot;Friart Benoît&quot;             &quot;Hellings Benoit&quot;          
-##  [23] &quot;Lutgen Benoît&quot;             &quot;Piedboeuf Benoît&quot;         
-##  [25] &quot;Wollants Bert&quot;             &quot;Vermeulen Brecht&quot;         
-##  [27] &quot;Van Cauter Carina&quot;         &quot;Cassart-Mailleux Caroline&quot;
-##  [29] &quot;Fonck Catherine&quot;           &quot;Fremault Céline&quot;          
-##  [31] &quot;Michel Charles&quot;            &quot;Brotcorne Christian&quot;      
-##  [33] &quot;D&#39;Haese Christoph&quot;         &quot;Thiéry Damien&quot;            
-##  [35] &quot;Bacquelaine Daniel&quot;        &quot;Senesael Daniel&quot;          
-##  [37] &quot;Dumery Daphné&quot;             &quot;Clarinval David&quot;          
-##  [39] &quot;Geerts David&quot;              &quot;Ducarme Denis&quot;            
-##  [41] &quot;Reynders Didier&quot;           &quot;Janssens Dirk&quot;            
-##  [43] &quot;Janssens Dirk&quot;             &quot;Van der Maelen Dirk&quot;      
-##  [45] &quot;Van Mechelen Dirk&quot;         &quot;Lachaert Egbert&quot;          
-##  [47] &quot;Di Rupo Elio&quot;              &quot;Van Hoof Els&quot;             
-##  [49] &quot;Van Hoof Els&quot;              &quot;Kir Emir&quot;                 
-##  [51] &quot;Burton Emmanuel&quot;           &quot;Massin Eric&quot;              
-##  [53] &quot;Thiébaut Eric&quot;             &quot;Van Rompuy Eric&quot;          
-##  [55] &quot;Willaert Evita&quot;            &quot;Winckel Fabienne&quot;         
-##  [57] &quot;Pehlivan Fatma&quot;            &quot;Dewinter Filip&quot;           
-##  [59] &quot;Delpérée Francis&quot;          &quot;Schepmans Françoise&quot;      
-##  [61] &quot;Wilrycx Frank&quot;             &quot;Wilrycx Frank&quot;            
-##  [63] &quot;Wilrycx Frank&quot;             &quot;Demon Franky&quot;             
-##  [65] &quot;Daerden Frédéric&quot;          &quot;Calomne Gautier&quot;          
-##  [67] &quot;Calomne Gautier&quot;           &quot;Dallemagne Georges&quot;       
-##  [69] &quot;Dallemagne Georges&quot;        &quot;Gilkinet Georges&quot;         
-##  [71] &quot;Foret Gilles&quot;              &quot;Vanden Burre Gilles&quot;      
-##  [73] &quot;Vanden Burre Gilles&quot;       &quot;Uyttersprot Goedele&quot;      
-##  [75] &quot;Smaers Griet&quot;              &quot;Grovonius Gwenaëlle&quot;      
-##  [77] &quot;Bonte Hans&quot;                &quot;Bogaert Hendrik&quot;          
-##  [79] &quot;Vuye Hendrik&quot;              &quot;Vuye Hendrik&quot;             
-##  [81] &quot;Vuye Hendrik&quot;              &quot;Vuye Hendrik&quot;             
-##  [83] &quot;Somers Ine&quot;                &quot;De Coninck Inez&quot;          
-##  [85] &quot;Galant Isabelle&quot;           &quot;Galant Isabelle&quot;          
-##  [87] &quot;Poncelet Isabelle&quot;         &quot;Chabot Jacques&quot;           
-##  [89] &quot;Chabot Jacques&quot;            &quot;Jambon Jan&quot;               
-##  [91] &quot;Jambon Jan&quot;                &quot;Jambon Jan&quot;               
-##  [93] &quot;Penris Jan&quot;                &quot;Penris Jan&quot;               
-##  [95] &quot;Spooren Jan&quot;               &quot;Vercammen Jan&quot;            
-##  [97] &quot;Flahaux Jean-Jacques&quot;      &quot;Delizée Jean-Marc&quot;        
-##  [99] &quot;Nollet Jean-Marc&quot;          &quot;Van den Bergh Jef&quot;        
-## [101] &quot;Klaps Johan&quot;               &quot;Vande Lanotte Johan&quot;      
-## [103] &quot;Fernandez Fernandez Julie&quot; &quot;Jiroflée Karin&quot;           
-## [105] &quot;Temmerman Karin&quot;           &quot;Lalieux Karine&quot;           
-## [107] &quot;Grosemans Karolien&quot;        &quot;Gabriëls Katja&quot;           
-## [109] &quot;Gabriëls Katja&quot;            &quot;Jadin Kattrin&quot;            
-## [111] &quot;Geens Koen&quot;                &quot;Metsu Koen&quot;               
-## [113] &quot;Degroote Koenraad&quot;         &quot;Van Vaerenbergh Kristien&quot; 
-## [115] &quot;Calvo Kristof&quot;             &quot;Devin Laurent&quot;            
-## [117] &quot;Onkelinx Laurette&quot;         &quot;Dierick Leen&quot;             
-## [119] &quot;Gustin Luc&quot;                &quot;Gustin Luc&quot;               
-## [121] &quot;Van Biesen Luk&quot;            &quot;De Block Maggie&quot;          
-## [123] &quot;Cheron Marcel&quot;             &quot;Van Hees Marco&quot;           
-## [125] &quot;Marghem Marie-Christine&quot;   &quot;Detiège Maya&quot;             
-## [127] &quot;Wathelet Melchior&quot;         &quot;Kitir Meryame&quot;            
-## [129] &quot;Almaci Meyrem&quot;             &quot;Corthouts Michel&quot;         
-## [131] &quot;Corthouts Michel&quot;          &quot;de Lamotte Michel&quot;        
-## [133] &quot;de Lamotte Michel&quot;         &quot;De Coninck Monica&quot;        
-## [135] &quot;Gerkens Muriel&quot;            &quot;Lanjri Nahima&quot;            
-## [137] &quot;Muylle Nathalie&quot;           &quot;Ben Hamou Nawal&quot;          
-## [139] &quot;Lijnen Nele&quot;               &quot;Chastel Olivier&quot;          
-## [141] &quot;Henry Olivier&quot;             &quot;Henry Olivier&quot;            
-## [143] &quot;Maingain Olivier&quot;          &quot;Maingain Olivier&quot;         
-## [145] &quot;Maingain Olivier&quot;          &quot;Maingain Olivier&quot;         
-## [147] &quot;Özen Özlem&quot;                &quot;Ceysens Patricia&quot;         
-## [149] &quot;Dewael Patrick&quot;            &quot;Dewael Patrick&quot;           
-## [151] &quot;Delannois Paul-Olivier&quot;    &quot;Buysrogge Peter&quot;          
-## [153] &quot;De Roover Peter&quot;           &quot;Dedecker Peter&quot;           
-## [155] &quot;Luykx Peter&quot;               &quot;Vanvelthoven Peter&quot;       
-## [157] &quot;Blanchart Philippe&quot;        &quot;Goffin Philippe&quot;          
-## [159] &quot;Pivin Philippe&quot;            &quot;De Crem Pieter&quot;           
-## [161] &quot;Terwingen Raf&quot;             &quot;Hedebouw Raoul&quot;           
-## [163] &quot;Hufkens Renate&quot;            &quot;Miller Richard&quot;           
-## [165] &quot;Miller Richard&quot;            &quot;Bellens Rita&quot;             
-## [167] &quot;Gantois Rita&quot;              &quot;Van de Velde Robert&quot;      
-## [169] &quot;Deseyn Roel&quot;               &quot;Lahaye-Battheu Sabien&quot;    
-## [171] &quot;De Crom Sandrine&quot;          &quot;De Crom Sandrine&quot;         
-## [173] &quot;Claerhout Sarah&quot;           &quot;Schlitz Sarah&quot;            
-## [175] &quot;Schlitz Sarah&quot;             &quot;Smeyers Sarah&quot;            
-## [177] &quot;Pirlot Sébastian&quot;          &quot;Verherstraeten Servais&quot;   
-## [179] &quot;Bracke Siegfried&quot;          &quot;Bracke Siegfried&quot;         
-## [181] &quot;Becq Sonja&quot;                &quot;De Wit Sophie&quot;            
-## [183] &quot;Wilmès Sophie&quot;             &quot;Van Hecke Stefaan&quot;        
-## [185] &quot;Vercamer Stefaan&quot;          &quot;Crusnière Stéphane&quot;       
-## [187] &quot;Thoron Stéphanie&quot;          &quot;Vandeput Steven&quot;          
-## [189] &quot;Vandeput Steven&quot;           &quot;Vandeput Steven&quot;          
-## [191] &quot;de Coster-Bauchau Sybille&quot; &quot;Francken Theo&quot;            
-## [193] &quot;Francken Theo&quot;             &quot;Francken Theo&quot;            
-## [195] &quot;Vandenput Tim&quot;             &quot;Van Peel Valerie&quot;         
-## [197] &quot;Matz Vanessa&quot;              &quot;Heeren Veerle&quot;            
-## [199] &quot;Wouters Veerle&quot;            &quot;Wouters Veerle&quot;           
-## [201] &quot;Wouters Veerle&quot;            &quot;Wouters Veerle&quot;           
-## [203] &quot;Yüksel Veli&quot;               &quot;Yüksel Veli&quot;              
-## [205] &quot;Yüksel Veli&quot;               &quot;Yüksel Veli&quot;              
-## [207] &quot;Caprasse Véronique&quot;        &quot;Caprasse Véronique&quot;       
-## [209] &quot;Caprasse Véronique&quot;        &quot;Caprasse Véronique&quot;       
-## [211] &quot;Waterschoot Véronique&quot;     &quot;Waterschoot Véronique&quot;    
-## [213] &quot;Scourneau Vincent&quot;         &quot;Scourneau Vincent&quot;        
-## [215] &quot;Van Peteghem Vincent&quot;      &quot;Van Peteghem Vincent&quot;     
-## [217] &quot;Van Quickenborne Vincent&quot;  &quot;Janssen Werner&quot;           
-## [219] &quot;Demeyer Willy&quot;             &quot;Van der Donckt Wim&quot;       
-## [221] &quot;Beke Wouter&quot;               &quot;De Vriendt Wouter&quot;        
-## [223] &quot;Raskin Wouter&quot;             &quot;Van Camp Yoleen&quot;          
-## [225] &quot;Casier Youro&quot;              &quot;Casier Youro&quot;             
-## [227] &quot;Khattabi Zakia&quot;            &quot;Demir Zuhal&quot;              
-## [229] &quot;Demir Zuhal&quot;               &quot;Demir Zuhal&quot;</code></pre>
+<pre><code>##  [1] &quot;De Croo Alexander&quot;       &quot;Flahaut André&quot;          
+##  [3] &quot;Vanheste Ann&quot;            &quot;Turtelboom Annemie&quot;     
+##  [5] &quot;Turtelboom Annemie&quot;      &quot;Turtelboom Annemie&quot;     
+##  [7] &quot;Hellings Benoit&quot;         &quot;Fremault Céline&quot;        
+##  [9] &quot;Michel Charles&quot;          &quot;Bacquelaine Daniel&quot;     
+## [11] &quot;Ducarme Denis&quot;           &quot;Reynders Didier&quot;        
+## [13] &quot;Massin Eric&quot;             &quot;Poncelet Isabelle&quot;      
+## [15] &quot;Klaps Johan&quot;             &quot;Vande Lanotte Johan&quot;    
+## [17] &quot;Geens Koen&quot;              &quot;De Block Maggie&quot;        
+## [19] &quot;Marghem Marie-Christine&quot; &quot;Wathelet Melchior&quot;      
+## [21] &quot;Gerkens Muriel&quot;          &quot;De Crem Pieter&quot;         
+## [23] &quot;Hufkens Renate&quot;          &quot;Lahaye-Battheu Sabien&quot;  
+## [25] &quot;Claerhout Sarah&quot;         &quot;Wilmès Sophie&quot;          
+## [27] &quot;Crusnière Stéphane&quot;      &quot;Demeyer Willy&quot;          
+## [29] &quot;Van der Donckt Wim&quot;      &quot;Raskin Wouter&quot;          
+## [31] &quot;Khattabi Zakia&quot;</code></pre>
 <p>For now I leave some fields incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language ‘role’.</p>
 <p>On the other hand if you are familiar with Belgium, you could just make good guesses looking at their first names:</p>
 <pre class="r"><code>word(empty_spaces$ln_fn,-1)</code></pre>
-<pre><code>##   [1] &quot;Ahmed&quot;           &quot;Alain&quot;           &quot;Alain&quot;          
-##   [4] &quot;Aldo&quot;            &quot;Alexander&quot;       &quot;An&quot;             
-##   [7] &quot;André&quot;           &quot;André&quot;           &quot;Ann&quot;            
-##  [10] &quot;Anne-Catherine&quot;  &quot;Anne-Catherine&quot;  &quot;Anne&quot;           
-##  [13] &quot;Annemie&quot;         &quot;Annemie&quot;         &quot;Annemie&quot;        
-##  [16] &quot;Annick&quot;          &quot;Annick&quot;          &quot;Barbara&quot;        
-##  [19] &quot;Bart&quot;            &quot;Benoît&quot;          &quot;Benoît&quot;         
-##  [22] &quot;Benoit&quot;          &quot;Benoît&quot;          &quot;Benoît&quot;         
-##  [25] &quot;Bert&quot;            &quot;Brecht&quot;          &quot;Carina&quot;         
-##  [28] &quot;Caroline&quot;        &quot;Catherine&quot;       &quot;Céline&quot;         
-##  [31] &quot;Charles&quot;         &quot;Christian&quot;       &quot;Christoph&quot;      
-##  [34] &quot;Damien&quot;          &quot;Daniel&quot;          &quot;Daniel&quot;         
-##  [37] &quot;Daphné&quot;          &quot;David&quot;           &quot;David&quot;          
-##  [40] &quot;Denis&quot;           &quot;Didier&quot;          &quot;Dirk&quot;           
-##  [43] &quot;Dirk&quot;            &quot;Dirk&quot;            &quot;Dirk&quot;           
-##  [46] &quot;Egbert&quot;          &quot;Elio&quot;            &quot;Els&quot;            
-##  [49] &quot;Els&quot;             &quot;Emir&quot;            &quot;Emmanuel&quot;       
-##  [52] &quot;Eric&quot;            &quot;Eric&quot;            &quot;Eric&quot;           
-##  [55] &quot;Evita&quot;           &quot;Fabienne&quot;        &quot;Fatma&quot;          
-##  [58] &quot;Filip&quot;           &quot;Francis&quot;         &quot;Françoise&quot;      
-##  [61] &quot;Frank&quot;           &quot;Frank&quot;           &quot;Frank&quot;          
-##  [64] &quot;Franky&quot;          &quot;Frédéric&quot;        &quot;Gautier&quot;        
-##  [67] &quot;Gautier&quot;         &quot;Georges&quot;         &quot;Georges&quot;        
-##  [70] &quot;Georges&quot;         &quot;Gilles&quot;          &quot;Gilles&quot;         
-##  [73] &quot;Gilles&quot;          &quot;Goedele&quot;         &quot;Griet&quot;          
-##  [76] &quot;Gwenaëlle&quot;       &quot;Hans&quot;            &quot;Hendrik&quot;        
-##  [79] &quot;Hendrik&quot;         &quot;Hendrik&quot;         &quot;Hendrik&quot;        
-##  [82] &quot;Hendrik&quot;         &quot;Ine&quot;             &quot;Inez&quot;           
-##  [85] &quot;Isabelle&quot;        &quot;Isabelle&quot;        &quot;Isabelle&quot;       
-##  [88] &quot;Jacques&quot;         &quot;Jacques&quot;         &quot;Jan&quot;            
-##  [91] &quot;Jan&quot;             &quot;Jan&quot;             &quot;Jan&quot;            
-##  [94] &quot;Jan&quot;             &quot;Jan&quot;             &quot;Jan&quot;            
-##  [97] &quot;Jean-Jacques&quot;    &quot;Jean-Marc&quot;       &quot;Jean-Marc&quot;      
-## [100] &quot;Jef&quot;             &quot;Johan&quot;           &quot;Johan&quot;          
-## [103] &quot;Julie&quot;           &quot;Karin&quot;           &quot;Karin&quot;          
-## [106] &quot;Karine&quot;          &quot;Karolien&quot;        &quot;Katja&quot;          
-## [109] &quot;Katja&quot;           &quot;Kattrin&quot;         &quot;Koen&quot;           
-## [112] &quot;Koen&quot;            &quot;Koenraad&quot;        &quot;Kristien&quot;       
-## [115] &quot;Kristof&quot;         &quot;Laurent&quot;         &quot;Laurette&quot;       
-## [118] &quot;Leen&quot;            &quot;Luc&quot;             &quot;Luc&quot;            
-## [121] &quot;Luk&quot;             &quot;Maggie&quot;          &quot;Marcel&quot;         
-## [124] &quot;Marco&quot;           &quot;Marie-Christine&quot; &quot;Maya&quot;           
-## [127] &quot;Melchior&quot;        &quot;Meryame&quot;         &quot;Meyrem&quot;         
-## [130] &quot;Michel&quot;          &quot;Michel&quot;          &quot;Michel&quot;         
-## [133] &quot;Michel&quot;          &quot;Monica&quot;          &quot;Muriel&quot;         
-## [136] &quot;Nahima&quot;          &quot;Nathalie&quot;        &quot;Nawal&quot;          
-## [139] &quot;Nele&quot;            &quot;Olivier&quot;         &quot;Olivier&quot;        
-## [142] &quot;Olivier&quot;         &quot;Olivier&quot;         &quot;Olivier&quot;        
-## [145] &quot;Olivier&quot;         &quot;Olivier&quot;         &quot;Özlem&quot;          
-## [148] &quot;Patricia&quot;        &quot;Patrick&quot;         &quot;Patrick&quot;        
-## [151] &quot;Paul-Olivier&quot;    &quot;Peter&quot;           &quot;Peter&quot;          
-## [154] &quot;Peter&quot;           &quot;Peter&quot;           &quot;Peter&quot;          
-## [157] &quot;Philippe&quot;        &quot;Philippe&quot;        &quot;Philippe&quot;       
-## [160] &quot;Pieter&quot;          &quot;Raf&quot;             &quot;Raoul&quot;          
-## [163] &quot;Renate&quot;          &quot;Richard&quot;         &quot;Richard&quot;        
-## [166] &quot;Rita&quot;            &quot;Rita&quot;            &quot;Robert&quot;         
-## [169] &quot;Roel&quot;            &quot;Sabien&quot;          &quot;Sandrine&quot;       
-## [172] &quot;Sandrine&quot;        &quot;Sarah&quot;           &quot;Sarah&quot;          
-## [175] &quot;Sarah&quot;           &quot;Sarah&quot;           &quot;Sébastian&quot;      
-## [178] &quot;Servais&quot;         &quot;Siegfried&quot;       &quot;Siegfried&quot;      
-## [181] &quot;Sonja&quot;           &quot;Sophie&quot;          &quot;Sophie&quot;         
-## [184] &quot;Stefaan&quot;         &quot;Stefaan&quot;         &quot;Stéphane&quot;       
-## [187] &quot;Stéphanie&quot;       &quot;Steven&quot;          &quot;Steven&quot;         
-## [190] &quot;Steven&quot;          &quot;Sybille&quot;         &quot;Theo&quot;           
-## [193] &quot;Theo&quot;            &quot;Theo&quot;            &quot;Tim&quot;            
-## [196] &quot;Valerie&quot;         &quot;Vanessa&quot;         &quot;Veerle&quot;         
-## [199] &quot;Veerle&quot;          &quot;Veerle&quot;          &quot;Veerle&quot;         
-## [202] &quot;Veerle&quot;          &quot;Veli&quot;            &quot;Veli&quot;           
-## [205] &quot;Veli&quot;            &quot;Veli&quot;            &quot;Véronique&quot;      
-## [208] &quot;Véronique&quot;       &quot;Véronique&quot;       &quot;Véronique&quot;      
-## [211] &quot;Véronique&quot;       &quot;Véronique&quot;       &quot;Vincent&quot;        
-## [214] &quot;Vincent&quot;         &quot;Vincent&quot;         &quot;Vincent&quot;        
-## [217] &quot;Vincent&quot;         &quot;Werner&quot;          &quot;Willy&quot;          
-## [220] &quot;Wim&quot;             &quot;Wouter&quot;          &quot;Wouter&quot;         
-## [223] &quot;Wouter&quot;          &quot;Yoleen&quot;          &quot;Youro&quot;          
-## [226] &quot;Youro&quot;           &quot;Zakia&quot;           &quot;Zuhal&quot;          
-## [229] &quot;Zuhal&quot;           &quot;Zuhal&quot;</code></pre>
+<pre><code>##  [1] &quot;Alexander&quot;       &quot;André&quot;           &quot;Ann&quot;            
+##  [4] &quot;Annemie&quot;         &quot;Annemie&quot;         &quot;Annemie&quot;        
+##  [7] &quot;Benoit&quot;          &quot;Céline&quot;          &quot;Charles&quot;        
+## [10] &quot;Daniel&quot;          &quot;Denis&quot;           &quot;Didier&quot;         
+## [13] &quot;Eric&quot;            &quot;Isabelle&quot;        &quot;Johan&quot;          
+## [16] &quot;Johan&quot;           &quot;Koen&quot;            &quot;Maggie&quot;         
+## [19] &quot;Marie-Christine&quot; &quot;Melchior&quot;        &quot;Muriel&quot;         
+## [22] &quot;Pieter&quot;          &quot;Renate&quot;          &quot;Sabien&quot;         
+## [25] &quot;Sarah&quot;           &quot;Sophie&quot;          &quot;Stéphane&quot;       
+## [28] &quot;Willy&quot;           &quot;Wim&quot;             &quot;Wouter&quot;         
+## [31] &quot;Zakia&quot;</code></pre>
 <p>But looking at the tweets:</p>
 <pre class="r"><code>tweets &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190503/tweets.rds&quot;)
 lang &lt;- tweets %&gt;% 
@@ -964,16 +778,7 @@ languages_used &lt;- lang %&gt;%
   select(-lang)</code></pre>
 <pre><code>## Joining, by = &quot;ln_fn&quot;</code></pre>
 <pre class="r"><code>setdiff(empty_spaces$ln_fn, languages_used$ln_fn)</code></pre>
-<pre><code>##  [1] &quot;Mathot Alain&quot;              &quot;Frédéric André&quot;           
-##  [3] &quot;Goffinet Anne-Catherine&quot;   &quot;Brotcorne Christian&quot;      
-##  [5] &quot;D&#39;Haese Christoph&quot;         &quot;Van Rompuy Eric&quot;          
-##  [7] &quot;Delpérée Francis&quot;          &quot;Wilrycx Frank&quot;            
-##  [9] &quot;Bonte Hans&quot;                &quot;Galant Isabelle&quot;          
-## [11] &quot;Vande Lanotte Johan&quot;       &quot;Devin Laurent&quot;            
-## [13] &quot;Gustin Luc&quot;                &quot;Cheron Marcel&quot;            
-## [15] &quot;Detiège Maya&quot;              &quot;Gerkens Muriel&quot;           
-## [17] &quot;Pivin Philippe&quot;            &quot;Van de Velde Robert&quot;      
-## [19] &quot;Pirlot Sébastian&quot;          &quot;de Coster-Bauchau Sybille&quot;</code></pre>
+<pre><code>## [1] &quot;Vande Lanotte Johan&quot; &quot;Gerkens Muriel&quot;</code></pre>
 <p>So let’s add them and end this for now.</p>
 <pre class="r"><code>to_add &lt;- data.frame(&quot;ln_fn&quot; = c(&quot;Vande Lanotte Johan&quot;,&quot;Gerkens Muriel&quot;), 
                      &quot;language&quot; = c(&quot;Nederlands&quot;, &quot;Frans&quot;)) 
@@ -990,7 +795,7 @@ reps54 &lt;- reps54 %&gt;%
   rbind(added_languages) %&gt;% 
   arrange(fn_ln)</code></pre>
 <p>Save after first cleaning.</p>
-<pre class="r"><code>saveRDS(reps54, &quot;./data/20190503/reps54_after_cleaning.rds&quot;)</code></pre>
+<pre class="r"><code># saveRDS(reps54, &quot;./data/20190503/reps54_after_cleaning.rds&quot;)</code></pre>
 <p>I’ll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from aws.</p>
 
       
