@@ -268,5 +268,9 @@ ln_fn <- data.frame("number" = 1:179,
 faces_reps$number <- as.integer(faces_reps$number)
 x <- faces_reps %>% 
   left_join(ln_fn)
+
+#saveRDS(faces_reps,"./data/20190511/faces.rds")
 ```
+
+Et voilà. A nice dataframe to have fun with :smile:
 
