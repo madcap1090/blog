@@ -272,5 +272,14 @@ faces_reps <- faces_reps %>%
 # saveRDS(faces_reps,"./data/20190511/faces.rds")
 ```
 
-Et voilà. A nice data frame to have fun with. :smile:
+Et voilà. A nice data frame to have fun with. :smile: For instance:
 
+```{r}
+faces_reps %>% group_by(Smile.Value)%>% 
+  summarise(count = n())
+
+```
+
+That's 88% smiling faces in a bucket S3. 
+
+More soon.

@@ -379,12 +379,21 @@ dim(faces_reps)&lt;/code&gt;&lt;/pre&gt;
 ln_fn &amp;lt;- data.frame(&amp;quot;number&amp;quot; = 1:179,
                     &amp;quot;ln_fn&amp;quot; = to_name)
 
-faces_reps$number &amp;lt;- as.integer(faces_reps$number)
-x &amp;lt;- faces_reps %&amp;gt;% 
+faces_reps$number &amp;lt;- as.integer(as.character(faces_reps$number))
+faces_reps &amp;lt;- faces_reps %&amp;gt;% 
   left_join(ln_fn)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Joining, by = &amp;quot;number&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#saveRDS(faces_reps,&amp;quot;./data/20190511/faces.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Et voilà. A nice data frame to have fun with. 😄&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# saveRDS(faces_reps,&amp;quot;./data/20190511/faces.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Et voilà. A nice data frame to have fun with. 😄 For instance:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;faces_reps %&amp;gt;% group_by(Smile.Value)%&amp;gt;% 
+  summarise(count = n())&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 2 x 2
+##   Smile.Value count
+##   &amp;lt;lgl&amp;gt;       &amp;lt;int&amp;gt;
+## 1 FALSE          21
+## 2 TRUE          158&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;That’s 88% smiling faces in a bucket S3.&lt;/p&gt;
+&lt;p&gt;More soon.&lt;/p&gt;
 </content>
       
     </item>

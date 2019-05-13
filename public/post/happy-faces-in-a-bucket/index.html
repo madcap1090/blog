@@ -479,12 +479,21 @@ dim(faces_reps)</code></pre>
 ln_fn &lt;- data.frame(&quot;number&quot; = 1:179,
                     &quot;ln_fn&quot; = to_name)
 
-faces_reps$number &lt;- as.integer(faces_reps$number)
-x &lt;- faces_reps %&gt;% 
+faces_reps$number &lt;- as.integer(as.character(faces_reps$number))
+faces_reps &lt;- faces_reps %&gt;% 
   left_join(ln_fn)</code></pre>
 <pre><code>## Joining, by = &quot;number&quot;</code></pre>
-<pre class="r"><code>#saveRDS(faces_reps,&quot;./data/20190511/faces.rds&quot;)</code></pre>
-<p>Et voilà. A nice data frame to have fun with. 😄</p>
+<pre class="r"><code># saveRDS(faces_reps,&quot;./data/20190511/faces.rds&quot;)</code></pre>
+<p>Et voilà. A nice data frame to have fun with. 😄 For instance:</p>
+<pre class="r"><code>faces_reps %&gt;% group_by(Smile.Value)%&gt;% 
+  summarise(count = n())</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   Smile.Value count
+##   &lt;lgl&gt;       &lt;int&gt;
+## 1 FALSE          21
+## 2 TRUE          158</code></pre>
+<p>That’s 88% smiling faces in a bucket S3.</p>
+<p>More soon.</p>
 
       
       <div class="related">
