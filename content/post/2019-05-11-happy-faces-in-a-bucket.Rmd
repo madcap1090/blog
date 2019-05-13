@@ -265,11 +265,11 @@ to_name <- list.files("./data/190417", pattern = "*.gif") %>%
 ln_fn <- data.frame("number" = 1:179,
                     "ln_fn" = to_name)
 
-faces_reps$number <- as.integer(faces_reps$number)
-x <- faces_reps %>% 
+faces_reps$number <- as.integer(as.character(faces_reps$number))
+faces_reps <- faces_reps %>% 
   left_join(ln_fn)
 
-#saveRDS(faces_reps,"./data/20190511/faces.rds")
+# saveRDS(faces_reps,"./data/20190511/faces.rds")
 ```
 
 Et voilà. A nice data frame to have fun with. :smile:
