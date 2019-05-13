@@ -23,12 +23,11 @@
 
 
 &lt;p&gt;Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using these seemed therefore like a good choice.&lt;/p&gt;
-&lt;p&gt;I searched for R packages to use Rekognition with, but did not find any. So I tried Python’s Boto3 but could not get the authorisation working. So with a little (a very little – promised) help from the new consultants (thank you Fabrice 👍) I set out to use my first scripts on the cloud.&lt;/p&gt;
+&lt;p&gt;I searched for R packages to use Rekognition with, but did not find any. So I tried Python’s Boto3 but could not get the authorisation working. So with a little (a very little – promised) help from the new consultants (thank you Fabien 👍) I set out to use my first scripts on the cloud.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# libraries
 library(&amp;quot;tidyverse&amp;quot;)
 library(&amp;quot;aws.s3&amp;quot;)
 library(&amp;quot;magick&amp;quot;)
-library(&amp;quot;aws.s3&amp;quot;)
 library(&amp;quot;jsonlite&amp;quot;)
 options(Encoding=&amp;quot;UTF-8&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;In the process I found out Rekognition did not treat gifs, so the pictures need to be converted first to jpgs.&lt;/p&gt;
@@ -46,7 +45,7 @@ heathens &amp;lt;- list.files(&amp;quot;./data/20190511&amp;quot;, pattern = &am
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;convert_ye(heathens)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Returns;
 Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\20190511VÃ©ronique.gif’: No such file or directory @ error/blob.c/OpenBlob/2701&lt;/p&gt;
-&lt;p&gt;In encoding hell again. Ã©Ã©Ã©Ã©! The heathens cannot be converted. Can’t really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs.&lt;/p&gt;
+&lt;p&gt;In encoding hell again. Magick cannot read the filename…Ã©Ã©Ã©Ã©! The heathens cannot be converted. Can’t really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;heathens &amp;lt;- list.files(&amp;quot;./data/20190511&amp;quot;)
 
 setwd(&amp;quot;./data/20190511&amp;quot;)
@@ -102,7 +101,7 @@ for(i in (1:length(files))){
 &lt;p class=&#34;caption&#34;&gt;aws sagemaker&lt;/p&gt;
 &lt;/div&gt;
 &lt;/center&gt;
-&lt;p&gt;We can use boto3 to apply rekognition to our files (boto3 is 🐍) :&lt;/p&gt;
+&lt;p&gt;We can use boto3 to apply Rekognition to our files (boto3 is 🐍) :&lt;/p&gt;
 &lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import boto3
 import json
 s3 = boto3.resource(&amp;#39;s3&amp;#39;)
@@ -132,7 +131,7 @@ for object in my_bucket.objects.all():
     .Bucket(&amp;#39;jsonmad&amp;#39;).Object(object.key[0:-4]+&amp;quot;.json&amp;quot;)\
     .upload_file(object.key[0:-4]+&amp;quot;.json&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Pardon my python.&lt;/p&gt;
-&lt;p&gt;The code goes through the files in the bucket, applies ‘detect_faces’ from recognize through boto3, saves the output
+&lt;p&gt;The code goes through the files in the bucket, applies ‘detect_faces’ from Rekognition through boto3, saves the output
 (in json) and sends it to another bucket.&lt;/p&gt;
 &lt;p&gt;Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the latest changes to the code and stop the notebook instance on Sagemaker.&lt;/p&gt;
 &lt;center&gt;
@@ -359,7 +358,7 @@ str(json_file_sample[[&amp;quot;FaceDetails&amp;quot;]][[1]])&lt;/code&gt;&lt;/p
 ##   ..$ Brightness: num 81.1
 ##   ..$ Sharpness : num 83.1
 ##  $ Confidence : num 100&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Let’s put all of the json files in a data frame.&lt;/p&gt;
+&lt;p&gt;Let’s put all of the json files in a data frame and first download them from the bucket.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;setwd(&amp;quot;./data/20190511/json/&amp;quot;)
 files &amp;lt;- list.files()
 faces_reps &amp;lt;- data.frame()

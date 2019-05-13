@@ -123,12 +123,11 @@ I searched for R packages to use Rekognition with, but did not find any.'>
 
 
 <p>Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using these seemed therefore like a good choice.</p>
-<p>I searched for R packages to use Rekognition with, but did not find any. So I tried Python’s Boto3 but could not get the authorisation working. So with a little (a very little – promised) help from the new consultants (thank you Fabrice 👍) I set out to use my first scripts on the cloud.</p>
+<p>I searched for R packages to use Rekognition with, but did not find any. So I tried Python’s Boto3 but could not get the authorisation working. So with a little (a very little – promised) help from the new consultants (thank you Fabien 👍) I set out to use my first scripts on the cloud.</p>
 <pre class="r"><code># libraries
 library(&quot;tidyverse&quot;)
 library(&quot;aws.s3&quot;)
 library(&quot;magick&quot;)
-library(&quot;aws.s3&quot;)
 library(&quot;jsonlite&quot;)
 options(Encoding=&quot;UTF-8&quot;)</code></pre>
 <p>In the process I found out Rekognition did not treat gifs, so the pictures need to be converted first to jpgs.</p>
@@ -146,7 +145,7 @@ heathens &lt;- list.files(&quot;./data/20190511&quot;, pattern = &quot;*.gif&quo
 <pre class="r"><code>convert_ye(heathens)</code></pre>
 <p>Returns;
 Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\20190511VÃ©ronique.gif’: No such file or directory @ error/blob.c/OpenBlob/2701</p>
-<p>In encoding hell again. Ã©Ã©Ã©Ã©! The heathens cannot be converted. Can’t really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs.</p>
+<p>In encoding hell again. Magick cannot read the filename…Ã©Ã©Ã©Ã©! The heathens cannot be converted. Can’t really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs.</p>
 <pre class="r"><code>heathens &lt;- list.files(&quot;./data/20190511&quot;)
 
 setwd(&quot;./data/20190511&quot;)
@@ -202,7 +201,7 @@ for(i in (1:length(files))){
 <p class="caption">aws sagemaker</p>
 </div>
 </center>
-<p>We can use boto3 to apply rekognition to our files (boto3 is 🐍) :</p>
+<p>We can use boto3 to apply Rekognition to our files (boto3 is 🐍) :</p>
 <pre class="python"><code>import boto3
 import json
 s3 = boto3.resource(&#39;s3&#39;)
@@ -232,7 +231,7 @@ for object in my_bucket.objects.all():
     .Bucket(&#39;jsonmad&#39;).Object(object.key[0:-4]+&quot;.json&quot;)\
     .upload_file(object.key[0:-4]+&quot;.json&quot;)</code></pre>
 <p>Pardon my python.</p>
-<p>The code goes through the files in the bucket, applies ‘detect_faces’ from recognize through boto3, saves the output
+<p>The code goes through the files in the bucket, applies ‘detect_faces’ from Rekognition through boto3, saves the output
 (in json) and sends it to another bucket.</p>
 <p>Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the latest changes to the code and stop the notebook instance on Sagemaker.</p>
 <center>
@@ -459,7 +458,7 @@ str(json_file_sample[[&quot;FaceDetails&quot;]][[1]])</code></pre>
 ##   ..$ Brightness: num 81.1
 ##   ..$ Sharpness : num 83.1
 ##  $ Confidence : num 100</code></pre>
-<p>Let’s put all of the json files in a data frame.</p>
+<p>Let’s put all of the json files in a data frame and first download them from the bucket.</p>
 <pre class="r"><code>setwd(&quot;./data/20190511/json/&quot;)
 files &lt;- list.files()
 faces_reps &lt;- data.frame()
