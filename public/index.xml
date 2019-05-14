@@ -1449,7 +1449,7 @@ nrow(table)&lt;/code&gt;&lt;/pre&gt;
 ##   party members
 ##   &amp;lt;lgl&amp;gt;   &amp;lt;int&amp;gt;
 ## 1 NA        179&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Hmm the page we used is down. :dissapointed:&lt;/p&gt;
+&lt;p&gt;Hmm the page we used has been replaced. :dissapointed: And that is logical because the parliamenty legistlature ended on 25/04/2019.&lt;/p&gt;
 &lt;p&gt;We can also scrape the complete list of members of the 54th legislature.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;url &amp;lt;- paste0(&amp;quot;https://www.dekamer.be/kvvcr/showpage.cfm?section&amp;quot;,
               &amp;quot;=/depute&amp;amp;language=nl&amp;amp;cfm=cvlist54.cfm?legis=54&amp;amp;today=n&amp;quot;)

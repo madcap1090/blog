@@ -66,7 +66,7 @@ table %>%
   arrange(desc(members))
 ```
 
-Hmm the page we used is down. :dissapointed:
+Hmm the page we used has been replaced. :dissapointed: And that is logical because the parliamenty legistlature ended on 25/04/2019.
 
 We can also scrape the complete list of members of the 54th legislature. 
 
