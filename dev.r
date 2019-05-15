@@ -1,103 +1,34 @@
-test <- df %>% 
-  mutate(from_dawn = 
-           case_when((period_to_seconds(hms(time)) > 21600) ~ (period_to_seconds(hms(time))-21600) ,
-                               TRUE ~ 2))
+
+#test at 697 & test that at end we have 150
 
 
-# next
-test <- df %>% 
-  mutate(from_dawn = 
-           case_when((period_to_seconds(hms(time)) > 21600) ~ (period_to_seconds(hms(time))-21600) ,
-                     TRUE ~ (period_to_seconds(hms(time))+64799)))
+max_date <- max(one_date$end_date)
+
+one_test <- one_date %>% 
+  filter(end_date == max_date)
+
+dim(one_date)
+dim(one_test)
+
+two_test <- two_dates %>% 
+  filter(end_date == max_date)
+
+dim(two_dates)
+dim(two_test)
 
 
+three_test <- three_dates %>% 
+  filter(end_date == max_date)
 
-options(stringsAsFactors = T)
-ggmap(brussels) + 
-  stat_summary_2d(geom = "tile", bins = 75, data = df, aes(x = lon, y = lat, z = from_dawn), alpha = 0.5) + 
-  scale_fill_gradientn(colours = terrain.colors(10), guide = guide_legend(title = "Velocity")) +
-  labs(
-    x = "Longitude", 
-    y = "Latitude", 
-    title = "Location history data points around Brussels",
-    subtitle = "Color scale shows accuracy (low: blue, high: red)",
-    caption = "\nThis bin plot shows recorded positions 
-    and their accuracy in and around M?nster")
+dim(three_dates)
+dim(three_test)
 
 
-options(stringsAsFactors = T)
-ggmap(brussels) + 
-  stat_summary_2d(geom = "tile", data = df, aes(x = lon, y = lat, z = from_dawn), alpha = 0.5) + 
-  scale_fill_gradientn(colours = terrain.colors(10), guide = guide_legend(title = "Velocity")) +
-  labs(
-    x = "Longitude", 
-    y = "Latitude", 
-    title = "Location history data points around Brussels",
-    subtitle = "Color scale shows accuracy (low: blue, high: red)",
-    caption = "\nThis bin plot shows recorded positions 
-    and their accuracy in and around M?nster")
-
-
-names(df)
-unique(df$time)
-as.numeric(as.POSIXct("2007-05-17 09:00:00")-as.POSIXct("2007-05-07 09:00:00"), units="secs")
+dim(three_dates)
 
 
 
-dat1 <- dmy_hm("7/1/2016 2:53")
-dat2 <- dmy_hm("7/1/2016 8:09")
 
-dat2-dat1
+dim(reps54)
 
-
-period_to_seconds(hms(df$time[1]))
-
-ref_time <- "06:00:00"
-
-period_to_seconds(hms("06:00:00"))
-
-period_to_seconds(hms("23:59:59"))
-
-df$time[1]
-
-hms("06:00:00") - hours(6)
-
-
-hms("23:00:00") - hours(6)
-
-hms("05:00:00") - hours(6)
-
-
-as.numeric(as.POSIXct("09:00:00")-as.POSIXct("09:30:00"), units="secs")
-
-# let's add seconds from 6 am to the df
-
-test <- df %>% 
-  mutate(from_dawn = (period_to_seconds(hms(time))-
-                        period_to_seconds(hms("06:00:00"))))
-
-test <- df %>% 
-  mutate(from_dawn = case_when(period_to_seconds(hms(time)) > 21600) ~ 1,
-         TRUE ~ 2)
-         
-
-test <- df %>% 
-  mutate(from_dawn = case_when((period_to_seconds(hms(time)) > 21600) ~ 1,
-         TRUE ~ 2))
-
-
-
-df %>%
-  mutate(g = if_else(a == 2 | a == 5 | a == 7 | (a == 1 & b == 4), 2,
-                     if_else(a == 0 | a == 1 | a == 4 | a == 3 |  c == 4, 3, NA_real_)))
-
-test <- df %>% 
-  mutate(from_dawn = (period_to_seconds(hms(time))))
-
-min(test$from_dawn)                                        
-max(test$from_dawn)       
-
-date <- with_tz(ymd_hms("2011-07-01 06:00:00"), tzone = "America/Los_Angeles")
-hms(date)
-date                                        
-period_to_seconds(date)
+length(unique(reps54$fn_ln))
