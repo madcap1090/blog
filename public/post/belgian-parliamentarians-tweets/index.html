@@ -118,45 +118,18 @@ The twitter API allows to download 3200 tweets per handle. This means that we wi
 <p>The twitter API allows to download 3200 tweets per handle. This means that we will not be able to download all tweets of all parliamentarians from the last five years, because some of them tweeted more than 3200 during that time period. But there will be a fair amount.</p>
 <p>These tweets will also have to be ‘cleaned’ of special characters like emojis and links in order to analyse them further without the different packages choking on them.</p>
 <p>As usually first the libraries and options:</p>
-<pre class="r"><code>library(&quot;tidyverse&quot;)</code></pre>
-<pre><code>## -- Attaching packages ---------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
-<pre><code>## v ggplot2 3.1.1       v purrr   0.3.1  
-## v tibble  2.0.1       v dplyr   0.8.0.1
-## v tidyr   0.8.3       v stringr 1.4.0  
-## v readr   1.3.1       v forcats 0.3.0</code></pre>
-<pre><code>## -- Conflicts ------------------------------------------------------------- tidyverse_conflicts() --
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(&quot;gmp&quot;)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;gmp&#39;</code></pre>
-<pre><code>## The following objects are masked from &#39;package:base&#39;:
-## 
-##     %*%, apply, crossprod, matrix, tcrossprod</code></pre>
-<pre class="r"><code>library(&quot;glue&quot;)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;glue&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
-## 
-##     collapse</code></pre>
-<pre class="r"><code>library(&quot;rtweet&quot;)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;rtweet&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:purrr&#39;:
-## 
-##     flatten</code></pre>
-<pre class="r"><code>library(&quot;cld2&quot;) 
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;gmp&quot;)
+library(&quot;glue&quot;)
+library(&quot;rtweet&quot;)
+library(&quot;cld2&quot;) 
 library(&quot;textcat&quot;)
-library(&quot;qdapRegex&quot;)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;qdapRegex&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
-## 
-##     explain</code></pre>
-<pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
-## 
-##     %+%</code></pre>
-<pre class="r"><code># options 
+library(&quot;qdapRegex&quot;)
+library(&quot;xml2&quot;)
+library(&quot;rvest&quot;)
+library(&quot;lubridate&quot;)
+
+# options 
 
 options(scipen=999)
 stringAsFactors = FALSE</code></pre>
@@ -175,187 +148,41 @@ stringAsFactors = FALSE</code></pre>
 <pre class="r"><code>twitter_users &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190502/twitter_users.rds&quot;)</code></pre>
 <p>A test</p>
 <pre class="r"><code>twitter_users$screen_name[3]</code></pre>
-<pre><code>## [1] &quot;wbeke&quot;</code></pre>
-<pre class="r"><code>names(twitter_users$screen_name[3])</code></pre>
-<pre><code>## NULL</code></pre>
-<p>It’s not stictly needed since we already know the correspondence between name and handle (‘screen_name’), but it’s fun to try map2_df.</p>
+<pre><code>## [1] &quot;SonjaBecq&quot;</code></pre>
+<p>It’s not strictly needed since we already know the correspondence between name and handle (‘screen_name’), but it’s fun to try map2_df. A test with two tweets:</p>
 <pre class="r"><code>get_handle_tweets &lt;- function(screen_name, ln_fn) {
   get_timeline(screen_name, n=2) %&gt;% 
-    mutata(ln_fn = ln_fn)
+    mutate(ln_fn = ln_fn)
 }
 
 tweets &lt;- map2_df(twitter_users$screen_name,twitter_users$ln_fn, 
              possibly(get_handle_tweets, otherwise = NULL))
 dim(tweets)</code></pre>
-<pre><code>## [1] 0 0</code></pre>
+<pre><code>## [1] 315  89</code></pre>
 <p>Now might be a good time to talk about rate limits. We are limited to go 3200 tweets in the past per handle, but we have also temporary limits to the calls we can do with the API.</p>
 <pre class="r"><code>limits &lt;- rate_limits()
-limits</code></pre>
-<pre><code>## # A tibble: 149 x 7
-##    query limit remaining reset reset_at            timestamp          
-##    &lt;chr&gt; &lt;int&gt;     &lt;int&gt; &lt;tim&gt; &lt;dttm&gt;              &lt;dttm&gt;             
-##  1 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-##  2 list~    75        75 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-##  3 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-##  4 list~   900       900 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-##  5 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-##  6 list~    75        75 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-##  7 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-##  8 list~   180       180 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-##  9 list~    15        15 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-## 10 list~   900       900 15.0~ 2019-05-05 14:52:30 2019-05-05 14:37:28
-## # ... with 139 more rows, and 1 more variable: app &lt;chr&gt;</code></pre>
-<p>In total there are 149 limits, we can access, amongst other things, how much remains and when the limit will be reset. Here are the limits:</p>
-<pre class="r"><code>limits$query</code></pre>
-<pre><code>##   [1] &quot;lists/list&quot;                                                      
-##   [2] &quot;lists/memberships&quot;                                               
-##   [3] &quot;lists/subscribers/show&quot;                                          
-##   [4] &quot;lists/members&quot;                                                   
-##   [5] &quot;lists/subscriptions&quot;                                             
-##   [6] &quot;lists/show&quot;                                                      
-##   [7] &quot;lists/ownerships&quot;                                                
-##   [8] &quot;lists/subscribers&quot;                                               
-##   [9] &quot;lists/members/show&quot;                                              
-##  [10] &quot;lists/statuses&quot;                                                  
-##  [11] &quot;application/rate_limit_status&quot;                                   
-##  [12] &quot;mutes/users/list&quot;                                                
-##  [13] &quot;mutes/users/ids&quot;                                                 
-##  [14] &quot;live_video_stream/status/:id&quot;                                    
-##  [15] &quot;friendships/outgoing&quot;                                            
-##  [16] &quot;friendships/list&quot;                                                
-##  [17] &quot;friendships/no_retweets/ids&quot;                                     
-##  [18] &quot;friendships/lookup&quot;                                              
-##  [19] &quot;friendships/incoming&quot;                                            
-##  [20] &quot;friendships/show&quot;                                                
-##  [21] &quot;guide&quot;                                                           
-##  [22] &quot;auth/csrf_token&quot;                                                 
-##  [23] &quot;blocks/list&quot;                                                     
-##  [24] &quot;blocks/ids&quot;                                                      
-##  [25] &quot;geo/similar_places&quot;                                              
-##  [26] &quot;geo/id/:place_id&quot;                                                
-##  [27] &quot;geo/reverse_geocode&quot;                                             
-##  [28] &quot;geo/search&quot;                                                      
-##  [29] &quot;users/report_spam&quot;                                               
-##  [30] &quot;users/contributors/pending&quot;                                      
-##  [31] &quot;users/show/:id&quot;                                                  
-##  [32] &quot;users/search&quot;                                                    
-##  [33] &quot;users/suggestions/:slug&quot;                                         
-##  [34] &quot;users/contributees/pending&quot;                                      
-##  [35] &quot;users/derived_info&quot;                                              
-##  [36] &quot;users/profile_banner&quot;                                            
-##  [37] &quot;users/suggestions/:slug/members&quot;                                 
-##  [38] &quot;users/lookup&quot;                                                    
-##  [39] &quot;users/suggestions&quot;                                               
-##  [40] &quot;followers/ids&quot;                                                   
-##  [41] &quot;followers/list&quot;                                                  
-##  [42] &quot;collections/list&quot;                                                
-##  [43] &quot;collections/entries&quot;                                             
-##  [44] &quot;collections/show&quot;                                                
-##  [45] &quot;statuses/retweeters/ids&quot;                                         
-##  [46] &quot;statuses/retweets_of_me&quot;                                         
-##  [47] &quot;statuses/home_timeline&quot;                                          
-##  [48] &quot;statuses/show/:id&quot;                                               
-##  [49] &quot;statuses/user_timeline&quot;                                          
-##  [50] &quot;statuses/friends&quot;                                                
-##  [51] &quot;statuses/retweets/:id&quot;                                           
-##  [52] &quot;statuses/mentions_timeline&quot;                                      
-##  [53] &quot;statuses/oembed&quot;                                                 
-##  [54] &quot;statuses/lookup&quot;                                                 
-##  [55] &quot;custom_profiles/list&quot;                                            
-##  [56] &quot;custom_profiles/show&quot;                                            
-##  [57] &quot;webhooks/subscriptions/direct_messages&quot;                          
-##  [58] &quot;webhooks&quot;                                                        
-##  [59] &quot;contacts/uploaded_by&quot;                                            
-##  [60] &quot;contacts/users&quot;                                                  
-##  [61] &quot;contacts/addressbook&quot;                                            
-##  [62] &quot;contacts/users_and_uploaded_by&quot;                                  
-##  [63] &quot;contacts/delete/status&quot;                                          
-##  [64] &quot;labs/:version/users&quot;                                             
-##  [65] &quot;labs/:version/tweets&quot;                                            
-##  [66] &quot;i/config&quot;                                                        
-##  [67] &quot;tweet_prompts/report_interaction&quot;                                
-##  [68] &quot;tweet_prompts/show&quot;                                              
-##  [69] &quot;moments/statuses/update&quot;                                         
-##  [70] &quot;moments/permissions&quot;                                             
-##  [71] &quot;help/tos&quot;                                                        
-##  [72] &quot;help/configuration&quot;                                              
-##  [73] &quot;help/privacy&quot;                                                    
-##  [74] &quot;help/settings&quot;                                                   
-##  [75] &quot;help/languages&quot;                                                  
-##  [76] &quot;feedback/show/:id&quot;                                               
-##  [77] &quot;feedback/events&quot;                                                 
-##  [78] &quot;business_experience/dashboard_settings/destroy&quot;                  
-##  [79] &quot;business_experience/dashboard_features&quot;                          
-##  [80] &quot;business_experience/keywords&quot;                                    
-##  [81] &quot;business_experience/dashboard_settings/update&quot;                   
-##  [82] &quot;business_experience/dashboard_settings/show&quot;                     
-##  [83] &quot;graphql&amp;POST&quot;                                                    
-##  [84] &quot;friends/following/ids&quot;                                           
-##  [85] &quot;friends/following/list&quot;                                          
-##  [86] &quot;friends/list&quot;                                                    
-##  [87] &quot;friends/ids&quot;                                                     
-##  [88] &quot;sandbox/account_activity/webhooks/:id/subscriptions&quot;             
-##  [89] &quot;drafts/statuses/update&quot;                                          
-##  [90] &quot;drafts/statuses/destroy&quot;                                         
-##  [91] &quot;drafts/statuses/ids&quot;                                             
-##  [92] &quot;drafts/statuses/list&quot;                                            
-##  [93] &quot;drafts/statuses/show&quot;                                            
-##  [94] &quot;drafts/statuses/create&quot;                                          
-##  [95] &quot;direct_messages/sent&quot;                                            
-##  [96] &quot;direct_messages/broadcasts/list&quot;                                 
-##  [97] &quot;direct_messages/subscribers/lists/members/show&quot;                  
-##  [98] &quot;direct_messages/mark_read&quot;                                       
-##  [99] &quot;direct_messages/subscribers/ids&quot;                                 
-## [100] &quot;direct_messages/sent_and_received&quot;                               
-## [101] &quot;direct_messages/broadcasts/statuses/list&quot;                        
-## [102] &quot;direct_messages&quot;                                                 
-## [103] &quot;direct_messages/subscribers/lists/members/ids&quot;                   
-## [104] &quot;direct_messages/subscribers/show&quot;                                
-## [105] &quot;direct_messages/broadcasts/show&quot;                                 
-## [106] &quot;direct_messages/broadcasts/statuses/show&quot;                        
-## [107] &quot;direct_messages/subscribers/lists/list&quot;                          
-## [108] &quot;direct_messages/show&quot;                                            
-## [109] &quot;direct_messages/events/list&quot;                                     
-## [110] &quot;direct_messages/subscribers/lists/show&quot;                          
-## [111] &quot;direct_messages/events/show&quot;                                     
-## [112] &quot;media/upload&quot;                                                    
-## [113] &quot;traffic/map&quot;                                                     
-## [114] &quot;account_activity/all/webhooks&quot;                                   
-## [115] &quot;account_activity/all/:instance_name/subscriptions&quot;               
-## [116] &quot;account_activity/direct_messages/webhooks&quot;                       
-## [117] &quot;account_activity/webhooks/:id/subscriptions/direct_messages/list&quot;
-## [118] &quot;account_activity/webhooks/:id/subscriptions/all&quot;                 
-## [119] &quot;account_activity/direct_messages/:instance_name/webhooks&quot;        
-## [120] &quot;account_activity/webhooks/:id/subscriptions/all/list&quot;            
-## [121] &quot;account_activity/webhooks/:id/subscriptions/direct_messages&quot;     
-## [122] &quot;account_activity/webhooks&quot;                                       
-## [123] &quot;account_activity/direct_messages/:instance_name/subscriptions&quot;   
-## [124] &quot;account_activity/webhooks/:id/subscriptions&quot;                     
-## [125] &quot;account_activity/all/:instance_name/webhooks&quot;                    
-## [126] &quot;account/login_verification_enrollment&quot;                           
-## [127] &quot;account/update_profile&quot;                                          
-## [128] &quot;account/verify_credentials&quot;                                      
-## [129] &quot;account/settings&quot;                                                
-## [130] &quot;safety/detection_feedback&quot;                                       
-## [131] &quot;favorites/list&quot;                                                  
-## [132] &quot;device/token&quot;                                                    
-## [133] &quot;tweets/stream/filter/rules&quot;                                      
-## [134] &quot;tweets/stream/filter/:instance_name&quot;                             
-## [135] &quot;tweets/search/:product/:label&quot;                                   
-## [136] &quot;tweets/search/:product/:instance/counts&quot;                         
-## [137] &quot;tweets/stream/filter/rules/:instance_name/validation&amp;POST&quot;       
-## [138] &quot;tweets/stream/filter/rules/:instance_name&amp;POST&quot;                  
-## [139] &quot;tweets/stream/filter/rules/:instance_name&amp;DELETE&quot;                
-## [140] &quot;tweets/stream/filter/rules/:instance_name/:rule_id&quot;              
-## [141] &quot;saved_searches/destroy/:id&quot;                                      
-## [142] &quot;saved_searches/show/:id&quot;                                         
-## [143] &quot;saved_searches/list&quot;                                             
-## [144] &quot;oauth/invalidate_token&quot;                                          
-## [145] &quot;search/tweets&quot;                                                   
-## [146] &quot;trends/closest&quot;                                                  
-## [147] &quot;trends/available&quot;                                                
-## [148] &quot;trends/place&quot;                                                    
-## [149] &quot;live_pipeline/events&quot;</code></pre>
+head(limits)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   query limit remaining reset reset_at            timestamp           app  
+##   &lt;chr&gt; &lt;int&gt;     &lt;int&gt; &lt;tim&gt; &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;
+## 1 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 2 list~    75        75 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 3 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 4 list~   900       900 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 5 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
+## 6 list~    75        75 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~</code></pre>
+<p>In total there are 149 limits, we can access, among other things, how much remains and when the limit will be reset. Here are some of the limits:</p>
+<pre class="r"><code>head(limits$query, 20)</code></pre>
+<pre><code>##  [1] &quot;lists/list&quot;                    &quot;lists/memberships&quot;            
+##  [3] &quot;lists/subscribers/show&quot;        &quot;lists/members&quot;                
+##  [5] &quot;lists/subscriptions&quot;           &quot;lists/show&quot;                   
+##  [7] &quot;lists/ownerships&quot;              &quot;lists/subscribers&quot;            
+##  [9] &quot;lists/members/show&quot;            &quot;lists/statuses&quot;               
+## [11] &quot;application/rate_limit_status&quot; &quot;mutes/users/list&quot;             
+## [13] &quot;mutes/users/ids&quot;               &quot;live_video_stream/status/:id&quot; 
+## [15] &quot;friendships/outgoing&quot;          &quot;friendships/list&quot;             
+## [17] &quot;friendships/no_retweets/ids&quot;   &quot;friendships/lookup&quot;           
+## [19] &quot;friendships/incoming&quot;          &quot;friendships/show&quot;</code></pre>
 <p>At this point we need to keep an eye on limits tweets (#49) and limits queries (#11).</p>
 <pre class="r"><code>limits %&gt;% select(limit, query, remaining, reset) %&gt;% 
   filter(query ==  &quot;application/rate_limit_status&quot;|
@@ -364,415 +191,612 @@ limits</code></pre>
 <pre><code>## # A tibble: 2 x 4
 ##   limit query                         remaining reset     
 ##   &lt;int&gt; &lt;chr&gt;                             &lt;int&gt; &lt;time&gt;    
-## 1   180 application/rate_limit_status        19 13.62 mins
-## 2   900 statuses/user_timeline              740 13.62 mins</code></pre>
+## 1   180 application/rate_limit_status        20 13.68 mins
+## 2   900 statuses/user_timeline              741 13.68 mins</code></pre>
 <p>We are searching 160 users and the rate limit for searching user timelines is 900, so we should be fine. But be aware that your limit searches are limited also (180 searches counted by individual limit in batches of 15 minutes).</p>
-<p>At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interuptions.</p>
+<p>At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interruptions.</p>
 <p>How well did our test go? Did we get tweets from everyone?</p>
 <pre class="r"><code>setdiff(twitter_users$ln_fn, tweets$ln_fn)</code></pre>
-<pre><code>## Warning: Unknown or uninitialised column: &#39;ln_fn&#39;.</code></pre>
-<pre><code>##   [1] &quot;Almaci Meyrem&quot;             &quot;Becq Sonja&quot;               
-##   [3] &quot;Beke Wouter&quot;               &quot;Bellens Rita&quot;             
-##   [5] &quot;Ben Hamou Nawal&quot;           &quot;Blanchart Philippe&quot;       
-##   [7] &quot;Bogaert Hendrik&quot;           &quot;Bracke Siegfried&quot;         
-##   [9] &quot;Burton Emmanuel&quot;           &quot;Buysrogge Peter&quot;          
-##  [11] &quot;Calomne Gautier&quot;           &quot;Calvo Kristof&quot;            
-##  [13] &quot;Capoen An&quot;                 &quot;Caprasse Véronique&quot;       
-##  [15] &quot;Carcaci Aldo&quot;              &quot;Casier Youro&quot;             
-##  [17] &quot;Chastel Olivier&quot;           &quot;Clarinval David&quot;          
-##  [19] &quot;Corthouts Michel&quot;          &quot;Daerden Frédéric&quot;         
-##  [21] &quot;Dallemagne Georges&quot;        &quot;De Coninck Monica&quot;        
-##  [23] &quot;De Coninck Inez&quot;           &quot;De Crom Sandrine&quot;         
-##  [25] &quot;de Lamotte Michel&quot;         &quot;De Roover Peter&quot;          
-##  [27] &quot;De Vriendt Wouter&quot;         &quot;De Wever Bart&quot;            
-##  [29] &quot;De Wit Sophie&quot;             &quot;Dedecker Peter&quot;           
-##  [31] &quot;Dedry Anne&quot;                &quot;Degroote Koenraad&quot;        
-##  [33] &quot;Delizée Jean-Marc&quot;         &quot;Demir Zuhal&quot;              
-##  [35] &quot;Demon Franky&quot;              &quot;Deseyn Roel&quot;              
-##  [37] &quot;Dewael Patrick&quot;            &quot;Dewinter Filip&quot;           
-##  [39] &quot;Di Rupo Elio&quot;              &quot;Dispa Benoît&quot;             
-##  [41] &quot;Dumery Daphné&quot;             &quot;Flahaux Jean-Jacques&quot;     
-##  [43] &quot;Fonck Catherine&quot;           &quot;Foret Gilles&quot;             
-##  [45] &quot;Frédéric André&quot;            &quot;Francken Theo&quot;            
-##  [47] &quot;Friart Benoît&quot;             &quot;Gabriëls Katja&quot;           
-##  [49] &quot;Gantois Rita&quot;              &quot;Gilkinet Georges&quot;         
-##  [51] &quot;Goffin Philippe&quot;           &quot;Grosemans Karolien&quot;       
-##  [53] &quot;Grovonius Gwenaëlle&quot;       &quot;Hedebouw Raoul&quot;           
-##  [55] &quot;Heeren Veerle&quot;             &quot;Jadin Kattrin&quot;            
-##  [57] &quot;Jambon Jan&quot;                &quot;Jiroflée Karin&quot;           
-##  [59] &quot;Kir Emir&quot;                  &quot;Kitir Meryame&quot;            
-##  [61] &quot;Laaouej Ahmed&quot;             &quot;Lachaert Egbert&quot;          
-##  [63] &quot;Lalieux Karine&quot;            &quot;Lambrecht Annick&quot;         
-##  [65] &quot;Lanjri Nahima&quot;             &quot;Lijnen Nele&quot;              
-##  [67] &quot;Lutgen Benoît&quot;             &quot;Luykx Peter&quot;              
-##  [69] &quot;Maingain Olivier&quot;          &quot;Nollet Jean-Marc&quot;         
-##  [71] &quot;Onkelinx Laurette&quot;         &quot;Özen Özlem&quot;               
-##  [73] &quot;Pas Barbara&quot;               &quot;Penris Jan&quot;               
-##  [75] &quot;Piedboeuf Benoît&quot;          &quot;Schepmans Françoise&quot;      
-##  [77] &quot;Schlitz Sarah&quot;             &quot;Scourneau Vincent&quot;        
-##  [79] &quot;Senesael Daniel&quot;           &quot;Smaers Griet&quot;             
-##  [81] &quot;Somers Ine&quot;                &quot;Spooren Jan&quot;              
-##  [83] &quot;Temmerman Karin&quot;           &quot;Terwingen Raf&quot;            
-##  [85] &quot;Thiébaut Eric&quot;             &quot;Thiéry Damien&quot;            
-##  [87] &quot;Thoron Stéphanie&quot;          &quot;Uyttersprot Goedele&quot;      
-##  [89] &quot;Van Biesen Luk&quot;            &quot;Van Camp Yoleen&quot;          
-##  [91] &quot;Van Cauter Carina&quot;         &quot;Van der Maelen Dirk&quot;      
-##  [93] &quot;Van Hecke Stefaan&quot;         &quot;Van Hees Marco&quot;           
-##  [95] &quot;Van Hoof Els&quot;              &quot;Van Mechelen Dirk&quot;        
-##  [97] &quot;Van Peel Valerie&quot;          &quot;Van Peteghem Vincent&quot;     
-##  [99] &quot;Van Vaerenbergh Kristien&quot;  &quot;Vanden Burre Gilles&quot;      
-## [101] &quot;Vandenput Tim&quot;             &quot;Vandeput Steven&quot;          
-## [103] &quot;Vercamer Stefaan&quot;          &quot;Vercammen Jan&quot;            
-## [105] &quot;Verherstraeten Servais&quot;    &quot;Vermeulen Brecht&quot;         
-## [107] &quot;Vuye Hendrik&quot;              &quot;Waterschoot Véronique&quot;    
-## [109] &quot;Willaert Evita&quot;            &quot;Winckel Fabienne&quot;         
-## [111] &quot;Wollants Bert&quot;             &quot;Wouters Veerle&quot;           
-## [113] &quot;Yüksel Veli&quot;               &quot;Bacquelaine Daniel&quot;       
-## [115] &quot;Claerhout Sarah&quot;           &quot;Crusnière Stéphane&quot;       
-## [117] &quot;De Block Maggie&quot;           &quot;De Crem Pieter&quot;           
-## [119] &quot;De Croo Alexander&quot;         &quot;Demeyer Willy&quot;            
-## [121] &quot;Ducarme Denis&quot;             &quot;Flahaut André&quot;            
-## [123] &quot;Fremault Céline&quot;           &quot;Geens Koen&quot;               
-## [125] &quot;Hellings Benoit&quot;           &quot;Hufkens Renate&quot;           
-## [127] &quot;Khattabi Zakia&quot;            &quot;Klaps Johan&quot;              
-## [129] &quot;Lahaye-Battheu Sabien&quot;     &quot;Massin Eric&quot;              
-## [131] &quot;Michel Charles&quot;            &quot;Poncelet Isabelle&quot;        
-## [133] &quot;Raskin Wouter&quot;             &quot;Reynders Didier&quot;          
-## [135] &quot;Turtelboom Annemie&quot;        &quot;Van der Donckt Wim&quot;       
-## [137] &quot;Vanheste Ann&quot;              &quot;Wathelet Melchior&quot;        
-## [139] &quot;Wilmès Sophie&quot;             &quot;Chabot Jacques&quot;           
-## [141] &quot;Fernandez Fernandez Julie&quot; &quot;Geerts David&quot;             
-## [143] &quot;Henry Olivier&quot;             &quot;Janssen Werner&quot;           
-## [145] &quot;Matz Vanessa&quot;              &quot;Metsu Koen&quot;               
-## [147] &quot;Smeyers Sarah&quot;             &quot;Top Alain&quot;                
-## [149] &quot;Cassart-Mailleux Caroline&quot; &quot;Ceysens Patricia&quot;         
-## [151] &quot;Delannois Paul-Olivier&quot;    &quot;Dierick Leen&quot;             
-## [153] &quot;Janssens Dirk&quot;             &quot;Miller Richard&quot;           
-## [155] &quot;Muylle Nathalie&quot;           &quot;Van den Bergh Jef&quot;        
-## [157] &quot;Van Quickenborne Vincent&quot;  &quot;Vanvelthoven Peter&quot;       
-## [159] &quot;Marghem Marie-Christine&quot;   &quot;Pehlivan Fatma&quot;</code></pre>
-<p>Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some 🎾 🏸</p>
+<pre><code>## character(0)</code></pre>
+<p>Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some 🏸 and after having waited fifteen minutes to be sure all rate limits were reset.</p>
 <pre class="r"><code>twitter_users &lt;- twitter_users %&gt;% 
   arrange(screen_name) %&gt;% 
   distinct(screen_name, .keep_all = TRUE) # removing doubles if present
 
 get_handle_tweets &lt;- function(screen_name, ln_fn) {
-  print(screen_name)
+  print(screen_name) # this can be used to see the advancement
   get_timeline(screen_name, n=3200) %&gt;% 
     mutate(ln_fn = ln_fn)
 }
 
 system.time(tweets &lt;- map2_df(twitter_users$screen_name,twitter_users$ln_fn, 
-             possibly(get_handle_tweets, otherwise = NULL)))</code></pre>
-<pre><code>## [1] &quot;AhmedLaaouej&quot;
-## [1] &quot;AlainTop27&quot;
-## [1] &quot;alexanderdecroo&quot;
-## [1] &quot;ancapoen&quot;
-## [1] &quot;andreflahaut&quot;
-## [1] &quot;annededry&quot;
-## [1] &quot;AnnVanheste&quot;
-## [1] &quot;ATurtelboom&quot;
-## [1] &quot;Barbara_Pas&quot;
-## [1] &quot;Bart_DeWever&quot;
-## [1] &quot;BellensRita&quot;
-## [1] &quot;Benoitbp59&quot;
-## [1] &quot;BenoitDispa&quot;
-## [1] &quot;BenoitFriart&quot;
-## [1] &quot;BenoitHellings&quot;
-## [1] &quot;BenoitLutgen&quot;
-## [1] &quot;BertWollants&quot;
-## [1] &quot;BurtonEmmanuel&quot;
-## [1] &quot;carcaci49&quot;
-## [1] &quot;CarinaVanCauter&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;CarolineCassart&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;CasierYouro&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;catherinefonck&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;celinefremault&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;CharlesMichel&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;DamienThiery&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;DanBacquelaine&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;danielsenesael&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;DavidClarinval&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;ddumery&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;DeWitSophie&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;dirkjanssens19&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;DirkVanMechele1&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;dirkvdmaelen&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;dreynders&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;ducarmedenis&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;egbertlachaert&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;eliodirupo&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;ElsVanHoofcdenv&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;emir_kir&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;EricMassin&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;EricThiebaut&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;EvitaWillaert&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;FabienneWinckel&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;FDW_VB&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;FlahauxMRI&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;FranckenTheo&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;FrankyDemon&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;FredericDaerden&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;FredericLeChat&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;fschepmans&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;G_Dallemagne&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;G_Uyttersprot&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;GautierCalomne&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;GeertsDavid&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;GeorgesGilkinet&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Gilles_VDB&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;gillesforet&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Gwengrovonius&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;hendrikbogaert&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;HendrikVuye&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;IneSomers&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;inez_deconinck&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;isabellepon&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;jacques_chabot&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;JanJambon&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;JanPenris&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;JanVercammenNVA&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;jefvandenbergh&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;jmdelizee&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;jmnollet&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;JohanKlaps&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;juliee710&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;karinelalieux&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;KarinJiroflee&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;karintemmerman&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;KaroGrosemans&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;katja_gabriels&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;KattrinJadin&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Koen_Geens1&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;koenraaddegroo1&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;kris10vanvaer&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;kristofcalvo&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;LambrechtAnnick&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;leendierick&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;LijnenNele&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;LOnkelinx&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;LukVanBiesen&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Maggie_DeBlock&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Marco_VanHees&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;McMarghem&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;MeryameKitir&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;MeyremAlmaci&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;MicheldeLamotte&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;millerrichardmr&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;MonicaDeConinck&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;NahimaLanjri&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;nathaliemuylle&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;nawalbenhamou&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;OChastel&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Olihen&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;OlivierMaingain&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;OzlemOzen1&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;patriciaceysens&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;PatrickDewael&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;peerlux&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;pehlivan_fatma&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;PeterBuysrogge&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;peterdedecker&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;PeterDeRoover1&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Phgoffin&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;PhilBlanchart&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;pieterdecrem&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;podelannois&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Rafterwingen&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;RaoulHedebouw&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;RaskinWouter&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;RenateHufkens&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;RitaGantois1&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;roeldeseyn&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;sandrinedecrom&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Sarah_Claerhout&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;SarahSchlitz&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;SBattheu&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;scourneau&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;ServaisV&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;sky39119&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;SmaersGriet&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;smeyers1994&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;SonjaBecq&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Sophie_Wilmes&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;SoVandeWoestyne&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;SpoorenJan&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Stefaanvercamer&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Steph_Crusniere&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;sthbracke&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;svandeput&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;SVHecke&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;ThoronStephanie&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;TimVandenput&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Univers80&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;valerievanpeel&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;vanderdoncktwim&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;VanessaMatz24&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;VCaprasse&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Veerle_Wouters&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;veerleheeren&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;veliyuksel&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;VermeulenBrecht&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;VeroWaterschoot&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;vincent_v_p&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;VincentVQ&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;VvelthovenPeter&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;wbeke&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;WernerJanssen00&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Willy_Demeyer&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;WouterDeVriendt&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;YoleenVanCamp&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;ZakiaKhattabi&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>## [1] &quot;Zu_Demir&quot;</code></pre>
-<pre><code>## Warning: Rate limit exceeded - 88</code></pre>
-<pre><code>##    user  system elapsed 
-##   73.25    0.97  167.22</code></pre>
-<pre class="r"><code>dim(tweets)</code></pre>
-<pre><code>## [1] 27237    89</code></pre>
-<pre class="r"><code>saveRDS(tweets, &quot;./data/20190503/tweets.rds&quot;)</code></pre>
-<p>Cool, so about 260K tweets.</p>
-<p>But as already mentioned these are some of the tweets from people who at some time were in the 54th legistlature. They are not always a tweet from a person actually seating in parliament.</p>
-<p>This wikipedia <a href="https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)#Lijst_van_volksvertegenwoordigers">page</a> has a good overview of the changes that occured since May 2014.</p>
+             possibly(get_handle_tweets, otherwise = NULL)))
+dim(tweets)</code></pre>
+<p>Cool, so about 265K tweets.</p>
+<p>But as already mentioned these are some of the tweets from people who at some time were in the 54th legislature. They are not always a tweet from a person actually seating in parliament.</p>
+<p>This Wikipedia page <a href="https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)" class="uri">https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)</a> has a good overview of the changes that occurred since May 2014.</p>
+<p>A few have also changed party or became independent. The table that was used to obtain the list of parliamentarian’s names, language and party, can be transformed into a reference table that we can join to the tweets for further analysis.</p>
+<pre class="r"><code>names &lt;- readRDS(&quot;./data/190417/names.rds&quot;)
+party_less &lt;- names %&gt;% 
+  filter(is.na(party))</code></pre>
+<p>The text on the Wikipedia page contains the information that is needed, but I wonder how easy it will be to use. We can try, let’s see what we get.</p>
+<pre class="r"><code>url &lt;- &quot;https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)&quot; 
+
+wiki_table_source&lt;- url %&gt;% 
+  read_html() %&gt;%
+  html_node(xpath = &#39;//*[@id=&quot;mw-content-text&quot;]/div/table[4]&#39;)  %&gt;%
+  html_table(fill = TRUE)
+
+head(wiki_table_source)</code></pre>
+<pre><code>##                 Volksvertegenwoordiger Fractie Kieskring  Taalgroep
+## 1         Almaci, Meyrem Meyrem Almaci   Groen Antwerpen Nederlands
+## 2           Bellens, Rita Rita Bellens    N-VA Antwerpen Nederlands
+## 3         Calvo, Kristof Kristof Calvo   Groen Antwerpen Nederlands
+## 4 De Coninck, Monica Monica De Coninck    sp.a Antwerpen Nederlands
+## 5             Demir, Zuhal Zuhal Demir    N-VA Antwerpen Nederlands
+## 6     De Roover, Peter Peter De Roover    N-VA Antwerpen Nederlands
+##                                                                                                                          Opmerkingen
+## 1                                                                                                                               &lt;NA&gt;
+## 2                                                                                                                               &lt;NA&gt;
+## 3                                                                                                                               &lt;NA&gt;
+## 4                                                                                                                               &lt;NA&gt;
+## 5 Werd van 9 maart 2017 tot 9 december 2018 als staatssecretaris in de federale regering-Michel I vervangen door Wim Van der Donckt.
+## 6                                                                                                                               &lt;NA&gt;</code></pre>
+<p>The nice thing is that additional information like the voting district was obtained. Using the comments (“Opmerkingen”), will probably be more time consuming than hard coding the changes, but I think it will be more fun ;-)</p>
+<p>That is if you are interested in data cleaning. If not no need to continue reading this post, because it will be all spring cleaning from now till the end.</p>
+<pre class="r"><code>wiki_table_source %&gt;% 
+  filter(!is.na(Opmerkingen)) %&gt;%
+  mutate(Opmerkingen = substr(Opmerkingen,0,100)) %&gt;% 
+  select(Opmerkingen) %&gt;% 
+  slice(1:7)</code></pre>
+<pre><code>##                                                                                            Opmerkingen
+## 1 Werd van 9 maart 2017 tot 9 december 2018 als staatssecretaris in de federale regering-Michel I verv
+## 2 Werd van 14 oktober 2014 tot 9 december 2018 als minister in de federale regering-Michel I vervangen
+## 3                          Vervangt vanaf 19 juni 2014 Marijke Dillen, die beslist om niet te zetelen.
+## 4 Vervangt sinds 3 mei 2018 Annemie Turtelboom, die lid wordt van de Europese Rekenkamer. Eerder vervi
+## 5                                                       Voorzitter van de Kamer vanaf 14 oktober 2014.
+## 6 Vervangt vanaf 10 november 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij te
+## 7 Vervangt vanaf 14 oktober 2014 Alexander De Croo, die minister in de federale regering-Michel I werd</code></pre>
+<p>‘Vervangt’ means ‘replaces’, so these are members that replaced someone who took on another mandate. ‘Werd’ means ‘was’, so these were replaced.</p>
+<pre class="r"><code>wiki_table &lt;- wiki_table_source %&gt;% 
+  filter(!is.na(Opmerkingen)) %&gt;% 
+  mutate(first_word = str_extract(Opmerkingen,&quot;(\\w+)&quot;))</code></pre>
+<p>In the comments (Opmerkingen) there are up to three dates that we need. A first step would be to change the month names in numbers. And then extract all the numbers into a list.</p>
+<pre class="r"><code>wiki_table &lt;- wiki_table %&gt;% 
+  mutate(Opmerkingen = gsub(&quot;januari&quot;, 1, Opmerkingen),
+         Opmerkingen = gsub(&quot;februari&quot;, 2, Opmerkingen),
+         Opmerkingen = gsub(&quot;maart&quot;, 3, Opmerkingen),
+         Opmerkingen = gsub(&quot;april&quot;, 4, Opmerkingen),
+         Opmerkingen = gsub(&quot;mei&quot;, 5, Opmerkingen),
+         Opmerkingen = gsub(&quot;juni&quot;, 6, Opmerkingen),
+         Opmerkingen = gsub(&quot;juli&quot;, 7, Opmerkingen),
+         Opmerkingen = gsub(&quot;augustus&quot;, 8, Opmerkingen),
+         Opmerkingen = gsub(&quot;september&quot;, 9, Opmerkingen),
+         Opmerkingen = gsub(&quot;oktober&quot;, 10, Opmerkingen),
+         Opmerkingen = gsub(&quot;november&quot;, 11, Opmerkingen),
+         Opmerkingen = gsub(&quot;december&quot;, 12, Opmerkingen)) %&gt;%
+    mutate(digits = str_extract_all(Opmerkingen,&quot;([0-9]+)&quot;)) %&gt;% #&#39;+&#39; keeps them together
+  filter(first_word != &quot;De&quot;) # this one has no date 
+
+
+
+inspect &lt;-wiki_table$digits
+inspect[[20]]</code></pre>
+<pre><code>## [1] &quot;22&quot;   &quot;9&quot;    &quot;2015&quot; &quot;11&quot;   &quot;10&quot;   &quot;2014&quot;</code></pre>
+<p>It will be more difficult to handle the digits if days and months smaller than 10 do not have a leading 0. So one needs to be added, before concatenating all the numbers</p>
+<pre class="r"><code>for (i in (1:length(inspect))){
+  for (j in (1:length(inspect[[i]]))){
+    if (nchar(inspect[[i]][j]) == 1) {inspect[[i]][j] &lt;- paste0(&quot;0&quot;,inspect[[i]][j])}
+  }
+  inspect[[i]] &lt;- paste0(inspect[[i]], collapse = &quot;&quot;)
+  print(inspect[[i]])
+}</code></pre>
+<pre><code>## [1] &quot;0903201709122018&quot;
+## [1] &quot;1410201409122018&quot;
+## [1] &quot;19062014&quot;
+## [1] &quot;030520183007201429042016&quot;
+## [1] &quot;14102014&quot;
+## [1] &quot;1011201614102014&quot;
+## [1] &quot;14102014&quot;
+## [1] &quot;14032019&quot;
+## [1] &quot;24082017&quot;
+## [1] &quot;24052018&quot;
+## [1] &quot;14102014&quot;
+## [1] &quot;06122018&quot;
+## [1] &quot;12012017&quot;
+## [1] &quot;13122017&quot;
+## [1] &quot;19112015&quot;
+## [1] &quot;30072014&quot;
+## [1] &quot;06122018&quot;
+## [1] &quot;28052015&quot;
+## [1] &quot;19112015&quot;
+## [1] &quot;2209201511102014&quot;
+## [1] &quot;09112017&quot;
+## [1] &quot;18102018&quot;
+## [1] &quot;14102014&quot;
+## [1] &quot;23042015&quot;
+## [1] &quot;1410201409122018&quot;
+## [1] &quot;14102014&quot;
+## [1] &quot;14102014&quot;
+## [1] &quot;22092710201627102016&quot;
+## [1] &quot;300614102014&quot;
+## [1] &quot;1410201412112018&quot;
+## [1] &quot;22092710201627102016&quot;
+## [1] &quot;0410201830072014&quot;
+## [1] &quot;14102014&quot;
+## [1] &quot;20092018&quot;</code></pre>
+<pre class="r"><code># pure poetry if you ask me
+
+con_dates &lt;- data.frame(&quot;condate&quot; = unlist(inspect))
+wiki_table &lt;- wiki_table %&gt;% 
+  cbind(con_dates) %&gt;% 
+  select(-digits)</code></pre>
+<p>Now we can extract the dates, but one problem still remains, on Wikipedia some years are not repeated for certain time periods:</p>
+<pre class="r"><code>wiki_table$Opmerkingen[28]</code></pre>
+<pre><code>## [1] &quot;Zetelt van 22 9 tot 27 10 2016 als onafhankelijke en vanaf 27 10 2016 in de Vuye&amp;Wouters-fractie.&quot;</code></pre>
+<pre class="r"><code>as.character(wiki_table$condate[28])</code></pre>
+<pre><code>## [1] &quot;22092710201627102016&quot;</code></pre>
+<p>A little bit more work is needed.</p>
+<pre class="r"><code>wiki_table &lt;- wiki_table %&gt;% 
+  mutate(date_1 = 
+           ifelse(substr(condate,5,6) == &quot;20&quot;,
+                  substr(condate,1,8),
+                  paste0(substr(condate,1,4),
+                    substr(condate,str_locate(condate, &quot;201&quot;),
+                            str_locate(condate, &quot;201&quot;) + 3))
+                  )
+         ) %&gt;% 
+   mutate(date_2 = 
+           ifelse(substr(condate,5,6) == &quot;20&quot;,
+                  substr(condate,9,16),
+                  paste0(
+                    substr(condate,str_locate(condate, &quot;201&quot;)-4,
+                            str_locate(condate, &quot;201&quot;) + 3))
+                  )
+         ) %&gt;% 
+   mutate(date_3 = 
+           ifelse(substr(condate,5,6) == &quot;20&quot;,
+                  substr(condate,17,24),
+                  &quot;&quot;)
+         ) %&gt;% 
+  select(-condate)
+
+
+wiki_table &lt;- wiki_table %&gt;% 
+  mutate(date_1 = dmy(as.numeric(date_1)),
+         date_2 = dmy(as.numeric(date_2)),
+         date_3 = dmy(as.numeric(date_3)),
+                )</code></pre>
+<p>There are other possibilities, but here we will use a table with one line per period a person seated for a party. To later use in the analysis of the tweets collected. In that table there will be one start date and one end date. A good start is assuming everyone started at “2014-06-19” and ended at “2019-05-31”, and then making corrections afterwards.</p>
+<p>We can start by consolidating our tables.</p>
+<pre class="r"><code>setdiff(names(wiki_table),names(wiki_table_source))</code></pre>
+<pre><code>## [1] &quot;first_word&quot; &quot;date_1&quot;     &quot;date_2&quot;     &quot;date_3&quot;</code></pre>
+<pre class="r"><code>wiki_table &lt;- wiki_table %&gt;% 
+  rbind(wiki_table_source %&gt;% 
+          filter(is.na(Opmerkingen) 
+                 | Volksvertegenwoordiger == &quot;Jadin, Kattrin Kattrin Jadin&quot;) %&gt;%
+          mutate(first_word = &quot;&quot;,
+                 date_1 = as.Date(&quot;2001-01-01&quot;),
+                 date_2 = as.Date(&quot;2001-01-01&quot;),
+                 date_3 = as.Date(&quot;2001-01-01&quot;))
+                              )</code></pre>
+<p>Aw, shoot did not see the names are funky.</p>
+<pre class="r"><code>head(wiki_table$Volksvertegenwoordiger)</code></pre>
+<pre><code>## [1] &quot;Demir, Zuhal Zuhal Demir&quot;                  
+## [2] &quot;Jambon, Jan Jan Jambon&quot;                    
+## [3] &quot;Penris, Jan Jan Penris&quot;                    
+## [4] &quot;Wilrycx, Frank Frank Wilrycx&quot;              
+## [5] &quot;Bracke, Siegfried Siegfried Bracke&quot;        
+## [6] &quot;Van Peteghem, Vincent Vincent Van Peteghem&quot;</code></pre>
+<p>Maybe we can join on the concatenation of letters.</p>
+<pre class="r"><code>x &lt;- wiki_table %&gt;% 
+  mutate(join = str_remove_all(Volksvertegenwoordiger,&quot; &quot;),
+         join = str_remove_all(join,&quot;,&quot;),
+         join = substr(join,1, nchar(join)/2))
+
+y &lt;- names %&gt;% 
+  mutate(join = str_remove_all(ln_fn,&quot; &quot;))
+
+z &lt;- y %&gt;% 
+  left_join(x)</code></pre>
+<pre><code>## Joining, by = &quot;join&quot;</code></pre>
+<pre class="r"><code>test &lt;- z %&gt;% 
+  filter(!is.na(Volksvertegenwoordiger)) %&gt;% 
+  mutate(test = &quot;test&quot;)
+  
+missing &lt;- wiki_table %&gt;% 
+  left_join(test %&gt;% 
+              select(Volksvertegenwoordiger, test)) %&gt;% 
+  filter(is.na(test))</code></pre>
+<pre><code>## Joining, by = &quot;Volksvertegenwoordiger&quot;</code></pre>
+<pre class="r"><code>missing$Volksvertegenwoordiger</code></pre>
+<pre><code>## [1] &quot;Van de Velde, Rob Rob Van de Velde&quot;                  
+## [2] &quot;Fernandez-Fernandez, Julie Julie Fernandez-Fernandez&quot;
+## [3] &quot;Jiroflée, Karine Karine Jiroflée&quot;</code></pre>
+<p>Yes I’ve got myself in a pickle again. Three missing. The join field for them should be VandeVeldeRobert, JirofléeKarin and, FernandezFernandezJulie. Instead of VandeVeldeRob, JirofléeKarine and Fernandez-FernandezJulie.</p>
+<p>We can follow how they are spelled on dekamer.be: Robert Van de Velde, Karin Jiroflée, Julie Fernandez Fernandez</p>
+<pre class="r"><code>x[x$join == &quot;VandeVeldeRob&quot;,]$join &lt;- &quot;VandeVeldeRobert&quot;
+x[x$join == &quot;JirofléeKarine&quot;,]$join &lt;- &quot;JirofléeKarin&quot;
+x[x$join == &quot;Fernandez-FernandezJulie&quot;,]$join &lt;- &quot;FernandezFernandezJulie&quot;
+
+y &lt;- names %&gt;% 
+  mutate(join = str_remove_all(ln_fn,&quot; &quot;))
+
+z &lt;- y %&gt;% 
+  left_join(x)</code></pre>
+<pre><code>## Joining, by = &quot;join&quot;</code></pre>
+<pre class="r"><code>test &lt;- z %&gt;% 
+  filter(!is.na(Volksvertegenwoordiger)) %&gt;% 
+  mutate(test = &quot;test&quot;)
+  
+missing &lt;- wiki_table %&gt;% 
+  left_join(test %&gt;% 
+              select(Volksvertegenwoordiger, test)) %&gt;% 
+  filter(is.na(test))</code></pre>
+<pre><code>## Joining, by = &quot;Volksvertegenwoordiger&quot;</code></pre>
+<pre class="r"><code>missing$Volksvertegenwoordiger</code></pre>
+<pre><code>## character(0)</code></pre>
+<p>Yeah! So now we have em all we can give em a default start date and a default end date.</p>
+<pre class="r"><code>reps54 &lt;- z %&gt;% 
+  mutate(start_date = as.Date(&quot;2014-06-19&quot;),
+         end_date = as.Date(&quot;2019-05-31&quot;)) %&gt;% 
+  mutate(fn_ln = trimws(fn_ln, c(&quot;both&quot;)))</code></pre>
+<p>Maybe we can start with those who only have one ‘date_1’? Let’s have a look.</p>
+<pre class="r"><code>one_date &lt;- reps54 %&gt;% 
+  filter(!is.na(date_1) &amp;
+           is.na(date_2))
+
+unique(one_date$first_word)</code></pre>
+<pre><code>## [1] &quot;Voorzitter&quot; &quot;Vanaf&quot;      &quot;Vervangt&quot;   &quot;Zetelt&quot;</code></pre>
+<p>“Voorzitter” is the president of the chamber. Not interested in this for now, so no change to be made. “Vanaf” seems to indicate a change of party and/or party name. What happened to the <a href="https://en.wikipedia.org/wiki/D%C3%A9FI">FDF</a>? Seems to have been a name change.</p>
+<p>In the data that come from the official website these members are already ‘Défi’ in the field ‘Party’. We can work on the field ‘fractie’ (party) but I doubt it will be needed.</p>
+<pre class="r"><code>fdf &lt;- one_date %&gt;% 
+  filter(first_word == &quot;Vanaf&quot;) %&gt;% 
+  mutate(end_date = ymd(date_1) -days(1)) %&gt;% 
+  rbind(one_date %&gt;% 
+          filter(first_word == &quot;Vanaf&quot;) %&gt;% 
+          mutate(start_date = date_1,
+                 Fractie = &quot;Défi&quot;))
+
+one_date &lt;- one_date %&gt;% 
+  filter(first_word != &quot;Vanaf&quot;) %&gt;% 
+  rbind(fdf)</code></pre>
+<p>So that takes care of ‘Vanaf’, now for “Vervangt” (replaces). Which looks pretty straightforward. The date_1 just needs to replace the start date.</p>
+<pre class="r"><code>replaces &lt;- one_date %&gt;% 
+  filter(first_word == &quot;Vervangt&quot;) %&gt;% 
+  mutate(start_date = date_1)
+
+one_date &lt;- one_date %&gt;% 
+  filter(first_word != &quot;Vervangt&quot;) %&gt;% 
+  rbind(replaces)</code></pre>
+<p>In this case ‘Zetelt’ means the person became independent. I doubt it will make a big difference to make the change for one person, but for the sake of precision, here is the correction.</p>
+<pre class="r"><code>zetelt &lt;- one_date %&gt;% 
+  filter(first_word == &quot;Zetelt&quot;) %&gt;% 
+  mutate(end_date = ymd(date_1) -days(1)) %&gt;% 
+  rbind(one_date %&gt;% 
+          filter(first_word == &quot;Zetelt&quot;) %&gt;% 
+          mutate(start_date = date_1,
+                 Fractie = &quot;ONAFH&quot;))
+
+one_date &lt;- one_date %&gt;% 
+  filter(first_word != &quot;Zetelt&quot;) %&gt;% 
+  rbind(zetelt)</code></pre>
+<p>Now just need to bind them and go to the next batch.</p>
+<pre class="r"><code>reps54 &lt;- reps54 %&gt;% 
+  filter(is.na(date_1) | date_1 == &quot;2001-01-01&quot;
+         | (date_1 != &quot;2001-01-01&quot; &amp; date_2 != &quot;2001-01-01&quot;))%&gt;% 
+  rbind(one_date)</code></pre>
+<p>two_dates</p>
+<pre class="r"><code>two_dates &lt;- reps54 %&gt;% 
+  filter(!is.na(date_1) &amp;
+           !is.na(date_2) &amp;
+           is.na(date_3))
+
+unique(two_dates$first_word)</code></pre>
+<pre><code>## [1] &quot;Vervangt&quot;   &quot;Werd&quot;       &quot;Voorzitter&quot; &quot;Zetelt&quot;</code></pre>
+<p>There are now three replacements (Vervangt) with two dates in the comment phrase. It is getting complicated, but fortunately they seem to be structured the same way.</p>
+<pre class="r"><code>two_dates %&gt;% filter(first_word == &quot;Vervangt&quot;) %&gt;%
+  mutate(Opmerkingen = substr(Opmerkingen, 0, 100)) %&gt;% 
+  select(Opmerkingen)</code></pre>
+<pre><code>##                                                                                            Opmerkingen
+## 1 Vervangt vanaf 22 9 2015 Sophie Wilmès, die minister wordt in de federale regering-Michel I. Wilmès 
+## 2 Vervangt vanaf 4 10 2018 Stéphane Crusnière, die financieel en administratief directeur van de Régie
+## 3 Vervangt vanaf 10 11 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij teruggee</code></pre>
+<p>So we are looking at these parliamentarians:</p>
+<pre class="r"><code>two_dates %&gt;% filter(first_word == &quot;Vervangt&quot;) %&gt;% 
+  select(fn_ln)</code></pre>
+<pre><code>##                  fn_ln
+## 1      Gautier Calomne
+## 2     Michel Corthouts
+## 3 Vincent Van Peteghem</code></pre>
+<p>They just enter the parliament at date_1, that is easy, but there is more information in the remarks. Easy part first (EPF), low hanging fruits, quick impacts and what have you.</p>
+<pre class="r"><code>vervangt &lt;- two_dates %&gt;% 
+  filter(first_word == &quot;Vervangt&quot;) %&gt;% 
+  mutate(start_date = date_1)
+
+two_dates &lt;- two_dates %&gt;% 
+  filter(first_word != &quot;Vervangt&quot;) %&gt;%
+  rbind(vervangt)</code></pre>
+<p>Those with “werd” were replaced during a period, so end_date is date_1-1 for their first period, and date_2+1 is the start date of their second period.</p>
+<pre class="r"><code>werd_1 &lt;- two_dates %&gt;% 
+  filter(first_word == &quot;Werd&quot;) %&gt;% 
+  mutate(end_date = ymd(date_1) - days(1))
+
+werd_2 &lt;- two_dates %&gt;% 
+  filter(first_word == &quot;Werd&quot;) %&gt;% 
+  mutate(start_date = ymd(date_2) + days(1))
+
+werd &lt;- rbind(werd_1, werd_2)
+
+two_dates &lt;- two_dates %&gt;%
+  filter(first_word != &quot;Werd&quot;) %&gt;%
+  rbind(werd)</code></pre>
+<p>Those with “Zetelt” (seats) changed parties twice. First became independent (from NV&amp;A), then created a new party “Vuye&amp;Wouters”.
+Mr Hendrik Vuye tweets a lot.</p>
+<pre class="r"><code>zetelt&lt;- two_dates %&gt;% 
+  filter(first_word == &quot;Zetelt&quot;) 
+
+zetelt$Opmerkingen</code></pre>
+<pre><code>## [1] &quot;Zetelt van 22 9 tot 27 10 2016 als onafhankelijke en vanaf 27 10 2016 in de Vuye&amp;Wouters-fractie.&quot;  
+## [2] &quot;Zetelt vanaf 22 9 tot 27 10 2016 als onafhankelijke en vanaf 27 10 2016 in de Vuye&amp;Wouters-fractie.&quot;</code></pre>
+<pre class="r"><code>nva &lt;- zetelt %&gt;% 
+  mutate(Fractie = &quot;NV&amp;A&quot;,
+         end_date = ymd(date_1) - days(1))
+onaf &lt;- zetelt %&gt;% 
+  mutate(Fractie = &quot;ONAFH&quot;,
+         start_date = date_1,
+         end_date = date_2)
+vuye &lt;- zetelt %&gt;% 
+  mutate(Fractie = &quot;Vuye&amp;Wouters&quot;,
+         start_date = ymd(date_2) + days(1))
+
+two_dates&lt;- two_dates %&gt;% 
+  filter(first_word != &quot;Zetelt&quot;) %&gt;% 
+  rbind(nva) %&gt;% 
+  rbind(onaf) %&gt;% 
+  rbind(vuye)</code></pre>
+<p>We need to go back to the comments with one days. They indicate the end date of a number of people and in particular of mayors or members of the government.</p>
+<pre class="r"><code>one_date %&gt;% 
+  filter(first_word == &quot;Vervangt&quot;) %&gt;% 
+  select(Opmerkingen)</code></pre>
+<pre><code>##                                                                                                 Opmerkingen
+## 1                     Vervangt vanaf 13 12 2017 Ann Vanheste, die voltijds burgemeester van De Panne wordt.
+## 2                         Vervangt vanaf 9 11 2017 Willy Demeyer, die voltijds burgemeester van Luik wordt.
+## 3         Vervangt vanaf 30 7 2014 Céline Fremault, die minister in de Brusselse regering-Vervoort II wordt
+## 4  Vervangt vanaf 6 12 2018 Sabien Lahaye-Battheu, die gedeputeerde van de provincie West-Vlaanderen wordt.
+## 5                        Vervangt vanaf 23 4 2015 Melchior Wathelet, die actief wordt in het bedrijfsleven.
+## 6           Vervangt vanaf 14 10 2014 Alexander De Croo, die minister in de federale regering-Michel I werd
+## 7                Vervangt vanaf 24 8 2017 Denis Ducarme, die minister in de federale Regering-Michel I werd
+## 8                                      Vervangt vanaf 20 9 2018 Isabelle Poncelet, die de politiek verlaat.
+## 9          Vervangt vanaf 14 10 2014 Daniel Bacquelaine, die minister in de federale regering-Michel I werd
+## 10                  Vervangt vanaf 24 5 2018 Eric Massin, die voltijds OCMW-voorzitter van Charleroi wordt.
+## 11            Vervangt vanaf 14 10 2014 Maggie De Block, die minister in de federale regering-Michel I werd
+## 12              Vervangt vanaf 12 1 2017 Johan Vande Lanotte, die voltijds burgemeester van Oostende wordt.
+## 13    Vervangt vanaf 14 10 2014 Marie-Christine Marghem, die minister in de federale regering-Michel I werd
+## 14                                 Vervangt vanaf 19 6 2014 Marijke Dillen, die beslist om niet te zetelen.
+## 15    Vervangt vanaf 18 10 2018 Muriel Gerkens, die zich kandidaat stelt bij de provincieraadsverkiezingen.
+## 16             Vervangt vanaf 14 10 2014 Charles Michel, die minister in de federale regering-Michel I werd
+## 17                           Vervangt vanaf 28 5 2015 Zakia Khattabi, die partijvoorzitter van Ecolo wordt.
+## 18                 Vervangt vanaf 14 10 2014 Koen Geens, die minister in de federale regering-Michel I werd
+## 19                                 Vervangt vanaf 6 12 2018 Benoit Hellings, die schepen van Brussel wordt.</code></pre>
+<p>We could use a regex to extract between the last digit and the ,
+But regexps are always more difficult than they seem. So here it is just easier to use ‘substr’.</p>
+<pre class="r"><code>str_locate(one_date$Opmerkingen[10], &quot;201&quot;)[2]+3</code></pre>
+<pre><code>## [1] 26</code></pre>
+<pre class="r"><code>str_locate(one_date$Opmerkingen[10], &quot;,&quot;)[1]-1</code></pre>
+<pre><code>## [1] 42</code></pre>
+<pre class="r"><code>substr(one_date$Opmerkingen[10], 26, 42)</code></pre>
+<pre><code>## [1] &quot;Melchior Wathelet&quot;</code></pre>
+<pre class="r"><code>end_dates &lt;- one_date %&gt;% 
+  select(date_1, Opmerkingen, first_word) %&gt;% 
+  filter(first_word == &quot;Vervangt&quot;) %&gt;%
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, &quot;201&quot;)[,2]+3,
+                                str_locate(Opmerkingen, &quot;,&quot;)[,1]-1)) %&gt;% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates$fn_ln</code></pre>
+<pre><code>##  [1] &quot;Ann Vanheste&quot;            &quot;Willy Demeyer&quot;          
+##  [3] &quot;Céline Fremault&quot;         &quot;Sabien Lahaye-Battheu&quot;  
+##  [5] &quot;Melchior Wathelet&quot;       &quot;Alexander De Croo&quot;      
+##  [7] &quot;Denis Ducarme&quot;           &quot;Isabelle Poncelet&quot;      
+##  [9] &quot;Daniel Bacquelaine&quot;      &quot;Eric Massin&quot;            
+## [11] &quot;Maggie De Block&quot;         &quot;Johan Vande Lanotte&quot;    
+## [13] &quot;Marie-Christine Marghem&quot; &quot;Marijke Dillen&quot;         
+## [15] &quot;Muriel Gerkens&quot;          &quot;Charles Michel&quot;         
+## [17] &quot;Zakia Khattabi&quot;          &quot;Koen Geens&quot;             
+## [19] &quot;Benoit Hellings&quot;</code></pre>
+<pre class="r"><code>new_end &lt;- reps54 %&gt;%
+  filter(fn_ln %in% end_dates$fn_ln)
+
+setdiff(end_dates$fn_ln,new_end$fn_ln)</code></pre>
+<pre><code>## [1] &quot;Marijke Dillen&quot;</code></pre>
+<p>So we do not have <a href="https://nl.wikipedia.org/wiki/Marijke_Dillen">that</a> nice young lady because she decided not to go to parliament and gave her seat to the fine young gentleman Jan Penris</p>
+<pre class="r"><code>to_replace &lt;- new_end %&gt;% 
+  left_join(end_dates,  by = c(&quot;fn_ln&quot;)) %&gt;% 
+  mutate(end_date = date_1.y) %&gt;% 
+  select(-date_1.y) %&gt;% 
+  rename(&quot;date_1&quot; = &quot;date_1.x&quot;)
+
+reps54&lt;-  reps54 %&gt;%
+  filter(!fn_ln %in% end_dates$fn_ln) %&gt;% 
+  rbind(to_replace)</code></pre>
+<p>We can do the same with the comments within ‘two_dates’</p>
+<pre class="r"><code>two_dates %&gt;% 
+  filter(first_word == &quot;Vervangt&quot;) %&gt;%
+  mutate(Opmerkingen = substr(Opmerkingen, 0, 100)) %&gt;% 
+  select(Opmerkingen)</code></pre>
+<pre><code>##                                                                                            Opmerkingen
+## 1 Vervangt vanaf 22 9 2015 Sophie Wilmès, die minister wordt in de federale regering-Michel I. Wilmès 
+## 2 Vervangt vanaf 4 10 2018 Stéphane Crusnière, die financieel en administratief directeur van de Régie
+## 3 Vervangt vanaf 10 11 2016 Sarah Claerhout, die uit CD&amp;V stapt en haar zetel aan haar partij teruggee</code></pre>
+<p>So here we have for instance Mrs Wilmès who is being replaced on 22/09/2015, but who replaced Mr Reynders on 11/10/2014.</p>
+<pre class="r"><code>end_dates_two &lt;- two_dates %&gt;% 
+  select(date_1, Opmerkingen, first_word) %&gt;% 
+  filter(first_word == &quot;Vervangt&quot;) %&gt;%
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, &quot;201&quot;)[,2]+3,
+                                str_locate(Opmerkingen, &quot;,&quot;)[,1]-1)) %&gt;% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates_two$fn_ln</code></pre>
+<pre><code>## [1] &quot;Sophie Wilmès&quot;      &quot;Stéphane Crusnière&quot; &quot;Sarah Claerhout&quot;</code></pre>
+<pre class="r"><code>to_replace_two &lt;- reps54 %&gt;%
+  filter(fn_ln %in% end_dates_two$fn_ln) %&gt;%
+  left_join(end_dates_two,  by = c(&quot;fn_ln&quot;)) %&gt;% 
+  mutate(end_date = date_1.y) %&gt;% 
+  select(-date_1.y) %&gt;% 
+  rename(&quot;date_1&quot; = &quot;date_1.x&quot;)
+
+reps54 &lt;-  reps54 %&gt;%
+  filter(!fn_ln %in% end_dates_two$fn_ln) %&gt;%
+  rbind(to_replace_two)</code></pre>
+<p>And then the last three replacements for the end dates of Mr De Crem, Reynders and Flahaut.</p>
+<pre class="r"><code>end_dates_three &lt;- two_dates %&gt;% 
+  select(date_2, Opmerkingen, first_word) %&gt;% 
+  filter(first_word == &quot;Vervangt&quot;) %&gt;%
+  mutate(Opmerkingen = substr(Opmerkingen,str_locate(Opmerkingen, &quot;,&quot;)[,1]+3, 100000))%&gt;% 
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, &quot;201&quot;)[,2]+3,
+                                str_locate(Opmerkingen, &quot;,&quot;)[,1]-1)) %&gt;% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates_three$fn_ln</code></pre>
+<pre><code>## [1] &quot;Didier Reynders&quot; &quot;André Flahaut&quot;   &quot;Pieter De Crem&quot;</code></pre>
+<pre class="r"><code>to_replace_three &lt;- reps54 %&gt;%
+  filter(fn_ln %in% end_dates_three$fn_ln) %&gt;%
+  left_join(end_dates_three,  by = c(&quot;fn_ln&quot;)) %&gt;% 
+  mutate(end_date = date_2.y) %&gt;% 
+  select(-date_2.y) %&gt;% 
+  rename(&quot;date_2&quot; = &quot;date_2.x&quot;)
+
+reps54 &lt;-  reps54 %&gt;%
+  filter(!fn_ln %in% end_dates_three$fn_ln) %&gt;%
+  rbind(to_replace_three)</code></pre>
+<p>Starting to see the end of the tunnel. Still need to arrange the case of Mrs Turtelboom and Mr Frank Wilrycx.</p>
+<pre class="r"><code>reps54 %&gt;% 
+  filter(fn_ln == &quot;Frank Wilrycx&quot;) %&gt;% 
+  select(Opmerkingen)</code></pre>
+<pre><code>##                                                                                                                                                                                               Opmerkingen
+## 1 Vervangt sinds 3 5 2018 Annemie Turtelboom, die lid wordt van de Europese Rekenkamer. Eerder verving hij van 30 7 2014 tot 29 4 2016 Turtelboom toen die minister was in de Vlaamse Regering-Bourgeois.</code></pre>
+<pre class="r"><code>dates &lt;- reps54 %&gt;% 
+  filter(fn_ln == &quot;Frank Wilrycx&quot;) %&gt;% 
+  select(date_1, date_2, date_3)
+dates</code></pre>
+<pre><code>##       date_1     date_2     date_3
+## 1 2018-05-03 2014-07-30 2016-04-29</code></pre>
+<pre class="r"><code>three_dates &lt;- reps54 %&gt;% 
+  filter(fn_ln == &quot;Frank Wilrycx&quot;) %&gt;% 
+  mutate(start_date = dates$date_2) %&gt;% 
+  mutate(end_date = dates$date_3) %&gt;% 
+  rbind(reps54 %&gt;% filter(fn_ln == &quot;Frank Wilrycx&quot;) %&gt;% 
+        mutate(start_date = dates$date_1)) %&gt;% 
+  rbind(reps54 %&gt;% filter(fn_ln == &quot;Annemie Turtelboom&quot;) %&gt;% 
+          mutate(end_date = ymd(dates$date_2) - days(1))) %&gt;% 
+  rbind(reps54 %&gt;% filter(fn_ln == &quot;Annemie Turtelboom&quot;) %&gt;% 
+          mutate(start_date = ymd(dates$date_3) + days(1)) %&gt;% 
+          mutate(end_date = ymd(dates$date_1) - days(1)))</code></pre>
+<p>So let’s bring them all together before tackling missing values.</p>
+<pre class="r"><code>dim(one_date)</code></pre>
+<pre><code>## [1] 26 19</code></pre>
+<pre class="r"><code>dim(two_dates)</code></pre>
+<pre><code>## [1] 18 19</code></pre>
+<pre class="r"><code>dim(three_dates)</code></pre>
+<pre><code>## [1]  4 19</code></pre>
+<pre class="r"><code>dim(reps54)</code></pre>
+<pre><code>## [1] 182  19</code></pre>
+<pre class="r"><code>length(unique(reps54$fn_ln))</code></pre>
+<pre><code>## [1] 179</code></pre>
+<pre class="r"><code>reps54 &lt;- reps54 %&gt;% 
+  filter(!fn_ln %in% one_date) %&gt;% 
+  filter(!fn_ln %in% two_dates) %&gt;% 
+  filter(!fn_ln %in% three_dates) %&gt;% 
+  rbind(one_date) %&gt;% 
+  rbind(two_dates) %&gt;% 
+  rbind(three_dates) %&gt;% 
+  mutate(fn_ln = trimws(fn_ln, c(&quot;both&quot;)))
+
+length(unique(reps54$fn_ln))</code></pre>
+<pre><code>## [1] 179</code></pre>
+<pre class="r"><code>length(reps54$fn_ln)</code></pre>
+<pre><code>## [1] 230</code></pre>
+<p>Save before cleaning.</p>
+<pre class="r"><code># saveRDS(reps54, &quot;./data/20190503/reps54_before_cleaning.rds&quot;)</code></pre>
+<p>Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
+party and lannguage. Untill it shows that page again, we’ll be using the fields obtained from Wikipedia instead.</p>
+<pre class="r"><code>empty_spaces &lt;- reps54 %&gt;%
+  mutate(language = Taalgroep,
+         party =Fractie) %&gt;% 
+  filter(is.na(language)) %&gt;% 
+  arrange(fn_ln)</code></pre>
+<pre class="r"><code>empty_spaces$ln_fn</code></pre>
+<pre><code>##  [1] &quot;De Croo Alexander&quot;       &quot;Flahaut André&quot;          
+##  [3] &quot;Vanheste Ann&quot;            &quot;Turtelboom Annemie&quot;     
+##  [5] &quot;Turtelboom Annemie&quot;      &quot;Turtelboom Annemie&quot;     
+##  [7] &quot;Hellings Benoit&quot;         &quot;Fremault Céline&quot;        
+##  [9] &quot;Michel Charles&quot;          &quot;Bacquelaine Daniel&quot;     
+## [11] &quot;Ducarme Denis&quot;           &quot;Reynders Didier&quot;        
+## [13] &quot;Massin Eric&quot;             &quot;Poncelet Isabelle&quot;      
+## [15] &quot;Klaps Johan&quot;             &quot;Vande Lanotte Johan&quot;    
+## [17] &quot;Geens Koen&quot;              &quot;De Block Maggie&quot;        
+## [19] &quot;Marghem Marie-Christine&quot; &quot;Wathelet Melchior&quot;      
+## [21] &quot;Gerkens Muriel&quot;          &quot;De Crem Pieter&quot;         
+## [23] &quot;Hufkens Renate&quot;          &quot;Lahaye-Battheu Sabien&quot;  
+## [25] &quot;Claerhout Sarah&quot;         &quot;Wilmès Sophie&quot;          
+## [27] &quot;Crusnière Stéphane&quot;      &quot;Demeyer Willy&quot;          
+## [29] &quot;Van der Donckt Wim&quot;      &quot;Raskin Wouter&quot;          
+## [31] &quot;Khattabi Zakia&quot;</code></pre>
+<p>For now I leave some fields incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language ‘role’.</p>
+<p>On the other hand if you are familiar with Belgium, you could just make good guesses looking at their first names:</p>
+<pre class="r"><code>word(empty_spaces$ln_fn,-1)</code></pre>
+<pre><code>##  [1] &quot;Alexander&quot;       &quot;André&quot;           &quot;Ann&quot;            
+##  [4] &quot;Annemie&quot;         &quot;Annemie&quot;         &quot;Annemie&quot;        
+##  [7] &quot;Benoit&quot;          &quot;Céline&quot;          &quot;Charles&quot;        
+## [10] &quot;Daniel&quot;          &quot;Denis&quot;           &quot;Didier&quot;         
+## [13] &quot;Eric&quot;            &quot;Isabelle&quot;        &quot;Johan&quot;          
+## [16] &quot;Johan&quot;           &quot;Koen&quot;            &quot;Maggie&quot;         
+## [19] &quot;Marie-Christine&quot; &quot;Melchior&quot;        &quot;Muriel&quot;         
+## [22] &quot;Pieter&quot;          &quot;Renate&quot;          &quot;Sabien&quot;         
+## [25] &quot;Sarah&quot;           &quot;Sophie&quot;          &quot;Stéphane&quot;       
+## [28] &quot;Willy&quot;           &quot;Wim&quot;             &quot;Wouter&quot;         
+## [31] &quot;Zakia&quot;</code></pre>
+<p>But looking at the tweets:</p>
+<pre class="r"><code>tweets &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190503/tweets.rds&quot;)
+lang &lt;- tweets %&gt;% 
+  filter(ln_fn %in% empty_spaces$ln_fn) %&gt;% 
+  select(ln_fn, lang) %&gt;% 
+  group_by(ln_fn, lang) %&gt;% 
+  summarise(count = n())</code></pre>
+<pre class="r"><code># this code is sinfull, apologies to the tidyverse saints;
+languages_used &lt;- lang %&gt;%
+  group_by(ln_fn)%&gt;%
+  summarise(m = max(count))%&gt;% 
+  left_join(lang) %&gt;% 
+  filter(m == count) %&gt;% 
+  select(-m, -count) %&gt;% 
+  mutate(language = ifelse(lang == &quot;nl&quot;, &quot;Nederlands&quot;, &quot;Frans&quot;)) %&gt;% 
+  select(-lang)</code></pre>
+<pre><code>## Joining, by = &quot;ln_fn&quot;</code></pre>
+<pre class="r"><code>setdiff(empty_spaces$ln_fn, languages_used$ln_fn)</code></pre>
+<pre><code>## [1] &quot;Vande Lanotte Johan&quot; &quot;Gerkens Muriel&quot;</code></pre>
+<p>So let’s add them and end this for now.</p>
+<pre class="r"><code>to_add &lt;- data.frame(&quot;ln_fn&quot; = c(&quot;Vande Lanotte Johan&quot;,&quot;Gerkens Muriel&quot;), 
+                     &quot;language&quot; = c(&quot;Nederlands&quot;, &quot;Frans&quot;)) 
+languages_used &lt;-languages_used %&gt;% 
+  rbind(to_add)
+
+added_languages &lt;- empty_spaces %&gt;% 
+  left_join(languages_used, by = c(&quot;ln_fn&quot;)) %&gt;% 
+  mutate(language = language.y) %&gt;% 
+  select(-language.x, -language.y)
+
+reps54 &lt;- reps54 %&gt;% 
+  filter(!is.na(language)) %&gt;% 
+  rbind(added_languages) %&gt;% 
+  arrange(fn_ln)</code></pre>
+<p>Save after first cleaning.</p>
+<pre class="r"><code># saveRDS(reps54, &quot;./data/20190503/reps54_after_cleaning.rds&quot;)</code></pre>
+<p>I’ll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from aws.</p>
 
       
       <div class="related">

@@ -68,9 +68,9 @@ A test
 twitter_users$screen_name[3]
 ```
 
-It's not stictly needed since we already know the correspondence between name and handle ('screen_name'), but it's fun to try map2_df. A test with two tweets:
+It's not strictly needed since we already know the correspondence between name and handle ('screen_name'), but it's fun to try map2_df. A test with two tweets:
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, eval= FALSE}
 get_handle_tweets <- function(screen_name, ln_fn) {
   get_timeline(screen_name, n=2) %>% 
     mutate(ln_fn = ln_fn)
@@ -81,6 +81,12 @@ tweets <- map2_df(twitter_users$screen_name,twitter_users$ln_fn,
 dim(tweets)
 ```
 
+```{r}
+#saveRDS(tweets, "./data/20190503/tweets1.rds")
+tweets <- readRDS("./data/20190503/tweets1.rds")
+```
+
+
 Now might be a good time to talk about rate limits. We are limited to go 3200 tweets in the past per handle, but we have also temporary limits to the calls we can do with the API. 
 
 ```{r}
@@ -88,7 +94,7 @@ limits <- rate_limits()
 head(limits)
 ```
 
-In total there are 149 limits, we can access, amongst other things, how much remains and when the limit will be reset. Here are some of the limits:
+In total there are 149 limits, we can access, among other things, how much remains and when the limit will be reset. Here are some of the limits:
 
 ```{r}
 head(limits$query, 20)
@@ -107,23 +113,23 @@ limits %>% select(limit, query, remaining, reset) %>%
 
 We are searching 160 users and the rate limit for searching user timelines is 900, so we should be fine. But be aware that your limit searches are limited also (180 searches counted by individual limit in batches of 15 minutes). 
 
-At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interuptions.
+At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interruptions.
 
 How well did our test go? Did we get tweets from everyone?
 
 ```{r}
 setdiff(twitter_users$ln_fn, tweets$ln_fn)
 ```
-Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some :badminton: 
+Nice. The results look ok too. Will now launch the bigger batch (3200) while out playing some :badminton: and after having waited fifteen minutes to be sure all rate limits were reset. 
 
 
-```{r}
+```{r, eval = FALSE}
 twitter_users <- twitter_users %>% 
   arrange(screen_name) %>% 
   distinct(screen_name, .keep_all = TRUE) # removing doubles if present
 
 get_handle_tweets <- function(screen_name, ln_fn) {
-  # print(screen_name) this can be used to see the advancement
+  print(screen_name) # this can be used to see the advancement
   get_timeline(screen_name, n=3200) %>% 
     mutate(ln_fn = ln_fn)
 }
@@ -134,19 +140,19 @@ dim(tweets)
 
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 saveRDS(tweets, "./data/20190503/tweets.rds")
 ```
 
-Cool, so about 260K tweets. 
+Cool, so about 265K tweets. 
 
-But as already mentioned these are some of the tweets from people who at some time were in the 54th legistlature. They are not always a tweet from a person actually seating in parliament.
+But as already mentioned these are some of the tweets from people who at some time were in the 54th legislature. They are not always a tweet from a person actually seating in parliament.
 
-This wikipedia page https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019) has a good overview of the changes that occured since May 2014.  
+This Wikipedia page https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019) has a good overview of the changes that occurred since May 2014.  
 
 
 
-A few have also changed party or became independent. The table that was used to obtain the list of parliamentariens's names, language and party, can be transformed into a reference table that we can join to the tweets for further analysis. 
+A few have also changed party or became independent. The table that was used to obtain the list of parliamentarian's names, language and party, can be transformed into a reference table that we can join to the tweets for further analysis. 
 
 ```{r}
 names <- readRDS("./data/190417/names.rds")
@@ -154,10 +160,10 @@ party_less <- names %>%
   filter(is.na(party))
 ```
 
-The text on the wikipedia page contains the information that is needed, but I wonder how easy it will be to use. We can try, let's see what we get.
+The text on the Wikipedia page contains the information that is needed, but I wonder how easy it will be to use. We can try, let's see what we get.
 
 ```{r}
-url <- "https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)" 
+url <- "https://nl.Wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2014-2019)" 
 
 wiki_table_source<- url %>% 
   read_html() %>%
@@ -168,15 +174,16 @@ head(wiki_table_source)
 
 ```
 
-The nice thing is that additional information like the voting disctrict was obtained. Using the comments ("Opmerkingen"), will probaly be more time consuming than hardcoding the changes, but I think it will be more fun ;-)
+The nice thing is that additional information like the voting district was obtained. Using the comments ("Opmerkingen"), will probably be more time consuming than hard coding the changes, but I think it will be more fun ;-)
 
-```{r}
-#print(wiki_table$Opmerkingen, na.print = "")
+That is if you are interested in data cleaning. If not no need to continue reading this post, because it will be all spring cleaning from now till the end. 
 
+```{r paged.print=TRUE}
 wiki_table_source %>% 
-  filter(!is.na(Opmerkingen)) %>% 
-  select(Opmerkingen)
-
+  filter(!is.na(Opmerkingen)) %>%
+  mutate(Opmerkingen = substr(Opmerkingen,0,100)) %>% 
+  select(Opmerkingen) %>% 
+  slice(1:7)
 ```
 
 
@@ -231,7 +238,11 @@ wiki_table <- wiki_table %>%
   select(-digits)
 ```
 
+<<<<<<< HEAD
 Now we can extrat the dates, but one problem still remains, on wikipedia some years are not repeated for certain time periods (so there are only 4 digits for a date):
+=======
+Now we can extract the dates, but one problem still remains, on Wikipedia some years are not repeated for certain time periods:
+>>>>>>> 150dca8c58f8f040a9c6243e222a53718192192f
 
 ```{r}
 wiki_table$Opmerkingen[28]
@@ -316,7 +327,6 @@ y <- names %>%
 
 z <- y %>% 
   left_join(x)
-
 ```
 ```{r}
 
@@ -333,10 +343,475 @@ missing$Volksvertegenwoordiger
 
 ```
 
-Yes I've got myself in a pickle again. Three missing. The join field for them should be VandeVeldeRobert, FernandezFernandezJulie and JirofléeKarin
+Yes I've got myself in a pickle again. Three missing. The join field for them should be VandeVeldeRobert, JirofléeKarin and, FernandezFernandezJulie. Instead of VandeVeldeRob, JirofléeKarine and Fernandez-FernandezJulie.
 
-instead of VandeVeldeRob 	JirofléeKarine and Fernandez-FernandezJulie
+We can follow how they are spelled on dekamer.be: Robert Van de Velde, Karin Jiroflée, Julie Fernandez Fernandez
 
+```{r}
+
+x[x$join == "VandeVeldeRob",]$join <- "VandeVeldeRobert"
+x[x$join == "JirofléeKarine",]$join <- "JirofléeKarin"
+x[x$join == "Fernandez-FernandezJulie",]$join <- "FernandezFernandezJulie"
+
+y <- names %>% 
+  mutate(join = str_remove_all(ln_fn," "))
+
+z <- y %>% 
+  left_join(x)
+
+
+test <- z %>% 
+  filter(!is.na(Volksvertegenwoordiger)) %>% 
+  mutate(test = "test")
+  
+missing <- wiki_table %>% 
+  left_join(test %>% 
+              select(Volksvertegenwoordiger, test)) %>% 
+  filter(is.na(test))
+
+missing$Volksvertegenwoordiger
+
+```
+
+Yeah! So now we have em all we can give em a default start date and a default end date.
+
+```{r}
+reps54 <- z %>% 
+  mutate(start_date = as.Date("2014-06-19"),
+         end_date = as.Date("2019-05-31")) %>% 
+  mutate(fn_ln = trimws(fn_ln, c("both")))
+```
+
+Maybe we can start with those who only have one 'date_1'? Let's have a look.
+
+```{r}
+one_date <- reps54 %>% 
+  filter(!is.na(date_1) &
+           is.na(date_2))
+
+unique(one_date$first_word)
+```
+
+"Voorzitter" is the president of the chamber. Not interested in this for now, so no change to be made. "Vanaf" seems to indicate a change of party and/or party name. What happened to the [FDF](https://en.wikipedia.org/wiki/D%C3%A9FI)? Seems to have been a name change. 
+
+In the data that come from the official website these members are already 'Défi' in the field 'Party'. We can work on the field 'fractie' (party) but I doubt it will be needed. 
+
+```{r}
+
+fdf <- one_date %>% 
+  filter(first_word == "Vanaf") %>% 
+  mutate(end_date = ymd(date_1) -days(1)) %>% 
+  rbind(one_date %>% 
+          filter(first_word == "Vanaf") %>% 
+          mutate(start_date = date_1,
+                 Fractie = "Défi"))
+
+one_date <- one_date %>% 
+  filter(first_word != "Vanaf") %>% 
+  rbind(fdf)
+
+```
+
+So that takes care of 'Vanaf', now for "Vervangt" (replaces). Which looks pretty straightforward. The date_1 just needs to replace the start date.
+```{r}
+replaces <- one_date %>% 
+  filter(first_word == "Vervangt") %>% 
+  mutate(start_date = date_1)
+
+one_date <- one_date %>% 
+  filter(first_word != "Vervangt") %>% 
+  rbind(replaces)
+
+```
+In this case 'Zetelt' means the person became independent. I doubt it will make a big difference to make the change for one person, but for the sake of precision, here is the correction.
+
+```{r}
+zetelt <- one_date %>% 
+  filter(first_word == "Zetelt") %>% 
+  mutate(end_date = ymd(date_1) -days(1)) %>% 
+  rbind(one_date %>% 
+          filter(first_word == "Zetelt") %>% 
+          mutate(start_date = date_1,
+                 Fractie = "ONAFH"))
+
+one_date <- one_date %>% 
+  filter(first_word != "Zetelt") %>% 
+  rbind(zetelt)
+```
+
+Now just need to bind them and go to the next batch.
+
+```{r}
+
+reps54 <- reps54 %>% 
+  filter(is.na(date_1) | date_1 == "2001-01-01"
+         | (date_1 != "2001-01-01" & date_2 != "2001-01-01"))%>% 
+  rbind(one_date)
+
+```
+
+two_dates 
+
+```{r}
+two_dates <- reps54 %>% 
+  filter(!is.na(date_1) &
+           !is.na(date_2) &
+           is.na(date_3))
+
+unique(two_dates$first_word)
+```
+
+There are now three replacements (Vervangt) with two dates in the comment phrase. It is getting complicated, but fortunately they seem to be structured the same way. 
+```{r}
+two_dates %>% filter(first_word == "Vervangt") %>%
+  mutate(Opmerkingen = substr(Opmerkingen, 0, 100)) %>% 
+  select(Opmerkingen)
+
+```
+
+So we are looking at these parliamentarians:
+
+```{r}
+two_dates %>% filter(first_word == "Vervangt") %>% 
+  select(fn_ln)
+```
+
+They just enter the parliament at date_1, that is easy, but there is more information in the remarks. Easy part first (EPF), low hanging fruits, quick impacts and what have you.
+```{r}
+vervangt <- two_dates %>% 
+  filter(first_word == "Vervangt") %>% 
+  mutate(start_date = date_1)
+
+two_dates <- two_dates %>% 
+  filter(first_word != "Vervangt") %>%
+  rbind(vervangt)
+
+```
+
+Those with "werd" were replaced during a period, so end_date is date_1-1 for their first period, and date_2+1 is the start date of their second period. 
+
+```{r}
+werd_1 <- two_dates %>% 
+  filter(first_word == "Werd") %>% 
+  mutate(end_date = ymd(date_1) - days(1))
+
+werd_2 <- two_dates %>% 
+  filter(first_word == "Werd") %>% 
+  mutate(start_date = ymd(date_2) + days(1))
+
+werd <- rbind(werd_1, werd_2)
+
+two_dates <- two_dates %>%
+  filter(first_word != "Werd") %>%
+  rbind(werd)
+  
+```
+Those with "Zetelt" (seats) changed parties twice. First became independent (from NV&A), then created a new party "Vuye&Wouters". 
+Mr Hendrik Vuye tweets a lot.
+
+```{r}
+
+zetelt<- two_dates %>% 
+  filter(first_word == "Zetelt") 
+
+zetelt$Opmerkingen
+```
+
+```{r}
+nva <- zetelt %>% 
+  mutate(Fractie = "NV&A",
+         end_date = ymd(date_1) - days(1))
+onaf <- zetelt %>% 
+  mutate(Fractie = "ONAFH",
+         start_date = date_1,
+         end_date = date_2)
+vuye <- zetelt %>% 
+  mutate(Fractie = "Vuye&Wouters",
+         start_date = ymd(date_2) + days(1))
+
+two_dates<- two_dates %>% 
+  filter(first_word != "Zetelt") %>% 
+  rbind(nva) %>% 
+  rbind(onaf) %>% 
+  rbind(vuye)
+  
+```
+
+We need to go back to the comments with one days. They indicate the end date of a number of people and in particular of mayors or members of the government. 
+
+```{r}
+one_date %>% 
+  filter(first_word == "Vervangt") %>% 
+  select(Opmerkingen)
+
+```
+
+We could use a regex to extract between the last digit and the , 
+But regexps are always more difficult than they seem. So here it is just easier to use 'substr'.
+
+```{r}
+str_locate(one_date$Opmerkingen[10], "201")[2]+3
+str_locate(one_date$Opmerkingen[10], ",")[1]-1
+substr(one_date$Opmerkingen[10], 26, 42)
+```
+
+```{r}
+end_dates <- one_date %>% 
+  select(date_1, Opmerkingen, first_word) %>% 
+  filter(first_word == "Vervangt") %>%
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, "201")[,2]+3,
+                                str_locate(Opmerkingen, ",")[,1]-1)) %>% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates$fn_ln
+```
+```{r}
+new_end <- reps54 %>%
+  filter(fn_ln %in% end_dates$fn_ln)
+
+setdiff(end_dates$fn_ln,new_end$fn_ln)
+```
+
+So we do not have [that](https://nl.wikipedia.org/wiki/Marijke_Dillen) nice young lady because she decided not to go to parliament and gave her seat to the fine young gentleman Jan Penris
+
+```{r}
+
+to_replace <- new_end %>% 
+  left_join(end_dates,  by = c("fn_ln")) %>% 
+  mutate(end_date = date_1.y) %>% 
+  select(-date_1.y) %>% 
+  rename("date_1" = "date_1.x")
+
+reps54<-  reps54 %>%
+  filter(!fn_ln %in% end_dates$fn_ln) %>% 
+  rbind(to_replace)
+
+```
+We can do the same with the comments within 'two_dates'
+
+```{r}
+two_dates %>% 
+  filter(first_word == "Vervangt") %>%
+  mutate(Opmerkingen = substr(Opmerkingen, 0, 100)) %>% 
+  select(Opmerkingen)
+
+```
+
+So here we have for instance Mrs Wilmès who is being replaced on 22/09/2015, but who replaced Mr Reynders on 11/10/2014.
+
+```{r}
+end_dates_two <- two_dates %>% 
+  select(date_1, Opmerkingen, first_word) %>% 
+  filter(first_word == "Vervangt") %>%
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, "201")[,2]+3,
+                                str_locate(Opmerkingen, ",")[,1]-1)) %>% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates_two$fn_ln
+
+```
+
+
+```{r}
+to_replace_two <- reps54 %>%
+  filter(fn_ln %in% end_dates_two$fn_ln) %>%
+  left_join(end_dates_two,  by = c("fn_ln")) %>% 
+  mutate(end_date = date_1.y) %>% 
+  select(-date_1.y) %>% 
+  rename("date_1" = "date_1.x")
+
+reps54 <-  reps54 %>%
+  filter(!fn_ln %in% end_dates_two$fn_ln) %>%
+  rbind(to_replace_two)
+```
+
+
+And then the last three replacements for the end dates of Mr De Crem, Reynders and Flahaut.
+
+
+```{r}
+end_dates_three <- two_dates %>% 
+  select(date_2, Opmerkingen, first_word) %>% 
+  filter(first_word == "Vervangt") %>%
+  mutate(Opmerkingen = substr(Opmerkingen,str_locate(Opmerkingen, ",")[,1]+3, 100000))%>% 
+  mutate(fn_ln = substr(Opmerkingen,
+                                str_locate(Opmerkingen, "201")[,2]+3,
+                                str_locate(Opmerkingen, ",")[,1]-1)) %>% 
+  select(-Opmerkingen, -first_word, )
+
+end_dates_three$fn_ln
+```
+
+
+```{r}
+to_replace_three <- reps54 %>%
+  filter(fn_ln %in% end_dates_three$fn_ln) %>%
+  left_join(end_dates_three,  by = c("fn_ln")) %>% 
+  mutate(end_date = date_2.y) %>% 
+  select(-date_2.y) %>% 
+  rename("date_2" = "date_2.x")
+
+reps54 <-  reps54 %>%
+  filter(!fn_ln %in% end_dates_three$fn_ln) %>%
+  rbind(to_replace_three)
+```
+
+Starting to see the end of the tunnel. Still need to arrange the case of Mrs Turtelboom and Mr Frank Wilrycx.
+
+```{r}
+reps54 %>% 
+  filter(fn_ln == "Frank Wilrycx") %>% 
+  select(Opmerkingen)
+```
+
+```{r}
+dates <- reps54 %>% 
+  filter(fn_ln == "Frank Wilrycx") %>% 
+  select(date_1, date_2, date_3)
+dates
+
+
+```
+```{r}
+
+three_dates <- reps54 %>% 
+  filter(fn_ln == "Frank Wilrycx") %>% 
+  mutate(start_date = dates$date_2) %>% 
+  mutate(end_date = dates$date_3) %>% 
+  rbind(reps54 %>% filter(fn_ln == "Frank Wilrycx") %>% 
+        mutate(start_date = dates$date_1)) %>% 
+  rbind(reps54 %>% filter(fn_ln == "Annemie Turtelboom") %>% 
+          mutate(end_date = ymd(dates$date_2) - days(1))) %>% 
+  rbind(reps54 %>% filter(fn_ln == "Annemie Turtelboom") %>% 
+          mutate(start_date = ymd(dates$date_3) + days(1)) %>% 
+          mutate(end_date = ymd(dates$date_1) - days(1)))
+
+
+```
+
+So let's bring them all together before tackling missing values.
+
+```{r}
+dim(one_date)
+dim(two_dates)
+dim(three_dates)
+dim(reps54)
+length(unique(reps54$fn_ln))
+
+```
+
+```{r}
+reps54 <- reps54 %>% 
+  filter(!fn_ln %in% one_date) %>% 
+  filter(!fn_ln %in% two_dates) %>% 
+  filter(!fn_ln %in% three_dates) %>% 
+  rbind(one_date) %>% 
+  rbind(two_dates) %>% 
+  rbind(three_dates) %>% 
+  mutate(fn_ln = trimws(fn_ln, c("both")))
+
+length(unique(reps54$fn_ln))
+length(reps54$fn_ln)
+```
+
+Save before cleaning.
+
+```{r}
+# saveRDS(reps54, "./data/20190503/reps54_before_cleaning.rds")
+reps54 <- readRDS("./data/20190503/reps54_before_cleaning.rds")
+```
+
+Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
+party and lannguage. Probably because of the end of the legistlature.
+
+
+```{r}
+
+reps54 <- reps54 %>%
+  mutate(language = Taalgroep,
+         party =Fractie)
+
+empty_spaces <- reps54 %>%
+  filter(is.na(language)) %>% 
+  arrange(fn_ln)
+
+empty_spaces$ln_fn
+
+```
+
+For now I leave some fields incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language 'role'.
+
+On the other hand if you are familiar with Belgium, you could just make good guesses looking at their first names:
+
+```{r}
+word(empty_spaces$ln_fn,-1)
+```
+
+But looking at the tweets:
+
+```{r}
+tweets <- readRDS("~/R/blogs/content/post/data/20190503/tweets.rds")
+lang <- tweets %>% 
+  filter(ln_fn %in% empty_spaces$ln_fn) %>% 
+  select(ln_fn, lang) %>% 
+  group_by(ln_fn, lang) %>% 
+  summarise(count = n())
+
+# this code is sinfull, apologies to the tidyverse saints;
+languages_used <- lang %>%
+  group_by(ln_fn)%>%
+  summarise(m = max(count))%>% 
+  left_join(lang) %>% 
+  filter(m == count) %>% 
+  select(-m, -count) %>% 
+  mutate(language = ifelse(lang == "nl", "Nederlands", "Frans")) %>% 
+  select(-lang)
+
+```
+
+We can get the language the members use the most.
+
+```{r}
+languages_used
+```
+
+
+```{r}
+setdiff(empty_spaces$ln_fn, languages_used$ln_fn)
+
+```
+
+So let's add them and end this for now.
+
+```{r}
+to_add <- data.frame("ln_fn" = c("Vande Lanotte Johan","Gerkens Muriel"), 
+                     "language" = c("Nederlands", "Frans")) 
+
+languages_used <-languages_used %>% 
+  rbind(to_add)
+
+added_languages <- empty_spaces %>% 
+  left_join(languages_used, by = c("ln_fn")) %>% 
+  mutate(language = language.y) %>% 
+  select(-language.x, -language.y)
+
+reps54 <- reps54 %>% 
+  filter(!is.na(language)) %>% 
+  rbind(added_languages) %>% 
+  arrange(fn_ln)
+```
+
+Save after first cleaning.
+
+```{r}
+#saveRDS(reps54, "./data/20190503/reps54_after_cleaning.rds")
+```
+
+I'll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from aws.
+
+<<<<<<< HEAD
 We can follow how they are spelled on dekamer.be: Robert Van de Velde, Karin Jiroflée, Julie Fernandez Fernandez
 
 And use a case_when for a change
@@ -362,3 +837,5 @@ xx %>%
 
 ```
 
+=======
+>>>>>>> 150dca8c58f8f040a9c6243e222a53718192192f

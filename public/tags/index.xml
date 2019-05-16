@@ -7,17 +7,62 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Fri, 03 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 11 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>AWS Rekognition</title>
+      <link>/tags/aws-rekognition/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/aws-rekognition/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Belgian politics</title>
       <link>/tags/belgian-politics/</link>
-      <pubDate>Fri, 03 May 2019 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/belgian-politics/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Boto3</title>
+      <link>/tags/boto3/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/boto3/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Facial analysis</title>
+      <link>/tags/facial-analysis/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/facial-analysis/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>S3</title>
+      <link>/tags/s3/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/s3/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Sagemaker</title>
+      <link>/tags/sagemaker/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/sagemaker/</guid>
       <description></description>
     </item>
     

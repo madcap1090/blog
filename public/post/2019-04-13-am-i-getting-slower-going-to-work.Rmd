@@ -244,7 +244,7 @@ class(commute_time)
 as.numeric(commute_time)
 ```
 
-17 minutes on the other hand seems a lot. But the data and calculations look correct to me. One explanation could be that sometimes there is a big delay in reporting the arrival time. Like on April 17 2015, where arrival was recorded after 12am.
+44 minutes on the other hand seems like a lot. But the data and calculations look correct to me. One explanation could be that sometimes there is a big delay in reporting the arrival time. Like on April 17 2015, where arrival was recorded after 12am.
 
 ```{r}
 day <- df %>% 

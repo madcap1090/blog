@@ -1,0 +1,389 @@
+---
+title: happy faces in a bucket
+author: William Bourgeois
+date: '2019-05-11'
+slug: happy-faces-in-a-bucket
+categories: []
+tags:
+  - Belgian politics
+  - AWS Rekognition
+  - Facial analysis
+  - Boto3
+  - S3
+  - Sagemaker
+---
+
+
+
+<p>Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using these seemed therefore like a good choice.</p>
+<p>I searched for R packages to use Rekognition with, but did not find any. So I tried Python’s Boto3 but could not get the authorisation working. So with a little (a very little – promised) help from the new consultants (thank you Fabien :thumbsup:) I set out to use my first scripts on the cloud.</p>
+<pre class="r"><code># libraries
+library(&quot;tidyverse&quot;)
+library(&quot;aws.s3&quot;)
+library(&quot;magick&quot;)
+library(&quot;jsonlite&quot;)
+options(Encoding=&quot;UTF-8&quot;)</code></pre>
+<p>In the process I found out Rekognition did not treat gifs, so the pictures need to be converted first to jpgs.</p>
+<pre class="r"><code>to_move &lt;- list.files(&quot;./data/190417&quot;, pattern = &quot;*.gif&quot;)
+file.copy(file.path(&quot;./data/190417&quot;, to_move), &quot;./data/20190511&quot;)</code></pre>
+<p>Returns TRUE and TRUE is good. TRUE will set you free. We can convert them with the magick package.</p>
+<pre class="r"><code>convert_ye &lt;- function(gif){
+  pic &lt;- image_read(gif)
+  name &lt;- str_remove(gif,&quot;.gif&quot;)
+  
+  image_write(pic, path = paste0(&quot;./jpg/&quot;,name,&quot;.jpg&quot;), format = &quot;jpg&quot;)
+}
+
+heathens &lt;- list.files(&quot;./data/20190511&quot;, pattern = &quot;*.gif&quot;, full.names = TRUE)</code></pre>
+<pre class="r"><code>convert_ye(heathens)</code></pre>
+<p>Returns;
+Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\20190511VÃ©ronique.gif’: No such file or directory @ error/blob.c/OpenBlob/2701</p>
+<p>In encoding hell again. Magick cannot read the filename…Ã©Ã©Ã©Ã©! The heathens cannot be converted. Can’t really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs.</p>
+<pre class="r"><code>heathens &lt;- list.files(&quot;./data/20190511&quot;)
+
+setwd(&quot;./data/20190511&quot;)
+dir.create(file.path(&quot;jpg&quot;), showWarnings = FALSE)
+for(i in (1:length(heathens))){
+  # print(headens[i])
+  file.rename(from = heathens[i], paste0(i,&quot;.gif&quot;))
+  pic &lt;- image_read(paste0(i, &quot;.gif&quot;))
+  name &lt;- str_remove(heathens[i],&quot;.gif&quot;)
+  image_write(pic, path = paste0(&quot;./jpg/&quot;,name,&quot;.jpg&quot;), format = &quot;jpg&quot;)
+}</code></pre>
+<p>That seemed to work.</p>
+<p>In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your Sagemaker instance. I wrote ‘instance’ because it sounds good, I don’t know if it really means something though. But it sounds like a cloud computing word to use.</p>
+<p>The authentication can be done like this:</p>
+<pre class="r"><code>AWSAccessKeyId &lt;- &quot;secret&quot;
+AWSSecretKey &lt;- &quot;secret&quot;
+region &lt;- &quot;eu-west-3&quot;
+
+Sys.setenv(&quot;AWS_ACCESS_KEY_ID&quot; = AWSAccessKeyId,
+           &quot;AWS_SECRET_ACCESS_KEY&quot; = AWSSecretKey,
+           &quot;AWS_DEFAULT_REGION&quot; = region,
+           &quot;AWS_SESSION_TOKEN&quot; = &quot;&quot;)</code></pre>
+<p>Creating a bucket (in Ireland).</p>
+<pre class="r"><code>put_bucket(&quot;reps666&quot;, region = &quot;eu-west-1&quot;)</code></pre>
+<p>And then uploading the pictures to a bucket.</p>
+<pre class="r"><code>put_object(&quot;./data/20190511/jpg/Almaci Meyrem.jpg&quot;, bucket = &quot;reps666&quot;, 
+           object = &quot;Almaci Meyrem.jpg&quot;)</code></pre>
+<p>Returns TRUE. TRUE is good, it will set you free.</p>
+<pre class="r"><code>delete_object(object = &quot;Almaci Meyrem.jpg&quot;,bucket = &quot;reps666&quot;)</code></pre>
+<p>Returns TRUE. Repeat after me, TRUE is…</p>
+<p>I’m still having problems with encodings, hope you have not, but will change the names to digits and convert them back to names later.</p>
+<pre class="r"><code>files &lt;- list.files(&quot;./data/20190511/jpg&quot;)
+files_full &lt;- list.files(&quot;./data/20190511/jpg&quot;,full.names = TRUE )
+for(i in (1:length(files))){
+    file.rename(from = files_full[i], paste0(&quot;./data/20190511/jpg/&quot;,i,&quot;.jpg&quot;))
+  }</code></pre>
+<p>And now uploading the files to the bucket.</p>
+<pre class="r"><code>files_full &lt;- list.files(&quot;./data/20190511/jpg&quot;,full.names = TRUE )
+for(i in (1:length(files))){
+    put_object(files_full[i], bucket = &quot;reps666&quot;)
+}</code></pre>
+<p>So we have the pictures in a bucket s3 with digits instead of names, or as names, but at least they are there, on our cloud.</p>
+<center>
+<div class="figure">
+<img src="/img/20190511/Management%20Console.jpg" alt="aws console" />
+<p class="caption">aws console</p>
+</div>
+</center>
+<p>Next we can create a notebook instance on Sagemaker and start it up.</p>
+<center>
+<div class="figure">
+<img src="/img/20190511/Amazon%20SageMaker.jpg" alt="aws sagemaker" />
+<p class="caption">aws sagemaker</p>
+</div>
+</center>
+<p>We can use boto3 to apply Rekognition to our files (boto3 is :snake:) :</p>
+<pre class="python"><code>import boto3
+import json
+s3 = boto3.resource(&#39;s3&#39;)
+rekognition = boto3.client(&quot;rekognition&quot;, &quot;eu-west-1&quot;)
+my_bucket = s3.Bucket(&#39;reps666&#39;)
+for object in my_bucket.objects.all():
+    name = object.key[0:-4] 
+    print(object.key[0:-4])
+    print(name)
+    BUCKET = &#39;reps666&#39;
+    KEY = object.key
+    response = rekognition.detect_faces(
+    Image={
+        
+        &#39;S3Object&#39;: {
+            &#39;Bucket&#39;: BUCKET,
+            &#39;Name&#39;: KEY,
+        }
+    },
+    Attributes=[
+        &#39;ALL&#39;,
+    ]
+    )
+    with open(object.key[0:-4]+&quot;.json&quot;, &#39;w&#39;) as json_file:
+        json.dump(response, json_file)
+    boto3.Session().resource(&#39;s3&#39;)\
+    .Bucket(&#39;jsonmad&#39;).Object(object.key[0:-4]+&quot;.json&quot;)\
+    .upload_file(object.key[0:-4]+&quot;.json&quot;)</code></pre>
+<p>Pardon my python.</p>
+<p>The code goes through the files in the bucket, applies ‘detect_faces’ from Rekognition through boto3, saves the output
+(in json) and sends it to another bucket.</p>
+<p>Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the latest changes to the code and stop the notebook instance on Sagemaker.</p>
+<center>
+<div class="figure">
+<img src="/img/20190511/JupyterLab.jpg" alt="jupyterlab" />
+<p class="caption">jupyterlab</p>
+</div>
+</center>
+<pre class="r"><code>bucket_content &lt;- get_bucket_df(bucket = &quot;jsonmad&quot;)</code></pre>
+<pre class="r"><code># saveRDS(bucket_content, &quot;./data/20190511/bucket_content.rds&quot;)
+bucket_content &lt;-readRDS(&quot;./data/20190511/bucket_content.rds&quot;)</code></pre>
+<pre class="r"><code>str(bucket_content)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    179 obs. of  8 variables:
+##  $ Key              : chr  &quot;1.json&quot; &quot;10.json&quot; &quot;100.json&quot; &quot;101.json&quot; ...
+##  $ LastModified     : chr  &quot;2019-05-12T11:45:07.000Z&quot; &quot;2019-05-12T11:45:07.000Z&quot; &quot;2019-05-12T11:45:08.000Z&quot; &quot;2019-05-12T11:45:08.000Z&quot; ...
+##  $ ETag             : chr  &quot;\&quot;6a7cb098674c1d5ab5fd66e66a031877\&quot;&quot; &quot;\&quot;36dd7f55e1db511dc3f4fabaf517492f\&quot;&quot; &quot;\&quot;0afacabc6c5ae4bea7da8116285bfb88\&quot;&quot; &quot;\&quot;42b33b346a37a50a8e832d6f0e875531\&quot;&quot; ...
+##  $ Size             : chr  &quot;3886&quot; &quot;3886&quot; &quot;3902&quot; &quot;3891&quot; ...
+##  $ Owner_ID         : chr  &quot;5c61b42d25c8ca6f8e818c7f78a69aaf2b99c91751b1d155178b5f72a88b84fd&quot; &quot;5c61b42d25c8ca6f8e818c7f78a69aaf2b99c91751b1d155178b5f72a88b84fd&quot; &quot;5c61b42d25c8ca6f8e818c7f78a69aaf2b99c91751b1d155178b5f72a88b84fd&quot; &quot;5c61b42d25c8ca6f8e818c7f78a69aaf2b99c91751b1d155178b5f72a88b84fd&quot; ...
+##  $ Owner_DisplayName: chr  &quot;madcap1090&quot; &quot;madcap1090&quot; &quot;madcap1090&quot; &quot;madcap1090&quot; ...
+##  $ StorageClass     : chr  &quot;STANDARD&quot; &quot;STANDARD&quot; &quot;STANDARD&quot; &quot;STANDARD&quot; ...
+##  $ Bucket           : chr  &quot;jsonmad&quot; &quot;jsonmad&quot; &quot;jsonmad&quot; &quot;jsonmad&quot; ...
+##  - attr(*, &quot;Marker&quot;)= list()
+##  - attr(*, &quot;IsTruncated&quot;)= chr &quot;false&quot;
+##  - attr(*, &quot;MaxKeys&quot;)= chr &quot;1000&quot;</code></pre>
+<pre class="r"><code>for (i in (1:nrow(bucket_content))){
+  name &lt;- str_remove(bucket_content$Key[i], &quot;.json&quot;) 
+  #print(name)
+  #print(bucket_content$Key[i])
+  save_object(bucket_content$Key[i], bucket = &quot;jsonmad&quot;, 
+              file = paste0(&quot;./data/20190511/json/&quot;,
+                            bucket_content$Key[i]))
+}</code></pre>
+<p>So they landed safely at home on my hard drive. Let’s look at one. Hi there Mr N°50.</p>
+<center>
+<div class="figure">
+<img src="/img/20190511/50.gif" alt="Mr N°50" />
+<p class="caption">Mr N°50</p>
+</div>
+</center>
+<p>And here is his face analysis data:</p>
+<pre class="r"><code>json_file_sample &lt;- read_json(&quot;./data/20190511/json/50.json&quot;)
+str(json_file_sample[[&quot;FaceDetails&quot;]][[1]])</code></pre>
+<pre><code>## List of 15
+##  $ BoundingBox:List of 4
+##   ..$ Width : num 0.6
+##   ..$ Height: num 0.629
+##   ..$ Left  : num 0.217
+##   ..$ Top   : num 0.191
+##  $ AgeRange   :List of 2
+##   ..$ Low : int 45
+##   ..$ High: int 66
+##  $ Smile      :List of 2
+##   ..$ Value     : logi FALSE
+##   ..$ Confidence: num 67
+##  $ Eyeglasses :List of 2
+##   ..$ Value     : logi TRUE
+##   ..$ Confidence: num 95.2
+##  $ Sunglasses :List of 2
+##   ..$ Value     : logi FALSE
+##   ..$ Confidence: num 93
+##  $ Gender     :List of 2
+##   ..$ Value     : chr &quot;Male&quot;
+##   ..$ Confidence: num 96.8
+##  $ Beard      :List of 2
+##   ..$ Value     : logi FALSE
+##   ..$ Confidence: num 96.7
+##  $ Mustache   :List of 2
+##   ..$ Value     : logi FALSE
+##   ..$ Confidence: num 99.5
+##  $ EyesOpen   :List of 2
+##   ..$ Value     : logi TRUE
+##   ..$ Confidence: num 100
+##  $ MouthOpen  :List of 2
+##   ..$ Value     : logi TRUE
+##   ..$ Confidence: num 95.1
+##  $ Emotions   :List of 7
+##   ..$ :List of 2
+##   .. ..$ Type      : chr &quot;ANGRY&quot;
+##   .. ..$ Confidence: num 27.6
+##   ..$ :List of 2
+##   .. ..$ Type      : chr &quot;DISGUSTED&quot;
+##   .. ..$ Confidence: num 21.5
+##   ..$ :List of 2
+##   .. ..$ Type      : chr &quot;SURPRISED&quot;
+##   .. ..$ Confidence: num 11.2
+##   ..$ :List of 2
+##   .. ..$ Type      : chr &quot;SAD&quot;
+##   .. ..$ Confidence: num 2.28
+##   ..$ :List of 2
+##   .. ..$ Type      : chr &quot;CALM&quot;
+##   .. ..$ Confidence: num 10.9
+##   ..$ :List of 2
+##   .. ..$ Type      : chr &quot;CONFUSED&quot;
+##   .. ..$ Confidence: num 17.6
+##   ..$ :List of 2
+##   .. ..$ Type      : chr &quot;HAPPY&quot;
+##   .. ..$ Confidence: num 8.97
+##  $ Landmarks  :List of 30
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;eyeLeft&quot;
+##   .. ..$ X   : num 0.402
+##   .. ..$ Y   : num 0.423
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;eyeRight&quot;
+##   .. ..$ X   : num 0.667
+##   .. ..$ Y   : num 0.438
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;mouthLeft&quot;
+##   .. ..$ X   : num 0.406
+##   .. ..$ Y   : num 0.635
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;mouthRight&quot;
+##   .. ..$ X   : num 0.626
+##   .. ..$ Y   : num 0.648
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;nose&quot;
+##   .. ..$ X   : num 0.531
+##   .. ..$ Y   : num 0.539
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;leftEyeBrowLeft&quot;
+##   .. ..$ X   : num 0.301
+##   .. ..$ Y   : num 0.37
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;leftEyeBrowRight&quot;
+##   .. ..$ X   : num 0.465
+##   .. ..$ Y   : num 0.362
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;leftEyeBrowUp&quot;
+##   .. ..$ X   : num 0.386
+##   .. ..$ Y   : num 0.347
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;rightEyeBrowLeft&quot;
+##   .. ..$ X   : num 0.621
+##   .. ..$ Y   : num 0.371
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;rightEyeBrowRight&quot;
+##   .. ..$ X   : num 0.774
+##   .. ..$ Y   : num 0.397
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;rightEyeBrowUp&quot;
+##   .. ..$ X   : num 0.7
+##   .. ..$ Y   : num 0.365
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;leftEyeLeft&quot;
+##   .. ..$ X   : num 0.354
+##   .. ..$ Y   : num 0.419
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;leftEyeRight&quot;
+##   .. ..$ X   : num 0.453
+##   .. ..$ Y   : num 0.427
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;leftEyeUp&quot;
+##   .. ..$ X   : num 0.402
+##   .. ..$ Y   : num 0.412
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;leftEyeDown&quot;
+##   .. ..$ X   : num 0.402
+##   .. ..$ Y   : num 0.431
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;rightEyeLeft&quot;
+##   .. ..$ X   : num 0.61
+##   .. ..$ Y   : num 0.436
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;rightEyeRight&quot;
+##   .. ..$ X   : num 0.707
+##   .. ..$ Y   : num 0.439
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;rightEyeUp&quot;
+##   .. ..$ X   : num 0.664
+##   .. ..$ Y   : num 0.427
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;rightEyeDown&quot;
+##   .. ..$ X   : num 0.66
+##   .. ..$ Y   : num 0.446
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;noseLeft&quot;
+##   .. ..$ X   : num 0.475
+##   .. ..$ Y   : num 0.562
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;noseRight&quot;
+##   .. ..$ X   : num 0.572
+##   .. ..$ Y   : num 0.567
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;mouthUp&quot;
+##   .. ..$ X   : num 0.519
+##   .. ..$ Y   : num 0.615
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;mouthDown&quot;
+##   .. ..$ X   : num 0.512
+##   .. ..$ Y   : num 0.678
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;leftPupil&quot;
+##   .. ..$ X   : num 0.402
+##   .. ..$ Y   : num 0.423
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;rightPupil&quot;
+##   .. ..$ X   : num 0.667
+##   .. ..$ Y   : num 0.438
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;upperJawlineLeft&quot;
+##   .. ..$ X   : num 0.22
+##   .. ..$ Y   : num 0.423
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;midJawlineLeft&quot;
+##   .. ..$ X   : num 0.26
+##   .. ..$ Y   : num 0.654
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;chinBottom&quot;
+##   .. ..$ X   : num 0.498
+##   .. ..$ Y   : num 0.789
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;midJawlineRight&quot;
+##   .. ..$ X   : num 0.736
+##   .. ..$ Y   : num 0.68
+##   ..$ :List of 3
+##   .. ..$ Type: chr &quot;upperJawlineRight&quot;
+##   .. ..$ X   : num 0.813
+##   .. ..$ Y   : num 0.456
+##  $ Pose       :List of 3
+##   ..$ Roll : num 2.95
+##   ..$ Yaw  : num 2.22
+##   ..$ Pitch: num -8.8
+##  $ Quality    :List of 2
+##   ..$ Brightness: num 81.1
+##   ..$ Sharpness : num 83.1
+##  $ Confidence : num 100</code></pre>
+<p>Let’s put all of the json files in a data frame and first download them from the bucket.</p>
+<pre class="r"><code>setwd(&quot;./data/20190511/json/&quot;)
+files &lt;- list.files()
+faces_reps &lt;- data.frame()
+for (i in (1: length(files))){
+x &lt;- read_json(files[i])
+#print(files[i])
+y &lt;- as.data.frame(x$FaceDetails)
+number &lt;- str_remove(as.character(files[i]),&quot;.json&quot;)
+y &lt;- cbind(y, number)
+faces_reps &lt;- rbind(faces_reps, y)
+}
+
+dim(faces_reps)</code></pre>
+<pre><code>## [1] 179 133</code></pre>
+<p>Looks like they are all there, but we lost their names along the way.</p>
+<pre class="r"><code>to_name &lt;- list.files(&quot;./data/190417&quot;, pattern = &quot;*.gif&quot;) %&gt;% 
+  str_remove(&quot;.gif&quot;)
+ln_fn &lt;- data.frame(&quot;number&quot; = 1:179,
+                    &quot;ln_fn&quot; = to_name)
+
+faces_reps$number &lt;- as.integer(as.character(faces_reps$number))
+faces_reps &lt;- faces_reps %&gt;% 
+  left_join(ln_fn)</code></pre>
+<pre><code>## Joining, by = &quot;number&quot;</code></pre>
+<pre class="r"><code># saveRDS(faces_reps,&quot;./data/20190511/faces.rds&quot;)</code></pre>
+<p>Et voilà. A nice data frame to have fun with. :smile: For instance:</p>
+<pre class="r"><code>faces_reps %&gt;% group_by(Smile.Value)%&gt;% 
+  summarise(count = n())</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   Smile.Value count
+##   &lt;lgl&gt;       &lt;int&gt;
+## 1 FALSE          21
+## 2 TRUE          158</code></pre>
+<p>That’s 88% smiling faces in a bucket S3.</p>
+<p>More soon.</p>

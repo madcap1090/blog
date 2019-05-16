@@ -304,7 +304,7 @@ class(commute_time)</code></pre>
 <pre><code>## [1] &quot;difftime&quot;</code></pre>
 <pre class="r"><code>as.numeric(commute_time)</code></pre>
 <pre><code>## [1] 44.48333</code></pre>
-<p>17 minutes on the other hand seems a lot. But the data and calculations look correct to me. One explanation could be that sometimes there is a big delay in reporting the arrival time. Like on April 17 2015, where arrival was recorded after 12am.</p>
+<p>44 minutes on the other hand seems like a lot. But the data and calculations look correct to me. One explanation could be that sometimes there is a big delay in reporting the arrival time. Like on April 17 2015, where arrival was recorded after 12am.</p>
 <pre class="r"><code>day &lt;- df %&gt;% 
   filter(date == &quot;2015-04-17&quot;) 
 

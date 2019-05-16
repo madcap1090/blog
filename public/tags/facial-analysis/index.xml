@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Facial analysis on bad to the code</title>
+    <link>/tags/facial-analysis/</link>
+    <description>Recent content in Facial analysis on bad to the code</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
+    <lastBuildDate>Sat, 11 May 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/facial-analysis/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>happy faces in a bucket</title>
+      <link>/post/happy-faces-in-a-bucket/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/happy-faces-in-a-bucket/</guid>
+      <description>Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using these seemed therefore like a good choice.
+I searched for R packages to use Rekognition with, but did not find any.</description>
+    </item>
+    
+  </channel>
+</rss>

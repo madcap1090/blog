@@ -1,0 +1,285 @@
+---
+title: happy faces in a bucket
+author: William Bourgeois
+date: '2019-05-11'
+slug: happy-faces-in-a-bucket
+categories: []
+tags:
+  - Belgian politics
+  - AWS Rekognition
+  - Facial analysis
+  - Boto3
+  - S3
+  - Sagemaker
+---
+
+Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using these seemed therefore like a good choice. 
+
+I searched for R packages to use Rekognition with, but did not find any. So I tried Python's Boto3 but could not get the authorisation working. So with a little (a very little -- promised) help from the new consultants (thank you Fabien :thumbsup:) I set out to use my first scripts on the cloud.
+
+```{r message=FALSE, warning=FALSE}
+# libraries
+library("tidyverse")
+library("aws.s3")
+library("magick")
+library("jsonlite")
+options(Encoding="UTF-8")
+```
+
+In the process I found out Rekognition did not treat gifs, so the pictures need to be converted first to jpgs.
+
+```{r, eval=FALSE,}
+to_move <- list.files("./data/190417", pattern = "*.gif")
+file.copy(file.path("./data/190417", to_move), "./data/20190511")
+```
+
+Returns TRUE and TRUE is good. TRUE will set you free. We can convert them with the magick package. 
+
+```{r}
+convert_ye <- function(gif){
+  pic <- image_read(gif)
+  name <- str_remove(gif,".gif")
+  
+  image_write(pic, path = paste0("./jpg/",name,".jpg"), format = "jpg")
+}
+
+heathens <- list.files("./data/20190511", pattern = "*.gif", full.names = TRUE)
+```
+
+```{r, eval=FALSE, warning=FALSE}
+convert_ye(heathens)
+```
+
+Returns;
+Error in magick_image_readpath(path, density, depth, strip) : Magick: UnableToOpenBlob `C:\Users\William\Documents\R\blogs\content\post\data\20190511\Caprasse VÃ©ronique.gif': No such file or directory @ error/blob.c/OpenBlob/2701
+
+In encoding hell again. Magick cannot read the filename...Ã©Ã©Ã©Ã©! The heathens cannot be converted.  Can't really find a way to solve this. Last time we just gave the files numbers. We can do that again, but now we will keep the names for future use. Or we can try to replace it just for the magick package and change it again once we have the jpgs. 
+
+```{r, eval=FALSE,}
+heathens <- list.files("./data/20190511")
+
+setwd("./data/20190511")
+dir.create(file.path("jpg"), showWarnings = FALSE)
+for(i in (1:length(heathens))){
+  # print(headens[i])
+  file.rename(from = heathens[i], paste0(i,".gif"))
+  pic <- image_read(paste0(i, ".gif"))
+  name <- str_remove(heathens[i],".gif")
+  image_write(pic, path = paste0("./jpg/",name,".jpg"), format = "jpg")
+}
+```
+
+That seemed to work.
+
+In comes AWS. We will upload these to a bucket S3. It is important that the bucket is in the same Amazon Region as your Sagemaker instance. I wrote 'instance' because it sounds good, I don't know if it really means something though. But it sounds like a cloud computing word to use.  
+
+The authentication can be done like this:
+
+```{r, eval=FALSE}
+AWSAccessKeyId <- "secret"
+AWSSecretKey <- "secret"
+region <- "eu-west-3"
+
+Sys.setenv("AWS_ACCESS_KEY_ID" = AWSAccessKeyId,
+           "AWS_SECRET_ACCESS_KEY" = AWSSecretKey,
+           "AWS_DEFAULT_REGION" = region,
+           "AWS_SESSION_TOKEN" = "")
+```
+
+Creating a bucket (in Ireland).
+
+```{r, eval=FALSE}
+put_bucket("reps666", region = "eu-west-1")
+```
+
+And then uploading the pictures to a bucket. 
+
+```{r, eval=FALSE}
+put_object("./data/20190511/jpg/Almaci Meyrem.jpg", bucket = "reps666", 
+           object = "Almaci Meyrem.jpg")
+```
+
+Returns TRUE. TRUE is good, it will set you free.
+
+```{r,eval=FALSE}
+delete_object(object = "Almaci Meyrem.jpg",bucket = "reps666")
+```
+
+Returns TRUE. Repeat after me, TRUE is...
+
+I'm still having problems with encodings, hope you have not, but will change the names to digits and convert them back to names later.
+
+```{r, eval=FALSE}
+files <- list.files("./data/20190511/jpg")
+files_full <- list.files("./data/20190511/jpg",full.names = TRUE )
+for(i in (1:length(files))){
+    file.rename(from = files_full[i], paste0("./data/20190511/jpg/",i,".jpg"))
+  }
+```
+
+And now uploading the files to the bucket.
+
+```{r, eval=FALSE}
+
+files_full <- list.files("./data/20190511/jpg",full.names = TRUE )
+for(i in (1:length(files))){
+    put_object(files_full[i], bucket = "reps666")
+}
+
+```
+
+So we have the pictures in a bucket s3 with digits instead of names, or as names, but at least they are there, on our cloud. 
+
+<center>
+![aws console](/img/20190511/Management Console.jpg)
+
+</center>
+
+
+
+Next we can create a notebook instance on Sagemaker and start it up. 
+
+<center>
+![aws sagemaker](/img/20190511/Amazon SageMaker.jpg)
+
+</center>
+
+
+
+We can use boto3 to apply Rekognition to our files (boto3 is :snake:) :
+
+```{python, eval = FALSE}
+import boto3
+import json
+s3 = boto3.resource('s3')
+rekognition = boto3.client("rekognition", "eu-west-1")
+my_bucket = s3.Bucket('reps666')
+for object in my_bucket.objects.all():
+    name = object.key[0:-4] 
+    print(object.key[0:-4])
+    print(name)
+    BUCKET = 'reps666'
+    KEY = object.key
+    response = rekognition.detect_faces(
+    Image={
+        
+        'S3Object': {
+            'Bucket': BUCKET,
+            'Name': KEY,
+        }
+    },
+    Attributes=[
+        'ALL',
+    ]
+    )
+    with open(object.key[0:-4]+".json", 'w') as json_file:
+        json.dump(response, json_file)
+    boto3.Session().resource('s3')\
+    .Bucket('jsonmad').Object(object.key[0:-4]+".json")\
+    .upload_file(object.key[0:-4]+".json")
+```
+
+Pardon my python. 
+
+The code goes through the files in the bucket, applies 'detect_faces' from Rekognition through boto3, saves the output
+(in json) and sends it to another bucket. 
+
+Next we can check that the json files safely arrived in their bucket (jsonmad), commit and push the latest changes to the code and stop the notebook instance on Sagemaker.
+
+
+<center>
+![jupyterlab](/img/20190511/JupyterLab.jpg)
+
+</center>
+
+```{r, eval=FALSE}
+bucket_content <- get_bucket_df(bucket = "jsonmad")
+```
+
+
+```{r}
+# saveRDS(bucket_content, "./data/20190511/bucket_content.rds")
+bucket_content <-readRDS("./data/20190511/bucket_content.rds")
+```
+
+
+
+```{r}
+str(bucket_content)
+```
+
+
+```{r, eval=FALSE}
+for (i in (1:nrow(bucket_content))){
+  name <- str_remove(bucket_content$Key[i], ".json") 
+  #print(name)
+  #print(bucket_content$Key[i])
+  save_object(bucket_content$Key[i], bucket = "jsonmad", 
+              file = paste0("./data/20190511/json/",
+                            bucket_content$Key[i]))
+}
+
+```
+
+So they landed safely at home on my hard drive. Let's look at one. Hi there Mr N°50.
+
+
+<center>
+![Mr N°50](/img/20190511/50.gif)
+
+</center>
+
+
+
+And here is his face analysis data: 
+
+
+```{r}
+json_file_sample <- read_json("./data/20190511/json/50.json")
+str(json_file_sample[["FaceDetails"]][[1]])
+```
+
+Let's put all of the json files in a data frame and first download them from the bucket.
+
+```{r message=FALSE, warning=FALSE}
+setwd("./data/20190511/json/")
+files <- list.files()
+faces_reps <- data.frame()
+for (i in (1: length(files))){
+x <- read_json(files[i])
+#print(files[i])
+y <- as.data.frame(x$FaceDetails)
+number <- str_remove(as.character(files[i]),".json")
+y <- cbind(y, number)
+faces_reps <- rbind(faces_reps, y)
+}
+
+dim(faces_reps)
+```
+
+Looks like they are all there, but we lost their names along the way.
+
+```{r}
+to_name <- list.files("./data/190417", pattern = "*.gif") %>% 
+  str_remove(".gif")
+ln_fn <- data.frame("number" = 1:179,
+                    "ln_fn" = to_name)
+
+faces_reps$number <- as.integer(as.character(faces_reps$number))
+faces_reps <- faces_reps %>% 
+  left_join(ln_fn)
+
+# saveRDS(faces_reps,"./data/20190511/faces.rds")
+```
+
+Et voilà. A nice data frame to have fun with. :smile: For instance:
+
+```{r}
+faces_reps %>% group_by(Smile.Value)%>% 
+  summarise(count = n())
+
+```
+
+That's 88% smiling faces in a bucket S3. 
+
+More soon.
