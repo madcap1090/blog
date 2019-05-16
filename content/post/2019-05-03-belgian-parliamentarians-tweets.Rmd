@@ -698,9 +698,9 @@ dim(reps54)
 length(unique(reps54$fn_ln))
 
 # clean names
-one_date$ln_fn <-  trimws(one_date$fn_ln, c("both"))
-two_dates$ln_fn <-  trimws(two_dates$fn_ln, c("both"))
-three_dates$ln_fn <-  trimws(three_dates$fn_ln, c("both"))
+one_date$fn_ln <-  trimws(one_date$fn_ln, c("both"))
+two_dates$fn_ln <-  trimws(two_dates$fn_ln, c("both"))
+three_dates$fn_ln <-  trimws(three_dates$fn_ln, c("both"))
 
 ```
 
@@ -718,11 +718,32 @@ length(unique(reps54$fn_ln))
 length(reps54$fn_ln)
 ```
 
+
+Some manual corrections
+
+```{r}
+x <- reps54
+
+x[x$fn_ln == "Renate Hufkens",]$start_date <- as.Date("2014-10-14")
+x[x$fn_ln == "Johan Klaps",]$start_date <- as.Date("2014-10-14")
+x[x$fn_ln == "Wouter Raskin",]$start_date <- as.Date("2014-10-14")
+x[x$fn_ln == "Wim Van der Donckt",]$start_date <- as.Date("2017-09-03")
+
+x[x$fn_ln == "Renate Hufkens",]$end_date <- as.Date("2018-12-09")
+x[x$fn_ln == "Johan Klaps",]$end_date <- as.Date("2018-12-09")
+x[x$fn_ln == "Wouter Raskin",]$end_date <- as.Date("2018-11-12")
+x[x$fn_ln == "Wim Van der Donckt",]$end_date <- as.Date("2018-12-09")
+
+reps54 <- x
+
+```
+
+
 Save before cleaning.
 
 ```{r}
-# saveRDS(reps54, "./data/20190503/reps54_before_cleaning.rds")
-reps54 <- readRDS("./data/20190503/reps54_before_cleaning.rds")
+#saveRDS(reps54, "./data/20190503/reps54_before_cleaning.rds")
+#reps54 <- readRDS("./data/20190503/reps54_before_cleaning.rds")
 ```
 
 Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
@@ -805,37 +826,13 @@ reps54 <- reps54 %>%
   arrange(fn_ln)
 ```
 
+
 Save after first cleaning.
 
 ```{r}
 #saveRDS(reps54, "./data/20190503/reps54_after_cleaning.rds")
 ```
 
-I'll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from aws.
+I'll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from AWS.
 
-<<<<<<< HEAD
-We can follow how they are spelled on dekamer.be: Robert Van de Velde, Karin Jiroflée, Julie Fernandez Fernandez
-
-And use a case_when for a change
-
-```{r}
-
-xx <- x %>% 
-  mutate(join = case_when(join == "VandeVeldeRob" ~ "VandeVeldeRobert",
-                          join == "JirofléeKarine" ~ "JirofléeKarin",
-                          join == "FernandezFernandezJulie" ~ "Fernandez-FernandezJulie",
-                          TRUE ~ join))
-
-```
-There are 150 persons on the Wikipedia list and 179 parliamentarians in the legistlature. We would need to find the dates these 29 left. For instance, when did Ann Vanheste leave?
-
-
-```{r}
-xx %>% 
-  filter(str_detect(Opmerkingen, "Ann Vanheste")) %>% 
-  select(date_1) %>% 
-  print()
-
-
-```
 

@@ -453,19 +453,20 @@ stringAsFactors = FALSE&lt;/code&gt;&lt;/pre&gt;
 tweets &amp;lt;- map2_df(twitter_users$screen_name,twitter_users$ln_fn, 
              possibly(get_handle_tweets, otherwise = NULL))
 dim(tweets)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 315  89&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#saveRDS(tweets, &amp;quot;./data/20190503/tweets1.rds&amp;quot;)
+tweets &amp;lt;- readRDS(&amp;quot;./data/20190503/tweets1.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Now might be a good time to talk about rate limits. We are limited to go 3200 tweets in the past per handle, but we have also temporary limits to the calls we can do with the API.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;limits &amp;lt;- rate_limits()
 head(limits)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## # A tibble: 6 x 7
 ##   query limit remaining reset reset_at            timestamp           app  
 ##   &amp;lt;chr&amp;gt; &amp;lt;int&amp;gt;     &amp;lt;int&amp;gt; &amp;lt;tim&amp;gt; &amp;lt;dttm&amp;gt;              &amp;lt;dttm&amp;gt;              &amp;lt;chr&amp;gt;
-## 1 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
-## 2 list~    75        75 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
-## 3 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
-## 4 list~   900       900 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
-## 5 list~    15        15 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~
-## 6 list~    75        75 15.0~ 2019-05-12 18:02:01 2019-05-12 17:47:01 madc~&lt;/code&gt;&lt;/pre&gt;
+## 1 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
+## 2 list~    75        75 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
+## 3 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
+## 4 list~   900       900 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
+## 5 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
+## 6 list~    75        75 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;In total there are 149 limits, we can access, among other things, how much remains and when the limit will be reset. Here are some of the limits:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(limits$query, 20)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;lists/list&amp;quot;                    &amp;quot;lists/memberships&amp;quot;            
@@ -486,8 +487,8 @@ head(limits)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## # A tibble: 2 x 4
 ##   limit query                         remaining reset     
 ##   &amp;lt;int&amp;gt; &amp;lt;chr&amp;gt;                             &amp;lt;int&amp;gt; &amp;lt;time&amp;gt;    
-## 1   180 application/rate_limit_status        20 13.68 mins
-## 2   900 statuses/user_timeline              741 13.68 mins&lt;/code&gt;&lt;/pre&gt;
+## 1   180 application/rate_limit_status       179 15.01 mins
+## 2   900 statuses/user_timeline              900 15.01 mins&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;We are searching 160 users and the rate limit for searching user timelines is 900, so we should be fine. But be aware that your limit searches are limited also (180 searches counted by individual limit in batches of 15 minutes).&lt;/p&gt;
 &lt;p&gt;At a certain point in time it might be useful to periodically query certain limits and to then pause the code in order not to produce interruptions.&lt;/p&gt;
 &lt;p&gt;How well did our test go? Did we get tweets from everyone?&lt;/p&gt;
@@ -626,7 +627,7 @@ con_dates &amp;lt;- data.frame(&amp;quot;condate&amp;quot; = unlist(inspect))
 wiki_table &amp;lt;- wiki_table %&amp;gt;% 
   cbind(con_dates) %&amp;gt;% 
   select(-digits)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Now we can extract the dates, but one problem still remains, on Wikipedia some years are not repeated for certain time periods:&lt;/p&gt;
+&lt;p&gt;Now we can extrat the dates, but one problem still remains, on wikipedia some years are not repeated for certain time periods (so there are only 4 digits for a date):&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;wiki_table$Opmerkingen[28]&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Zetelt van 22 9 tot 27 10 2016 als onafhankelijke en vanaf 27 10 2016 in de Vuye&amp;amp;Wouters-fractie.&amp;quot;&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;as.character(wiki_table$condate[28])&lt;/code&gt;&lt;/pre&gt;
@@ -662,6 +663,7 @@ wiki_table &amp;lt;- wiki_table %&amp;gt;%
          date_2 = dmy(as.numeric(date_2)),
          date_3 = dmy(as.numeric(date_3)),
                 )&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Ok that looks fine now.&lt;/p&gt;
 &lt;p&gt;There are other possibilities, but here we will use a table with one line per period a person seated for a party. To later use in the analysis of the tweets collected. In that table there will be one start date and one end date. A good start is assuming everyone started at “2014-06-19” and ended at “2019-05-31”, and then making corrections afterwards.&lt;/p&gt;
 &lt;p&gt;We can start by consolidating our tables.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;setdiff(names(wiki_table),names(wiki_table_source))&lt;/code&gt;&lt;/pre&gt;
@@ -1002,10 +1004,14 @@ dates&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] 182  19&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(unique(reps54$fn_ln))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] 179&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# clean names
+one_date$ln_fn &amp;lt;-  trimws(one_date$fn_ln, c(&amp;quot;both&amp;quot;))
+two_dates$ln_fn &amp;lt;-  trimws(two_dates$fn_ln, c(&amp;quot;both&amp;quot;))
+three_dates$ln_fn &amp;lt;-  trimws(three_dates$fn_ln, c(&amp;quot;both&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;reps54 &amp;lt;- reps54 %&amp;gt;% 
-  filter(!fn_ln %in% one_date) %&amp;gt;% 
-  filter(!fn_ln %in% two_dates) %&amp;gt;% 
-  filter(!fn_ln %in% three_dates) %&amp;gt;% 
+  filter(!fn_ln %in% one_date$fn_ln) %&amp;gt;% 
+  filter(!fn_ln %in% two_dates$fn_ln) %&amp;gt;% 
+  filter(!fn_ln %in% three_dates$fn_ln) %&amp;gt;% 
   rbind(one_date) %&amp;gt;% 
   rbind(two_dates) %&amp;gt;% 
   rbind(three_dates) %&amp;gt;% 
@@ -1014,17 +1020,21 @@ dates&lt;/code&gt;&lt;/pre&gt;
 length(unique(reps54$fn_ln))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] 179&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(reps54$fn_ln)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] 230&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 192&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Save before cleaning.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# saveRDS(reps54, &amp;quot;./data/20190503/reps54_before_cleaning.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# saveRDS(reps54, &amp;quot;./data/20190503/reps54_before_cleaning.rds&amp;quot;)
+reps54 &amp;lt;- readRDS(&amp;quot;./data/20190503/reps54_before_cleaning.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
-party and lannguage. Untill it shows that page again, we’ll be using the fields obtained from Wikipedia instead.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;empty_spaces &amp;lt;- reps54 %&amp;gt;%
+party and lannguage. Probably because of the end of the legistlature.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;reps54 &amp;lt;- reps54 %&amp;gt;%
   mutate(language = Taalgroep,
-         party =Fractie) %&amp;gt;% 
+         party =Fractie)
+
+empty_spaces &amp;lt;- reps54 %&amp;gt;%
   filter(is.na(language)) %&amp;gt;% 
-  arrange(fn_ln)&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;empty_spaces$ln_fn&lt;/code&gt;&lt;/pre&gt;
+  arrange(fn_ln)
+
+empty_spaces$ln_fn&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;De Croo Alexander&amp;quot;       &amp;quot;Flahaut André&amp;quot;          
 ##  [3] &amp;quot;Vanheste Ann&amp;quot;            &amp;quot;Turtelboom Annemie&amp;quot;     
 ##  [5] &amp;quot;Turtelboom Annemie&amp;quot;      &amp;quot;Turtelboom Annemie&amp;quot;     
@@ -1061,8 +1071,9 @@ lang &amp;lt;- tweets %&amp;gt;%
   filter(ln_fn %in% empty_spaces$ln_fn) %&amp;gt;% 
   select(ln_fn, lang) %&amp;gt;% 
   group_by(ln_fn, lang) %&amp;gt;% 
-  summarise(count = n())&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# this code is sinfull, apologies to the tidyverse saints;
+  summarise(count = n())
+
+# this code is sinfull, apologies to the tidyverse saints;
 languages_used &amp;lt;- lang %&amp;gt;%
   group_by(ln_fn)%&amp;gt;%
   summarise(m = max(count))%&amp;gt;% 
@@ -1072,11 +1083,28 @@ languages_used &amp;lt;- lang %&amp;gt;%
   mutate(language = ifelse(lang == &amp;quot;nl&amp;quot;, &amp;quot;Nederlands&amp;quot;, &amp;quot;Frans&amp;quot;)) %&amp;gt;% 
   select(-lang)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Joining, by = &amp;quot;ln_fn&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can get the language the members use the most.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;languages_used&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 27 x 2
+##    ln_fn              language  
+##    &amp;lt;chr&amp;gt;              &amp;lt;chr&amp;gt;     
+##  1 Bacquelaine Daniel Frans     
+##  2 Claerhout Sarah    Nederlands
+##  3 Crusnière Stéphane Frans     
+##  4 De Block Maggie    Nederlands
+##  5 De Crem Pieter     Nederlands
+##  6 De Croo Alexander  Nederlands
+##  7 Demeyer Willy      Frans     
+##  8 Ducarme Denis      Frans     
+##  9 Flahaut André      Frans     
+## 10 Fremault Céline    Frans     
+## # ... with 17 more rows&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;setdiff(empty_spaces$ln_fn, languages_used$ln_fn)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] &amp;quot;Vande Lanotte Johan&amp;quot; &amp;quot;Gerkens Muriel&amp;quot;&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;So let’s add them and end this for now.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;to_add &amp;lt;- data.frame(&amp;quot;ln_fn&amp;quot; = c(&amp;quot;Vande Lanotte Johan&amp;quot;,&amp;quot;Gerkens Muriel&amp;quot;), 
                      &amp;quot;language&amp;quot; = c(&amp;quot;Nederlands&amp;quot;, &amp;quot;Frans&amp;quot;)) 
+
 languages_used &amp;lt;-languages_used %&amp;gt;% 
   rbind(to_add)
 
@@ -1090,8 +1118,8 @@ reps54 &amp;lt;- reps54 %&amp;gt;%
   rbind(added_languages) %&amp;gt;% 
   arrange(fn_ln)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Save after first cleaning.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# saveRDS(reps54, &amp;quot;./data/20190503/reps54_after_cleaning.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;I’ll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from aws.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;saveRDS(reps54, &amp;quot;./data/20190503/reps54_after_cleaning.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I’ll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from AWS.&lt;/p&gt;
 </content>
       
     </item>

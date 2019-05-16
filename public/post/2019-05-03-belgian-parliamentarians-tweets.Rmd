@@ -70,7 +70,7 @@ twitter_users$screen_name[3]
 
 It's not strictly needed since we already know the correspondence between name and handle ('screen_name'), but it's fun to try map2_df. A test with two tweets:
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, eval= FALSE}
 get_handle_tweets <- function(screen_name, ln_fn) {
   get_timeline(screen_name, n=2) %>% 
     mutate(ln_fn = ln_fn)
@@ -80,6 +80,12 @@ tweets <- map2_df(twitter_users$screen_name,twitter_users$ln_fn,
              possibly(get_handle_tweets, otherwise = NULL))
 dim(tweets)
 ```
+
+```{r}
+#saveRDS(tweets, "./data/20190503/tweets1.rds")
+tweets <- readRDS("./data/20190503/tweets1.rds")
+```
+
 
 Now might be a good time to talk about rate limits. We are limited to go 3200 tweets in the past per handle, but we have also temporary limits to the calls we can do with the API. 
 
@@ -135,7 +141,7 @@ dim(tweets)
 ```
 
 ```{r eval=FALSE, include=FALSE}
-saveRDS(tweets, "./data/20190503/tweets.rds")
+#saveRDS(tweets, "./data/20190503/tweets.rds")
 ```
 
 Cool, so about 265K tweets. 
@@ -232,7 +238,8 @@ wiki_table <- wiki_table %>%
   select(-digits)
 ```
 
-Now we can extract the dates, but one problem still remains, on Wikipedia some years are not repeated for certain time periods:
+
+Now we can extrat the dates, but one problem still remains, on wikipedia some years are not repeated for certain time periods (so there are only 4 digits for a date):
 
 ```{r}
 wiki_table$Opmerkingen[28]
@@ -275,6 +282,8 @@ wiki_table <- wiki_table %>%
 
 ```
 
+Ok that looks fine now.
+
 There are other possibilities, but here we will use a table with one line per period a person seated for a party. To later use in the analysis of the tweets collected. In that table there will be one start date and one end date. A good start is assuming everyone started at "2014-06-19" and ended at "2019-05-31", and then making corrections afterwards. 
 
 We can start by consolidating our tables.
@@ -315,7 +324,6 @@ y <- names %>%
 
 z <- y %>% 
   left_join(x)
-
 ```
 ```{r}
 
@@ -689,13 +697,18 @@ dim(three_dates)
 dim(reps54)
 length(unique(reps54$fn_ln))
 
+# clean names
+one_date$ln_fn <-  trimws(one_date$fn_ln, c("both"))
+two_dates$ln_fn <-  trimws(two_dates$fn_ln, c("both"))
+three_dates$ln_fn <-  trimws(three_dates$fn_ln, c("both"))
+
 ```
 
 ```{r}
 reps54 <- reps54 %>% 
-  filter(!fn_ln %in% one_date) %>% 
-  filter(!fn_ln %in% two_dates) %>% 
-  filter(!fn_ln %in% three_dates) %>% 
+  filter(!fn_ln %in% one_date$fn_ln) %>% 
+  filter(!fn_ln %in% two_dates$fn_ln) %>% 
+  filter(!fn_ln %in% three_dates$fn_ln) %>% 
   rbind(one_date) %>% 
   rbind(two_dates) %>% 
   rbind(three_dates) %>% 
@@ -709,24 +722,25 @@ Save before cleaning.
 
 ```{r}
 # saveRDS(reps54, "./data/20190503/reps54_before_cleaning.rds")
+reps54 <- readRDS("./data/20190503/reps54_before_cleaning.rds")
 ```
 
 Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
-party and lannguage. Untill it shows that page again, we'll be using the fields obtained from Wikipedia instead.
+party and lannguage. Probably because of the end of the legistlature.
 
 
 ```{r}
-empty_spaces <- reps54 %>%
+
+reps54 <- reps54 %>%
   mutate(language = Taalgroep,
-         party =Fractie) %>% 
+         party =Fractie)
+
+empty_spaces <- reps54 %>%
   filter(is.na(language)) %>% 
   arrange(fn_ln)
 
-```
-
-
-```{r}
 empty_spaces$ln_fn
+
 ```
 
 For now I leave some fields incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language 'role'.
@@ -746,11 +760,7 @@ lang <- tweets %>%
   select(ln_fn, lang) %>% 
   group_by(ln_fn, lang) %>% 
   summarise(count = n())
-```
 
-
-
-```{r}
 # this code is sinfull, apologies to the tidyverse saints;
 languages_used <- lang %>%
   group_by(ln_fn)%>%
@@ -761,6 +771,16 @@ languages_used <- lang %>%
   mutate(language = ifelse(lang == "nl", "Nederlands", "Frans")) %>% 
   select(-lang)
 
+```
+
+We can get the language the members use the most.
+
+```{r}
+languages_used
+```
+
+
+```{r}
 setdiff(empty_spaces$ln_fn, languages_used$ln_fn)
 
 ```
@@ -770,6 +790,7 @@ So let's add them and end this for now.
 ```{r}
 to_add <- data.frame("ln_fn" = c("Vande Lanotte Johan","Gerkens Muriel"), 
                      "language" = c("Nederlands", "Frans")) 
+
 languages_used <-languages_used %>% 
   rbind(to_add)
 
@@ -787,8 +808,9 @@ reps54 <- reps54 %>%
 Save after first cleaning.
 
 ```{r}
-# saveRDS(reps54, "./data/20190503/reps54_after_cleaning.rds")
+saveRDS(reps54, "./data/20190503/reps54_after_cleaning.rds")
 ```
 
-I'll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from aws.
+I'll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from AWS.
+
 
