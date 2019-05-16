@@ -141,7 +141,7 @@ dim(tweets)
 ```
 
 ```{r eval=FALSE, include=FALSE}
-saveRDS(tweets, "./data/20190503/tweets.rds")
+#saveRDS(tweets, "./data/20190503/tweets.rds")
 ```
 
 Cool, so about 265K tweets. 
@@ -238,11 +238,8 @@ wiki_table <- wiki_table %>%
   select(-digits)
 ```
 
-<<<<<<< HEAD
+
 Now we can extrat the dates, but one problem still remains, on wikipedia some years are not repeated for certain time periods (so there are only 4 digits for a date):
-=======
-Now we can extract the dates, but one problem still remains, on Wikipedia some years are not repeated for certain time periods:
->>>>>>> 150dca8c58f8f040a9c6243e222a53718192192f
 
 ```{r}
 wiki_table$Opmerkingen[28]
@@ -700,13 +697,18 @@ dim(three_dates)
 dim(reps54)
 length(unique(reps54$fn_ln))
 
+# clean names
+one_date$ln_fn <-  trimws(one_date$fn_ln, c("both"))
+two_dates$ln_fn <-  trimws(two_dates$fn_ln, c("both"))
+three_dates$ln_fn <-  trimws(three_dates$fn_ln, c("both"))
+
 ```
 
 ```{r}
 reps54 <- reps54 %>% 
-  filter(!fn_ln %in% one_date) %>% 
-  filter(!fn_ln %in% two_dates) %>% 
-  filter(!fn_ln %in% three_dates) %>% 
+  filter(!fn_ln %in% one_date$fn_ln) %>% 
+  filter(!fn_ln %in% two_dates$fn_ln) %>% 
+  filter(!fn_ln %in% three_dates$fn_ln) %>% 
   rbind(one_date) %>% 
   rbind(two_dates) %>% 
   rbind(three_dates) %>% 
@@ -837,5 +839,3 @@ xx %>%
 
 ```
 
-=======
->>>>>>> 150dca8c58f8f040a9c6243e222a53718192192f
