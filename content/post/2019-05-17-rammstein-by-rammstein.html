@@ -1,0 +1,199 @@
+---
+title: RAMMSTEIN By Rammstein
+author: William Bourgeois
+date: '2019-05-17'
+slug: rammstein-by-rammstein
+categories: []
+tags:
+  - music
+  - Spotify
+---
+
+
+
+<p>Today Rammstein released ‘RAMMSTEIN’, first album studio since 10 years.</p>
+<center>
+<strong>Jetzt geht es mir gut, ja!</strong>
+</center>
+<center>
+<div class="figure">
+<img src="/img/20190517/rammstein.jpg" alt="RAMMSTEIN" />
+<p class="caption">RAMMSTEIN</p>
+</div>
+</center>
+<p>I love it. Gave me a lot of pleasure today. All day in a loop since 7 am. Time for a small analysis. I got the code from <a href="https://peerchristensen.netlify.com/post/clustering-springsteen-albums-with-spotifyr/">Peer</a>. And from <a href="https://twitter.com/plzbeemyfriend/status/1028080281323036678">plzbeemyfriend</a> who is a cool dude, and made some insightful graphs based on Spotify data.</p>
+<pre class="r"><code>library(spotifyr) # install.packages(&quot;spotifyr&quot;)
+library(tidyverse)</code></pre>
+<pre><code>## -- Attaching packages -------------------------------------- tidyverse 1.2.1 --</code></pre>
+<pre><code>## v ggplot2 3.1.1       v purrr   0.3.1  
+## v tibble  2.0.1       v dplyr   0.8.0.1
+## v tidyr   0.8.3       v stringr 1.4.0  
+## v readr   1.3.1       v forcats 0.3.0</code></pre>
+<pre><code>## -- Conflicts ----------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<p>Authentication:</p>
+<pre class="r"><code>secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;) %&gt;% 
+  filter(name == &quot;spotify&quot;)
+
+clientId &lt;- secrets$id
+clientSecret &lt;- secrets$key
+
+Sys.setenv(SPOTIFY_CLIENT_ID = clientId)
+Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)</code></pre>
+<p>Spotify has also an API and some interesting information can be downloaded from it.</p>
+<pre class="r"><code>spotify_df &lt;- get_artist_audio_features(&#39;Rammstein&#39;)
+
+names(spotify_df)</code></pre>
+<pre><code>##  [1] &quot;artist_name&quot;                  &quot;artist_id&quot;                   
+##  [3] &quot;album_id&quot;                     &quot;album_type&quot;                  
+##  [5] &quot;album_images&quot;                 &quot;album_release_date&quot;          
+##  [7] &quot;album_release_year&quot;           &quot;album_release_date_precision&quot;
+##  [9] &quot;danceability&quot;                 &quot;energy&quot;                      
+## [11] &quot;key&quot;                          &quot;loudness&quot;                    
+## [13] &quot;mode&quot;                         &quot;speechiness&quot;                 
+## [15] &quot;acousticness&quot;                 &quot;instrumentalness&quot;            
+## [17] &quot;liveness&quot;                     &quot;valence&quot;                     
+## [19] &quot;tempo&quot;                        &quot;track_id&quot;                    
+## [21] &quot;analysis_url&quot;                 &quot;time_signature&quot;              
+## [23] &quot;artists&quot;                      &quot;available_markets&quot;           
+## [25] &quot;disc_number&quot;                  &quot;duration_ms&quot;                 
+## [27] &quot;explicit&quot;                     &quot;track_href&quot;                  
+## [29] &quot;is_local&quot;                     &quot;track_name&quot;                  
+## [31] &quot;track_preview_url&quot;            &quot;track_number&quot;                
+## [33] &quot;type&quot;                         &quot;track_uri&quot;                   
+## [35] &quot;external_urls.spotify&quot;        &quot;album_name&quot;                  
+## [37] &quot;key_name&quot;                     &quot;mode_name&quot;                   
+## [39] &quot;key_mode&quot;</code></pre>
+<pre class="r"><code>saveRDS(spotify_df, &quot;./data/20190517/spotify_rammstein.rds&quot;)</code></pre>
+<p>It has for instance links to three different sizes of the album images.</p>
+<pre class="r"><code>spotify_df[[5]][[1]]</code></pre>
+<pre><code>##   height                                                              url
+## 1    640 https://i.scdn.co/image/1cfbb1da99c6259b43e1b53cf695c8850adc0241
+## 2    300 https://i.scdn.co/image/389c1df3f21fa93570dde0b75332e75ab91bd878
+## 3     64 https://i.scdn.co/image/2afdabd6b6318481fdb7e8288a170e8623d06ff7
+##   width
+## 1   640
+## 2   300
+## 3    64</code></pre>
+<p>And of course the albums.</p>
+<pre class="r"><code>unique(spotify_df$album_name)</code></pre>
+<pre><code>##  [1] &quot;RAMMSTEIN&quot;               &quot;XXI - Klavier&quot;          
+##  [3] &quot;RARITÄTEN (1994 - 2012)&quot; &quot;LIEBE IST FÜR ALLE DA&quot;  
+##  [5] &quot;ROSENROT&quot;                &quot;REISE, REISE&quot;           
+##  [7] &quot;Mutter&quot;                  &quot;Live aus Berlin&quot;        
+##  [9] &quot;Sehnsucht&quot;               &quot;Herzeleid&quot;</code></pre>
+<p>We can focus on the studio albums.</p>
+<pre class="r"><code>studio_albums &lt;- spotify_df %&gt;% 
+  filter(album_name != &quot;XXI - Klavier&quot;) %&gt;% 
+  filter(album_name != &quot;RARITÄTEN (1994 - 2012)&quot;) %&gt;% 
+  filter(album_name != &quot;Live aus Berlin&quot;)</code></pre>
+<p>Check if we got them all</p>
+<pre class="r"><code>unique(studio_albums$album_name)</code></pre>
+<pre><code>## [1] &quot;RAMMSTEIN&quot;             &quot;LIEBE IST FÜR ALLE DA&quot; &quot;ROSENROT&quot;             
+## [4] &quot;REISE, REISE&quot;          &quot;Mutter&quot;                &quot;Sehnsucht&quot;            
+## [7] &quot;Herzeleid&quot;</code></pre>
+<p>Every song gets scored by Spotify algorythms on:</p>
+<pre class="r"><code>names(spotify_df)[12:19]</code></pre>
+<pre><code>## [1] &quot;loudness&quot;         &quot;mode&quot;             &quot;speechiness&quot;     
+## [4] &quot;acousticness&quot;     &quot;instrumentalness&quot; &quot;liveness&quot;        
+## [7] &quot;valence&quot;          &quot;tempo&quot;</code></pre>
+<p>So with the code by plzbeemyfriend that builds an graphical album representation by song we can get this graph of their first album:</p>
+<pre class="r"><code>polar_spotify &lt;- studio_albums %&gt;%
+  mutate(date = album_release_date %&gt;% 
+           str_extract(&#39;(?&lt;=^\\d{2})\\d{2}&#39;) %&gt;%
+           {paste0(&quot;&#39;&quot;, .)} ,
+         album_name = album_name %&gt;%
+           str_to_title() %&gt;%
+           {paste0(., &#39; | &#39;, date)}) %&gt;%
+  select(album_name,
+         track_name,
+         danceability,
+         energy,
+         loudness,
+         speechiness,
+         acousticness,
+         valence,
+         instrumentalness,
+         tempo) %&gt;%
+  mutate(loudness = (loudness + 60 )/ 60,
+         tempo = tempo/200,
+         end = danceability) %&gt;%
+  gather(key = key, value = value, -album_name, -track_name) %&gt;%
+  mutate(key = factor(key, levels = unique(key)),
+         angle = as.numeric(key)/length(unique(key)) * 2 * pi,
+         album_name = factor(album_name, levels = unique(album_name))) %&gt;% 
+  filter(album_name == &quot;Herzeleid | &#39;95&quot;)
+
+ggplot(polar_spotify, aes(x = angle, 
+                          y = value, 
+                          group = track_name)) +
+  geom_point() +
+  scale_x_continuous(breaks = unique(polar_spotify$angle) %&gt;% .[-length(.)],
+                     labels = levels(polar_spotify$key) %&gt;% .[-length(.)],
+                     name = &#39;&#39;,
+                     minor_breaks = NULL)  +
+  scale_y_continuous(name = &#39;&#39;) +
+  coord_polar(theta = &#39;x&#39;) +
+  geom_path()  + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = seq(0, -315, by = -45),
+                                   size = 7)) +
+  facet_wrap(~album_name) + 
+  labs(title = &quot;Rammstein | Latest Studio Albums&quot;,
+       subtitle = &quot;Spotify Metrics&quot;)</code></pre>
+<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>And then compare their latest six albums:</p>
+<pre class="r"><code>polar_spotify &lt;- studio_albums %&gt;%
+  mutate(date = album_release_date %&gt;% 
+           str_extract(&#39;(?&lt;=^\\d{2})\\d{2}&#39;) %&gt;%
+           {paste0(&quot;&#39;&quot;, .)} ,
+         album_name = album_name %&gt;%
+           str_to_title() %&gt;%
+           {paste0(., &#39; | &#39;, date)}) %&gt;%
+  select(album_name,
+         track_name,
+         danceability,
+         energy,
+         loudness,
+         speechiness,
+         acousticness,
+         valence,
+         instrumentalness,
+         tempo) %&gt;%
+  mutate(loudness = (loudness + 60 )/ 60,
+         tempo = tempo/200,
+         end = danceability) %&gt;%
+  gather(key = key, value = value, -album_name, -track_name) %&gt;%
+  mutate(key = factor(key, levels = unique(key)),
+         angle = as.numeric(key)/length(unique(key)) * 2 * pi,
+         album_name = factor(album_name, levels = unique(album_name))) %&gt;% 
+  filter(album_name != &quot;Herzeleid | &#39;95&quot;)
+
+ggplot(polar_spotify, aes(x = angle, 
+                          y = value, 
+                          group = track_name)) +
+  geom_point() +
+  scale_x_continuous(breaks = unique(polar_spotify$angle) %&gt;% .[-length(.)],
+                     labels = levels(polar_spotify$key) %&gt;% .[-length(.)],
+                     name = &#39;&#39;,
+                     minor_breaks = NULL)  +
+  scale_y_continuous(name = &#39;&#39;) +
+  coord_polar(theta = &#39;x&#39;) +
+  geom_path()  + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = seq(0, -315, by = -45),
+                                   size = 7)) +
+  facet_wrap(~album_name) + 
+  labs(title = &quot;Rammstein | Latest Studio Albums&quot;,
+       subtitle = &quot;Spotify Metrics&quot;)</code></pre>
+<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>So yes, 7 studio albums.</p>
+<p><a href="https://www.udiscovermusic.com/news/rammstein-self-titled-seventh-album/" class="uri">https://www.udiscovermusic.com/news/rammstein-self-titled-seventh-album/</a>
+Share On Flipboard
+German Industrial metal icons Rammstein have now released their long awaited, self-titled seventh album. Available now via physical and digital formats, Rammstein is released through Spinefarm Records in the UK and Caroline International in the US.</p>
+<p>Comprised of 11 new tracks, Rammstein includes ‘Zeig Dich’ and singles ‘Radio’ and ‘Deutschland,’ the new untitled record is Rammstein’s first studio album since 2009’s Liebe Ist Für Alle Da. To date, ‘Radio’ and ‘Deutschland’ have amassed combined streams and views exceeding 100 million. The new album has been produced by Olsen Involtini with Rammstein.</p>
+<p>The band recently spoke about the making of Rammstein with Metal Hammer Germany’s Thorsten Zahn. “We just wanted to try something new – how we write, basically”, said guitarist Richard Z. Kruspe.</p>
+<p>“And even the way we produce – first we went to France with Tom Dalgety (Ghost, Royal Blood) and Olsen Involtini (Rammstein’s front of house engineer) instead of (long-term collaborators) Jacob Hellner and Stefan Glaumann as previously.</p>
+<p>“Change is always a fragile thing: On the one hand, you don’t want to change something you’ve had success with. But on the other hand, you’ve got that desire to develop as a musician. We decided to step out of our comfort zone.</p>
+<p>“It wasn’t always plain sailing, at the start we didn’t really get along that well with Tom and Olsen. And Jacob Hellner was also a father figure to a certain extent, someone who really leads a production. Olsen doesn’t do that, Tom doesn’t do that. So for me it just felt like: Nobody knows where we’re supposed to go any more. This is when you realise: from an astrological point of view, Rammstein is fire, water and earth at the same time. What we’re missing is air, in other word, is lightness. We tried to bring in air. Olsen Involtini is an air sign.”</p>

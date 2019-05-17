@@ -12,6 +12,207 @@
     
     
     <item>
+      <title>RAMMSTEIN By Rammstein</title>
+      <link>/post/rammstein-by-rammstein/</link>
+      <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
+      <author>William Bourgeois</author>
+      <guid>/post/rammstein-by-rammstein/</guid>
+      <description></description>
+      
+      <content>
+
+
+&lt;p&gt;Today Rammstein released ‘RAMMSTEIN’, first album studio since 10 years.&lt;/p&gt;
+&lt;center&gt;
+&lt;strong&gt;Jetzt geht es mir gut, ja!&lt;/strong&gt;
+&lt;/center&gt;
+&lt;center&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/20190517/rammstein.jpg&#34; alt=&#34;RAMMSTEIN&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;RAMMSTEIN&lt;/p&gt;
+&lt;/div&gt;
+&lt;/center&gt;
+&lt;p&gt;I love it. Gave me a lot of pleasure today. All day in a loop since 7 am. Time for a small analysis. I got the code from &lt;a href=&#34;https://peerchristensen.netlify.com/post/clustering-springsteen-albums-with-spotifyr/&#34;&gt;Peer&lt;/a&gt;. And from &lt;a href=&#34;https://twitter.com/plzbeemyfriend/status/1028080281323036678&#34;&gt;plzbeemyfriend&lt;/a&gt; who is a cool dude, and made some insightful graphs based on Spotify data.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(spotifyr) # install.packages(&amp;quot;spotifyr&amp;quot;)
+library(tidyverse)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## -- Attaching packages -------------------------------------- tidyverse 1.2.1 --&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## v ggplot2 3.1.1       v purrr   0.3.1  
+## v tibble  2.0.1       v dplyr   0.8.0.1
+## v tidyr   0.8.3       v stringr 1.4.0  
+## v readr   1.3.1       v forcats 0.3.0&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## -- Conflicts ----------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Authentication:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;secrets &amp;lt;- readRDS(&amp;quot;~/R/geo/secret/secrets.rds&amp;quot;) %&amp;gt;% 
+  filter(name == &amp;quot;spotify&amp;quot;)
+
+clientId &amp;lt;- secrets$id
+clientSecret &amp;lt;- secrets$key
+
+Sys.setenv(SPOTIFY_CLIENT_ID = clientId)
+Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Spotify has also an API and some interesting information can be downloaded from it.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;spotify_df &amp;lt;- get_artist_audio_features(&amp;#39;Rammstein&amp;#39;)
+
+names(spotify_df)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;artist_name&amp;quot;                  &amp;quot;artist_id&amp;quot;                   
+##  [3] &amp;quot;album_id&amp;quot;                     &amp;quot;album_type&amp;quot;                  
+##  [5] &amp;quot;album_images&amp;quot;                 &amp;quot;album_release_date&amp;quot;          
+##  [7] &amp;quot;album_release_year&amp;quot;           &amp;quot;album_release_date_precision&amp;quot;
+##  [9] &amp;quot;danceability&amp;quot;                 &amp;quot;energy&amp;quot;                      
+## [11] &amp;quot;key&amp;quot;                          &amp;quot;loudness&amp;quot;                    
+## [13] &amp;quot;mode&amp;quot;                         &amp;quot;speechiness&amp;quot;                 
+## [15] &amp;quot;acousticness&amp;quot;                 &amp;quot;instrumentalness&amp;quot;            
+## [17] &amp;quot;liveness&amp;quot;                     &amp;quot;valence&amp;quot;                     
+## [19] &amp;quot;tempo&amp;quot;                        &amp;quot;track_id&amp;quot;                    
+## [21] &amp;quot;analysis_url&amp;quot;                 &amp;quot;time_signature&amp;quot;              
+## [23] &amp;quot;artists&amp;quot;                      &amp;quot;available_markets&amp;quot;           
+## [25] &amp;quot;disc_number&amp;quot;                  &amp;quot;duration_ms&amp;quot;                 
+## [27] &amp;quot;explicit&amp;quot;                     &amp;quot;track_href&amp;quot;                  
+## [29] &amp;quot;is_local&amp;quot;                     &amp;quot;track_name&amp;quot;                  
+## [31] &amp;quot;track_preview_url&amp;quot;            &amp;quot;track_number&amp;quot;                
+## [33] &amp;quot;type&amp;quot;                         &amp;quot;track_uri&amp;quot;                   
+## [35] &amp;quot;external_urls.spotify&amp;quot;        &amp;quot;album_name&amp;quot;                  
+## [37] &amp;quot;key_name&amp;quot;                     &amp;quot;mode_name&amp;quot;                   
+## [39] &amp;quot;key_mode&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;saveRDS(spotify_df, &amp;quot;./data/20190517/spotify_rammstein.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It has for instance links to three different sizes of the album images.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;spotify_df[[5]][[1]]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   height                                                              url
+## 1    640 https://i.scdn.co/image/1cfbb1da99c6259b43e1b53cf695c8850adc0241
+## 2    300 https://i.scdn.co/image/389c1df3f21fa93570dde0b75332e75ab91bd878
+## 3     64 https://i.scdn.co/image/2afdabd6b6318481fdb7e8288a170e8623d06ff7
+##   width
+## 1   640
+## 2   300
+## 3    64&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And of course the albums.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unique(spotify_df$album_name)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;RAMMSTEIN&amp;quot;               &amp;quot;XXI - Klavier&amp;quot;          
+##  [3] &amp;quot;RARITÄTEN (1994 - 2012)&amp;quot; &amp;quot;LIEBE IST FÜR ALLE DA&amp;quot;  
+##  [5] &amp;quot;ROSENROT&amp;quot;                &amp;quot;REISE, REISE&amp;quot;           
+##  [7] &amp;quot;Mutter&amp;quot;                  &amp;quot;Live aus Berlin&amp;quot;        
+##  [9] &amp;quot;Sehnsucht&amp;quot;               &amp;quot;Herzeleid&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can focus on the studio albums.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;studio_albums &amp;lt;- spotify_df %&amp;gt;% 
+  filter(album_name != &amp;quot;XXI - Klavier&amp;quot;) %&amp;gt;% 
+  filter(album_name != &amp;quot;RARITÄTEN (1994 - 2012)&amp;quot;) %&amp;gt;% 
+  filter(album_name != &amp;quot;Live aus Berlin&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Check if we got them all&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unique(studio_albums$album_name)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;RAMMSTEIN&amp;quot;             &amp;quot;LIEBE IST FÜR ALLE DA&amp;quot; &amp;quot;ROSENROT&amp;quot;             
+## [4] &amp;quot;REISE, REISE&amp;quot;          &amp;quot;Mutter&amp;quot;                &amp;quot;Sehnsucht&amp;quot;            
+## [7] &amp;quot;Herzeleid&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Every song gets scored by Spotify algorythms on:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;names(spotify_df)[12:19]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;loudness&amp;quot;         &amp;quot;mode&amp;quot;             &amp;quot;speechiness&amp;quot;     
+## [4] &amp;quot;acousticness&amp;quot;     &amp;quot;instrumentalness&amp;quot; &amp;quot;liveness&amp;quot;        
+## [7] &amp;quot;valence&amp;quot;          &amp;quot;tempo&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So with the code by plzbeemyfriend that builds an graphical album representation by song we can get this graph of their first album:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;polar_spotify &amp;lt;- studio_albums %&amp;gt;%
+  mutate(date = album_release_date %&amp;gt;% 
+           str_extract(&amp;#39;(?&amp;lt;=^\\d{2})\\d{2}&amp;#39;) %&amp;gt;%
+           {paste0(&amp;quot;&amp;#39;&amp;quot;, .)} ,
+         album_name = album_name %&amp;gt;%
+           str_to_title() %&amp;gt;%
+           {paste0(., &amp;#39; | &amp;#39;, date)}) %&amp;gt;%
+  select(album_name,
+         track_name,
+         danceability,
+         energy,
+         loudness,
+         speechiness,
+         acousticness,
+         valence,
+         instrumentalness,
+         tempo) %&amp;gt;%
+  mutate(loudness = (loudness + 60 )/ 60,
+         tempo = tempo/200,
+         end = danceability) %&amp;gt;%
+  gather(key = key, value = value, -album_name, -track_name) %&amp;gt;%
+  mutate(key = factor(key, levels = unique(key)),
+         angle = as.numeric(key)/length(unique(key)) * 2 * pi,
+         album_name = factor(album_name, levels = unique(album_name))) %&amp;gt;% 
+  filter(album_name == &amp;quot;Herzeleid | &amp;#39;95&amp;quot;)
+
+ggplot(polar_spotify, aes(x = angle, 
+                          y = value, 
+                          group = track_name)) +
+  geom_point() +
+  scale_x_continuous(breaks = unique(polar_spotify$angle) %&amp;gt;% .[-length(.)],
+                     labels = levels(polar_spotify$key) %&amp;gt;% .[-length(.)],
+                     name = &amp;#39;&amp;#39;,
+                     minor_breaks = NULL)  +
+  scale_y_continuous(name = &amp;#39;&amp;#39;) +
+  coord_polar(theta = &amp;#39;x&amp;#39;) +
+  geom_path()  + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = seq(0, -315, by = -45),
+                                   size = 7)) +
+  facet_wrap(~album_name) + 
+  labs(title = &amp;quot;Rammstein | Latest Studio Albums&amp;quot;,
+       subtitle = &amp;quot;Spotify Metrics&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;And then compare their latest six albums:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;polar_spotify &amp;lt;- studio_albums %&amp;gt;%
+  mutate(date = album_release_date %&amp;gt;% 
+           str_extract(&amp;#39;(?&amp;lt;=^\\d{2})\\d{2}&amp;#39;) %&amp;gt;%
+           {paste0(&amp;quot;&amp;#39;&amp;quot;, .)} ,
+         album_name = album_name %&amp;gt;%
+           str_to_title() %&amp;gt;%
+           {paste0(., &amp;#39; | &amp;#39;, date)}) %&amp;gt;%
+  select(album_name,
+         track_name,
+         danceability,
+         energy,
+         loudness,
+         speechiness,
+         acousticness,
+         valence,
+         instrumentalness,
+         tempo) %&amp;gt;%
+  mutate(loudness = (loudness + 60 )/ 60,
+         tempo = tempo/200,
+         end = danceability) %&amp;gt;%
+  gather(key = key, value = value, -album_name, -track_name) %&amp;gt;%
+  mutate(key = factor(key, levels = unique(key)),
+         angle = as.numeric(key)/length(unique(key)) * 2 * pi,
+         album_name = factor(album_name, levels = unique(album_name))) %&amp;gt;% 
+  filter(album_name != &amp;quot;Herzeleid | &amp;#39;95&amp;quot;)
+
+ggplot(polar_spotify, aes(x = angle, 
+                          y = value, 
+                          group = track_name)) +
+  geom_point() +
+  scale_x_continuous(breaks = unique(polar_spotify$angle) %&amp;gt;% .[-length(.)],
+                     labels = levels(polar_spotify$key) %&amp;gt;% .[-length(.)],
+                     name = &amp;#39;&amp;#39;,
+                     minor_breaks = NULL)  +
+  scale_y_continuous(name = &amp;#39;&amp;#39;) +
+  coord_polar(theta = &amp;#39;x&amp;#39;) +
+  geom_path()  + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = seq(0, -315, by = -45),
+                                   size = 7)) +
+  facet_wrap(~album_name) + 
+  labs(title = &amp;quot;Rammstein | Latest Studio Albums&amp;quot;,
+       subtitle = &amp;quot;Spotify Metrics&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-11-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So yes, 7 studio albums.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.udiscovermusic.com/news/rammstein-self-titled-seventh-album/&#34; class=&#34;uri&#34;&gt;https://www.udiscovermusic.com/news/rammstein-self-titled-seventh-album/&lt;/a&gt;
+Share On Flipboard
+German Industrial metal icons Rammstein have now released their long awaited, self-titled seventh album. Available now via physical and digital formats, Rammstein is released through Spinefarm Records in the UK and Caroline International in the US.&lt;/p&gt;
+&lt;p&gt;Comprised of 11 new tracks, Rammstein includes ‘Zeig Dich’ and singles ‘Radio’ and ‘Deutschland,’ the new untitled record is Rammstein’s first studio album since 2009’s Liebe Ist Für Alle Da. To date, ‘Radio’ and ‘Deutschland’ have amassed combined streams and views exceeding 100 million. The new album has been produced by Olsen Involtini with Rammstein.&lt;/p&gt;
+&lt;p&gt;The band recently spoke about the making of Rammstein with Metal Hammer Germany’s Thorsten Zahn. “We just wanted to try something new – how we write, basically”, said guitarist Richard Z. Kruspe.&lt;/p&gt;
+&lt;p&gt;“And even the way we produce – first we went to France with Tom Dalgety (Ghost, Royal Blood) and Olsen Involtini (Rammstein’s front of house engineer) instead of (long-term collaborators) Jacob Hellner and Stefan Glaumann as previously.&lt;/p&gt;
+&lt;p&gt;“Change is always a fragile thing: On the one hand, you don’t want to change something you’ve had success with. But on the other hand, you’ve got that desire to develop as a musician. We decided to step out of our comfort zone.&lt;/p&gt;
+&lt;p&gt;“It wasn’t always plain sailing, at the start we didn’t really get along that well with Tom and Olsen. And Jacob Hellner was also a father figure to a certain extent, someone who really leads a production. Olsen doesn’t do that, Tom doesn’t do that. So for me it just felt like: Nobody knows where we’re supposed to go any more. This is when you realise: from an astrological point of view, Rammstein is fire, water and earth at the same time. What we’re missing is air, in other word, is lightness. We tried to bring in air. Olsen Involtini is an air sign.”&lt;/p&gt;
+</content>
+      
+    </item>
+    
+    <item>
       <title>happy faces in a bucket</title>
       <link>/post/happy-faces-in-a-bucket/</link>
       <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
@@ -461,12 +662,12 @@ head(limits)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## # A tibble: 6 x 7
 ##   query limit remaining reset reset_at            timestamp           app  
 ##   &amp;lt;chr&amp;gt; &amp;lt;int&amp;gt;     &amp;lt;int&amp;gt; &amp;lt;tim&amp;gt; &amp;lt;dttm&amp;gt;              &amp;lt;dttm&amp;gt;              &amp;lt;chr&amp;gt;
-## 1 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 2 list~    75        75 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 3 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 4 list~   900       900 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 5 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 6 list~    75        75 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~&lt;/code&gt;&lt;/pre&gt;
+## 1 list~    15        15 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 2 list~    75        75 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 3 list~    15        15 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 4 list~   900       900 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 5 list~    15        15 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 6 list~    75        75 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;In total there are 149 limits, we can access, among other things, how much remains and when the limit will be reset. Here are some of the limits:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(limits$query, 20)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;lists/list&amp;quot;                    &amp;quot;lists/memberships&amp;quot;            
@@ -1005,9 +1206,9 @@ dates&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(unique(reps54$fn_ln))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] 179&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# clean names
-one_date$ln_fn &amp;lt;-  trimws(one_date$fn_ln, c(&amp;quot;both&amp;quot;))
-two_dates$ln_fn &amp;lt;-  trimws(two_dates$fn_ln, c(&amp;quot;both&amp;quot;))
-three_dates$ln_fn &amp;lt;-  trimws(three_dates$fn_ln, c(&amp;quot;both&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+one_date$fn_ln &amp;lt;-  trimws(one_date$fn_ln, c(&amp;quot;both&amp;quot;))
+two_dates$fn_ln &amp;lt;-  trimws(two_dates$fn_ln, c(&amp;quot;both&amp;quot;))
+three_dates$fn_ln &amp;lt;-  trimws(three_dates$fn_ln, c(&amp;quot;both&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;reps54 &amp;lt;- reps54 %&amp;gt;% 
   filter(!fn_ln %in% one_date$fn_ln) %&amp;gt;% 
   filter(!fn_ln %in% two_dates$fn_ln) %&amp;gt;% 
@@ -1021,9 +1222,23 @@ length(unique(reps54$fn_ln))&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] 179&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;length(reps54$fn_ln)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] 192&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Some manual corrections&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;x &amp;lt;- reps54
+
+x[x$fn_ln == &amp;quot;Renate Hufkens&amp;quot;,]$start_date &amp;lt;- as.Date(&amp;quot;2014-10-14&amp;quot;)
+x[x$fn_ln == &amp;quot;Johan Klaps&amp;quot;,]$start_date &amp;lt;- as.Date(&amp;quot;2014-10-14&amp;quot;)
+x[x$fn_ln == &amp;quot;Wouter Raskin&amp;quot;,]$start_date &amp;lt;- as.Date(&amp;quot;2014-10-14&amp;quot;)
+x[x$fn_ln == &amp;quot;Wim Van der Donckt&amp;quot;,]$start_date &amp;lt;- as.Date(&amp;quot;2017-09-03&amp;quot;)
+
+x[x$fn_ln == &amp;quot;Renate Hufkens&amp;quot;,]$end_date &amp;lt;- as.Date(&amp;quot;2018-12-09&amp;quot;)
+x[x$fn_ln == &amp;quot;Johan Klaps&amp;quot;,]$end_date &amp;lt;- as.Date(&amp;quot;2018-12-09&amp;quot;)
+x[x$fn_ln == &amp;quot;Wouter Raskin&amp;quot;,]$end_date &amp;lt;- as.Date(&amp;quot;2018-11-12&amp;quot;)
+x[x$fn_ln == &amp;quot;Wim Van der Donckt&amp;quot;,]$end_date &amp;lt;- as.Date(&amp;quot;2018-12-09&amp;quot;)
+
+reps54 &amp;lt;- x&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Save before cleaning.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# saveRDS(reps54, &amp;quot;./data/20190503/reps54_before_cleaning.rds&amp;quot;)
-reps54 &amp;lt;- readRDS(&amp;quot;./data/20190503/reps54_before_cleaning.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#saveRDS(reps54, &amp;quot;./data/20190503/reps54_before_cleaning.rds&amp;quot;)
+#reps54 &amp;lt;- readRDS(&amp;quot;./data/20190503/reps54_before_cleaning.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
 party and lannguage. Probably because of the end of the legistlature.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;reps54 &amp;lt;- reps54 %&amp;gt;%
@@ -1037,34 +1252,32 @@ empty_spaces &amp;lt;- reps54 %&amp;gt;%
 empty_spaces$ln_fn&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;De Croo Alexander&amp;quot;       &amp;quot;Flahaut André&amp;quot;          
 ##  [3] &amp;quot;Vanheste Ann&amp;quot;            &amp;quot;Turtelboom Annemie&amp;quot;     
-##  [5] &amp;quot;Turtelboom Annemie&amp;quot;      &amp;quot;Turtelboom Annemie&amp;quot;     
-##  [7] &amp;quot;Hellings Benoit&amp;quot;         &amp;quot;Fremault Céline&amp;quot;        
-##  [9] &amp;quot;Michel Charles&amp;quot;          &amp;quot;Bacquelaine Daniel&amp;quot;     
-## [11] &amp;quot;Ducarme Denis&amp;quot;           &amp;quot;Reynders Didier&amp;quot;        
-## [13] &amp;quot;Massin Eric&amp;quot;             &amp;quot;Poncelet Isabelle&amp;quot;      
-## [15] &amp;quot;Klaps Johan&amp;quot;             &amp;quot;Vande Lanotte Johan&amp;quot;    
-## [17] &amp;quot;Geens Koen&amp;quot;              &amp;quot;De Block Maggie&amp;quot;        
-## [19] &amp;quot;Marghem Marie-Christine&amp;quot; &amp;quot;Wathelet Melchior&amp;quot;      
-## [21] &amp;quot;Gerkens Muriel&amp;quot;          &amp;quot;De Crem Pieter&amp;quot;         
-## [23] &amp;quot;Hufkens Renate&amp;quot;          &amp;quot;Lahaye-Battheu Sabien&amp;quot;  
-## [25] &amp;quot;Claerhout Sarah&amp;quot;         &amp;quot;Wilmès Sophie&amp;quot;          
-## [27] &amp;quot;Crusnière Stéphane&amp;quot;      &amp;quot;Demeyer Willy&amp;quot;          
-## [29] &amp;quot;Van der Donckt Wim&amp;quot;      &amp;quot;Raskin Wouter&amp;quot;          
-## [31] &amp;quot;Khattabi Zakia&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+##  [5] &amp;quot;Turtelboom Annemie&amp;quot;      &amp;quot;Hellings Benoit&amp;quot;        
+##  [7] &amp;quot;Fremault Céline&amp;quot;         &amp;quot;Michel Charles&amp;quot;         
+##  [9] &amp;quot;Bacquelaine Daniel&amp;quot;      &amp;quot;Ducarme Denis&amp;quot;          
+## [11] &amp;quot;Reynders Didier&amp;quot;         &amp;quot;Massin Eric&amp;quot;            
+## [13] &amp;quot;Poncelet Isabelle&amp;quot;       &amp;quot;Klaps Johan&amp;quot;            
+## [15] &amp;quot;Vande Lanotte Johan&amp;quot;     &amp;quot;Geens Koen&amp;quot;             
+## [17] &amp;quot;De Block Maggie&amp;quot;         &amp;quot;Marghem Marie-Christine&amp;quot;
+## [19] &amp;quot;Wathelet Melchior&amp;quot;       &amp;quot;Gerkens Muriel&amp;quot;         
+## [21] &amp;quot;De Crem Pieter&amp;quot;          &amp;quot;Hufkens Renate&amp;quot;         
+## [23] &amp;quot;Lahaye-Battheu Sabien&amp;quot;   &amp;quot;Claerhout Sarah&amp;quot;        
+## [25] &amp;quot;Wilmès Sophie&amp;quot;           &amp;quot;Crusnière Stéphane&amp;quot;     
+## [27] &amp;quot;Demeyer Willy&amp;quot;           &amp;quot;Van der Donckt Wim&amp;quot;     
+## [29] &amp;quot;Raskin Wouter&amp;quot;           &amp;quot;Khattabi Zakia&amp;quot;&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;For now I leave some fields incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language ‘role’.&lt;/p&gt;
 &lt;p&gt;On the other hand if you are familiar with Belgium, you could just make good guesses looking at their first names:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;word(empty_spaces$ln_fn,-1)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;Alexander&amp;quot;       &amp;quot;André&amp;quot;           &amp;quot;Ann&amp;quot;            
-##  [4] &amp;quot;Annemie&amp;quot;         &amp;quot;Annemie&amp;quot;         &amp;quot;Annemie&amp;quot;        
-##  [7] &amp;quot;Benoit&amp;quot;          &amp;quot;Céline&amp;quot;          &amp;quot;Charles&amp;quot;        
-## [10] &amp;quot;Daniel&amp;quot;          &amp;quot;Denis&amp;quot;           &amp;quot;Didier&amp;quot;         
-## [13] &amp;quot;Eric&amp;quot;            &amp;quot;Isabelle&amp;quot;        &amp;quot;Johan&amp;quot;          
-## [16] &amp;quot;Johan&amp;quot;           &amp;quot;Koen&amp;quot;            &amp;quot;Maggie&amp;quot;         
-## [19] &amp;quot;Marie-Christine&amp;quot; &amp;quot;Melchior&amp;quot;        &amp;quot;Muriel&amp;quot;         
-## [22] &amp;quot;Pieter&amp;quot;          &amp;quot;Renate&amp;quot;          &amp;quot;Sabien&amp;quot;         
-## [25] &amp;quot;Sarah&amp;quot;           &amp;quot;Sophie&amp;quot;          &amp;quot;Stéphane&amp;quot;       
-## [28] &amp;quot;Willy&amp;quot;           &amp;quot;Wim&amp;quot;             &amp;quot;Wouter&amp;quot;         
-## [31] &amp;quot;Zakia&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+##  [4] &amp;quot;Annemie&amp;quot;         &amp;quot;Annemie&amp;quot;         &amp;quot;Benoit&amp;quot;         
+##  [7] &amp;quot;Céline&amp;quot;          &amp;quot;Charles&amp;quot;         &amp;quot;Daniel&amp;quot;         
+## [10] &amp;quot;Denis&amp;quot;           &amp;quot;Didier&amp;quot;          &amp;quot;Eric&amp;quot;           
+## [13] &amp;quot;Isabelle&amp;quot;        &amp;quot;Johan&amp;quot;           &amp;quot;Johan&amp;quot;          
+## [16] &amp;quot;Koen&amp;quot;            &amp;quot;Maggie&amp;quot;          &amp;quot;Marie-Christine&amp;quot;
+## [19] &amp;quot;Melchior&amp;quot;        &amp;quot;Muriel&amp;quot;          &amp;quot;Pieter&amp;quot;         
+## [22] &amp;quot;Renate&amp;quot;          &amp;quot;Sabien&amp;quot;          &amp;quot;Sarah&amp;quot;          
+## [25] &amp;quot;Sophie&amp;quot;          &amp;quot;Stéphane&amp;quot;        &amp;quot;Willy&amp;quot;          
+## [28] &amp;quot;Wim&amp;quot;             &amp;quot;Wouter&amp;quot;          &amp;quot;Zakia&amp;quot;&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;But looking at the tweets:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;tweets &amp;lt;- readRDS(&amp;quot;~/R/blogs/content/post/data/20190503/tweets.rds&amp;quot;)
 lang &amp;lt;- tweets %&amp;gt;% 
@@ -1118,7 +1331,7 @@ reps54 &amp;lt;- reps54 %&amp;gt;%
   rbind(added_languages) %&amp;gt;% 
   arrange(fn_ln)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Save after first cleaning.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;saveRDS(reps54, &amp;quot;./data/20190503/reps54_after_cleaning.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#saveRDS(reps54, &amp;quot;./data/20190503/reps54_after_cleaning.rds&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;I’ll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from AWS.&lt;/p&gt;
 </content>
       

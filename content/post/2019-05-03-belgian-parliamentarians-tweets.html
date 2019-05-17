@@ -63,12 +63,12 @@ head(limits)</code></pre>
 <pre><code>## # A tibble: 6 x 7
 ##   query limit remaining reset reset_at            timestamp           app  
 ##   &lt;chr&gt; &lt;int&gt;     &lt;int&gt; &lt;tim&gt; &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;
-## 1 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 2 list~    75        75 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 3 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 4 list~   900       900 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 5 list~    15        15 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~
-## 6 list~    75        75 15.0~ 2019-05-16 20:01:29 2019-05-16 19:46:29 madc~</code></pre>
+## 1 list~    15        15 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 2 list~    75        75 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 3 list~    15        15 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 4 list~   900       900 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 5 list~    15        15 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~
+## 6 list~    75        75 15.0~ 2019-05-17 23:12:22 2019-05-17 22:57:22 madc~</code></pre>
 <p>In total there are 149 limits, we can access, among other things, how much remains and when the limit will be reset. Here are some of the limits:</p>
 <pre class="r"><code>head(limits$query, 20)</code></pre>
 <pre><code>##  [1] &quot;lists/list&quot;                    &quot;lists/memberships&quot;            
@@ -607,9 +607,9 @@ dates</code></pre>
 <pre class="r"><code>length(unique(reps54$fn_ln))</code></pre>
 <pre><code>## [1] 179</code></pre>
 <pre class="r"><code># clean names
-one_date$ln_fn &lt;-  trimws(one_date$fn_ln, c(&quot;both&quot;))
-two_dates$ln_fn &lt;-  trimws(two_dates$fn_ln, c(&quot;both&quot;))
-three_dates$ln_fn &lt;-  trimws(three_dates$fn_ln, c(&quot;both&quot;))</code></pre>
+one_date$fn_ln &lt;-  trimws(one_date$fn_ln, c(&quot;both&quot;))
+two_dates$fn_ln &lt;-  trimws(two_dates$fn_ln, c(&quot;both&quot;))
+three_dates$fn_ln &lt;-  trimws(three_dates$fn_ln, c(&quot;both&quot;))</code></pre>
 <pre class="r"><code>reps54 &lt;- reps54 %&gt;% 
   filter(!fn_ln %in% one_date$fn_ln) %&gt;% 
   filter(!fn_ln %in% two_dates$fn_ln) %&gt;% 
@@ -623,9 +623,23 @@ length(unique(reps54$fn_ln))</code></pre>
 <pre><code>## [1] 179</code></pre>
 <pre class="r"><code>length(reps54$fn_ln)</code></pre>
 <pre><code>## [1] 192</code></pre>
+<p>Some manual corrections</p>
+<pre class="r"><code>x &lt;- reps54
+
+x[x$fn_ln == &quot;Renate Hufkens&quot;,]$start_date &lt;- as.Date(&quot;2014-10-14&quot;)
+x[x$fn_ln == &quot;Johan Klaps&quot;,]$start_date &lt;- as.Date(&quot;2014-10-14&quot;)
+x[x$fn_ln == &quot;Wouter Raskin&quot;,]$start_date &lt;- as.Date(&quot;2014-10-14&quot;)
+x[x$fn_ln == &quot;Wim Van der Donckt&quot;,]$start_date &lt;- as.Date(&quot;2017-09-03&quot;)
+
+x[x$fn_ln == &quot;Renate Hufkens&quot;,]$end_date &lt;- as.Date(&quot;2018-12-09&quot;)
+x[x$fn_ln == &quot;Johan Klaps&quot;,]$end_date &lt;- as.Date(&quot;2018-12-09&quot;)
+x[x$fn_ln == &quot;Wouter Raskin&quot;,]$end_date &lt;- as.Date(&quot;2018-11-12&quot;)
+x[x$fn_ln == &quot;Wim Van der Donckt&quot;,]$end_date &lt;- as.Date(&quot;2018-12-09&quot;)
+
+reps54 &lt;- x</code></pre>
 <p>Save before cleaning.</p>
-<pre class="r"><code># saveRDS(reps54, &quot;./data/20190503/reps54_before_cleaning.rds&quot;)
-reps54 &lt;- readRDS(&quot;./data/20190503/reps54_before_cleaning.rds&quot;)</code></pre>
+<pre class="r"><code>#saveRDS(reps54, &quot;./data/20190503/reps54_before_cleaning.rds&quot;)
+#reps54 &lt;- readRDS(&quot;./data/20190503/reps54_before_cleaning.rds&quot;)</code></pre>
 <p>Hmm unfortunately the site dekamer.be is unstable or under transformation. It stopped listing the current members with their
 party and lannguage. Probably because of the end of the legistlature.</p>
 <pre class="r"><code>reps54 &lt;- reps54 %&gt;%
@@ -639,34 +653,32 @@ empty_spaces &lt;- reps54 %&gt;%
 empty_spaces$ln_fn</code></pre>
 <pre><code>##  [1] &quot;De Croo Alexander&quot;       &quot;Flahaut André&quot;          
 ##  [3] &quot;Vanheste Ann&quot;            &quot;Turtelboom Annemie&quot;     
-##  [5] &quot;Turtelboom Annemie&quot;      &quot;Turtelboom Annemie&quot;     
-##  [7] &quot;Hellings Benoit&quot;         &quot;Fremault Céline&quot;        
-##  [9] &quot;Michel Charles&quot;          &quot;Bacquelaine Daniel&quot;     
-## [11] &quot;Ducarme Denis&quot;           &quot;Reynders Didier&quot;        
-## [13] &quot;Massin Eric&quot;             &quot;Poncelet Isabelle&quot;      
-## [15] &quot;Klaps Johan&quot;             &quot;Vande Lanotte Johan&quot;    
-## [17] &quot;Geens Koen&quot;              &quot;De Block Maggie&quot;        
-## [19] &quot;Marghem Marie-Christine&quot; &quot;Wathelet Melchior&quot;      
-## [21] &quot;Gerkens Muriel&quot;          &quot;De Crem Pieter&quot;         
-## [23] &quot;Hufkens Renate&quot;          &quot;Lahaye-Battheu Sabien&quot;  
-## [25] &quot;Claerhout Sarah&quot;         &quot;Wilmès Sophie&quot;          
-## [27] &quot;Crusnière Stéphane&quot;      &quot;Demeyer Willy&quot;          
-## [29] &quot;Van der Donckt Wim&quot;      &quot;Raskin Wouter&quot;          
-## [31] &quot;Khattabi Zakia&quot;</code></pre>
+##  [5] &quot;Turtelboom Annemie&quot;      &quot;Hellings Benoit&quot;        
+##  [7] &quot;Fremault Céline&quot;         &quot;Michel Charles&quot;         
+##  [9] &quot;Bacquelaine Daniel&quot;      &quot;Ducarme Denis&quot;          
+## [11] &quot;Reynders Didier&quot;         &quot;Massin Eric&quot;            
+## [13] &quot;Poncelet Isabelle&quot;       &quot;Klaps Johan&quot;            
+## [15] &quot;Vande Lanotte Johan&quot;     &quot;Geens Koen&quot;             
+## [17] &quot;De Block Maggie&quot;         &quot;Marghem Marie-Christine&quot;
+## [19] &quot;Wathelet Melchior&quot;       &quot;Gerkens Muriel&quot;         
+## [21] &quot;De Crem Pieter&quot;          &quot;Hufkens Renate&quot;         
+## [23] &quot;Lahaye-Battheu Sabien&quot;   &quot;Claerhout Sarah&quot;        
+## [25] &quot;Wilmès Sophie&quot;           &quot;Crusnière Stéphane&quot;     
+## [27] &quot;Demeyer Willy&quot;           &quot;Van der Donckt Wim&quot;     
+## [29] &quot;Raskin Wouter&quot;           &quot;Khattabi Zakia&quot;</code></pre>
 <p>For now I leave some fields incomplete and see if we can have fun finding them with algorithms or with some other tools. But since we have a number of their tweets in ram, we kan have a shot at guessing their language ‘role’.</p>
 <p>On the other hand if you are familiar with Belgium, you could just make good guesses looking at their first names:</p>
 <pre class="r"><code>word(empty_spaces$ln_fn,-1)</code></pre>
 <pre><code>##  [1] &quot;Alexander&quot;       &quot;André&quot;           &quot;Ann&quot;            
-##  [4] &quot;Annemie&quot;         &quot;Annemie&quot;         &quot;Annemie&quot;        
-##  [7] &quot;Benoit&quot;          &quot;Céline&quot;          &quot;Charles&quot;        
-## [10] &quot;Daniel&quot;          &quot;Denis&quot;           &quot;Didier&quot;         
-## [13] &quot;Eric&quot;            &quot;Isabelle&quot;        &quot;Johan&quot;          
-## [16] &quot;Johan&quot;           &quot;Koen&quot;            &quot;Maggie&quot;         
-## [19] &quot;Marie-Christine&quot; &quot;Melchior&quot;        &quot;Muriel&quot;         
-## [22] &quot;Pieter&quot;          &quot;Renate&quot;          &quot;Sabien&quot;         
-## [25] &quot;Sarah&quot;           &quot;Sophie&quot;          &quot;Stéphane&quot;       
-## [28] &quot;Willy&quot;           &quot;Wim&quot;             &quot;Wouter&quot;         
-## [31] &quot;Zakia&quot;</code></pre>
+##  [4] &quot;Annemie&quot;         &quot;Annemie&quot;         &quot;Benoit&quot;         
+##  [7] &quot;Céline&quot;          &quot;Charles&quot;         &quot;Daniel&quot;         
+## [10] &quot;Denis&quot;           &quot;Didier&quot;          &quot;Eric&quot;           
+## [13] &quot;Isabelle&quot;        &quot;Johan&quot;           &quot;Johan&quot;          
+## [16] &quot;Koen&quot;            &quot;Maggie&quot;          &quot;Marie-Christine&quot;
+## [19] &quot;Melchior&quot;        &quot;Muriel&quot;          &quot;Pieter&quot;         
+## [22] &quot;Renate&quot;          &quot;Sabien&quot;          &quot;Sarah&quot;          
+## [25] &quot;Sophie&quot;          &quot;Stéphane&quot;        &quot;Willy&quot;          
+## [28] &quot;Wim&quot;             &quot;Wouter&quot;          &quot;Zakia&quot;</code></pre>
 <p>But looking at the tweets:</p>
 <pre class="r"><code>tweets &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190503/tweets.rds&quot;)
 lang &lt;- tweets %&gt;% 
@@ -720,5 +732,5 @@ reps54 &lt;- reps54 %&gt;%
   rbind(added_languages) %&gt;% 
   arrange(fn_ln)</code></pre>
 <p>Save after first cleaning.</p>
-<pre class="r"><code>saveRDS(reps54, &quot;./data/20190503/reps54_after_cleaning.rds&quot;)</code></pre>
+<pre class="r"><code>#saveRDS(reps54, &quot;./data/20190503/reps54_after_cleaning.rds&quot;)</code></pre>
 <p>I’ll pick up the tweets analysis soon, but first want to show you some cool stuff using Rekognition from AWS.</p>

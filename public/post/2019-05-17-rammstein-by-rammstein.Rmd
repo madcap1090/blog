@@ -91,7 +91,7 @@ names(spotify_df)[12:19]
 
 So with the code by plzbeemyfriend that builds an graphical album representation by song we can get this graph of their first album:
 
-```{r warning=FALSE, fig.height=8, fig.width=8}
+```{r warning=FALSE}
 polar_spotify <- studio_albums %>%
   mutate(date = album_release_date %>% 
            str_extract('(?<=^\\d{2})\\d{2}') %>%
@@ -139,7 +139,7 @@ ggplot(polar_spotify, aes(x = angle,
 
 And then compare their latest six albums:
 
-```{r warning=FALSE,fig.height=8, fig.width=8}
+```{r warning=FALSE}
 polar_spotify <- studio_albums %>%
   mutate(date = album_release_date %>% 
            str_extract('(?<=^\\d{2})\\d{2}') %>%
@@ -187,7 +187,6 @@ ggplot(polar_spotify, aes(x = angle,
 ```
 
 
-The diffrent albums compared here. Does the 'RAMMSTEIN' look different to you from the other albums?
 
 
 
@@ -200,5 +199,28 @@ The diffrent albums compared here. Does the 'RAMMSTEIN' look different to you fr
 
 
 
+
+
+
+
+
+
+
+So yes, 7 studio albums.
+
+https://www.udiscovermusic.com/news/rammstein-self-titled-seventh-album/
+ Share On Flipboard
+German Industrial metal icons Rammstein have now released their long awaited, self-titled seventh album.  Available now via physical and digital formats, Rammstein is released through Spinefarm Records in the UK and Caroline International in the US.
+
+Comprised of 11 new tracks, Rammstein includes ‘Zeig Dich’ and singles ‘Radio’ and ‘Deutschland,’ the new untitled record is Rammstein’s first studio album since 2009’s Liebe Ist Für Alle Da. To date, ‘Radio’ and ‘Deutschland’ have amassed combined streams and views exceeding 100 million. The new album has been produced by Olsen Involtini with Rammstein.
+
+The band recently spoke about the making of Rammstein with Metal Hammer Germany’s Thorsten Zahn. “We just wanted to try something new – how we write, basically”, said guitarist Richard Z. Kruspe.
+
+“And even the way we produce – first we went to France with Tom Dalgety (Ghost, Royal Blood) and Olsen Involtini (Rammstein’s front of house engineer) instead of (long-term collaborators) Jacob Hellner and Stefan Glaumann as previously.
+
+
+“Change is always a fragile thing: On the one hand, you don’t want to change something you’ve had success with. But on the other hand, you’ve got that desire to develop as a musician. We decided to step out of our comfort zone.
+
+“It wasn’t always plain sailing, at the start we didn’t really get along that well with Tom and Olsen. And Jacob Hellner was also a father figure to a certain extent, someone who really leads a production. Olsen doesn’t do that, Tom doesn’t do that. So for me it just felt like: Nobody knows where we’re supposed to go any more. This is when you realise: from an astrological point of view, Rammstein is fire, water and earth at the same time. What we’re missing is air, in other word, is lightness. We tried to bring in air. Olsen Involtini is an air sign.”
 
 
