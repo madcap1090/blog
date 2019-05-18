@@ -4,16 +4,16 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-<title>RAMMSTEIN By Rammstein | bad to the code</title>
+<title>RAMMSTEIN by Rammstein | bad to the code</title>
 
-<meta property='og:title' content='RAMMSTEIN By Rammstein - bad to the code'>
+<meta property='og:title' content='RAMMSTEIN by Rammstein - bad to the code'>
 <meta property='og:description' content='Today Rammstein released ‘RAMMSTEIN’, first studio album since 10 years.
 Jetzt geht es mir gut, ja!I love it. Gave me a lot of pleasure today.
 Time for a small analysis. I got the code from Peer. And from plzbeemyfriend who is a cool dude, and made some insightful graphs based on Spotify data.
 library(spotifyr) # install.packages(&quot;spotifyr&quot;)library(tidyverse)library(factoextra)library(viridisLite)library(ggiraphExtra)Spotify also has an API and some interesting information can be downloaded from it.'>
 <meta property='og:url' content='/post/rammstein-by-rammstein/'>
 <meta property='og:site_name' content='bad to the code'>
-<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='music'><meta property='article:tag' content='Spotify'><meta property='article:published_time' content='2019-05-17T00:00:00Z'/><meta property='article:modified_time' content='2019-05-17T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='music'><meta property='article:tag' content='Spotify'><meta property='article:tag' content='clustering'><meta property='article:published_time' content='2019-05-17T00:00:00Z'/><meta property='article:modified_time' content='2019-05-17T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
 
 
 <link href="/index.xml" rel="alternate" type="application/rss+xml" title="bad to the code" />
@@ -106,11 +106,13 @@ library(spotifyr) # install.packages(&quot;spotifyr&quot;)library(tidyverse)li
   
   | <a class="subtitle is-6" href="/tags/spotify">#Spotify</a>
   
+  | <a class="subtitle is-6" href="/tags/clustering">#clustering</a>
+  
 
       
     </div>
     <h2 class="subtitle is-6">May 17, 2019</h2>
-    <h1 class="title">RAMMSTEIN By Rammstein</h1>
+    <h1 class="title">RAMMSTEIN by Rammstein</h1>
     
     <div class="content">
       
@@ -316,6 +318,7 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &quot;white&quot;, hig
 <p>Only based on the Spotify metrics of course.</p>
 <pre class="r"><code>dfScale %&gt;%
   mutate(albums = row.names(dfScale)) %&gt;%
+  filter(albums != &quot;Herzeleid&quot;) %&gt;% 
   ggRadar(aes(group = albums), 
         rescale = FALSE, legend.position = &quot;none&quot;,
         size = 1, interactive = FALSE, use.label = TRUE) +
@@ -326,7 +329,7 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &quot;white&quot;, hig
   theme(legend.position = &quot;none&quot;) +
   scale_fill_grey() +
   scale_colour_grey()</code></pre>
-<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
 <p>We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.</p>
 <pre class="r"><code>df.hc &lt;- hclust(dist(scale(dfScale)))
 
@@ -351,8 +354,8 @@ fviz_cluster(km.res, data = dfScale,
 <p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <p>Consistant.</p>
 <center>
-<p><strong>REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN</strong>
-&lt;&gt;</p>
+<strong>REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN</strong>
+</center>
 <center>
 <img src="/img/20190517/Deutschland.jpg" alt="album cover - RAMMSTEIN" />
 </center>

@@ -1,5 +1,5 @@
 ---
-title: RAMMSTEIN By Rammstein
+title: RAMMSTEIN by Rammstein
 author: William Bourgeois
 date: '2019-05-17'
 slug: rammstein-by-rammstein
@@ -7,6 +7,7 @@ categories: []
 tags:
   - music
   - Spotify
+  - clustering
 ---
 
 
@@ -211,6 +212,7 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &quot;white&quot;, hig
 <p>Only based on the Spotify metrics of course.</p>
 <pre class="r"><code>dfScale %&gt;%
   mutate(albums = row.names(dfScale)) %&gt;%
+  filter(albums != &quot;Herzeleid&quot;) %&gt;% 
   ggRadar(aes(group = albums), 
         rescale = FALSE, legend.position = &quot;none&quot;,
         size = 1, interactive = FALSE, use.label = TRUE) +
@@ -221,7 +223,7 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &quot;white&quot;, hig
   theme(legend.position = &quot;none&quot;) +
   scale_fill_grey() +
   scale_colour_grey()</code></pre>
-<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
 <p>We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.</p>
 <pre class="r"><code>df.hc &lt;- hclust(dist(scale(dfScale)))
 
@@ -246,8 +248,8 @@ fviz_cluster(km.res, data = dfScale,
 <p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <p>Consistant.</p>
 <center>
-<p><strong>REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN</strong>
-&lt;&gt;</p>
+<strong>REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN</strong>
+</center>
 <center>
 <img src="/img/20190517/Deutschland.jpg" alt="album cover - RAMMSTEIN" />
 </center>

@@ -12,7 +12,7 @@
     
     
     <item>
-      <title>RAMMSTEIN By Rammstein</title>
+      <title>RAMMSTEIN by Rammstein</title>
       <link>/post/rammstein-by-rammstein/</link>
       <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
       <author>William Bourgeois</author>
@@ -222,6 +222,7 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &amp;quot;white&amp;qu
 &lt;p&gt;Only based on the Spotify metrics of course.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dfScale %&amp;gt;%
   mutate(albums = row.names(dfScale)) %&amp;gt;%
+  filter(albums != &amp;quot;Herzeleid&amp;quot;) %&amp;gt;% 
   ggRadar(aes(group = albums), 
         rescale = FALSE, legend.position = &amp;quot;none&amp;quot;,
         size = 1, interactive = FALSE, use.label = TRUE) +
@@ -232,7 +233,7 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &amp;quot;white&amp;qu
   theme(legend.position = &amp;quot;none&amp;quot;) +
   scale_fill_grey() +
   scale_colour_grey()&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df.hc &amp;lt;- hclust(dist(scale(dfScale)))
 
@@ -257,8 +258,8 @@ fviz_cluster(km.res, data = dfScale,
 &lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-14-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;Consistant.&lt;/p&gt;
 &lt;center&gt;
-&lt;p&gt;&lt;strong&gt;REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN&lt;/strong&gt;
-&amp;lt;&amp;gt;&lt;/p&gt;
+&lt;strong&gt;REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN&lt;/strong&gt;
+&lt;/center&gt;
 &lt;center&gt;
 &lt;img src=&#34;/img/20190517/Deutschland.jpg&#34; alt=&#34;album cover - RAMMSTEIN&#34; /&gt;
 &lt;/center&gt;

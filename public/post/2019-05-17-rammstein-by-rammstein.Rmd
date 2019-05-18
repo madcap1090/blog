@@ -1,5 +1,5 @@
 ---
-title: RAMMSTEIN By Rammstein
+title: RAMMSTEIN by Rammstein
 author: William Bourgeois
 date: '2019-05-17'
 slug: rammstein-by-rammstein
@@ -7,6 +7,7 @@ categories: []
 tags:
   - music
   - Spotify
+  - clustering
 ---
 
 Today Rammstein released 'RAMMSTEIN', first studio album since 10 years. 
@@ -228,9 +229,10 @@ Only based on the Spotify metrics of course.
 
 
 
-```{r}
+```{r, fig.height=8, fig.width=8}
 dfScale %>%
   mutate(albums = row.names(dfScale)) %>%
+  filter(albums != "Herzeleid") %>% 
   ggRadar(aes(group = albums), 
         rescale = FALSE, legend.position = "none",
         size = 1, interactive = FALSE, use.label = TRUE) +
@@ -279,7 +281,7 @@ Consistant.
 
 <center>
 **REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN**
-<\center>
+</center>
 
 
 
