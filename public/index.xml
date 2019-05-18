@@ -27,13 +27,17 @@
 &lt;strong&gt;Jetzt geht es mir gut, ja!&lt;/strong&gt;
 &lt;/center&gt;
 &lt;center&gt;
-&lt;p&gt;&lt;img src=&#34;/img/20190517/rammstein.jpg&#34; /&gt;&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/20190517/rammstein.jpg&#34; alt=&#34;album cover - RAMMSTEIN&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;album cover - RAMMSTEIN&lt;/p&gt;
+&lt;/div&gt;
 &lt;/center&gt;
 &lt;p&gt;I love it. Gave me a lot of pleasure today.&lt;/p&gt;
 &lt;p&gt;Time for a small analysis. I got the code from &lt;a href=&#34;https://peerchristensen.netlify.com/post/clustering-springsteen-albums-with-spotifyr/&#34;&gt;Peer&lt;/a&gt;. And from &lt;a href=&#34;https://twitter.com/plzbeemyfriend/status/1028080281323036678&#34;&gt;plzbeemyfriend&lt;/a&gt; who is a cool dude, and made some insightful graphs based on Spotify data.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(spotifyr) # install.packages(&amp;quot;spotifyr&amp;quot;)
 library(tidyverse)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Authentication:&lt;/p&gt;
+&lt;p&gt;Spotify also has an API and some interesting information can be downloaded from it.&lt;/p&gt;
+&lt;p&gt;Spotify authentication:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;secrets &amp;lt;- readRDS(&amp;quot;~/R/geo/secret/secrets.rds&amp;quot;) %&amp;gt;% 
   filter(name == &amp;quot;spotify&amp;quot;)
 
@@ -42,7 +46,7 @@ clientSecret &amp;lt;- secrets$key
 
 Sys.setenv(SPOTIFY_CLIENT_ID = clientId)
 Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Spotify also has an API and some interesting information can be downloaded from it.&lt;/p&gt;
+&lt;p&gt;Downlaoding data in a data frame:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;spotify_df &amp;lt;- get_artist_audio_features(&amp;#39;Rammstein&amp;#39;)
 
 names(spotify_df)&lt;/code&gt;&lt;/pre&gt;

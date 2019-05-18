@@ -8,10 +8,10 @@
 
 <meta property='og:title' content='RAMMSTEIN By Rammstein - bad to the code'>
 <meta property='og:description' content='Today Rammstein released ‘RAMMSTEIN’, first studio album since 10 years.
-Jetzt geht es mir gut, ja!I love it. Gave me a lot of pleasure today.
+Jetzt geht es mir gut, ja!album cover - RAMMSTEIN
+I love it. Gave me a lot of pleasure today.
 Time for a small analysis. I got the code from Peer. And from plzbeemyfriend who is a cool dude, and made some insightful graphs based on Spotify data.
-library(spotifyr) # install.packages(&quot;spotifyr&quot;)library(tidyverse)Authentication:
-secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;) %&gt;% filter(name == &quot;spotify&quot;)clientId &lt;- secrets$idclientSecret &lt;- secrets$keySys.'>
+library(spotifyr) # install.packages(&quot;spotifyr&quot;)library(tidyverse)Spotify also has an API and some interesting information can be downloaded from it.'>
 <meta property='og:url' content='/post/rammstein-by-rammstein/'>
 <meta property='og:site_name' content='bad to the code'>
 <meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='music'><meta property='article:tag' content='Spotify'><meta property='article:published_time' content='2019-05-17T00:00:00Z'/><meta property='article:modified_time' content='2019-05-17T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
@@ -122,13 +122,17 @@ secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;) %&gt;% filter(name
 <strong>Jetzt geht es mir gut, ja!</strong>
 </center>
 <center>
-<p><img src="/img/20190517/rammstein.jpg" /></p>
+<div class="figure">
+<img src="/img/20190517/rammstein.jpg" alt="album cover - RAMMSTEIN" />
+<p class="caption">album cover - RAMMSTEIN</p>
+</div>
 </center>
 <p>I love it. Gave me a lot of pleasure today.</p>
 <p>Time for a small analysis. I got the code from <a href="https://peerchristensen.netlify.com/post/clustering-springsteen-albums-with-spotifyr/">Peer</a>. And from <a href="https://twitter.com/plzbeemyfriend/status/1028080281323036678">plzbeemyfriend</a> who is a cool dude, and made some insightful graphs based on Spotify data.</p>
 <pre class="r"><code>library(spotifyr) # install.packages(&quot;spotifyr&quot;)
 library(tidyverse)</code></pre>
-<p>Authentication:</p>
+<p>Spotify also has an API and some interesting information can be downloaded from it.</p>
+<p>Spotify authentication:</p>
 <pre class="r"><code>secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;) %&gt;% 
   filter(name == &quot;spotify&quot;)
 
@@ -137,7 +141,7 @@ clientSecret &lt;- secrets$key
 
 Sys.setenv(SPOTIFY_CLIENT_ID = clientId)
 Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)</code></pre>
-<p>Spotify also has an API and some interesting information can be downloaded from it.</p>
+<p>Downlaoding data in a data frame:</p>
 <pre class="r"><code>spotify_df &lt;- get_artist_audio_features(&#39;Rammstein&#39;)
 
 names(spotify_df)</code></pre>

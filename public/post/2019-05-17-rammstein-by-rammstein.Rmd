@@ -18,7 +18,7 @@ Today Rammstein released 'RAMMSTEIN', first studio album since 10 years.
 
 
 <center>
-![](/img/20190517/rammstein.jpg)
+![album cover - RAMMSTEIN](/img/20190517/rammstein.jpg)
 
 </center>
 
@@ -31,7 +31,9 @@ library(spotifyr) # install.packages("spotifyr")
 library(tidyverse)
 ```
 
-Authentication:
+Spotify also has an API and some interesting information can be downloaded from it.
+
+Spotify authentication:
 
 ```{r}
 secrets <- readRDS("~/R/geo/secret/secrets.rds") %>% 
@@ -45,7 +47,7 @@ Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)
 
 ```
 
-Spotify also has an API and some interesting information can be downloaded from it.
+Downlaoding data in a data frame:
 
 ```{r}
 spotify_df <- get_artist_audio_features('Rammstein')

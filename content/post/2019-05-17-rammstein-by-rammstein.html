@@ -16,13 +16,17 @@ tags:
 <strong>Jetzt geht es mir gut, ja!</strong>
 </center>
 <center>
-<p><img src="/img/20190517/rammstein.jpg" /></p>
+<div class="figure">
+<img src="/img/20190517/rammstein.jpg" alt="album cover - RAMMSTEIN" />
+<p class="caption">album cover - RAMMSTEIN</p>
+</div>
 </center>
 <p>I love it. Gave me a lot of pleasure today.</p>
 <p>Time for a small analysis. I got the code from <a href="https://peerchristensen.netlify.com/post/clustering-springsteen-albums-with-spotifyr/">Peer</a>. And from <a href="https://twitter.com/plzbeemyfriend/status/1028080281323036678">plzbeemyfriend</a> who is a cool dude, and made some insightful graphs based on Spotify data.</p>
 <pre class="r"><code>library(spotifyr) # install.packages(&quot;spotifyr&quot;)
 library(tidyverse)</code></pre>
-<p>Authentication:</p>
+<p>Spotify also has an API and some interesting information can be downloaded from it.</p>
+<p>Spotify authentication:</p>
 <pre class="r"><code>secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;) %&gt;% 
   filter(name == &quot;spotify&quot;)
 
@@ -31,7 +35,7 @@ clientSecret &lt;- secrets$key
 
 Sys.setenv(SPOTIFY_CLIENT_ID = clientId)
 Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)</code></pre>
-<p>Spotify also has an API and some interesting information can be downloaded from it.</p>
+<p>Downlaoding data in a data frame:</p>
 <pre class="r"><code>spotify_df &lt;- get_artist_audio_features(&#39;Rammstein&#39;)
 
 names(spotify_df)</code></pre>
