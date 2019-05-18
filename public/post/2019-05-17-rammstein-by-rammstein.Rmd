@@ -189,8 +189,6 @@ ggplot(polar_spotify, aes(x = angle,
        subtitle = "Spotify Metrics")
 
 ```
-
-
 The different albums compared here. Does the 'RAMMSTEIN' look different to you from the other albums?
 
 
@@ -223,7 +221,7 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = "white", high = gray(1
 ```
 
 
-The new album would be more similar to 'ROSENROT' and most disimilar to thier first 'Herzeleid'. 
+The new album would be more similar to 'ROSENROT' and most disimilar to their first 'Herzeleid'. 
 
 Only based on the Spotify metrics of course. 
 
@@ -244,10 +242,7 @@ dfScale %>%
   scale_fill_grey() +
   scale_colour_grey()
 ```
-
-
 We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.
-
 
 ```{r message=FALSE, warning=FALSE}
 df.hc <- hclust(dist(scale(dfScale)))
@@ -278,10 +273,6 @@ fviz_cluster(km.res, data = dfScale,
 ```
 
 Consistant.
-
-<center>
-**REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN**
-</center>
 
 
 

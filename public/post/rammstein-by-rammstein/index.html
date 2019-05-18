@@ -286,8 +286,8 @@ ggplot(polar_spotify, aes(x = angle,
   facet_wrap(~album_name) + 
   labs(title = &quot;Rammstein | Latest Studio Albums&quot;,
        subtitle = &quot;Spotify Metrics&quot;)</code></pre>
-<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-10-1.png" width="768" /></p>
-<p>The different albums compared here. Does the ‘RAMMSTEIN’ look different to you from the other albums?</p>
+<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-10-1.png" width="768" />
+The different albums compared here. Does the ‘RAMMSTEIN’ look different to you from the other albums?</p>
 <pre class="r"><code>dfScale &lt;- studio_albums %&gt;%
   select(album_name,acousticness,danceability,energy,loudness,tempo,valence) %&gt;%
   group_by(album_name) %&gt;%
@@ -314,7 +314,7 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &quot;white&quot;, hig
   theme(axis.text.x = element_text(hjust = 1,angle = 45),
         axis.title = element_blank())</code></pre>
 <p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
-<p>The new album would be more similar to ‘ROSENROT’ and most disimilar to thier first ‘Herzeleid’.</p>
+<p>The new album would be more similar to ‘ROSENROT’ and most disimilar to their first ‘Herzeleid’.</p>
 <p>Only based on the Spotify metrics of course.</p>
 <pre class="r"><code>dfScale %&gt;%
   mutate(albums = row.names(dfScale)) %&gt;%
@@ -329,8 +329,8 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &quot;white&quot;, hig
   theme(legend.position = &quot;none&quot;) +
   scale_fill_grey() +
   scale_colour_grey()</code></pre>
-<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
-<p>We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.</p>
+<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png" width="768" />
+We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.</p>
 <pre class="r"><code>df.hc &lt;- hclust(dist(scale(dfScale)))
 
 fviz_dend(df.hc, k = 3,
@@ -353,9 +353,6 @@ fviz_cluster(km.res, data = dfScale,
              main = &quot;K-means Clustering&quot;) </code></pre>
 <p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <p>Consistant.</p>
-<center>
-<strong>REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN</strong>
-</center>
 <center>
 <img src="/img/20190517/Deutschland.jpg" alt="album cover - RAMMSTEIN" />
 </center>
