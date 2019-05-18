@@ -18,10 +18,11 @@
       <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/post/rammstein-by-rammstein/</guid>
-      <description>Today Rammstein released ‘RAMMSTEIN’, first album studio since 10 years.
-Jetzt geht es mir gut, ja!RAMMSTEIN
-I love it. Gave me a lot of pleasure today. All day in a loop since 7 am. Time for a small analysis. I got the code from Peer. And from plzbeemyfriend who is a cool dude, and made some insightful graphs based on Spotify data.
-library(spotifyr) # install.</description>
+      <description>Today Rammstein released ‘RAMMSTEIN’, first studio album since 10 years.
+Jetzt geht es mir gut, ja!I love it. Gave me a lot of pleasure today.
+Time for a small analysis. I got the code from Peer. And from plzbeemyfriend who is a cool dude, and made some insightful graphs based on Spotify data.
+library(spotifyr) # install.packages(&amp;quot;spotifyr&amp;quot;)library(tidyverse)Authentication:
+secrets &amp;lt;- readRDS(&amp;quot;~/R/geo/secret/secrets.rds&amp;quot;) %&amp;gt;% filter(name == &amp;quot;spotify&amp;quot;)clientId &amp;lt;- secrets$idclientSecret &amp;lt;- secrets$keySys.</description>
     </item>
     
     <item>

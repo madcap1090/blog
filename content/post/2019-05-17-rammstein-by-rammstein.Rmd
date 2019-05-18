@@ -9,7 +9,7 @@ tags:
   - Spotify
 ---
 
-Today Rammstein released 'RAMMSTEIN', first album studio since 10 years. 
+Today Rammstein released 'RAMMSTEIN', first studio album since 10 years. 
 
 <center>
 **Jetzt geht es mir gut, ja!**
@@ -18,13 +18,15 @@ Today Rammstein released 'RAMMSTEIN', first album studio since 10 years.
 
 
 <center>
-![RAMMSTEIN](/img/20190517/rammstein.jpg)
+![](/img/20190517/rammstein.jpg)
 
 </center>
 
-I love it. Gave me a lot of pleasure today. All day in a loop since 7 am. Time for a small analysis. I got the code from [Peer](https://peerchristensen.netlify.com/post/clustering-springsteen-albums-with-spotifyr/). And from [plzbeemyfriend](https://twitter.com/plzbeemyfriend/status/1028080281323036678) who is a cool dude, and made some insightful graphs based on Spotify data.  
+I love it. Gave me a lot of pleasure today. 
 
-```{r}
+Time for a small analysis. I got the code from [Peer](https://peerchristensen.netlify.com/post/clustering-springsteen-albums-with-spotifyr/). And from [plzbeemyfriend](https://twitter.com/plzbeemyfriend/status/1028080281323036678) who is a cool dude, and made some insightful graphs based on Spotify data.  
+
+```{r message=FALSE, warning=FALSE}
 library(spotifyr) # install.packages("spotifyr")
 library(tidyverse)
 ```
@@ -43,17 +45,13 @@ Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)
 
 ```
 
-Spotify has also an API and some interesting information can be downloaded from it.
+Spotify also has an API and some interesting information can be downloaded from it.
 
 ```{r}
 spotify_df <- get_artist_audio_features('Rammstein')
 
 names(spotify_df)
 
-```
-
-```{r}
-saveRDS(spotify_df, "./data/20190517/spotify_rammstein.rds")
 ```
 
 It has for instance links to three different sizes of the album images.
@@ -83,7 +81,7 @@ Check if we got them all
 unique(studio_albums$album_name)
 ```
 
-Every song gets scored by Spotify algorythms on:
+Every song gets scored by Spotify algorithms on:
 
 ```{r}
 names(spotify_df)[12:19]
@@ -132,7 +130,6 @@ ggplot(polar_spotify, aes(x = angle,
   theme_bw() + 
   theme(axis.text.x = element_text(angle = seq(0, -315, by = -45),
                                    size = 7)) +
-  facet_wrap(~album_name) + 
   labs(title = "Rammstein | Latest Studio Albums",
        subtitle = "Spotify Metrics")
 ```
@@ -187,7 +184,7 @@ ggplot(polar_spotify, aes(x = angle,
 ```
 
 
-The diffrent albums compared here. Does the 'RAMMSTEIN' look different to you from the other albums?
+The different albums compared here. Does the 'RAMMSTEIN' look different to you from the other albums?
 
 
 
