@@ -142,7 +142,7 @@ clientSecret &lt;- secrets$key
 
 Sys.setenv(SPOTIFY_CLIENT_ID = clientId)
 Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)</code></pre>
-<p>Downlaoding data in a data frame:</p>
+<p>Downloading data in a data frame:</p>
 <pre class="r"><code>spotify_df &lt;- get_artist_audio_features(&#39;Rammstein&#39;)
 
 names(spotify_df)</code></pre>
@@ -329,8 +329,8 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &quot;white&quot;, hig
   theme(legend.position = &quot;none&quot;) +
   scale_fill_grey() +
   scale_colour_grey()</code></pre>
-<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png" width="768" />
-We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.</p>
+<p><img src="/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
+<p>We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.</p>
 <pre class="r"><code>df.hc &lt;- hclust(dist(scale(dfScale)))
 
 fviz_dend(df.hc, k = 3,

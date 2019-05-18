@@ -52,7 +52,7 @@ Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)
 
 ```
 
-Downlaoding data in a data frame:
+Downloading data in a data frame:
 
 ```{r}
 spotify_df <- get_artist_audio_features('Rammstein')
@@ -242,6 +242,7 @@ dfScale %>%
   scale_fill_grey() +
   scale_colour_grey()
 ```
+
 We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.
 
 ```{r message=FALSE, warning=FALSE}

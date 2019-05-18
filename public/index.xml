@@ -46,7 +46,7 @@ clientSecret &amp;lt;- secrets$key
 
 Sys.setenv(SPOTIFY_CLIENT_ID = clientId)
 Sys.setenv(SPOTIFY_CLIENT_SECRET = clientSecret)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Downlaoding data in a data frame:&lt;/p&gt;
+&lt;p&gt;Downloading data in a data frame:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;spotify_df &amp;lt;- get_artist_audio_features(&amp;#39;Rammstein&amp;#39;)
 
 names(spotify_df)&lt;/code&gt;&lt;/pre&gt;
@@ -233,8 +233,8 @@ fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &amp;quot;white&amp;qu
   theme(legend.position = &amp;quot;none&amp;quot;) +
   scale_fill_grey() +
   scale_colour_grey()&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;768&#34; /&gt;
-We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df.hc &amp;lt;- hclust(dist(scale(dfScale)))
 
 fviz_dend(df.hc, k = 3,
