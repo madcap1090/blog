@@ -19,8 +19,9 @@ Today Rammstein released 'RAMMSTEIN', first studio album since 10 years.
 
 <center>
 ![album cover - RAMMSTEIN](/img/20190517/rammstein.jpg)
-
 </center>
+
+
 
 I love it. Gave me a lot of pleasure today. 
 
@@ -29,6 +30,9 @@ Time for a small analysis. I got the code from [Peer](https://peerchristensen.ne
 ```{r message=FALSE, warning=FALSE}
 library(spotifyr) # install.packages("spotifyr")
 library(tidyverse)
+library(factoextra)
+library(viridisLite)
+library(ggiraphExtra)
 ```
 
 Spotify also has an API and some interesting information can be downloaded from it.
@@ -132,7 +136,7 @@ ggplot(polar_spotify, aes(x = angle,
   theme_bw() + 
   theme(axis.text.x = element_text(angle = seq(0, -315, by = -45),
                                    size = 7)) +
-  labs(title = "Rammstein | Latest Studio Albums",
+  labs(title = "Rammstein | Herzeleid | '95",
        subtitle = "Spotify Metrics")
 ```
 
@@ -189,15 +193,96 @@ ggplot(polar_spotify, aes(x = angle,
 The different albums compared here. Does the 'RAMMSTEIN' look different to you from the other albums?
 
 
+```{r}
+dfScale <- studio_albums %>%
+  select(album_name,acousticness,danceability,energy,loudness,tempo,valence) %>%
+  group_by(album_name) %>%
+  summarise(acousticness = mean(scale(acousticness)),
+            danceability = mean(scale(danceability)),
+            energy       = mean(scale(energy)),
+            loudness     = mean(scale(loudness)),
+            tempo        = mean(scale(tempo)),
+            valence      = mean(scale(valence))) %>%
+  data.frame()
+
+row.names(dfScale) <- dfScale$album_name
+
+dfScale %<>% 
+  select(-album_name) %>%
+  data.frame()
+
+df_dist <- get_dist(dfScale, stand = TRUE)
+
+fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = "white", high = gray(1)[0])) +
+  theme_minimal() +
+  ggtitle("Distance matrix",
+          subtitle  = "Similarity between albums based on all features") +
+  theme(axis.text.x = element_text(hjust = 1,angle = 45),
+        axis.title = element_blank())
+```
+
+
+The new album would be more similar to 'ROSENROT' and most disimilar to thier first 'Herzeleid'. 
+
+Only based on the Spotify metrics of course. 
 
 
 
+```{r}
+dfScale %>%
+  mutate(albums = row.names(dfScale)) %>%
+  ggRadar(aes(group = albums), 
+        rescale = FALSE, legend.position = "none",
+        size = 1, interactive = FALSE, use.label = TRUE) +
+  facet_wrap(~albums) + 
+  scale_y_discrete(breaks = NULL) +
+  theme(axis.text.x = element_text(size = 10)) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_grey() +
+  scale_colour_grey()
+```
+
+
+We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.
+
+
+```{r message=FALSE, warning=FALSE}
+df.hc <- hclust(dist(scale(dfScale)))
+
+fviz_dend(df.hc, k = 3,
+          cex = .9,
+          k_colors = gray(1)[c(4,7)],
+          color_labels_by_k = TRUE, 
+          rect = TRUE) +
+  ggtitle("Hierachical Clustering")
+```
+
+
+The new album is again closer to "LIEBE IST FÜR ALLE DA" and "ROSENROT".
+
+Now for k-mens clustering:
+
+```{r}
+set.seed(42)
+km.res <- kmeans(dfScale, 3, nstart = 25)
+
+fviz_cluster(km.res, data = dfScale,
+             ellipse.type = "convex",
+             repel = T,
+             palette = gray.colors(10)[c(1,2,3)],
+             ggtheme = theme_minimal(),
+             main = "K-means Clustering") 
+```
+
+Consistant.
+
+<center>
+**REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN**
+<\center>
 
 
 
-
-
-
-
-
-
+<center>
+![album cover - RAMMSTEIN](/img/20190517/Deutschland.jpg)
+</center>

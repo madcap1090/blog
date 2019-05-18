@@ -27,15 +27,15 @@
 &lt;strong&gt;Jetzt geht es mir gut, ja!&lt;/strong&gt;
 &lt;/center&gt;
 &lt;center&gt;
-&lt;div class=&#34;figure&#34;&gt;
 &lt;img src=&#34;/img/20190517/rammstein.jpg&#34; alt=&#34;album cover - RAMMSTEIN&#34; /&gt;
-&lt;p class=&#34;caption&#34;&gt;album cover - RAMMSTEIN&lt;/p&gt;
-&lt;/div&gt;
 &lt;/center&gt;
 &lt;p&gt;I love it. Gave me a lot of pleasure today.&lt;/p&gt;
 &lt;p&gt;Time for a small analysis. I got the code from &lt;a href=&#34;https://peerchristensen.netlify.com/post/clustering-springsteen-albums-with-spotifyr/&#34;&gt;Peer&lt;/a&gt;. And from &lt;a href=&#34;https://twitter.com/plzbeemyfriend/status/1028080281323036678&#34;&gt;plzbeemyfriend&lt;/a&gt; who is a cool dude, and made some insightful graphs based on Spotify data.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(spotifyr) # install.packages(&amp;quot;spotifyr&amp;quot;)
-library(tidyverse)&lt;/code&gt;&lt;/pre&gt;
+library(tidyverse)
+library(factoextra)
+library(viridisLite)
+library(ggiraphExtra)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Spotify also has an API and some interesting information can be downloaded from it.&lt;/p&gt;
 &lt;p&gt;Spotify authentication:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;secrets &amp;lt;- readRDS(&amp;quot;~/R/geo/secret/secrets.rds&amp;quot;) %&amp;gt;% 
@@ -143,7 +143,7 @@ ggplot(polar_spotify, aes(x = angle,
   theme_bw() + 
   theme(axis.text.x = element_text(angle = seq(0, -315, by = -45),
                                    size = 7)) +
-  labs(title = &amp;quot;Rammstein | Latest Studio Albums&amp;quot;,
+  labs(title = &amp;quot;Rammstein | Herzeleid | &amp;#39;95&amp;quot;,
        subtitle = &amp;quot;Spotify Metrics&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-9-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;And then compare their latest six albums:&lt;/p&gt;
@@ -192,6 +192,76 @@ ggplot(polar_spotify, aes(x = angle,
        subtitle = &amp;quot;Spotify Metrics&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;The different albums compared here. Does the ‘RAMMSTEIN’ look different to you from the other albums?&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dfScale &amp;lt;- studio_albums %&amp;gt;%
+  select(album_name,acousticness,danceability,energy,loudness,tempo,valence) %&amp;gt;%
+  group_by(album_name) %&amp;gt;%
+  summarise(acousticness = mean(scale(acousticness)),
+            danceability = mean(scale(danceability)),
+            energy       = mean(scale(energy)),
+            loudness     = mean(scale(loudness)),
+            tempo        = mean(scale(tempo)),
+            valence      = mean(scale(valence))) %&amp;gt;%
+  data.frame()
+
+row.names(dfScale) &amp;lt;- dfScale$album_name
+
+dfScale %&amp;lt;&amp;gt;% 
+  select(-album_name) %&amp;gt;%
+  data.frame()
+
+df_dist &amp;lt;- get_dist(dfScale, stand = TRUE)
+
+fviz_dist(df_dist,gradient = list(low = gray(0)[1], mid = &amp;quot;white&amp;quot;, high = gray(1)[0])) +
+  theme_minimal() +
+  ggtitle(&amp;quot;Distance matrix&amp;quot;,
+          subtitle  = &amp;quot;Similarity between albums based on all features&amp;quot;) +
+  theme(axis.text.x = element_text(hjust = 1,angle = 45),
+        axis.title = element_blank())&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-11-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The new album would be more similar to ‘ROSENROT’ and most disimilar to thier first ‘Herzeleid’.&lt;/p&gt;
+&lt;p&gt;Only based on the Spotify metrics of course.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dfScale %&amp;gt;%
+  mutate(albums = row.names(dfScale)) %&amp;gt;%
+  ggRadar(aes(group = albums), 
+        rescale = FALSE, legend.position = &amp;quot;none&amp;quot;,
+        size = 1, interactive = FALSE, use.label = TRUE) +
+  facet_wrap(~albums) + 
+  scale_y_discrete(breaks = NULL) +
+  theme(axis.text.x = element_text(size = 10)) +
+  theme_minimal() +
+  theme(legend.position = &amp;quot;none&amp;quot;) +
+  scale_fill_grey() +
+  scale_colour_grey()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;We can also group the albums into groups using k-means and hierarchical clustering. Here in 3 hierachical clusters.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df.hc &amp;lt;- hclust(dist(scale(dfScale)))
+
+fviz_dend(df.hc, k = 3,
+          cex = .9,
+          k_colors = gray(1)[c(4,7)],
+          color_labels_by_k = TRUE, 
+          rect = TRUE) +
+  ggtitle(&amp;quot;Hierachical Clustering&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;The new album is again closer to “LIEBE IST FÜR ALLE DA” and “ROSENROT”.&lt;/p&gt;
+&lt;p&gt;Now for k-mens clustering:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;set.seed(42)
+km.res &amp;lt;- kmeans(dfScale, 3, nstart = 25)
+
+fviz_cluster(km.res, data = dfScale,
+             ellipse.type = &amp;quot;convex&amp;quot;,
+             repel = T,
+             palette = gray.colors(10)[c(1,2,3)],
+             ggtheme = theme_minimal(),
+             main = &amp;quot;K-means Clustering&amp;quot;) &lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-17-rammstein-by-rammstein_files/figure-html/unnamed-chunk-14-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Consistant.&lt;/p&gt;
+&lt;center&gt;
+&lt;p&gt;&lt;strong&gt;REISE, REISE, LIEBE IST FUR ALLE DA, RAMMSTEIN&lt;/strong&gt;
+&amp;lt;&amp;gt;&lt;/p&gt;
+&lt;center&gt;
+&lt;img src=&#34;/img/20190517/Deutschland.jpg&#34; alt=&#34;album cover - RAMMSTEIN&#34; /&gt;
+&lt;/center&gt;
 </content>
       
     </item>
