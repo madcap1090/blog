@@ -1,0 +1,375 @@
+---
+title: I second that emotion
+author: William Bourgeois
+date: '2019-05-19'
+slug: i-second-that-emotion
+categories: []
+tags:
+  - Belgian politics
+  - Facial analysis
+  - AWS Rekognition
+  - Gather
+  - Spread
+---
+
+
+
+<p>In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit clorser at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;magick&quot;)
+library(&quot;ggthemes&quot;)
+library(&quot;extrafont&quot;)</code></pre>
+<p>Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legistlation) in order to have a slightly more objective representation.</p>
+<pre class="r"><code>faces &lt;- readRDS(&quot;~/R/dev_blog/faces.rds&quot;)
+names(faces)</code></pre>
+<pre><code>##   [1] &quot;BoundingBox.Width&quot;     &quot;BoundingBox.Height&quot;   
+##   [3] &quot;BoundingBox.Left&quot;      &quot;BoundingBox.Top&quot;      
+##   [5] &quot;AgeRange.Low&quot;          &quot;AgeRange.High&quot;        
+##   [7] &quot;Smile.Value&quot;           &quot;Smile.Confidence&quot;     
+##   [9] &quot;Eyeglasses.Value&quot;      &quot;Eyeglasses.Confidence&quot;
+##  [11] &quot;Sunglasses.Value&quot;      &quot;Sunglasses.Confidence&quot;
+##  [13] &quot;Gender.Value&quot;          &quot;Gender.Confidence&quot;    
+##  [15] &quot;Beard.Value&quot;           &quot;Beard.Confidence&quot;     
+##  [17] &quot;Mustache.Value&quot;        &quot;Mustache.Confidence&quot;  
+##  [19] &quot;EyesOpen.Value&quot;        &quot;EyesOpen.Confidence&quot;  
+##  [21] &quot;MouthOpen.Value&quot;       &quot;MouthOpen.Confidence&quot; 
+##  [23] &quot;Emotions.Type&quot;         &quot;Emotions.Confidence&quot;  
+##  [25] &quot;Emotions.Type.1&quot;       &quot;Emotions.Confidence.1&quot;
+##  [27] &quot;Emotions.Type.2&quot;       &quot;Emotions.Confidence.2&quot;
+##  [29] &quot;Emotions.Type.3&quot;       &quot;Emotions.Confidence.3&quot;
+##  [31] &quot;Emotions.Type.4&quot;       &quot;Emotions.Confidence.4&quot;
+##  [33] &quot;Emotions.Type.5&quot;       &quot;Emotions.Confidence.5&quot;
+##  [35] &quot;Emotions.Type.6&quot;       &quot;Emotions.Confidence.6&quot;
+##  [37] &quot;Landmarks.Type&quot;        &quot;Landmarks.X&quot;          
+##  [39] &quot;Landmarks.Y&quot;           &quot;Landmarks.Type.1&quot;     
+##  [41] &quot;Landmarks.X.1&quot;         &quot;Landmarks.Y.1&quot;        
+##  [43] &quot;Landmarks.Type.2&quot;      &quot;Landmarks.X.2&quot;        
+##  [45] &quot;Landmarks.Y.2&quot;         &quot;Landmarks.Type.3&quot;     
+##  [47] &quot;Landmarks.X.3&quot;         &quot;Landmarks.Y.3&quot;        
+##  [49] &quot;Landmarks.Type.4&quot;      &quot;Landmarks.X.4&quot;        
+##  [51] &quot;Landmarks.Y.4&quot;         &quot;Landmarks.Type.5&quot;     
+##  [53] &quot;Landmarks.X.5&quot;         &quot;Landmarks.Y.5&quot;        
+##  [55] &quot;Landmarks.Type.6&quot;      &quot;Landmarks.X.6&quot;        
+##  [57] &quot;Landmarks.Y.6&quot;         &quot;Landmarks.Type.7&quot;     
+##  [59] &quot;Landmarks.X.7&quot;         &quot;Landmarks.Y.7&quot;        
+##  [61] &quot;Landmarks.Type.8&quot;      &quot;Landmarks.X.8&quot;        
+##  [63] &quot;Landmarks.Y.8&quot;         &quot;Landmarks.Type.9&quot;     
+##  [65] &quot;Landmarks.X.9&quot;         &quot;Landmarks.Y.9&quot;        
+##  [67] &quot;Landmarks.Type.10&quot;     &quot;Landmarks.X.10&quot;       
+##  [69] &quot;Landmarks.Y.10&quot;        &quot;Landmarks.Type.11&quot;    
+##  [71] &quot;Landmarks.X.11&quot;        &quot;Landmarks.Y.11&quot;       
+##  [73] &quot;Landmarks.Type.12&quot;     &quot;Landmarks.X.12&quot;       
+##  [75] &quot;Landmarks.Y.12&quot;        &quot;Landmarks.Type.13&quot;    
+##  [77] &quot;Landmarks.X.13&quot;        &quot;Landmarks.Y.13&quot;       
+##  [79] &quot;Landmarks.Type.14&quot;     &quot;Landmarks.X.14&quot;       
+##  [81] &quot;Landmarks.Y.14&quot;        &quot;Landmarks.Type.15&quot;    
+##  [83] &quot;Landmarks.X.15&quot;        &quot;Landmarks.Y.15&quot;       
+##  [85] &quot;Landmarks.Type.16&quot;     &quot;Landmarks.X.16&quot;       
+##  [87] &quot;Landmarks.Y.16&quot;        &quot;Landmarks.Type.17&quot;    
+##  [89] &quot;Landmarks.X.17&quot;        &quot;Landmarks.Y.17&quot;       
+##  [91] &quot;Landmarks.Type.18&quot;     &quot;Landmarks.X.18&quot;       
+##  [93] &quot;Landmarks.Y.18&quot;        &quot;Landmarks.Type.19&quot;    
+##  [95] &quot;Landmarks.X.19&quot;        &quot;Landmarks.Y.19&quot;       
+##  [97] &quot;Landmarks.Type.20&quot;     &quot;Landmarks.X.20&quot;       
+##  [99] &quot;Landmarks.Y.20&quot;        &quot;Landmarks.Type.21&quot;    
+## [101] &quot;Landmarks.X.21&quot;        &quot;Landmarks.Y.21&quot;       
+## [103] &quot;Landmarks.Type.22&quot;     &quot;Landmarks.X.22&quot;       
+## [105] &quot;Landmarks.Y.22&quot;        &quot;Landmarks.Type.23&quot;    
+## [107] &quot;Landmarks.X.23&quot;        &quot;Landmarks.Y.23&quot;       
+## [109] &quot;Landmarks.Type.24&quot;     &quot;Landmarks.X.24&quot;       
+## [111] &quot;Landmarks.Y.24&quot;        &quot;Landmarks.Type.25&quot;    
+## [113] &quot;Landmarks.X.25&quot;        &quot;Landmarks.Y.25&quot;       
+## [115] &quot;Landmarks.Type.26&quot;     &quot;Landmarks.X.26&quot;       
+## [117] &quot;Landmarks.Y.26&quot;        &quot;Landmarks.Type.27&quot;    
+## [119] &quot;Landmarks.X.27&quot;        &quot;Landmarks.Y.27&quot;       
+## [121] &quot;Landmarks.Type.28&quot;     &quot;Landmarks.X.28&quot;       
+## [123] &quot;Landmarks.Y.28&quot;        &quot;Landmarks.Type.29&quot;    
+## [125] &quot;Landmarks.X.29&quot;        &quot;Landmarks.Y.29&quot;       
+## [127] &quot;Pose.Roll&quot;             &quot;Pose.Yaw&quot;             
+## [129] &quot;Pose.Pitch&quot;            &quot;Quality.Brightness&quot;   
+## [131] &quot;Quality.Sharpness&quot;     &quot;Confidence&quot;           
+## [133] &quot;number&quot;                &quot;ln_fn&quot;</code></pre>
+<p>We have this data to play with. There are some basic statistics that could be interesting. But we can first add the political parties of the members to make it yeah well, a bit more political.</p>
+<pre class="r"><code>reps54_after_cleaning &lt;- readRDS(&quot;./data/20190503/reps54_after_cleaning.rds&quot;)</code></pre>
+<p>Slicing to the last date.</p>
+<pre class="r"><code>reps_end &lt;- reps54_after_cleaning %&gt;% 
+  filter(end_date == &quot;2019-05-31&quot;)</code></pre>
+<p>Adding party:</p>
+<pre class="r"><code>faces &lt;- faces %&gt;% 
+  inner_join(reps_end %&gt;% 
+              select(ln_fn, &quot;party&quot; = Fractie)) # you can rename in a select</code></pre>
+<pre><code>## Joining, by = &quot;ln_fn&quot;</code></pre>
+<pre><code>## Warning: Column `ln_fn` joining factor and character vector, coercing into
+## character vector</code></pre>
+<p>What is our gender inbalence here?</p>
+<pre class="r"><code>faces %&gt;% group_by(Gender.Value) %&gt;% 
+  summarise(n = n())</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   Gender.Value     n
+##   &lt;fct&gt;        &lt;int&gt;
+## 1 Female          56
+## 2 Male            94</code></pre>
+<p>37% female, that’s about 14% short. Meaning there should be about 34% more women in parliament to achieve a better representation. If of course Rekognize correctly identifies gender. What are the lowest confidence values on gender?</p>
+<p>First Mr. Scourneau does not really have a mug shot, and maybe therefore all his emotional values are off so it is better to get rid of his values.</p>
+<pre class="r"><code>faces&lt;- faces %&gt;% 
+  filter(number != 130)</code></pre>
+<p>What are the lowest confidence values on gender?</p>
+<pre class="r"><code>faces %&gt;% 
+  arrange(Gender.Confidence) %&gt;% 
+  select(ln_fn,Gender.Value, Gender.Confidence, number) %&gt;% 
+  slice(1:3)</code></pre>
+<pre><code>##                      ln_fn Gender.Value Gender.Confidence number
+## 1 Van Vaerenbergh Kristien       Female          50.09950    159
+## 2               Dedry Anne       Female          64.48689     45
+## 3            Calvo Kristof         Male          75.73949     15</code></pre>
+<center>
+<img src="/img/20190519/159.jpg" alt="Mrs Van Vaerenbergh" /> <img src="/img/20190519/45.jpg" alt="Mrs Dedry" /> <img src="/img/20190519/15.jpg" alt="Mr Calvo" />
+</center>
+<p>And the highest confidence values for gender:</p>
+<pre class="r"><code>faces %&gt;% 
+  arrange(desc(Gender.Confidence)) %&gt;% 
+  select(ln_fn,Gender.Value, Gender.Confidence) %&gt;% 
+  slice(1:3)</code></pre>
+<pre><code>##                       ln_fn Gender.Value Gender.Confidence
+## 1 Fernandez Fernandez Julie       Female          99.98109
+## 2               Lijnen Nele       Female          99.97976
+## 3   Goffinet Anne-Catherine       Female          99.96049</code></pre>
+<center>
+<img src="/img/20190519/63.jpg" alt="Mrs Frenandez" /> <img src="/img/20190519/104.jpg" alt="Mrs Lijnen" /> <img src="/img/20190519/80.jpg" alt="Mrs Goffinet" />
+</center>
+<p>Looking at the confidence values Rekognition is pretty sure about the results and seems to be very accurante. But how accurate? A mosaic of the pictures identified as women will create a quick visual and will enable us to have a fast visual check.</p>
+<pre class="r"><code>unique(faces$Gender.Value)</code></pre>
+<pre><code>## [1] Female Male  
+## Levels: Female Male</code></pre>
+<pre class="r"><code>women &lt;- faces %&gt;% 
+  filter(Gender.Value == &quot;Female&quot;) %&gt;% 
+  select(number) %&gt;% 
+  mutate(file = paste0(number,&quot;.jpg&quot;))</code></pre>
+<pre class="r"><code>nrow(women)</code></pre>
+<pre><code>## [1] 56</code></pre>
+<p>Seems good.</p>
+<p>The image sizes of the source files can be made equal.</p>
+<p>We can use a data frame with the files names and full path of the pictures of female reps.</p>
+<pre class="r"><code>getwd()</code></pre>
+<pre><code>## [1] &quot;C:/Users/William/Documents/R/blogs/content/post&quot;</code></pre>
+<pre class="r"><code>files &lt;- dir(&quot;./data/20190511/jpg&quot;, full.names = TRUE) %&gt;%
+  cbind(dir(&quot;./data/20190511/jpg&quot;, full.names = FALSE)) %&gt;% 
+  as.data.frame() %&gt;% 
+  rename(&quot;long_name&quot; = &quot;.&quot;, &quot;short_name&quot; = &quot;V2&quot;) %&gt;% 
+  filter(short_name %in% women$file)</code></pre>
+<p>Make columns of our picture patch work.</p>
+<pre class="r"><code>no_rows &lt;- 9
+no_cols &lt;- 6
+files &lt;- as.character(files$long_name)
+dir.create(&quot;./data/20190519/&quot;, showWarnings = FALSE)
+dir.create(&quot;./data/20190519/women/&quot;, showWarnings = FALSE)
+
+
+fun &lt;- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
+  image_append(stack = TRUE) %&gt;%
+    image_write(paste0(&quot;./data/20190519/women/&quot;, i, &quot;.jpg&quot;))
+}
+
+ for(i in (0:(no_cols-1))) {
+ fun(i, files, no_rows)
+ }</code></pre>
+<p>Bind columns</p>
+<pre class="r"><code>img &lt;- image_read(dir(&quot;data/20190519/women/&quot;, full.names = TRUE)) %&gt;%
+image_append(stack = FALSE) 
+
+image_write(img,&quot;~/R/blogs/static/img/20190519/women_reps.jpg&quot;)</code></pre>
+<p>Regognize seems to have calculated corectly:</p>
+<center>
+<div class="figure">
+<img src="/img/20190519/women_reps.jpg" alt="women" />
+<p class="caption">women</p>
+</div>
+</center>
+<p>And we can do the same with the men (well 88 out of the 93):</p>
+<pre class="r"><code>men &lt;- faces %&gt;% 
+  filter(Gender.Value == &quot;Male&quot;) %&gt;% 
+  select(number) %&gt;% 
+  mutate(file = paste0(number,&quot;.jpg&quot;))
+
+files &lt;- dir(&quot;./data/20190511/jpg&quot;, full.names = TRUE) %&gt;%
+  cbind(dir(&quot;./data/20190511/jpg&quot;, full.names = FALSE)) %&gt;% 
+  as.data.frame() %&gt;% 
+  rename(&quot;long_name&quot; = &quot;.&quot;, &quot;short_name&quot; = &quot;V2&quot;) %&gt;% 
+  filter(short_name %in% men$file)
+
+no_rows &lt;- 11
+no_cols &lt;- 8
+files &lt;- as.character(files$long_name)
+
+dir.create(&quot;./data/20190519/men/&quot;, showWarnings = FALSE)
+
+fun &lt;- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
+  image_append(stack = TRUE) %&gt;%
+    image_write(paste0(&quot;./data/20190519/men/&quot;, i, &quot;.jpg&quot;))
+}
+
+ for(i in (0:(no_cols-1))) {
+ fun(i, files, no_rows)
+ }
+
+img &lt;- image_read(dir(&quot;data/20190519/men&quot;, full.names = TRUE)) %&gt;%
+image_append(stack = FALSE) 
+
+image_write(img,&quot;~/R/blogs/static/img/20190519/men_reps.jpg&quot;)</code></pre>
+<p>Regognize seems to have calculated corectly:</p>
+<center>
+<img src="/img/20190519/men_reps.jpg" alt="men" />
+</center>
+<p>Oh, wait top right. One false positive.</p>
+<p>Probably with low confidence for gender value then(?) :</p>
+<pre class="r"><code>faces %&gt;% 
+  filter(Gender.Value == &quot;Male&quot;) %&gt;% 
+  arrange(Gender.Confidence) %&gt;% 
+  select(ln_fn, Gender.Confidence) %&gt;% 
+  slice(1:5)</code></pre>
+<pre><code>##                 ln_fn Gender.Confidence
+## 1       Calvo Kristof          75.73949
+## 2        Gantois Rita          77.39245
+## 3        Di Rupo Elio          85.54747
+## 4 Brotcorne Christian          87.08642
+## 5          Jambon Jan          92.63754</code></pre>
+<p>Seems to be Mrs <a href="https://www.n-va.be/wie-is-wie/rita-gantois">Gantois</a>. So good news, parliament is slightly less unbalanced.</p>
+<p>Rekognition also gave us data that was the results of estimating the emotions shown by the person on the picture. For each of them we have these types of estimations:</p>
+<p>“Emotions”:
+[
+{“Type”: “DISGUSTED”, “Confidence”: 1.3769829273223877},
+{“Type”: “SURPRISED”, “Confidence”: 1.2581121921539307},
+{“Type”: “CALM”, “Confidence”: 83.50717163085938},
+{“Type”: “HAPPY”, “Confidence”: 0.663156270980835},
+{“Type”: “SAD”, “Confidence”: 2.5097835063934326},
+{“Type”: “CONFUSED”, “Confidence”: 8.314539909362793},
+{“Type”: “ANGRY”, “Confidence”: 2.370262384414673}]</p>
+<p>So the emotions are a bit more complicated here. They usualy are. This time we have some more emotions.confidence though.</p>
+<p>I have not used the ‘spread’ function before.</p>
+<p>It puts the different values of ‘Emotion.Type’ into columns, with as row values ‘Emotions.Confidence’ and fills with 0 where there are missing values.</p>
+<pre class="r"><code>y.0 &lt;- faces %&gt;% 
+  select(134:135,23:24) %&gt;% 
+  spread(key = &quot;Emotions.Type&quot;, value = &quot;Emotions.Confidence&quot;, fill = 0)
+
+y.1 &lt;- faces %&gt;% 
+  select(134:135,25:26) %&gt;% 
+  spread(key = &quot;Emotions.Type.1&quot;, value = &quot;Emotions.Confidence.1&quot;, fill = 0) 
+
+y.2 &lt;- faces %&gt;% 
+  select(134:135,27:28) %&gt;% 
+  spread(key = &quot;Emotions.Type.2&quot;, value = &quot;Emotions.Confidence.2&quot;, fill = 0)
+
+y.3 &lt;- faces %&gt;% 
+  select(134:135,29:30) %&gt;% 
+  spread(key = &quot;Emotions.Type.3&quot;, value = &quot;Emotions.Confidence.3&quot;, fill = 0)
+
+y.4 &lt;- faces %&gt;% 
+  select(134:135,31:32) %&gt;% 
+  spread(key = &quot;Emotions.Type.4&quot;, value = &quot;Emotions.Confidence.4&quot;, fill = 0)
+
+y.5 &lt;- faces %&gt;% 
+  select(134:135,33:34) %&gt;% 
+  spread(key = &quot;Emotions.Type.5&quot;, value = &quot;Emotions.Confidence.5&quot;, fill = 0)
+
+y.6 &lt;- faces %&gt;% 
+  select(134:135,35:36) %&gt;% 
+  spread(key = &quot;Emotions.Type.6&quot;, value = &quot;Emotions.Confidence.6&quot;, fill = 0)</code></pre>
+<pre class="r"><code>emotions &lt;- rbind(y.0, y.1, y.2, y.3, y.4, y.5, y.6)
+head(emotions)</code></pre>
+<pre><code>##                ln_fn party SURPRISED DISGUSTED HAPPY     ANGRY CALM
+## 1      Almaci Meyrem Groen  1.634811         0     0 0.0000000    0
+## 2         Becq Sonja  CD&amp;V  0.000000         0     0 0.5985800    0
+## 3        Beke Wouter  CD&amp;V  1.269888         0     0 0.0000000    0
+## 4       Bellens Rita  N-VA  0.000000         0     0 0.1302407    0
+## 5    Ben Hamou Nawal    PS  0.000000         0     0 1.3519702    0
+## 6 Blanchart Philippe    PS 18.822914         0     0 0.0000000    0
+##   CONFUSED SAD
+## 1        0   0
+## 2        0   0
+## 3        0   0
+## 4        0   0
+## 5        0   0
+## 6        0   0</code></pre>
+<pre class="r"><code>nrow(emotions)</code></pre>
+<pre><code>## [1] 1043</code></pre>
+<p>So ‘spread’ has made the data frame wider and created 0 values, and we can now group them:</p>
+<pre class="r"><code>reps_emotions &lt;- emotions %&gt;% 
+  group_by(ln_fn, party) %&gt;% 
+  summarise(surprised = sum(SURPRISED),
+            disgusted = sum(DISGUSTED),
+            happy = sum(HAPPY),
+            angry = sum(ANGRY),
+            calm = sum(CALM),
+            confused = sum(CONFUSED),
+            sad = sum(SAD))
+
+party_emotions &lt;- emotions %&gt;% 
+   group_by(party) %&gt;% 
+   summarise(surprised = sum(SURPRISED),
+             disgusted = sum(DISGUSTED),
+             happy = sum(HAPPY),
+             angry = sum(ANGRY),
+             calm = sum(CALM),
+             confused = sum(CONFUSED),
+             sad = sum(SAD),
+             count = (n()/7))</code></pre>
+<pre class="r"><code>charts.data &lt;- party_emotions %&gt;% 
+  mutate(surprised = surprised/count,
+         disgusted = disgusted/count,
+         happy = happy/count,
+         angry = angry/count,
+         calm = calm/count,
+         confused = confused/count,
+         sad = sad/count)
+
+head(charts.data)</code></pre>
+<pre><code>## # A tibble: 6 x 9
+##   party surprised disgusted happy angry  calm confused   sad count
+##   &lt;chr&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 CD&amp;V       2.30     1.82   72.0 1.80  18.6      2.57 0.952    17
+## 2 cdH        1.89     4.23   84.5 2.19   4.16     2.39 0.616     9
+## 3 Défi       1.31     0.625  93.5 0.379  2.49     1.38 0.264     2
+## 4 Ecolo      2.13     3.19   84.8 1.66   2.93     3.83 1.44      6
+## 5 Groen      4.81     2.92   69.9 1.74  15.4      4.02 1.21      6
+## 6 MR         4.37     3.27   76.6 4.53   6.74     3.22 1.25     19</code></pre>
+<p>And now use ‘gather’ to get our data in shape for a stacked bar chart.</p>
+<pre class="r"><code>charts.data &lt;- gather(charts.data, &quot;emotion&quot;, &quot;score&quot;, 2:8)
+head(charts.data)</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   party count emotion   score
+##   &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;
+## 1 CD&amp;V     17 surprised  2.30
+## 2 cdH       9 surprised  1.89
+## 3 Défi      2 surprised  1.31
+## 4 Ecolo     6 surprised  2.13
+## 5 Groen     6 surprised  4.81
+## 6 MR       19 surprised  4.37</code></pre>
+<pre class="r"><code>bar_chart &lt;- ggplot() + theme_economist() + scale_fill_economist() +
+  theme(plot.title=element_text(family=&quot;OfficinaSanITC-Book&quot;),
+        text=element_text(family=&quot;OfficinaSanITC-Book&quot;)) +
+  geom_bar(aes(y = score, x = party, fill = emotion), data = charts.data,
+                           stat=&quot;identity&quot;) +
+    theme(legend.position=&quot;top&quot;, legend.direction=&quot;horizontal&quot;,
+        legend.title = element_blank(), 
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+    labs(x= NULL, y=&quot;Percentage&quot;) +
+  ggtitle(&quot;Composition of emotions in party (%)&quot;)
+
+bar_chart</code></pre>
+<p><img src="/post/2019-05-19-i-second-that-emotion_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<p>So the more disgusted are Vuye&amp;Wouters and Vlaams Belang. The majority of them are happy. But the hapiest are (is) the Parti Populaire.</p>
+<p>But these are the smaller parties.</p>
+<pre class="r"><code>party_emotions %&gt;% select(party, count) %&gt;% 
+  arrange(count) %&gt;% 
+  slice(1:6)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   party           count
+##   &lt;chr&gt;           &lt;dbl&gt;
+## 1 ONAFH               1
+## 2 Parti Populaire     1
+## 3 Défi                2
+## 4 PTB-go!             2
+## 5 Vuye&amp;Wouters        2
+## 6 Vlaams Belang       3</code></pre>

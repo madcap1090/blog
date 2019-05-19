@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Sat, 11 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 19 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/aws-rekognition/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>I second that emotion</title>
+      <link>/post/i-second-that-emotion/</link>
+      <pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/i-second-that-emotion/</guid>
+      <description>In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit clorser at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.
+library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;magick&amp;quot;)library(&amp;quot;ggthemes&amp;quot;)library(&amp;quot;extrafont&amp;quot;)Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legistlation) in order to have a slightly more objective representation.</description>
+    </item>
     
     <item>
       <title>happy faces in a bucket</title>
