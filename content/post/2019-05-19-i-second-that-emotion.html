@@ -150,8 +150,6 @@ names(faces)</code></pre>
 <p>Seems good.</p>
 <p>The image sizes of the source files can be made equal.</p>
 <p>We can use a data frame with the files names and full path of the pictures of female reps.</p>
-<pre class="r"><code>getwd()</code></pre>
-<pre><code>## [1] &quot;C:/Users/William/Documents/R/blogs/content/post&quot;</code></pre>
 <pre class="r"><code>files &lt;- dir(&quot;./data/20190511/jpg&quot;, full.names = TRUE) %&gt;%
   cbind(dir(&quot;./data/20190511/jpg&quot;, full.names = FALSE)) %&gt;% 
   as.data.frame() %&gt;% 
@@ -372,4 +370,4 @@ bar_chart</code></pre>
 ## 4 PTB-go!             2
 ## 5 Vuye&amp;Wouters        2
 ## 6 Vlaams Belang       3</code></pre>
-<p>The majority of the bigger are happy with some calmness spread around too.</p>
+<p>The majority of the bigger ones are mostly happy with some calmness spread around too. And yes, I know the sample biais is huge. This is indeed just for fun. And I had some.</p>

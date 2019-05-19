@@ -138,7 +138,6 @@ We can use a data frame with the files names and full path of the pictures of fe
 
 
 ```{r}
-getwd()
 files <- dir("./data/20190511/jpg", full.names = TRUE) %>%
   cbind(dir("./data/20190511/jpg", full.names = FALSE)) %>% 
   as.data.frame() %>% 
@@ -383,4 +382,4 @@ party_emotions %>% select(party, count) %>%
   slice(1:6)
 ```
 
-The majority of the bigger are happy with some calmness spread around too.
+The majority of the bigger ones are mostly happy with some calmness spread around too. And yes, I know the sample biais is huge. This is indeed just for fun. And I had some. 

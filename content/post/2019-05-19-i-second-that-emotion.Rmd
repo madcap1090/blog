@@ -382,4 +382,4 @@ party_emotions %>% select(party, count) %>%
   slice(1:6)
 ```
 
-The majority of the bigger are happy with some calmness spread around too.
+The majority of the bigger ones are mostly happy with some calmness spread around too. And yes, I know the sample biais is huge. This is indeed just for fun. And I had some. 

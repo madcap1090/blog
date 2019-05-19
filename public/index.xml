@@ -158,8 +158,6 @@ names(faces)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Seems good.&lt;/p&gt;
 &lt;p&gt;The image sizes of the source files can be made equal.&lt;/p&gt;
 &lt;p&gt;We can use a data frame with the files names and full path of the pictures of female reps.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;getwd()&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code&gt;## [1] &amp;quot;C:/Users/William/Documents/R/blogs/content/post&amp;quot;&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;files &amp;lt;- dir(&amp;quot;./data/20190511/jpg&amp;quot;, full.names = TRUE) %&amp;gt;%
   cbind(dir(&amp;quot;./data/20190511/jpg&amp;quot;, full.names = FALSE)) %&amp;gt;% 
   as.data.frame() %&amp;gt;% 
@@ -380,7 +378,7 @@ bar_chart&lt;/code&gt;&lt;/pre&gt;
 ## 4 PTB-go!             2
 ## 5 Vuye&amp;amp;Wouters        2
 ## 6 Vlaams Belang       3&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The majority of the bigger are happy with some calmness spread around too.&lt;/p&gt;
+&lt;p&gt;The majority of the bigger ones are mostly happy with some calmness spread around too. And yes, I know the sample biais is huge. This is indeed just for fun. And I had some.&lt;/p&gt;
 </content>
       
     </item>
