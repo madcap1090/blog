@@ -1,0 +1,391 @@
+---
+title: I second that emotion
+author: William Bourgeois
+date: '2019-05-19'
+slug: i-second-that-emotion
+categories: []
+tags:
+  - Belgian politics
+  - Facial analysis
+  - AWS Rekognition
+  - Gather
+  - Spread
+---
+
+In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It's time to look a little bit clorser at the data, test the usage of the 'gather' and 'spread' function and get to know ggplot a little bit more.
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("magick")
+library("ggthemes")
+library("extrafont")
+```
+
+Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legistlation) in order to have a slightly more objective representation. 
+
+
+```{r}
+faces <- readRDS("~/R/dev_blog/faces.rds")
+names(faces)
+```
+
+We have this data to play with. There are some basic statistics that could be interesting. But we can first add the political parties of the members to make it yeah well, a bit more political. 
+
+```{r}
+reps54_after_cleaning <- readRDS("./data/20190503/reps54_after_cleaning.rds")
+```
+
+Slicing to the last date.
+
+```{r}
+reps_end <- reps54_after_cleaning %>% 
+  filter(end_date == "2019-05-31")
+```
+
+Adding party:
+
+
+```{r}
+faces <- faces %>% 
+  inner_join(reps_end %>% 
+              select(ln_fn, "party" = Fractie)) # you can rename in a select
+```
+
+What is our gender inbalence here? 
+
+```{r}
+
+faces %>% group_by(Gender.Value) %>% 
+  summarise(n = n())
+
+```
+
+37% female, that's about 14% short. Meaning there should be about 34% more women in parliament to achieve a better representation. If of course Rekognize correctly identifies gender. What are the lowest confidence values on gender? 
+
+First Mr. Scourneau does not really have a mug shot, and maybe therefore all his emotional values are off so it is better to get rid of his values.
+
+```{r}
+faces<- faces %>% 
+  filter(number != 130)
+```
+
+
+What are the lowest confidence values on gender? 
+
+
+```{r}
+faces %>% 
+  arrange(Gender.Confidence) %>% 
+  select(ln_fn,Gender.Value, Gender.Confidence) %>% 
+  slice(1:3)
+```
+
+<center>
+![Mrs Frenandez](/img/20190514/63.jpg)  ![Mrs Lijnen](/img/20190514/104.jpg)  ![Mrs Goffinet](/img/20190514/80.jpg)
+
+</center>
+
+
+Looking at the confidence values ReKognition is pretty sure about the results and seems to be very accurante. But how accurate? A mosaic of the pictures identified as women will create a quick visual and will enable us to have a fast visual check. 
+
+```{r}
+unique(faces$Gender.Value)
+```
+
+```{r}
+
+women <- faces %>% 
+  filter(Gender.Value == "Female") %>% 
+  select(number) %>% 
+  mutate(file = paste0(number,".jpg"))
+```
+
+```{r}
+nrow(women)
+```
+
+Seems good. 
+
+The image sizes of the source files can be made equal.
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+resize_rep <- function(x){
+  img <- image_scale(image_read(x), "145x190!")
+  image_write(img, x)        
+}
+
+rep_pics <- list.files("./data/20190511/jpg", full.names = TRUE)
+
+map(rep_pics, resize_rep)
+
+```
+
+
+We can use a data frame with the files names and full path of the pictures of female reps.
+
+
+```{r}
+getwd()
+files <- dir("./data/20190511/jpg", full.names = TRUE) %>%
+  cbind(dir("./data/20190511/jpg", full.names = FALSE)) %>% 
+  as.data.frame() %>% 
+  rename("long_name" = ".", "short_name" = "V2") %>% 
+  filter(short_name %in% women$file)
+
+```
+
+Make columns of our picture patch work.
+
+```{r}
+no_rows <- 9
+no_cols <- 6
+files <- as.character(files$long_name)
+dir.create("./data/20190519/", showWarnings = FALSE)
+dir.create("./data/20190519/women/", showWarnings = FALSE)
+
+
+fun <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("./data/20190519/women/", i, ".jpg"))
+}
+
+ for(i in (0:(no_cols-1))) {
+ fun(i, files, no_rows)
+ }
+
+```
+
+Bind columns
+
+```{r}
+img <- image_read(dir("data/20190519/women/", full.names = TRUE)) %>%
+image_append(stack = FALSE) 
+
+image_write(img,"~/R/blogs/static/img/20190519/women_reps.jpg")
+            
+```
+
+
+Regognize seems to have calculated corectly:
+
+<center>
+![women](/img/20190519/women_reps.jpg)  
+
+</center>
+
+
+And we can do the same with the men (well 88 out of the 93):
+
+```{r}
+men <- faces %>% 
+  filter(Gender.Value == "Male") %>% 
+  select(number) %>% 
+  mutate(file = paste0(number,".jpg"))
+
+files <- dir("./data/20190511/jpg", full.names = TRUE) %>%
+  cbind(dir("./data/20190511/jpg", full.names = FALSE)) %>% 
+  as.data.frame() %>% 
+  rename("long_name" = ".", "short_name" = "V2") %>% 
+  filter(short_name %in% men$file)
+
+no_rows <- 11
+no_cols <- 8
+files <- as.character(files$long_name)
+
+dir.create("./data/20190519/men/", showWarnings = FALSE)
+
+fun <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("./data/20190519/men/", i, ".jpg"))
+}
+
+ for(i in (0:(no_cols-1))) {
+ fun(i, files, no_rows)
+ }
+
+img <- image_read(dir("data/20190519/men", full.names = TRUE)) %>%
+image_append(stack = FALSE) 
+
+image_write(img,"~/R/blogs/static/img/20190519/men_reps.jpg")
+
+
+```
+
+Regognize seems to have calculated corectly:
+
+<center>
+![men](/img/20190519/men_reps.jpg)  
+
+</center>
+
+Oh, wait top right. One false positive. 
+
+Probably with low confidence for gender value then(?) :
+
+```{r}
+faces %>% 
+  filter(Gender.Value == "Male") %>% 
+  arrange(Gender.Confidence) %>% 
+  select(ln_fn, Gender.Confidence) %>% 
+  slice(1:5)
+```
+
+Seems to be Mrs [Gantois](https://www.n-va.be/wie-is-wie/rita-gantois). So good news, parliament is slightly less unbalanced. 
+
+Rekognition also gave us data that was the results of estimating the emotions shown by the person on the picture. For each of them we have these types of estimations:
+
+"Emotions": 
+[
+{"Type": "DISGUSTED", "Confidence": 1.3769829273223877}, 
+{"Type": "SURPRISED", "Confidence": 1.2581121921539307}, 
+{"Type": "CALM", "Confidence": 83.50717163085938}, 
+{"Type": "HAPPY", "Confidence": 0.663156270980835}, 
+{"Type": "SAD", "Confidence": 2.5097835063934326}, 
+{"Type": "CONFUSED", "Confidence": 8.314539909362793}, 
+{"Type": "ANGRY", "Confidence": 2.370262384414673}
+]
+
+
+So the emotions are a bit more complicated here. They usualy are. And if they aren't mixed, they probably are not emotions. This time we have some more emotions.confidence though. 
+
+I have not used the 'spread' function before. 
+
+It puts the different values of 'Emotion.Type' into columns, with as row values 'Emotions.Confidence' and fills with 0 where there are missing values.
+
+```{r}
+y.0 <- faces %>% 
+  select(134:135,23:24) %>% 
+  spread(key = "Emotions.Type", value = "Emotions.Confidence", fill = 0)
+
+y.1 <- faces %>% 
+  select(134:135,25:26) %>% 
+  spread(key = "Emotions.Type.1", value = "Emotions.Confidence.1", fill = 0) 
+
+y.2 <- faces %>% 
+  select(134:135,27:28) %>% 
+  spread(key = "Emotions.Type.2", value = "Emotions.Confidence.2", fill = 0)
+
+y.3 <- faces %>% 
+  select(134:135,29:30) %>% 
+  spread(key = "Emotions.Type.3", value = "Emotions.Confidence.3", fill = 0)
+
+y.4 <- faces %>% 
+  select(134:135,31:32) %>% 
+  spread(key = "Emotions.Type.4", value = "Emotions.Confidence.4", fill = 0)
+
+y.5 <- faces %>% 
+  select(134:135,33:34) %>% 
+  spread(key = "Emotions.Type.5", value = "Emotions.Confidence.5", fill = 0)
+
+y.6 <- faces %>% 
+  select(134:135,35:36) %>% 
+  spread(key = "Emotions.Type.6", value = "Emotions.Confidence.6", fill = 0)
+
+
+```
+
+```{r}
+emotions <- rbind(y.0, y.1, y.2, y.3, y.4, y.5, y.6)
+head(emotions)
+```
+
+
+```{r}
+nrow(emotions)
+```
+
+So 'spread' has made the data frame wider and created 0 values, and we can now group them
+
+
+```{r}
+test2 <- emotions %>% 
+  group_by(ln_fn, party) %>% 
+  summarise(surprised = sum(SURPRISED),
+            disgusted = sum(DISGUSTED),
+            happy = sum(HAPPY),
+            angry = sum(ANGRY),
+            calm = sum(CALM),
+            confused = sum(CONFUSED),
+            sad = sum(SAD))
+
+party_emotions <- test %>% 
+  group_by(party) %>% 
+  summarise(surprised = sum(SURPRISED),
+            disgusted = sum(DISGUSTED),
+            happy = sum(HAPPY),
+            angry = sum(ANGRY),
+            calm = sum(CALM),
+            confused = sum(CONFUSED),
+            sad = sum(SAD),
+            count = (n()/7))
+
+
+```
+
+
+```{r}
+charts.data <- party_emotions %>% 
+  mutate(surprised = surprised/count,
+         disgusted = disgusted/count,
+         happy = happy/count,
+         angry = angry/count,
+         calm = calm/count,
+         confused = confused/count,
+         sad = sad/count)
+
+charts.data
+
+```
+
+
+```{r}
+p4 <- ggplot() + geom_bar(aes(y = count, x = party, fill = happy), data = charts.data,
+                           stat="identity")
+p4
+```
+
+
+```{r}
+
+head(charts.data)
+
+
+```
+
+
+```{r}
+gather(charts.data, "emotion", "score", 2:8)
+```
+
+```{r}
+#charts.data <- gather(charts.data, "emotion", "score", 2:8)
+p4 <- ggplot() + geom_bar(aes(y = score, x = party, fill = emotion), data = charts.data,
+                           stat="identity")
+p4
+
+
+```
+
+
+
+```{r warning=FALSE}
+p4 <- ggplot() + theme_economist() + scale_fill_economist() +
+  theme(plot.title=element_text(family="OfficinaSanITC-Book"),
+        text=element_text(family="OfficinaSanITC-Book")) +
+  geom_bar(aes(y = score, x = party, fill = emotion), data = charts.data,
+                           stat="identity") +
+  #geom_text(data=charts.data, aes(x = party, y = score, label = paste0(score,"%")),
+  #          colour="white", family="OfficinaSanITC-Book", size=4) +
+  theme(legend.position="top", legend.direction="horizontal",
+        legend.title = element_blank(), axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  #scale_y_continuous(labels = "%") +
+  labs(x="Party", y="Percentage") +
+  ggtitle("Composition of emotions in party (%)")
+p4
+```
+
+
+The three most surprised, sad,...
+
