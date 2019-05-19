@@ -22,12 +22,12 @@
       <content>
 
 
-&lt;p&gt;In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit clorser at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.&lt;/p&gt;
+&lt;p&gt;In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit closer at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;tidyverse&amp;quot;)
 library(&amp;quot;magick&amp;quot;)
 library(&amp;quot;ggthemes&amp;quot;)
 library(&amp;quot;extrafont&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legistlation) in order to have a slightly more objective representation.&lt;/p&gt;
+&lt;p&gt;Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legislation) in order to have a slightly more objective representation.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;faces &amp;lt;- readRDS(&amp;quot;~/R/dev_blog/faces.rds&amp;quot;)
 names(faces)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;##   [1] &amp;quot;BoundingBox.Width&amp;quot;     &amp;quot;BoundingBox.Height&amp;quot;   
@@ -109,7 +109,7 @@ names(faces)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Joining, by = &amp;quot;ln_fn&amp;quot;&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Warning: Column `ln_fn` joining factor and character vector, coercing into
 ## character vector&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;What is our gender inbalence here?&lt;/p&gt;
+&lt;p&gt;What is our gender balence here?&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;faces %&amp;gt;% group_by(Gender.Value) %&amp;gt;% 
   summarise(n = n())&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## # A tibble: 2 x 2
@@ -145,7 +145,7 @@ names(faces)&lt;/code&gt;&lt;/pre&gt;
 &lt;center&gt;
 &lt;img src=&#34;/img/20190519/63.jpg&#34; alt=&#34;Mrs Frenandez&#34; /&gt; &lt;img src=&#34;/img/20190519/104.jpg&#34; alt=&#34;Mrs Lijnen&#34; /&gt; &lt;img src=&#34;/img/20190519/80.jpg&#34; alt=&#34;Mrs Goffinet&#34; /&gt;
 &lt;/center&gt;
-&lt;p&gt;Looking at the confidence values Rekognition is pretty sure about the results and seems to be very accurante. But how accurate? A mosaic of the pictures identified as women will create a quick visual and will enable us to have a fast visual check.&lt;/p&gt;
+&lt;p&gt;Looking at the confidence values Rekognition is pretty sure about the results and seems to be very accurate. But how accurate? A mosaic of the pictures identified as women will create a quick visual and will enable us to have a fast visual check.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;unique(faces$Gender.Value)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] Female Male  
 ## Levels: Female Male&lt;/code&gt;&lt;/pre&gt;
@@ -187,7 +187,7 @@ fun &amp;lt;- function(i, files, no_rows){
 image_append(stack = FALSE) 
 
 image_write(img,&amp;quot;~/R/blogs/static/img/20190519/women_reps.jpg&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Regognize seems to have calculated corectly:&lt;/p&gt;
+&lt;p&gt;Rekognize seems to have calculated correctly:&lt;/p&gt;
 &lt;center&gt;
 &lt;div class=&#34;figure&#34;&gt;
 &lt;img src=&#34;/img/20190519/women_reps.jpg&#34; alt=&#34;women&#34; /&gt;
@@ -226,7 +226,7 @@ img &amp;lt;- image_read(dir(&amp;quot;data/20190519/men&amp;quot;, full.names =
 image_append(stack = FALSE) 
 
 image_write(img,&amp;quot;~/R/blogs/static/img/20190519/men_reps.jpg&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Regognize seems to have calculated corectly:&lt;/p&gt;
+&lt;p&gt;Rekognize seems to have calculated correctly:&lt;/p&gt;
 &lt;center&gt;
 &lt;img src=&#34;/img/20190519/men_reps.jpg&#34; alt=&#34;men&#34; /&gt;
 &lt;/center&gt;
@@ -254,7 +254,7 @@ image_write(img,&amp;quot;~/R/blogs/static/img/20190519/men_reps.jpg&amp;quot;)&
 {“Type”: “SAD”, “Confidence”: 2.5097835063934326},
 {“Type”: “CONFUSED”, “Confidence”: 8.314539909362793},
 {“Type”: “ANGRY”, “Confidence”: 2.370262384414673}]&lt;/p&gt;
-&lt;p&gt;So the emotions are a bit more complicated here. They usualy are. This time we have some more emotions.confidence though.&lt;/p&gt;
+&lt;p&gt;So the emotions are a bit more complicated here. They usually are. This time we have some more emotions.confidence though.&lt;/p&gt;
 &lt;p&gt;I have not used the ‘spread’ function before.&lt;/p&gt;
 &lt;p&gt;It puts the different values of ‘Emotion.Type’ into columns, with as row values ‘Emotions.Confidence’ and fills with 0 where there are missing values.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;y.0 &amp;lt;- faces %&amp;gt;% 
@@ -366,9 +366,8 @@ head(charts.data)&lt;/code&gt;&lt;/pre&gt;
   ggtitle(&amp;quot;Composition of emotions in party (%)&amp;quot;)
 
 bar_chart&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/2019-05-19-i-second-that-emotion_files/figure-html/unnamed-chunk-25-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;So the more disgusted are Vuye&amp;amp;Wouters and Vlaams Belang. The majority of them are happy. But the hapiest are (is) the Parti Populaire.&lt;/p&gt;
-&lt;p&gt;But these are the smaller parties.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/2019-05-19-i-second-that-emotion_files/figure-html/unnamed-chunk-25-1.png&#34; width=&#34;672&#34; style=&#34;display: block; margin: auto;&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;So the more disgusted are Vuye&amp;amp;Wouters and Vlaams Belang. The happiest are (is) the Parti Populaire. But these are the smaller parties.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;party_emotions %&amp;gt;% select(party, count) %&amp;gt;% 
   arrange(count) %&amp;gt;% 
   slice(1:6)&lt;/code&gt;&lt;/pre&gt;
@@ -381,6 +380,7 @@ bar_chart&lt;/code&gt;&lt;/pre&gt;
 ## 4 PTB-go!             2
 ## 5 Vuye&amp;amp;Wouters        2
 ## 6 Vlaams Belang       3&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The majority of the bigger are happy with some calmness spread around too.&lt;/p&gt;
 </content>
       
     </item>
@@ -2386,11 +2386,6 @@ gmp::factorize(length(files)-2)
 no_rows &amp;lt;- 11
 no_cols &amp;lt;- 16
 
-make_column &amp;lt;- function(i, files, no_rows){
-  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&amp;gt;%
-  image_append(stack = TRUE) %&amp;gt;%
-    image_write(paste0(&amp;quot;cols/&amp;quot;, i, &amp;quot;.jpg&amp;quot;))
-}
 
 fun &amp;lt;- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&amp;gt;%
@@ -2398,15 +2393,11 @@ fun &amp;lt;- function(i, files, no_rows){
     image_write(paste0(&amp;quot;./data/190417/cols_rep/&amp;quot;, i, &amp;quot;.jpg&amp;quot;))
 }
 
- #could not really make map function ;-(
-
  for(i in (0:(no_cols-1))) {
  fun(i, files, no_rows)
  }&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;So we have the columns. Still need to bind them together.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;getwd()
-
-x &amp;lt;- image_read(dir(&amp;quot;.data/190417/cols_rep/&amp;quot;, full.names = TRUE))
 
 img &amp;lt;- image_read(dir(&amp;quot;data/190417/cols_rep/&amp;quot;, full.names = TRUE)) %&amp;gt;%
 image_append(stack = FALSE) 
@@ -2514,12 +2505,8 @@ gmp::factorize(length(files))
 no_rows &amp;lt;- 11
 no_cols &amp;lt;- 16
 
-make_column &amp;lt;- function(i, files, no_rows){
-  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&amp;gt;%
-  image_append(stack = TRUE) %&amp;gt;%
-    image_write(paste0(&amp;quot;cols/&amp;quot;, i, &amp;quot;.jpg&amp;quot;))
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;fun &amp;lt;- function(i, files, no_rows){
+
+fun &amp;lt;- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&amp;gt;%
   image_append(stack = TRUE) %&amp;gt;%
     image_write(paste0(&amp;quot;./data/190417/cols/&amp;quot;, i, &amp;quot;.jpg&amp;quot;))

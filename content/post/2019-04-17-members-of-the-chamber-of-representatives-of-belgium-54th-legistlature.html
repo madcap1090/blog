@@ -331,11 +331,6 @@ gmp::factorize(length(files)-2)
 no_rows &lt;- 11
 no_cols &lt;- 16
 
-make_column &lt;- function(i, files, no_rows){
-  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
-  image_append(stack = TRUE) %&gt;%
-    image_write(paste0(&quot;cols/&quot;, i, &quot;.jpg&quot;))
-}
 
 fun &lt;- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
@@ -343,15 +338,11 @@ fun &lt;- function(i, files, no_rows){
     image_write(paste0(&quot;./data/190417/cols_rep/&quot;, i, &quot;.jpg&quot;))
 }
 
- #could not really make map function ;-(
-
  for(i in (0:(no_cols-1))) {
  fun(i, files, no_rows)
  }</code></pre>
 <p>So we have the columns. Still need to bind them together.</p>
 <pre class="r"><code>getwd()
-
-x &lt;- image_read(dir(&quot;.data/190417/cols_rep/&quot;, full.names = TRUE))
 
 img &lt;- image_read(dir(&quot;data/190417/cols_rep/&quot;, full.names = TRUE)) %&gt;%
 image_append(stack = FALSE) 
@@ -459,12 +450,8 @@ gmp::factorize(length(files))
 no_rows &lt;- 11
 no_cols &lt;- 16
 
-make_column &lt;- function(i, files, no_rows){
-  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
-  image_append(stack = TRUE) %&gt;%
-    image_write(paste0(&quot;cols/&quot;, i, &quot;.jpg&quot;))
-}</code></pre>
-<pre class="r"><code>fun &lt;- function(i, files, no_rows){
+
+fun &lt;- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
   image_append(stack = TRUE) %&gt;%
     image_write(paste0(&quot;./data/190417/cols/&quot;, i, &quot;.jpg&quot;))

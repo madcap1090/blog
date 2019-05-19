@@ -12,7 +12,7 @@ tags:
   - Spread
 ---
 
-In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It's time to look a little bit clorser at the data, test the usage of the 'gather' and 'spread' function and get to know ggplot a little bit more.
+In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It's time to look a little bit closer at the data, test the usage of the 'gather' and 'spread' function and get to know ggplot a little bit more.
 
 ```{r message=FALSE, warning=FALSE}
 library("tidyverse")
@@ -21,7 +21,7 @@ library("ggthemes")
 library("extrafont")
 ```
 
-Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legistlation) in order to have a slightly more objective representation. 
+Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legislation) in order to have a slightly more objective representation. 
 
 
 ```{r}
@@ -51,7 +51,7 @@ faces <- faces %>%
               select(ln_fn, "party" = Fractie)) # you can rename in a select
 ```
 
-What is our gender inbalence here? 
+What is our gender balence here? 
 
 ```{r}
 
@@ -99,7 +99,7 @@ faces %>%
 </center>
 
 
-Looking at the confidence values Rekognition is pretty sure about the results and seems to be very accurante. But how accurate? A mosaic of the pictures identified as women will create a quick visual and will enable us to have a fast visual check. 
+Looking at the confidence values Rekognition is pretty sure about the results and seems to be very accurate. But how accurate? A mosaic of the pictures identified as women will create a quick visual and will enable us to have a fast visual check. 
 
 ```{r}
 unique(faces$Gender.Value)
@@ -180,7 +180,7 @@ image_write(img,"~/R/blogs/static/img/20190519/women_reps.jpg")
 ```
 
 
-Regognize seems to have calculated corectly:
+Rekognize seems to have calculated correctly:
 
 <center>
 ![women](/img/20190519/women_reps.jpg)  
@@ -226,7 +226,7 @@ image_write(img,"~/R/blogs/static/img/20190519/men_reps.jpg")
 
 ```
 
-Regognize seems to have calculated corectly:
+Rekognize seems to have calculated correctly:
 
 <center>
 ![men](/img/20190519/men_reps.jpg)  
@@ -260,7 +260,7 @@ Rekognition also gave us data that was the results of estimating the emotions sh
 ]
 
 
-So the emotions are a bit more complicated here. They usualy are. This time we have some more emotions.confidence though. 
+So the emotions are a bit more complicated here. They usually are. This time we have some more emotions.confidence though. 
 
 I have not used the 'spread' function before. 
 
@@ -359,7 +359,7 @@ head(charts.data)
 ```
 
 
-```{r warning=FALSE}
+```{r, fig.align='center', warning=FALSE}
 bar_chart <- ggplot() + theme_economist() + scale_fill_economist() +
   theme(plot.title=element_text(family="OfficinaSanITC-Book"),
         text=element_text(family="OfficinaSanITC-Book")) +
@@ -375,9 +375,7 @@ bar_chart
 ```
 
 
-So the more disgusted are Vuye&Wouters and Vlaams Belang. The majority of them are happy. But the hapiest are (is) the Parti Populaire. 
-
-But these are the smaller parties.
+So the more disgusted are Vuye&Wouters and Vlaams Belang. The happiest are (is) the Parti Populaire. But these are the smaller parties.
 
 ```{r}
 party_emotions %>% select(party, count) %>% 
@@ -385,4 +383,4 @@ party_emotions %>% select(party, count) %>%
   slice(1:6)
 ```
 
-
+The majority of the bigger are happy with some calmness spread around too.

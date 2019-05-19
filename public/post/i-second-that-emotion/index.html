@@ -7,8 +7,8 @@
 <title>I second that emotion | bad to the code</title>
 
 <meta property='og:title' content='I second that emotion - bad to the code'>
-<meta property='og:description' content='In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit clorser at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.
-library(&quot;tidyverse&quot;)library(&quot;magick&quot;)library(&quot;ggthemes&quot;)library(&quot;extrafont&quot;)Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legistlation) in order to have a slightly more objective representation.'>
+<meta property='og:description' content='In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit closer at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.
+library(&quot;tidyverse&quot;)library(&quot;magick&quot;)library(&quot;ggthemes&quot;)library(&quot;extrafont&quot;)Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legislation) in order to have a slightly more objective representation.'>
 <meta property='og:url' content='/post/i-second-that-emotion/'>
 <meta property='og:site_name' content='bad to the code'>
 <meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='Belgian politics'><meta property='article:tag' content='Facial analysis'><meta property='article:tag' content='AWS Rekognition'><meta property='article:tag' content='Gather'><meta property='article:tag' content='Spread'><meta property='article:published_time' content='2019-05-19T00:00:00Z'/><meta property='article:modified_time' content='2019-05-19T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
@@ -120,12 +120,12 @@ library(&quot;tidyverse&quot;)library(&quot;magick&quot;)library(&quot;ggtheme
       
 
 
-<p>In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit clorser at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.</p>
+<p>In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit closer at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
 library(&quot;magick&quot;)
 library(&quot;ggthemes&quot;)
 library(&quot;extrafont&quot;)</code></pre>
-<p>Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legistlation) in order to have a slightly more objective representation.</p>
+<p>Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legislation) in order to have a slightly more objective representation.</p>
 <pre class="r"><code>faces &lt;- readRDS(&quot;~/R/dev_blog/faces.rds&quot;)
 names(faces)</code></pre>
 <pre><code>##   [1] &quot;BoundingBox.Width&quot;     &quot;BoundingBox.Height&quot;   
@@ -207,7 +207,7 @@ names(faces)</code></pre>
 <pre><code>## Joining, by = &quot;ln_fn&quot;</code></pre>
 <pre><code>## Warning: Column `ln_fn` joining factor and character vector, coercing into
 ## character vector</code></pre>
-<p>What is our gender inbalence here?</p>
+<p>What is our gender balence here?</p>
 <pre class="r"><code>faces %&gt;% group_by(Gender.Value) %&gt;% 
   summarise(n = n())</code></pre>
 <pre><code>## # A tibble: 2 x 2
@@ -243,7 +243,7 @@ names(faces)</code></pre>
 <center>
 <img src="/img/20190519/63.jpg" alt="Mrs Frenandez" /> <img src="/img/20190519/104.jpg" alt="Mrs Lijnen" /> <img src="/img/20190519/80.jpg" alt="Mrs Goffinet" />
 </center>
-<p>Looking at the confidence values Rekognition is pretty sure about the results and seems to be very accurante. But how accurate? A mosaic of the pictures identified as women will create a quick visual and will enable us to have a fast visual check.</p>
+<p>Looking at the confidence values Rekognition is pretty sure about the results and seems to be very accurate. But how accurate? A mosaic of the pictures identified as women will create a quick visual and will enable us to have a fast visual check.</p>
 <pre class="r"><code>unique(faces$Gender.Value)</code></pre>
 <pre><code>## [1] Female Male  
 ## Levels: Female Male</code></pre>
@@ -285,7 +285,7 @@ fun &lt;- function(i, files, no_rows){
 image_append(stack = FALSE) 
 
 image_write(img,&quot;~/R/blogs/static/img/20190519/women_reps.jpg&quot;)</code></pre>
-<p>Regognize seems to have calculated corectly:</p>
+<p>Rekognize seems to have calculated correctly:</p>
 <center>
 <div class="figure">
 <img src="/img/20190519/women_reps.jpg" alt="women" />
@@ -324,7 +324,7 @@ img &lt;- image_read(dir(&quot;data/20190519/men&quot;, full.names = TRUE)) %&gt
 image_append(stack = FALSE) 
 
 image_write(img,&quot;~/R/blogs/static/img/20190519/men_reps.jpg&quot;)</code></pre>
-<p>Regognize seems to have calculated corectly:</p>
+<p>Rekognize seems to have calculated correctly:</p>
 <center>
 <img src="/img/20190519/men_reps.jpg" alt="men" />
 </center>
@@ -352,7 +352,7 @@ image_write(img,&quot;~/R/blogs/static/img/20190519/men_reps.jpg&quot;)</code></
 {“Type”: “SAD”, “Confidence”: 2.5097835063934326},
 {“Type”: “CONFUSED”, “Confidence”: 8.314539909362793},
 {“Type”: “ANGRY”, “Confidence”: 2.370262384414673}]</p>
-<p>So the emotions are a bit more complicated here. They usualy are. This time we have some more emotions.confidence though.</p>
+<p>So the emotions are a bit more complicated here. They usually are. This time we have some more emotions.confidence though.</p>
 <p>I have not used the ‘spread’ function before.</p>
 <p>It puts the different values of ‘Emotion.Type’ into columns, with as row values ‘Emotions.Confidence’ and fills with 0 where there are missing values.</p>
 <pre class="r"><code>y.0 &lt;- faces %&gt;% 
@@ -464,9 +464,8 @@ head(charts.data)</code></pre>
   ggtitle(&quot;Composition of emotions in party (%)&quot;)
 
 bar_chart</code></pre>
-<p><img src="/post/2019-05-19-i-second-that-emotion_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
-<p>So the more disgusted are Vuye&amp;Wouters and Vlaams Belang. The majority of them are happy. But the hapiest are (is) the Parti Populaire.</p>
-<p>But these are the smaller parties.</p>
+<p><img src="/post/2019-05-19-i-second-that-emotion_files/figure-html/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So the more disgusted are Vuye&amp;Wouters and Vlaams Belang. The happiest are (is) the Parti Populaire. But these are the smaller parties.</p>
 <pre class="r"><code>party_emotions %&gt;% select(party, count) %&gt;% 
   arrange(count) %&gt;% 
   slice(1:6)</code></pre>
@@ -479,6 +478,7 @@ bar_chart</code></pre>
 ## 4 PTB-go!             2
 ## 5 Vuye&amp;Wouters        2
 ## 6 Vlaams Belang       3</code></pre>
+<p>The majority of the bigger are happy with some calmness spread around too.</p>
 
       
       <div class="related">
