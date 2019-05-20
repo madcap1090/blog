@@ -12,7 +12,7 @@ tags:
   - Spread
 ---
 
-In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It's time to look a little bit closer at the data, test the usage of the 'gather' and 'spread' function and get to know ggplot a little bit more.
+In an earlier [post](https://badtothecode.netlify.com/post/happy-faces-in-a-bucket/) we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It's time to look a little bit closer at the data, test the usage of the 'gather' and 'spread' function and get to know ggplot a little bit more.
 
 ```{r message=FALSE, warning=FALSE}
 library("tidyverse")
@@ -368,7 +368,7 @@ bar_chart <- ggplot() + theme_economist() + scale_fill_economist() +
         legend.title = element_blank(), 
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
     labs(x= NULL, y="Percentage") +
-  ggtitle("Composition of emotions in party (%)")
+  ggtitle("Composition of emotions in party (% confidence)")
 
 bar_chart
 ```
@@ -382,4 +382,4 @@ party_emotions %>% select(party, count) %>%
   slice(1:6)
 ```
 
-The majority of the bigger ones are mostly happy with some calmness spread around too. And yes, I know the sample biais is huge. This is indeed just for fun. And I had some. 
+The majority of the bigger ones are mostly happy with some calmness spread around too. And yes, I know the sample bias is huge. This is indeed just for fun. And I had some. 
