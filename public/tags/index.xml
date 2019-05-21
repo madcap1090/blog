@@ -7,17 +7,71 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Sun, 19 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 21 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>AWS</title>
+      <link>/tags/aws/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/aws/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>AWS Rekognition</title>
       <link>/tags/aws-rekognition/</link>
-      <pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/aws-rekognition/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Amazon Comprehend</title>
+      <link>/tags/amazon-comprehend/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/amazon-comprehend/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Amazon Translate</title>
+      <link>/tags/amazon-translate/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/amazon-translate/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>R</title>
+      <link>/tags/r/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/r/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Sagemaker</title>
+      <link>/tags/sagemaker/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/sagemaker/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Twitter</title>
+      <link>/tags/twitter/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/twitter/</guid>
       <description></description>
     </item>
     
@@ -99,24 +153,6 @@
       <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/s3/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Sagemaker</title>
-      <link>/tags/sagemaker/</link>
-      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/sagemaker/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Twitter</title>
-      <link>/tags/twitter/</link>
-      <pubDate>Fri, 03 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/twitter/</guid>
       <description></description>
     </item>
     

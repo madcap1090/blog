@@ -374,7 +374,7 @@ bar_chart
 ```
 
 
-So the more disgusted are Vuye&Wouters and Vlaams Belang. The happiest are (is) the Parti Populaire. But these are the smaller parties.
+So the more disgusted are Vuye&Wouters and Vlaams Belang. The happiest party is the Parti Populaire. But these are the smaller parties.
 
 ```{r}
 party_emotions %>% select(party, count) %>% 

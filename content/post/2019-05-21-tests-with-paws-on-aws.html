@@ -1,0 +1,335 @@
+---
+title: tests with paws on aws
+author: William Bourgeois
+date: '2019-05-21'
+slug: tests-with-paws-on-aws
+categories: []
+tags:
+  - AWS
+  - R
+  - Sagemaker
+  - Twitter
+  - Amazon Translate
+  - AWS Rekognition
+  - Amazon Comprehend
+---
+
+
+
+<p>When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from (rweekly)[<a href="https://rweekly.org/" class="uri">https://rweekly.org/</a>], that a number of interesting R packages just came out at the beginning of the month.</p>
+<p>As far as I understand at the moment, there are 11 packages bundled in a (kit)[<a href="https://cran.r-project.org/web/packages/paws/index.html" class="uri">https://cran.r-project.org/web/packages/paws/index.html</a>] published three days ago…</p>
+<p>So my intent in this post is to take these for a ride, using our parliamentarian’s tweets, and see what I can get out of different AWS services through R.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;paws.machine.learning&quot;) # install.packages(&quot;paws.machine.learning&quot;)</code></pre>
+<p>Authentication information for AWS:</p>
+<p>Detecting languages with Amazon Comprehend:</p>
+<pre class="r"><code>svc &lt;- comprehend()
+svc$batch_detect_dominant_language(
+  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;)</code></pre>
+<pre><code>## $ResultList
+## $ResultList[[1]]
+## $ResultList[[1]]$Index
+## [1] 0
+## 
+## $ResultList[[1]]$Languages
+## $ResultList[[1]]$Languages[[1]]
+## $ResultList[[1]]$Languages[[1]]$LanguageCode
+## [1] &quot;nl&quot;
+## 
+## $ResultList[[1]]$Languages[[1]]$Score
+## [1] 0.9996414
+## 
+## 
+## 
+## 
+## 
+## $ErrorList
+## list()</code></pre>
+<p>Nice! Indeed Dutch. This returns 0.9996 confidence score.</p>
+<pre class="r"><code>svc$batch_detect_sentiment(
+  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;)</code></pre>
+<p>Returns an error. It needs to know which language it would be in.</p>
+<pre class="r"><code>svc$batch_detect_sentiment(
+  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;,
+  LanguageCode = &quot;nl&quot;)</code></pre>
+<p>Aw shoot does not do Dutch yet.</p>
+<p>But can we translate Dutch to French?</p>
+<pre class="r"><code>svc &lt;- translate()
+svc$translate_text(&quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;, 
+                   SourceLanguageCode = &quot;nl&quot;, 
+                   TargetLanguageCode =&quot;fr&quot;)</code></pre>
+<pre><code>## $TranslatedText
+## [1] &quot;Je me sentais aussi anxieux qu&#39;un jeune animal mis sous le feu par des chasseurs&quot;
+## 
+## $SourceLanguageCode
+## [1] &quot;nl&quot;
+## 
+## $TargetLanguageCode
+## [1] &quot;fr&quot;
+## 
+## $AppliedTerminologies
+## list()</code></pre>
+<p>Not perfect, but pretty close.</p>
+<pre class="r"><code>text &lt;- svc$translate_text(&quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;,
+                           SourceLanguageCode = &quot;nl&quot;, 
+                           TargetLanguageCode =&quot;fr&quot;) 
+
+sentiment_text &lt;- text$TranslatedText
+
+svc &lt;- comprehend()
+svc$batch_detect_sentiment(sentiment_text,
+  LanguageCode = &quot;fr&quot;)</code></pre>
+<pre><code>## $ResultList
+## $ResultList[[1]]
+## $ResultList[[1]]$Index
+## [1] 0
+## 
+## $ResultList[[1]]$Sentiment
+## [1] &quot;NEUTRAL&quot;
+## 
+## $ResultList[[1]]$SentimentScore
+## $ResultList[[1]]$SentimentScore$Positive
+## [1] 0.1202592
+## 
+## $ResultList[[1]]$SentimentScore$Negative
+## [1] 0.01508467
+## 
+## $ResultList[[1]]$SentimentScore$Neutral
+## [1] 0.864205
+## 
+## $ResultList[[1]]$SentimentScore$Mixed
+## [1] 0.0004511347
+## 
+## 
+## 
+## 
+## $ErrorList
+## list()</code></pre>
+<p>Hmm. Not really neutral this text.</p>
+<p>Let’s get some tweets. But just the texts for now.</p>
+<pre class="r"><code>tweets &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190503/tweets.rds&quot;) %&gt;% 
+  select(text)
+
+nrow(tweets)</code></pre>
+<pre><code>## [1] 264466</code></pre>
+<p>So we have 264K tweets. The text is still not cleaned. Let’s see what we can get out of a small sample of them.</p>
+<pre class="r"><code>set.seed(42)
+sample &lt;- sample_n(tweets, 20)
+sample</code></pre>
+<pre><code>## # A tibble: 20 x 1
+##    text                                                                    
+##    &lt;chr&gt;                                                                   
+##  1 De winsten bij de bedrijven, de miserie bij de mensen. Totaalverbod op ~
+##  2 De stilte is voorbij, de storm van alle politieke partijen begint weer.~
+##  3 Het kantoor van Vlaams Belang Antwerpen werd vannacht besmeurd met eier~
+##  4 &quot;Toekomstig Premier van Oostenrijk. \n\nHet discours is onvoorstelbaar ~
+##  5 La Chambre a adopté jeudi soir le budget 2018, majorité contre oppositi~
+##  6 Omdat we wie ziek is beter kunnen helpen als anderen geen misbruik make~
+##  7 Op bezoek bij MM&#39;se jeugdverenigingen op kamp : fier op onze vereniging~
+##  8 Le gouvernement @CharlesMichel a t-il fait mieux que le gouvernement @D~
+##  9 &quot;Un #begov opérationnel, en situation de relever les défis prioritaires~
+## 10 Proficiat @PolitieLokeren met geslaagde deelname aan @vokavzw openbedri~
+## 11 Maintenant en direct de la #ClimateMarch pour ce qui s&#39;annonce la plus ~
+## 12 N-VA-fractieleider @PeterDeRoover1 uit ernstige bedenkingen bij verklar~
+## 13 @ValentinoBresc6 @ThomasVanwing @RuttenGwendolyn Alweer is uw kennis va~
+## 14 #INFO #EAU VIVAQUA&lt;U+200B&gt; propose une facturation mensuelle https://t.co/Li67~ 
+## 15 Nog één keer meezingen met #Bobbejaan op @canvastv #lichtjesvandescheld~
+## 16 @kamisolf @MarcoG_01 @de_NVA @jvanovertveldt @FranckenTheo Vergelijk da~
+## 17 @IJsboerke Echt een aanrader! Moet je echt geproefd hebben, heel fijn. ~
+## 18 Que le #begov veuille voter la &lt;U+2198&gt;&lt;U+FE0F&gt; de l&#39;#ISOC pour les PME avt le 31/12 ~ 
+## 19 Le Groupe PS se réjouit de l&#39;adoption en commission de la proposition d~
+## 20 laat de zon maar veel schijnen in #brugge #terrasjes #santé Horecazaken~</code></pre>
+<p>Language detection on the sample.</p>
+<pre class="r"><code>svc &lt;- comprehend()
+languages &lt;- svc$batch_detect_dominant_language(sample$text)
+list &lt;- languages$ResultList
+
+lang &lt;- vector()
+for (i in (1:length(list))){
+  print(list[[i]][[&quot;Languages&quot;]][[1]][[&quot;LanguageCode&quot;]])
+  lang_tweet &lt;- list[[i]][[&quot;Languages&quot;]][[1]][[&quot;LanguageCode&quot;]]
+  lang &lt;- append(lang, lang_tweet)
+}</code></pre>
+<pre><code>## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;</code></pre>
+<p>So let’s look at the results compared to the tweets.</p>
+<pre class="r"><code>x &lt;- as.data.frame(lang) %&gt;% 
+  cbind(sample) %&gt;% 
+  mutate(text = substr(text, 0, 50))
+
+x</code></pre>
+<pre><code>##    lang                                                             text
+## 1    nl               De winsten bij de bedrijven, de miserie bij de men
+## 2    nl               De stilte is voorbij, de storm van alle politieke 
+## 3    nl               Het kantoor van Vlaams Belang Antwerpen werd vanna
+## 4    nl             Toekomstig Premier van Oostenrijk. \n\nHet discours 
+## 5    fr               La Chambre a adopté jeudi soir le budget 2018, maj
+## 6    nl               Omdat we wie ziek is beter kunnen helpen als ander
+## 7    nl               Op bezoek bij MM&#39;se jeugdverenigingen op kamp : fi
+## 8    fr               Le gouvernement @CharlesMichel a t-il fait mieux q
+## 9    fr               Un #begov opérationnel, en situation de relever le
+## 10   nl               Proficiat @PolitieLokeren met geslaagde deelname a
+## 11   fr               Maintenant en direct de la #ClimateMarch pour ce q
+## 12   nl               N-VA-fractieleider @PeterDeRoover1 uit ernstige be
+## 13   nl               @ValentinoBresc6 @ThomasVanwing @RuttenGwendolyn A
+## 14   fr        #INFO #EAU VIVAQUA&lt;U+200B&gt; propose une facturation mensue
+## 15   nl               Nog één keer meezingen met #Bobbejaan op @canvastv
+## 16   nl               @kamisolf @MarcoG_01 @de_NVA @jvanovertveldt @Fran
+## 17   nl               @IJsboerke Echt een aanrader! Moet je echt geproef
+## 18   fr Que le #begov veuille voter la &lt;U+2198&gt;&lt;U+FE0F&gt; de l&#39;#ISOC pour 
+## 19   fr               Le Groupe PS se réjouit de l&#39;adoption en commissio
+## 20   nl               laat de zon maar veel schijnen in #brugge #terrasj</code></pre>
+<p>So that is more than good, the false English tags are garbage tweet texts. Happy with this proof of concept.</p>
+<p>Before calling it a day I wanted to test the detect_entities function.</p>
+<pre class="r"><code>svc$detect_entities(tweets$text[200011], LanguageCode = &quot;fr&quot;)</code></pre>
+<pre><code>## $Entities
+## $Entities[[1]]
+## $Entities[[1]]$Score
+## [1] 0.6681724
+## 
+## $Entities[[1]]$Type
+## [1] &quot;ORGANIZATION&quot;
+## 
+## $Entities[[1]]$Text
+## [1] &quot;@BeeuwsaertEric&quot;
+## 
+## $Entities[[1]]$BeginOffset
+## [1] 0
+## 
+## $Entities[[1]]$EndOffset
+## [1] 15</code></pre>
+<pre class="r"><code>tweets$text[200011]</code></pre>
+<pre><code>## [1] &quot;@BeeuwsaertEric heeft u het over Huts, de mensen op de foto, de heftruckchauffeurs,...? Het zal geheel aan mezelf liggen, mr begrijp u niet&quot;</code></pre>
+<p>It detected the handle, can be useful, but there are other ways to extract the handles from a tweet.</p>
+<p>What about this tweet:</p>
+<p>Damn does not seem to work in Dutch.</p>
+<p>So what about this one:</p>
+<pre class="r"><code>svc$detect_entities(tweets$text[264000], LanguageCode = &quot;fr&quot;)</code></pre>
+<pre><code>## $Entities
+## $Entities[[1]]
+## $Entities[[1]]$Score
+## [1] 0.9685722
+## 
+## $Entities[[1]]$Type
+## [1] &quot;QUANTITY&quot;
+## 
+## $Entities[[1]]$Text
+## [1] &quot;10%&quot;
+## 
+## $Entities[[1]]$BeginOffset
+## [1] 53
+## 
+## $Entities[[1]]$EndOffset
+## [1] 56
+## 
+## 
+## $Entities[[2]]
+## $Entities[[2]]$Score
+## [1] 0.9842716
+## 
+## $Entities[[2]]$Type
+## [1] &quot;PERSON&quot;
+## 
+## $Entities[[2]]$Text
+## [1] &quot;John Crombez&quot;
+## 
+## $Entities[[2]]$BeginOffset
+## [1] 95
+## 
+## $Entities[[2]]$EndOffset
+## [1] 107
+## 
+## 
+## $Entities[[3]]
+## $Entities[[3]]$Score
+## [1] 0.9677431
+## 
+## $Entities[[3]]$Type
+## [1] &quot;OTHER&quot;
+## 
+## $Entities[[3]]$Text
+## [1] &quot;https://t.co/JyILveDaMw&quot;
+## 
+## $Entities[[3]]$BeginOffset
+## [1] 114
+## 
+## $Entities[[3]]$EndOffset
+## [1] 137</code></pre>
+<pre class="r"><code>tweets$text[264000]</code></pre>
+<pre><code>## [1] &quot;Onterecht uitbetaalde uitkeringen? Terugvorderingen +10%. #eerlijkerisbeter? Probeer het eens, John Crombez. #dmd https://t.co/JyILveDaMw&quot;</code></pre>
+<p>So saying that it is in French resulted in a correct output (that might be an exceptional though, let’s see)</p>
+<pre class="r"><code>svc$detect_entities(tweets$text[260725], LanguageCode = &quot;fr&quot;)</code></pre>
+<pre><code>## $Entities
+## $Entities[[1]]
+## $Entities[[1]]$Score
+## [1] 0.993213
+## 
+## $Entities[[1]]$Type
+## [1] &quot;PERSON&quot;
+## 
+## $Entities[[1]]$Text
+## [1] &quot;Zakia Khattabi&quot;
+## 
+## $Entities[[1]]$BeginOffset
+## [1] 14
+## 
+## $Entities[[1]]$EndOffset
+## [1] 28
+## 
+## 
+## $Entities[[2]]
+## $Entities[[2]]$Score
+## [1] 0.82321
+## 
+## $Entities[[2]]$Type
+## [1] &quot;OTHER&quot;
+## 
+## $Entities[[2]]$Text
+## [1] &quot;https://t.co/lOkItFXEER&quot;
+## 
+## $Entities[[2]]$BeginOffset
+## [1] 88
+## 
+## $Entities[[2]]$EndOffset
+## [1] 111
+## 
+## 
+## $Entities[[3]]
+## $Entities[[3]]$Score
+## [1] 0.9617769
+## 
+## $Entities[[3]]$Type
+## [1] &quot;OTHER&quot;
+## 
+## $Entities[[3]]$Text
+## [1] &quot;https://t.co/YwRcO5VyPA&quot;
+## 
+## $Entities[[3]]$BeginOffset
+## [1] 112
+## 
+## $Entities[[3]]$EndOffset
+## [1] 135</code></pre>
+<pre class="r"><code>tweets$text[260725]</code></pre>
+<pre><code>## [1] &quot;#CarteBlanche Zakia Khattabi: «L’état d’exception doit se soumettre à l’État de droit» \nhttps://t.co/lOkItFXEER https://t.co/YwRcO5VyPA&quot;</code></pre>
+<p>Clearly identified “Zakia Khattabi” in the tweet. Nice. Looking forward to test some more.</p>
+<p>But for now will see an episode of “Collateral” on Netflix and hope not to get to bed too late.</p>
+<p>Thank you for your attention.</p>
+<p>Sleep tight.</p>

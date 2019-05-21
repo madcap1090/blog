@@ -1,0 +1,198 @@
+---
+title: tests with paws on aws
+author: William Bourgeois
+date: '2019-05-21'
+slug: tests-with-paws-on-aws
+categories: []
+tags:
+  - AWS
+  - R
+  - Sagemaker
+  - Twitter
+  - Amazon Translate
+  - AWS Rekognition
+  - Amazon Comprehend
+---
+
+When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from (rweekly)[https://rweekly.org/], that a number of interesting R packages just came out at the beginning of the month.
+
+As far as I understand at the moment, there are 11 packages bundled in a (kit)[https://cran.r-project.org/web/packages/paws/index.html] published three days ago...
+
+So my intent in this post is to take these for a ride, using our parliamentarian's tweets, and see what I can get out of different AWS services through R.
+
+
+```{r message=FALSE, warning=FALSE}
+
+library("tidyverse")
+library("paws.machine.learning") # install.packages("paws.machine.learning")
+
+```
+
+Authentication information for AWS:
+
+```{r eval=FALSE, include=FALSE}
+
+# s3 bucket
+AWSAccessKeyId <- ""
+AWSSecretKey <- ""
+region <- "eu-west-1"
+
+Sys.setenv("AWS_ACCESS_KEY_ID" = AWSAccessKeyId,
+           "AWS_SECRET_ACCESS_KEY" = AWSSecretKey,
+           "AWS_DEFAULT_REGION" = region,
+           "AWS_REGION" = region,
+           "AWS_SESSION_TOKEN" = "")
+```
+
+Detecting languages with Amazon Comprehend:
+
+```{r}
+
+svc <- comprehend()
+svc$batch_detect_dominant_language(
+  "ik voelde me zo angstg als een jong dier onder vuur genomen door jagers")
+
+```
+
+Nice! Indeed Dutch. This returns 0.9996 confidence score.
+
+```{r, eval= FALSE}
+svc$batch_detect_sentiment(
+  "ik voelde me zo angstg als een jong dier onder vuur genomen door jagers")
+```
+
+Returns an error. It needs to know which language it would be in.
+
+```{r, eval= FALSE}
+svc$batch_detect_sentiment(
+  "ik voelde me zo angstg als een jong dier onder vuur genomen door jagers",
+  LanguageCode = "nl")
+```
+
+Aw shoot does not do Dutch yet.
+
+But can we translate Dutch to French?
+
+```{r}
+svc <- translate()
+svc$translate_text("ik voelde me zo angstg als een jong dier onder vuur genomen door jagers", 
+                   SourceLanguageCode = "nl", 
+                   TargetLanguageCode ="fr")
+
+
+```
+
+Not perfect, but pretty close.
+
+```{r}
+text <- svc$translate_text("ik voelde me zo angstg als een jong dier onder vuur genomen door jagers",
+                           SourceLanguageCode = "nl", 
+                           TargetLanguageCode ="fr") 
+
+sentiment_text <- text$TranslatedText
+
+svc <- comprehend()
+svc$batch_detect_sentiment(sentiment_text,
+  LanguageCode = "fr")
+
+```
+
+Hmm. Not really neutral this text. 
+
+Let's get some tweets. But just the texts for now.  
+
+```{r}
+tweets <- readRDS("~/R/blogs/content/post/data/20190503/tweets.rds") %>% 
+  select(text)
+
+nrow(tweets)
+
+```
+
+So we have 264K tweets. The text is still not cleaned. Let's see what we can get out of a small sample of them.
+
+```{r}
+set.seed(42)
+sample <- sample_n(tweets, 20)
+sample
+```
+
+Language detection on the sample.
+
+```{r}
+
+svc <- comprehend()
+languages <- svc$batch_detect_dominant_language(sample$text)
+list <- languages$ResultList
+
+lang <- vector()
+for (i in (1:length(list))){
+  print(list[[i]][["Languages"]][[1]][["LanguageCode"]])
+  lang_tweet <- list[[i]][["Languages"]][[1]][["LanguageCode"]]
+  lang <- append(lang, lang_tweet)
+}
+
+```
+
+So let's look at the results compared to the tweets.
+
+```{r}
+x <- as.data.frame(lang) %>% 
+  cbind(sample) %>% 
+  mutate(text = substr(text, 0, 50))
+
+x
+
+```
+
+So that is more than good, the false English tags are garbage tweet texts. Happy with this proof of concept. 
+
+Before calling it a day I wanted to test the detect_entities function.
+
+```{r}
+svc$detect_entities(tweets$text[200011], LanguageCode = "fr")
+tweets$text[200011]
+
+```
+
+
+It detected the handle, can be useful, but there are other ways to extract the handles from a tweet. 
+
+What about this tweet:
+
+```{r eval=FALSE, include=FALSE}
+svc$detect_entities(tweets$text[264000], LanguageCode = "nl")
+```
+
+
+```{r eval=FALSE, include=FALSE}
+tweets$text[264000]
+
+```
+
+Damn does not seem to work in Dutch.
+
+So what about this one:
+
+```{r}
+svc$detect_entities(tweets$text[264000], LanguageCode = "fr")
+tweets$text[264000]
+```
+
+So saying that it is in French resulted in a correct output (that might be an exceptional though, let's see)
+
+```{r}
+svc$detect_entities(tweets$text[260725], LanguageCode = "fr")
+
+tweets$text[260725]
+```
+
+
+Clearly identified "Zakia Khattabi" in the tweet. Nice. Looking forward to test some more. 
+
+But for now will see an episode of "Collateral" on Netflix and hope not to get to bed too late.
+
+Thank you for your attention. 
+
+Sleep tight. 
+

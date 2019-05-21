@@ -14,7 +14,7 @@ tags:
 
 
 
-<p>In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit closer at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.</p>
+<p>In an earlier <a href="https://badtothecode.netlify.com/post/happy-faces-in-a-bucket/">post</a> we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit closer at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
 library(&quot;magick&quot;)
 library(&quot;ggthemes&quot;)
@@ -353,11 +353,11 @@ head(charts.data)</code></pre>
         legend.title = element_blank(), 
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
     labs(x= NULL, y=&quot;Percentage&quot;) +
-  ggtitle(&quot;Composition of emotions in party (%)&quot;)
+  ggtitle(&quot;Composition of emotions in party (% confidence)&quot;)
 
 bar_chart</code></pre>
 <p><img src="/post/2019-05-19-i-second-that-emotion_files/figure-html/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>So the more disgusted are Vuye&amp;Wouters and Vlaams Belang. The happiest are (is) the Parti Populaire. But these are the smaller parties.</p>
+<p>So the more disgusted are Vuye&amp;Wouters and Vlaams Belang. The happiest party is the Parti Populaire. But these are the smaller parties.</p>
 <pre class="r"><code>party_emotions %&gt;% select(party, count) %&gt;% 
   arrange(count) %&gt;% 
   slice(1:6)</code></pre>

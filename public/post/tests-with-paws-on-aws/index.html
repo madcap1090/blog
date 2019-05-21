@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>tests with paws on aws | bad to the code</title>
+
+<meta property='og:title' content='tests with paws on aws - bad to the code'>
+<meta property='og:description' content='When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from (rweekly)[https://rweekly.org/], that a number of interesting R packages just came out at the beginning of the month.
+As far as I understand at the moment, there are 11 packages bundled in a (kit)[https://cran.'>
+<meta property='og:url' content='/post/tests-with-paws-on-aws/'>
+<meta property='og:site_name' content='bad to the code'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='AWS'><meta property='article:tag' content='R'><meta property='article:tag' content='Sagemaker'><meta property='article:tag' content='Twitter'><meta property='article:tag' content='Amazon Translate'><meta property='article:tag' content='AWS Rekognition'><meta property='article:tag' content='Amazon Comprehend'><meta property='article:published_time' content='2019-05-21T00:00:00Z'/><meta property='article:modified_time' content='2019-05-21T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
+
+
+<link href="/index.xml" rel="alternate" type="application/rss+xml" title="bad to the code" />
+
+<link rel="stylesheet" href="/css/style.css"/><link rel='stylesheet' href='/css/custom.css'><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="theme-color" content="#ffffff">
+</head>
+<body>
+<section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="/">
+          <h1 class="title is-4">bad to the code</h1>
+        </a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile"><a class="level-item" aria-label="facebook" href='https://facebook.com/OClassicoOficial/videos/391802167961744/'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="email" href='mailto:madcap1090@gmail.com'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="linkedin" href='https://linkedin.com/in/williambourgeois'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path stroke-width="1.8" d="m5.839218,4.101561c0,1.211972 -0.974141,2.194011 -2.176459,2.194011s-2.176459,-0.982039 -2.176459,-2.194011c0,-1.211094 0.974141,-2.194011 2.176459,-2.194011s2.176459,0.982917 2.176459,2.194011zm0.017552,3.94922l-4.388022,0l0,14.04167l4.388022,0l0,-14.04167zm7.005038,0l-4.359939,0l0,14.04167l4.360816,0l0,-7.370999c0,-4.098413 5.291077,-4.433657 5.291077,0l0,7.370999l4.377491,0l0,-8.89101c0,-6.915523 -7.829986,-6.66365 -9.669445,-3.259423l0,-1.891237z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="twitter" href='https://twitter.com/WilliamBourgeoi'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="github" href='https://github.com/madcap1090'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+    
+  </svg></i>
+            </span>
+          </a></nav>
+      </div>
+    </nav>
+
+    <nav class="nav">
+      
+
+      
+    </nav>
+
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="subtitle tags is-6 is-pulled-right">
+      
+      
+<a class="subtitle is-6" href="/tags/aws">#AWS</a>
+
+
+
+  
+  | <a class="subtitle is-6" href="/tags/r">#R</a>
+  
+  | <a class="subtitle is-6" href="/tags/sagemaker">#Sagemaker</a>
+  
+  | <a class="subtitle is-6" href="/tags/twitter">#Twitter</a>
+  
+  | <a class="subtitle is-6" href="/tags/amazon-translate">#Amazon Translate</a>
+  
+  | <a class="subtitle is-6" href="/tags/aws-rekognition">#AWS Rekognition</a>
+  
+  | <a class="subtitle is-6" href="/tags/amazon-comprehend">#Amazon Comprehend</a>
+  
+
+      
+    </div>
+    <h2 class="subtitle is-6">May 21, 2019</h2>
+    <h1 class="title">tests with paws on aws</h1>
+    
+    <div class="content">
+      
+
+
+<p>When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from (rweekly)[<a href="https://rweekly.org/" class="uri">https://rweekly.org/</a>], that a number of interesting R packages just came out at the beginning of the month.</p>
+<p>As far as I understand at the moment, there are 11 packages bundled in a (kit)[<a href="https://cran.r-project.org/web/packages/paws/index.html" class="uri">https://cran.r-project.org/web/packages/paws/index.html</a>] published three days ago…</p>
+<p>So my intent in this post is to take these for a ride, using our parliamentarian’s tweets, and see what I can get out of different AWS services through R.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;paws.machine.learning&quot;) # install.packages(&quot;paws.machine.learning&quot;)</code></pre>
+<p>Authentication information for AWS:</p>
+<p>Detecting languages with Amazon Comprehend:</p>
+<pre class="r"><code>svc &lt;- comprehend()
+svc$batch_detect_dominant_language(
+  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;)</code></pre>
+<pre><code>## $ResultList
+## $ResultList[[1]]
+## $ResultList[[1]]$Index
+## [1] 0
+## 
+## $ResultList[[1]]$Languages
+## $ResultList[[1]]$Languages[[1]]
+## $ResultList[[1]]$Languages[[1]]$LanguageCode
+## [1] &quot;nl&quot;
+## 
+## $ResultList[[1]]$Languages[[1]]$Score
+## [1] 0.9996414
+## 
+## 
+## 
+## 
+## 
+## $ErrorList
+## list()</code></pre>
+<p>Nice! Indeed Dutch. This returns 0.9996 confidence score.</p>
+<pre class="r"><code>svc$batch_detect_sentiment(
+  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;)</code></pre>
+<p>Returns an error. It needs to know which language it would be in.</p>
+<pre class="r"><code>svc$batch_detect_sentiment(
+  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;,
+  LanguageCode = &quot;nl&quot;)</code></pre>
+<p>Aw shoot does not do Dutch yet.</p>
+<p>But can we translate Dutch to French?</p>
+<pre class="r"><code>svc &lt;- translate()
+svc$translate_text(&quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;, 
+                   SourceLanguageCode = &quot;nl&quot;, 
+                   TargetLanguageCode =&quot;fr&quot;)</code></pre>
+<pre><code>## $TranslatedText
+## [1] &quot;Je me sentais aussi anxieux qu&#39;un jeune animal mis sous le feu par des chasseurs&quot;
+## 
+## $SourceLanguageCode
+## [1] &quot;nl&quot;
+## 
+## $TargetLanguageCode
+## [1] &quot;fr&quot;
+## 
+## $AppliedTerminologies
+## list()</code></pre>
+<p>Not perfect, but pretty close.</p>
+<pre class="r"><code>text &lt;- svc$translate_text(&quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;,
+                           SourceLanguageCode = &quot;nl&quot;, 
+                           TargetLanguageCode =&quot;fr&quot;) 
+
+sentiment_text &lt;- text$TranslatedText
+
+svc &lt;- comprehend()
+svc$batch_detect_sentiment(sentiment_text,
+  LanguageCode = &quot;fr&quot;)</code></pre>
+<pre><code>## $ResultList
+## $ResultList[[1]]
+## $ResultList[[1]]$Index
+## [1] 0
+## 
+## $ResultList[[1]]$Sentiment
+## [1] &quot;NEUTRAL&quot;
+## 
+## $ResultList[[1]]$SentimentScore
+## $ResultList[[1]]$SentimentScore$Positive
+## [1] 0.1202592
+## 
+## $ResultList[[1]]$SentimentScore$Negative
+## [1] 0.01508467
+## 
+## $ResultList[[1]]$SentimentScore$Neutral
+## [1] 0.864205
+## 
+## $ResultList[[1]]$SentimentScore$Mixed
+## [1] 0.0004511347
+## 
+## 
+## 
+## 
+## $ErrorList
+## list()</code></pre>
+<p>Hmm. Not really neutral this text.</p>
+<p>Let’s get some tweets. But just the texts for now.</p>
+<pre class="r"><code>tweets &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190503/tweets.rds&quot;) %&gt;% 
+  select(text)
+
+nrow(tweets)</code></pre>
+<pre><code>## [1] 264466</code></pre>
+<p>So we have 264K tweets. The text is still not cleaned. Let’s see what we can get out of a small sample of them.</p>
+<pre class="r"><code>set.seed(42)
+sample &lt;- sample_n(tweets, 20)
+sample</code></pre>
+<pre><code>## # A tibble: 20 x 1
+##    text                                                                    
+##    &lt;chr&gt;                                                                   
+##  1 De winsten bij de bedrijven, de miserie bij de mensen. Totaalverbod op ~
+##  2 De stilte is voorbij, de storm van alle politieke partijen begint weer.~
+##  3 Het kantoor van Vlaams Belang Antwerpen werd vannacht besmeurd met eier~
+##  4 &quot;Toekomstig Premier van Oostenrijk. \n\nHet discours is onvoorstelbaar ~
+##  5 La Chambre a adopté jeudi soir le budget 2018, majorité contre oppositi~
+##  6 Omdat we wie ziek is beter kunnen helpen als anderen geen misbruik make~
+##  7 Op bezoek bij MM&#39;se jeugdverenigingen op kamp : fier op onze vereniging~
+##  8 Le gouvernement @CharlesMichel a t-il fait mieux que le gouvernement @D~
+##  9 &quot;Un #begov opérationnel, en situation de relever les défis prioritaires~
+## 10 Proficiat @PolitieLokeren met geslaagde deelname aan @vokavzw openbedri~
+## 11 Maintenant en direct de la #ClimateMarch pour ce qui s&#39;annonce la plus ~
+## 12 N-VA-fractieleider @PeterDeRoover1 uit ernstige bedenkingen bij verklar~
+## 13 @ValentinoBresc6 @ThomasVanwing @RuttenGwendolyn Alweer is uw kennis va~
+## 14 #INFO #EAU VIVAQUA&lt;U+200B&gt; propose une facturation mensuelle https://t.co/Li67~ 
+## 15 Nog één keer meezingen met #Bobbejaan op @canvastv #lichtjesvandescheld~
+## 16 @kamisolf @MarcoG_01 @de_NVA @jvanovertveldt @FranckenTheo Vergelijk da~
+## 17 @IJsboerke Echt een aanrader! Moet je echt geproefd hebben, heel fijn. ~
+## 18 Que le #begov veuille voter la &lt;U+2198&gt;&lt;U+FE0F&gt; de l&#39;#ISOC pour les PME avt le 31/12 ~ 
+## 19 Le Groupe PS se réjouit de l&#39;adoption en commission de la proposition d~
+## 20 laat de zon maar veel schijnen in #brugge #terrasjes #santé Horecazaken~</code></pre>
+<p>Language detection on the sample.</p>
+<pre class="r"><code>svc &lt;- comprehend()
+languages &lt;- svc$batch_detect_dominant_language(sample$text)
+list &lt;- languages$ResultList
+
+lang &lt;- vector()
+for (i in (1:length(list))){
+  print(list[[i]][[&quot;Languages&quot;]][[1]][[&quot;LanguageCode&quot;]])
+  lang_tweet &lt;- list[[i]][[&quot;Languages&quot;]][[1]][[&quot;LanguageCode&quot;]]
+  lang &lt;- append(lang, lang_tweet)
+}</code></pre>
+<pre><code>## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;nl&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;fr&quot;
+## [1] &quot;nl&quot;</code></pre>
+<p>So let’s look at the results compared to the tweets.</p>
+<pre class="r"><code>x &lt;- as.data.frame(lang) %&gt;% 
+  cbind(sample) %&gt;% 
+  mutate(text = substr(text, 0, 50))
+
+x</code></pre>
+<pre><code>##    lang                                                             text
+## 1    nl               De winsten bij de bedrijven, de miserie bij de men
+## 2    nl               De stilte is voorbij, de storm van alle politieke 
+## 3    nl               Het kantoor van Vlaams Belang Antwerpen werd vanna
+## 4    nl             Toekomstig Premier van Oostenrijk. \n\nHet discours 
+## 5    fr               La Chambre a adopté jeudi soir le budget 2018, maj
+## 6    nl               Omdat we wie ziek is beter kunnen helpen als ander
+## 7    nl               Op bezoek bij MM&#39;se jeugdverenigingen op kamp : fi
+## 8    fr               Le gouvernement @CharlesMichel a t-il fait mieux q
+## 9    fr               Un #begov opérationnel, en situation de relever le
+## 10   nl               Proficiat @PolitieLokeren met geslaagde deelname a
+## 11   fr               Maintenant en direct de la #ClimateMarch pour ce q
+## 12   nl               N-VA-fractieleider @PeterDeRoover1 uit ernstige be
+## 13   nl               @ValentinoBresc6 @ThomasVanwing @RuttenGwendolyn A
+## 14   fr        #INFO #EAU VIVAQUA&lt;U+200B&gt; propose une facturation mensue
+## 15   nl               Nog één keer meezingen met #Bobbejaan op @canvastv
+## 16   nl               @kamisolf @MarcoG_01 @de_NVA @jvanovertveldt @Fran
+## 17   nl               @IJsboerke Echt een aanrader! Moet je echt geproef
+## 18   fr Que le #begov veuille voter la &lt;U+2198&gt;&lt;U+FE0F&gt; de l&#39;#ISOC pour 
+## 19   fr               Le Groupe PS se réjouit de l&#39;adoption en commissio
+## 20   nl               laat de zon maar veel schijnen in #brugge #terrasj</code></pre>
+<p>So that is more than good, the false English tags are garbage tweet texts. Happy with this proof of concept.</p>
+<p>Before calling it a day I wanted to test the detect_entities function.</p>
+<pre class="r"><code>svc$detect_entities(tweets$text[200011], LanguageCode = &quot;fr&quot;)</code></pre>
+<pre><code>## $Entities
+## $Entities[[1]]
+## $Entities[[1]]$Score
+## [1] 0.6681724
+## 
+## $Entities[[1]]$Type
+## [1] &quot;ORGANIZATION&quot;
+## 
+## $Entities[[1]]$Text
+## [1] &quot;@BeeuwsaertEric&quot;
+## 
+## $Entities[[1]]$BeginOffset
+## [1] 0
+## 
+## $Entities[[1]]$EndOffset
+## [1] 15</code></pre>
+<pre class="r"><code>tweets$text[200011]</code></pre>
+<pre><code>## [1] &quot;@BeeuwsaertEric heeft u het over Huts, de mensen op de foto, de heftruckchauffeurs,...? Het zal geheel aan mezelf liggen, mr begrijp u niet&quot;</code></pre>
+<p>It detected the handle, can be useful, but there are other ways to extract the handles from a tweet.</p>
+<p>What about this tweet:</p>
+<p>Damn does not seem to work in Dutch.</p>
+<p>So what about this one:</p>
+<pre class="r"><code>svc$detect_entities(tweets$text[264000], LanguageCode = &quot;fr&quot;)</code></pre>
+<pre><code>## $Entities
+## $Entities[[1]]
+## $Entities[[1]]$Score
+## [1] 0.9685722
+## 
+## $Entities[[1]]$Type
+## [1] &quot;QUANTITY&quot;
+## 
+## $Entities[[1]]$Text
+## [1] &quot;10%&quot;
+## 
+## $Entities[[1]]$BeginOffset
+## [1] 53
+## 
+## $Entities[[1]]$EndOffset
+## [1] 56
+## 
+## 
+## $Entities[[2]]
+## $Entities[[2]]$Score
+## [1] 0.9842716
+## 
+## $Entities[[2]]$Type
+## [1] &quot;PERSON&quot;
+## 
+## $Entities[[2]]$Text
+## [1] &quot;John Crombez&quot;
+## 
+## $Entities[[2]]$BeginOffset
+## [1] 95
+## 
+## $Entities[[2]]$EndOffset
+## [1] 107
+## 
+## 
+## $Entities[[3]]
+## $Entities[[3]]$Score
+## [1] 0.9677431
+## 
+## $Entities[[3]]$Type
+## [1] &quot;OTHER&quot;
+## 
+## $Entities[[3]]$Text
+## [1] &quot;https://t.co/JyILveDaMw&quot;
+## 
+## $Entities[[3]]$BeginOffset
+## [1] 114
+## 
+## $Entities[[3]]$EndOffset
+## [1] 137</code></pre>
+<pre class="r"><code>tweets$text[264000]</code></pre>
+<pre><code>## [1] &quot;Onterecht uitbetaalde uitkeringen? Terugvorderingen +10%. #eerlijkerisbeter? Probeer het eens, John Crombez. #dmd https://t.co/JyILveDaMw&quot;</code></pre>
+<p>So saying that it is in French resulted in a correct output (that might be an exceptional though, let’s see)</p>
+<pre class="r"><code>svc$detect_entities(tweets$text[260725], LanguageCode = &quot;fr&quot;)</code></pre>
+<pre><code>## $Entities
+## $Entities[[1]]
+## $Entities[[1]]$Score
+## [1] 0.993213
+## 
+## $Entities[[1]]$Type
+## [1] &quot;PERSON&quot;
+## 
+## $Entities[[1]]$Text
+## [1] &quot;Zakia Khattabi&quot;
+## 
+## $Entities[[1]]$BeginOffset
+## [1] 14
+## 
+## $Entities[[1]]$EndOffset
+## [1] 28
+## 
+## 
+## $Entities[[2]]
+## $Entities[[2]]$Score
+## [1] 0.82321
+## 
+## $Entities[[2]]$Type
+## [1] &quot;OTHER&quot;
+## 
+## $Entities[[2]]$Text
+## [1] &quot;https://t.co/lOkItFXEER&quot;
+## 
+## $Entities[[2]]$BeginOffset
+## [1] 88
+## 
+## $Entities[[2]]$EndOffset
+## [1] 111
+## 
+## 
+## $Entities[[3]]
+## $Entities[[3]]$Score
+## [1] 0.9617769
+## 
+## $Entities[[3]]$Type
+## [1] &quot;OTHER&quot;
+## 
+## $Entities[[3]]$Text
+## [1] &quot;https://t.co/YwRcO5VyPA&quot;
+## 
+## $Entities[[3]]$BeginOffset
+## [1] 112
+## 
+## $Entities[[3]]$EndOffset
+## [1] 135</code></pre>
+<pre class="r"><code>tweets$text[260725]</code></pre>
+<pre><code>## [1] &quot;#CarteBlanche Zakia Khattabi: «L’état d’exception doit se soumettre à l’État de droit» \nhttps://t.co/lOkItFXEER https://t.co/YwRcO5VyPA&quot;</code></pre>
+<p>Clearly identified “Zakia Khattabi” in the tweet. Nice. Looking forward to test some more.</p>
+<p>But for now will see an episode of “Collateral” on Netflix and hope not to get to bed too late.</p>
+<p>Thank you for your attention.</p>
+<p>Sleep tight.</p>
+
+      
+      <div class="related">
+
+<h3>Similar articles:</h3>
+<ul>
+	
+	<li><a href="/post/happy-faces-in-a-bucket/">happy faces in a bucket</a></li>
+	
+	<li><a href="/post/i-second-that-emotion/">I second that emotion</a></li>
+	
+	<li><a href="/post/belgian-parliamentarians-tweets/">Belgian parliamentarians tweets</a></li>
+	
+	<li><a href="/post/belgian-parliamentarians-twitter-accounts/">Belgian parliamentarians Twitter accounts</a></li>
+	
+</ul>
+</div>
+      
+    </div>
+    
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container">
+    <aside><div id="disqus_thread"></div></aside>
+  
+    <div id="show_comments"><a id="load_comments" class="button is-link">Load comments</a></div>
+  
+    <script type="text/javascript">
+      var disqus_shortname = 'bad-to-the-code';
+      function disqus() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+  
+      
+      var hash = window.location.hash.substr(1);
+      if ((hash.length > 8) && (hash.substring(0, 8) === "comment-")) {
+        disqus();
+        document.getElementById("show_comments").style.display = "none";
+      } else {
+        document.getElementById('load_comments').onclick = function() {
+          disqus();
+          document.getElementById("show_comments").style.display = "none";
+        };
+      }
+  
+
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/madcap1090">William Bourgeois</a> 2019</p>
+    
+      <p>Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/ribice/kiss">Kiss</a>.</p>
+    
+  </div>
+</section>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-137981534-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="\/\/matomo.example.com\/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript>
+  <img src="//matomo.example.com/piwik.php?idsite=1&amp;rec=1" style="border:0" alt="" />
+</noscript>
+
+
+</body>
+</html>
+
