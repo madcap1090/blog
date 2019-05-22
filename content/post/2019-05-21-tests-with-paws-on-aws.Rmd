@@ -33,9 +33,8 @@ Authentication information for AWS:
 ```{r eval=FALSE, include=FALSE}
 
 # s3 bucket
-
-user_key <- ""
-api_key <- ""
+AWSAccessKeyId <- ""
+AWSSecretKey <- ""
 region <- "eu-west-1"
 
 Sys.setenv("AWS_ACCESS_KEY_ID" = AWSAccessKeyId,
@@ -191,9 +190,8 @@ tweets$text[260725]
 
 Clearly identified "Zakia Khattabi" in the tweet. Nice. Looking forward to test some more. 
 
-But for now will see an episode of "Collateral" on Netflix and hope not to get to bed too late.
+But for now will see an episode of Collateral on Netflix and hope not to get to bed too late.
 
 Thank you for your attention. 
 
-Sleep tight. 
 
