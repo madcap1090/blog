@@ -14,9 +14,9 @@ tags:
   - Amazon Comprehend
 ---
 
-When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from (rweekly)[https://rweekly.org/], that a number of interesting R packages just came out at the beginning of the month.
+When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from [rweekly](https://rweekly.org/), that a number of interesting R packages just came out at the beginning of the month.
 
-As far as I understand at the moment, there are 11 packages bundled in a (kit)[https://cran.r-project.org/web/packages/paws/index.html] published three days ago...
+As far as I understand at the moment, there are 11 packages bundled in a [kit](https://cran.r-project.org/web/packages/paws/index.html) published three days ago...
 
 So my intent in this post is to take these for a ride, using our parliamentarian's tweets, and see what I can get out of different AWS services through R.
 
@@ -33,8 +33,9 @@ Authentication information for AWS:
 ```{r eval=FALSE, include=FALSE}
 
 # s3 bucket
-AWSAccessKeyId <- ""
-AWSSecretKey <- ""
+
+user_key <- ""
+api_key <- ""
 region <- "eu-west-1"
 
 Sys.setenv("AWS_ACCESS_KEY_ID" = AWSAccessKeyId,
@@ -145,7 +146,7 @@ x
 
 ```
 
-So that is more than good, the false English tags are garbage tweet texts. Happy with this proof of concept. 
+So that is more than good. Happy with this proof of concept. 
 
 Before calling it a day I wanted to test the detect_entities function.
 

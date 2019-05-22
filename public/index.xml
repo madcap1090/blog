@@ -22,8 +22,8 @@
       <content>
 
 
-&lt;p&gt;When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from (rweekly)[&lt;a href=&#34;https://rweekly.org/&#34; class=&#34;uri&#34;&gt;https://rweekly.org/&lt;/a&gt;], that a number of interesting R packages just came out at the beginning of the month.&lt;/p&gt;
-&lt;p&gt;As far as I understand at the moment, there are 11 packages bundled in a (kit)[&lt;a href=&#34;https://cran.r-project.org/web/packages/paws/index.html&#34; class=&#34;uri&#34;&gt;https://cran.r-project.org/web/packages/paws/index.html&lt;/a&gt;] published three days ago…&lt;/p&gt;
+&lt;p&gt;When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from &lt;a href=&#34;https://rweekly.org/&#34;&gt;rweekly&lt;/a&gt;, that a number of interesting R packages just came out at the beginning of the month.&lt;/p&gt;
+&lt;p&gt;As far as I understand at the moment, there are 11 packages bundled in a &lt;a href=&#34;https://cran.r-project.org/web/packages/paws/index.html&#34;&gt;kit&lt;/a&gt; published three days ago…&lt;/p&gt;
 &lt;p&gt;So my intent in this post is to take these for a ride, using our parliamentarian’s tweets, and see what I can get out of different AWS services through R.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;tidyverse&amp;quot;)
 library(&amp;quot;paws.machine.learning&amp;quot;) # install.packages(&amp;quot;paws.machine.learning&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
@@ -203,7 +203,7 @@ x&lt;/code&gt;&lt;/pre&gt;
 ## 18   fr Que le #begov veuille voter la &amp;lt;U+2198&amp;gt;&amp;lt;U+FE0F&amp;gt; de l&amp;#39;#ISOC pour 
 ## 19   fr               Le Groupe PS se réjouit de l&amp;#39;adoption en commissio
 ## 20   nl               laat de zon maar veel schijnen in #brugge #terrasj&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;So that is more than good, the false English tags are garbage tweet texts. Happy with this proof of concept.&lt;/p&gt;
+&lt;p&gt;So that is more than good. Happy with this proof of concept.&lt;/p&gt;
 &lt;p&gt;Before calling it a day I wanted to test the detect_entities function.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;svc$detect_entities(tweets$text[200011], LanguageCode = &amp;quot;fr&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## $Entities
