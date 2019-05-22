@@ -94,7 +94,7 @@ Every song gets scored by Spotify algorithms on:
 names(spotify_df)[12:19]
 ```
 
-So with the code by plzbeemyfriend that builds an graphical album representation by song we can get this graph of their first album:
+So with the code by plzbeemyfriend that builds a graphical album representation by song we can get this graph of their first album:
 
 ```{r warning=FALSE, fig.height=8, fig.width=8}
 polar_spotify <- studio_albums %>%

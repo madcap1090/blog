@@ -130,10 +130,20 @@ As far as I understand at the moment, there are 11 packages bundled in a kit pub
 <pre class="r"><code>library(&quot;tidyverse&quot;)
 library(&quot;paws.machine.learning&quot;) # install.packages(&quot;paws.machine.learning&quot;)</code></pre>
 <p>Authentication information for AWS:</p>
+<pre class="r"><code># s3 bucket
+AWSAccessKeyId &lt;- &quot;&quot;
+AWSSecretKey &lt;- &quot;&quot;
+region &lt;- &quot;eu-west-1&quot;
+
+Sys.setenv(&quot;AWS_ACCESS_KEY_ID&quot; = AWSAccessKeyId,
+           &quot;AWS_SECRET_ACCESS_KEY&quot; = AWSSecretKey,
+           &quot;AWS_DEFAULT_REGION&quot; = region,
+           &quot;AWS_REGION&quot; = region,
+           &quot;AWS_SESSION_TOKEN&quot; = &quot;&quot;)</code></pre>
 <p>Detecting languages with Amazon Comprehend:</p>
 <pre class="r"><code>svc &lt;- comprehend()
 svc$batch_detect_dominant_language(
-  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;)</code></pre>
+  &quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&quot;)</code></pre>
 <pre><code>## $ResultList
 ## $ResultList[[1]]
 ## $ResultList[[1]]$Index
@@ -145,7 +155,7 @@ svc$batch_detect_dominant_language(
 ## [1] &quot;nl&quot;
 ## 
 ## $ResultList[[1]]$Languages[[1]]$Score
-## [1] 0.9996414
+## [1] 0.9996376
 ## 
 ## 
 ## 
@@ -155,15 +165,15 @@ svc$batch_detect_dominant_language(
 ## list()</code></pre>
 <p>Nice! Indeed Dutch. This returns 0.9996 confidence score.</p>
 <pre class="r"><code>svc$batch_detect_sentiment(
-  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;)</code></pre>
+  &quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&quot;)</code></pre>
 <p>Returns an error. It needs to know which language it would be in.</p>
 <pre class="r"><code>svc$batch_detect_sentiment(
-  &quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;,
+  &quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&quot;,
   LanguageCode = &quot;nl&quot;)</code></pre>
 <p>Aw shoot does not do Dutch yet.</p>
 <p>But can we translate Dutch to French?</p>
 <pre class="r"><code>svc &lt;- translate()
-svc$translate_text(&quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;, 
+svc$translate_text(&quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&quot;, 
                    SourceLanguageCode = &quot;nl&quot;, 
                    TargetLanguageCode =&quot;fr&quot;)</code></pre>
 <pre><code>## $TranslatedText
@@ -178,7 +188,7 @@ svc$translate_text(&quot;ik voelde me zo angstg als een jong dier onder vuur gen
 ## $AppliedTerminologies
 ## list()</code></pre>
 <p>Not perfect, but pretty close.</p>
-<pre class="r"><code>text &lt;- svc$translate_text(&quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&quot;,
+<pre class="r"><code>text &lt;- svc$translate_text(&quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&quot;,
                            SourceLanguageCode = &quot;nl&quot;, 
                            TargetLanguageCode =&quot;fr&quot;) 
 

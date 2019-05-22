@@ -92,7 +92,7 @@ names(spotify_df)</code></pre>
 <pre><code>## [1] &quot;loudness&quot;         &quot;mode&quot;             &quot;speechiness&quot;     
 ## [4] &quot;acousticness&quot;     &quot;instrumentalness&quot; &quot;liveness&quot;        
 ## [7] &quot;valence&quot;          &quot;tempo&quot;</code></pre>
-<p>So with the code by plzbeemyfriend that builds an graphical album representation by song we can get this graph of their first album:</p>
+<p>So with the code by plzbeemyfriend that builds a graphical album representation by song we can get this graph of their first album:</p>
 <pre class="r"><code>polar_spotify &lt;- studio_albums %&gt;%
   mutate(date = album_release_date %&gt;% 
            str_extract(&#39;(?&lt;=^\\d{2})\\d{2}&#39;) %&gt;%

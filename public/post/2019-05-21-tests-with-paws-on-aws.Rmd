@@ -30,7 +30,7 @@ library("paws.machine.learning") # install.packages("paws.machine.learning")
 
 Authentication information for AWS:
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 
 # s3 bucket
 AWSAccessKeyId <- ""
@@ -50,7 +50,7 @@ Detecting languages with Amazon Comprehend:
 
 svc <- comprehend()
 svc$batch_detect_dominant_language(
-  "ik voelde me zo angstg als een jong dier onder vuur genomen door jagers")
+  "ik voelde me zo angstig als een jong dier onder vuur genomen door jagers")
 
 ```
 
@@ -58,14 +58,14 @@ Nice! Indeed Dutch. This returns 0.9996 confidence score.
 
 ```{r, eval= FALSE}
 svc$batch_detect_sentiment(
-  "ik voelde me zo angstg als een jong dier onder vuur genomen door jagers")
+  "ik voelde me zo angstig als een jong dier onder vuur genomen door jagers")
 ```
 
 Returns an error. It needs to know which language it would be in.
 
 ```{r, eval= FALSE}
 svc$batch_detect_sentiment(
-  "ik voelde me zo angstg als een jong dier onder vuur genomen door jagers",
+  "ik voelde me zo angstig als een jong dier onder vuur genomen door jagers",
   LanguageCode = "nl")
 ```
 
@@ -75,7 +75,7 @@ But can we translate Dutch to French?
 
 ```{r}
 svc <- translate()
-svc$translate_text("ik voelde me zo angstg als een jong dier onder vuur genomen door jagers", 
+svc$translate_text("ik voelde me zo angstig als een jong dier onder vuur genomen door jagers", 
                    SourceLanguageCode = "nl", 
                    TargetLanguageCode ="fr")
 
@@ -85,7 +85,7 @@ svc$translate_text("ik voelde me zo angstg als een jong dier onder vuur genomen 
 Not perfect, but pretty close.
 
 ```{r}
-text <- svc$translate_text("ik voelde me zo angstg als een jong dier onder vuur genomen door jagers",
+text <- svc$translate_text("ik voelde me zo angstig als een jong dier onder vuur genomen door jagers",
                            SourceLanguageCode = "nl", 
                            TargetLanguageCode ="fr") 
 

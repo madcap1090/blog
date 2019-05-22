@@ -28,10 +28,20 @@
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(&amp;quot;tidyverse&amp;quot;)
 library(&amp;quot;paws.machine.learning&amp;quot;) # install.packages(&amp;quot;paws.machine.learning&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Authentication information for AWS:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# s3 bucket
+AWSAccessKeyId &amp;lt;- &amp;quot;&amp;quot;
+AWSSecretKey &amp;lt;- &amp;quot;&amp;quot;
+region &amp;lt;- &amp;quot;eu-west-1&amp;quot;
+
+Sys.setenv(&amp;quot;AWS_ACCESS_KEY_ID&amp;quot; = AWSAccessKeyId,
+           &amp;quot;AWS_SECRET_ACCESS_KEY&amp;quot; = AWSSecretKey,
+           &amp;quot;AWS_DEFAULT_REGION&amp;quot; = region,
+           &amp;quot;AWS_REGION&amp;quot; = region,
+           &amp;quot;AWS_SESSION_TOKEN&amp;quot; = &amp;quot;&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Detecting languages with Amazon Comprehend:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;svc &amp;lt;- comprehend()
 svc$batch_detect_dominant_language(
-  &amp;quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+  &amp;quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## $ResultList
 ## $ResultList[[1]]
 ## $ResultList[[1]]$Index
@@ -43,7 +53,7 @@ svc$batch_detect_dominant_language(
 ## [1] &amp;quot;nl&amp;quot;
 ## 
 ## $ResultList[[1]]$Languages[[1]]$Score
-## [1] 0.9996414
+## [1] 0.9996376
 ## 
 ## 
 ## 
@@ -53,15 +63,15 @@ svc$batch_detect_dominant_language(
 ## list()&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Nice! Indeed Dutch. This returns 0.9996 confidence score.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;svc$batch_detect_sentiment(
-  &amp;quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+  &amp;quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Returns an error. It needs to know which language it would be in.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;svc$batch_detect_sentiment(
-  &amp;quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&amp;quot;,
+  &amp;quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&amp;quot;,
   LanguageCode = &amp;quot;nl&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Aw shoot does not do Dutch yet.&lt;/p&gt;
 &lt;p&gt;But can we translate Dutch to French?&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;svc &amp;lt;- translate()
-svc$translate_text(&amp;quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&amp;quot;, 
+svc$translate_text(&amp;quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&amp;quot;, 
                    SourceLanguageCode = &amp;quot;nl&amp;quot;, 
                    TargetLanguageCode =&amp;quot;fr&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## $TranslatedText
@@ -76,7 +86,7 @@ svc$translate_text(&amp;quot;ik voelde me zo angstg als een jong dier onder vuur
 ## $AppliedTerminologies
 ## list()&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Not perfect, but pretty close.&lt;/p&gt;
-&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;text &amp;lt;- svc$translate_text(&amp;quot;ik voelde me zo angstg als een jong dier onder vuur genomen door jagers&amp;quot;,
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;text &amp;lt;- svc$translate_text(&amp;quot;ik voelde me zo angstig als een jong dier onder vuur genomen door jagers&amp;quot;,
                            SourceLanguageCode = &amp;quot;nl&amp;quot;, 
                            TargetLanguageCode =&amp;quot;fr&amp;quot;) 
 
@@ -805,7 +815,7 @@ names(spotify_df)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## [1] &amp;quot;loudness&amp;quot;         &amp;quot;mode&amp;quot;             &amp;quot;speechiness&amp;quot;     
 ## [4] &amp;quot;acousticness&amp;quot;     &amp;quot;instrumentalness&amp;quot; &amp;quot;liveness&amp;quot;        
 ## [7] &amp;quot;valence&amp;quot;          &amp;quot;tempo&amp;quot;&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;So with the code by plzbeemyfriend that builds an graphical album representation by song we can get this graph of their first album:&lt;/p&gt;
+&lt;p&gt;So with the code by plzbeemyfriend that builds a graphical album representation by song we can get this graph of their first album:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;polar_spotify &amp;lt;- studio_albums %&amp;gt;%
   mutate(date = album_release_date %&amp;gt;% 
            str_extract(&amp;#39;(?&amp;lt;=^\\d{2})\\d{2}&amp;#39;) %&amp;gt;%
