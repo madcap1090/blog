@@ -118,8 +118,7 @@ for(i in urls$value){
 
 ```
 
-
-At this point 'concert_url' contains the urls of the concert we did not have in the data since our latest scraping. We need to suffix it with "https://www.setlist.fm". 
+At this point 'concert_url' contains the urls of the concert we did not have in the data since our latest future scraping. We need to suffix it with "https://www.setlist.fm". 
 
 ```{r}
 concert_urls <- concert_urls %>% 
@@ -140,7 +139,7 @@ n <- nrow(concert_urls)
 
 for(i in (1:n)) {
   
-# download page
+  # download page
   url <- concert_urls$url[i]
   page <- read_html(url)
 
@@ -151,7 +150,7 @@ for(i in (1:n)) {
   
   concert_urls$tour[i] <- tour
 
-# get date
+  # get date
   year <- page %>%
     html_node(".year") %>%
     html_text
@@ -170,7 +169,7 @@ for(i in (1:n)) {
 
  concert_urls$date[i] <- date
 
-# get venue
+  # get venue
   venue <- page %>%
     html_nodes("div.infoContainer > div > h1 > span > span > a > span") %>%
     html_text()
@@ -184,18 +183,32 @@ for(i in (1:n)) {
     
   concert_urls$setlist[i] <- list(setlist)
   
-  Sys.sleep(1)
+  Sys.sleep(1) # do not stress the website, we have time
 }
 ```
 
+Ok, we can now do some data cleaning. And add the new data to the older data if we are not scaping in this way for the first time. 
+
 
 ```{r}
-bu <- concert_urls
-
 concert_urls$date <- as.numeric(concert_urls$date)
 concert_urls$date <- as.Date(concert_urls$date, origin = "1969-12-30")
 concert_urls_new <- concert_urls
 
+if(file.exists("./data/20190524/scraping.rds")){
+  concert_urls_old <- readRDS("./data/20190524/scraping.rds") %>% 
+    filter(!date %in% concert_urls_new$date)
+    } else{
+  concert_urls_old <- data.frame()
+  }
+
+concert_urls <- rbind(concert_urls_new,concert_urls_old)
+```
+
+Happy me I am. We tanked data on the 2K concerts of Metallica. And we know some more are coming. :metal: 
+
+```{r}
+saveRDS(concert_urls, "./data/20190524/scraping.rds")
 
 ```
 
