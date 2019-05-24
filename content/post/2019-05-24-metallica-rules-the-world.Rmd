@@ -1,0 +1,108 @@
+---
+title: Metallica rules the world
+author: William Bourgeois
+date: '2019-05-24'
+slug: metallica-rules-the-world
+categories: []
+tags:
+  - Geocoding
+  - music
+  - scraping
+  - rbokeh
+---
+
+23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called [setlist](https://www.setlist.fm) that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy. 
+
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/watch?v=FtUptw2ZmDM" frameborder="0" allowfullscreen></iframe>
+</center>
+
+
+```{r warning=FALSE}
+library("rbokeh") # install.packages("rbokeh")
+library("tidyverse")
+library("maps")
+library("lubridate")
+library("rvest")
+library("httr")
+library("glue")
+```
+
+
+In order to scrape the pages we want, a tibble of urls can be constructed in this manner:
+
+```{r}
+url <- "https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1"
+```
+
+This is the first page showing the latests concerts of Metallica. On that page there is one element that can be used, the total number of Metallica pages on the website (today a whopping 202!). 
+
+We read the page and get that element.
+
+```{r}
+selector <- "body > div.body > div.container > div.row.main > div.mainColumn.col-xs-12.col-md-8 > div:nth-child(2) > div > div > div.col-xs-12.noTopBorder.noTopPadding.hidden-print.text-center.listPager-lg > ul > li:nth-child(9) > a"
+page <- read_html(url)
+
+n_pages <- page %>% 
+  html_node(selector) %>% 
+  html_text
+n_pages #number of pages
+
+```
+
+
+So our object will have 202 rows. It's also a nifty trick using the function glue. 
+
+```{r}
+
+pages <- c(1:n_pages) # the vector of the pages
+urls <-  glue("https://www.setlist.fm/setlists/metallica-3bd680c8.html?page={pages}") %>% 
+  enframe(name = NULL)
+head(urls)
+
+```
+
+We also might want to use this code in the future not to scrape the 202 pages again, but just the latest concerts. So going back to the future we can look for a file where we stored our results from the latest scraping and extract the latest date. 
+
+```{r}
+if(file.exists("./data/20190524/scraping.rds")){
+  max_date <- readRDS("./data/20190524/scraping.rds") %>% 
+    select("date") %>% 
+    filter(date == max(date)) %>%
+    unique() %>% 
+    '[['(1) # funky ;-)
+    } else{
+  max_date <- ymd("1966-01-01")
+  }
+max_date
+```
+
+So now we can start scraping.
+
+```{r}
+
+# selector
+#selector_url_concert <- ".url"
+
+# function
+get_urls <- function(x){
+  read_html(x) %>% 
+  html_nodes(".url")
+  }
+
+for(i in urls$value){
+    # evaluate if we already have the data
+  selector <- "body > div.body > div.container > div.row.main > div.mainColumn.col-xs-12.col-md-8 > div:nth-child(2) > div > div > div:nth-child(1) > div:nth-child(1) > div"
+  date <- read_html(i) %>% 
+    html_node(selector) %>% 
+    html_text
+  date <- str_replace_all(date, "\\\n", " ") %>% 
+    mdy()
+  if (date < max_date) break # break here if we have it, continue if we don't
+  print(i)
+  new_url_nodes <- get_urls(i) 
+  print(new_url_nodes)
+}
+
+```
+
