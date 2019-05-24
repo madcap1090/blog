@@ -11,7 +11,7 @@ tags:
   - rbokeh
 ---
 
-23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called [setlist](https://www.setlist.fm) that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy. 
+23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called [setlist](https://www.setlist.fm) that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy, perfect! 
 
 <center>
 <iframe width="560" height="315" src="https://www.youtube.com/watch?v=FtUptw2ZmDM" frameborder="0" allowfullscreen></iframe>
@@ -77,7 +77,7 @@ if(file.exists("./data/20190524/scraping.rds")){
 max_date
 ```
 
-So now we can start scraping.
+So now we can continue to prepare the scraping by getting the pages we need to download.
 
 ```{r}
 
@@ -89,6 +89,7 @@ get_urls <- function(x){
   read_html(x) %>% 
   html_nodes(".url")
   }
+concert_urls <- tibble() # empty tibble to be filled
 
 for(i in urls$value){
     # evaluate if we already have the data
@@ -98,11 +99,103 @@ for(i in urls$value){
     html_text
   date <- str_replace_all(date, "\\\n", " ") %>% 
     mdy()
+  
   if (date < max_date) break # break here if we have it, continue if we don't
+  
   print(i)
   new_url_nodes <- get_urls(i) 
   print(new_url_nodes)
+  
+  urls <- tibble() # empty tibble to be filled
+  
+  for (j in (1:length(new_url_nodes))) {
+    url <- xml_attrs(new_url_nodes[[j]])[["href"]] %>% 
+    as_tibble()  
+    urls <- rbind(urls, url)
+  }
+  concert_urls <- rbind(concert_urls, urls)
 }
+
+```
+
+
+At this point 'concert_url' contains the urls of the concert we did not have in the data since our latest scraping. We need to suffix it with "https://www.setlist.fm". 
+
+```{r}
+concert_urls <- concert_urls %>% 
+  mutate(url = str_replace(value,"..","https://www.setlist.fm")) %>% 
+  select(-value)
+```
+
+Getting there. All systems are go.
+
+```{r}
+concert_urls <- add_column(concert_urls, date = "", tour ="", venue ="",
+                           setlist ="") # create space to add to the df
+```
+
+
+```{r}
+n <- nrow(concert_urls)
+
+for(i in (1:n)) {
+  
+# download page
+  url <- concert_urls$url[i]
+  page <- read_html(url)
+
+  # get tour
+  tour <- page %>%
+    html_node("p > span:nth-child(2)") %>%
+    html_text()
+  
+  concert_urls$tour[i] <- tour
+
+# get date
+  year <- page %>%
+    html_node(".year") %>%
+    html_text
+  
+  month <- page %>%
+    html_node(".month") %>%
+    html_text
+  
+  day <- page %>%
+    html_node(".day") %>%
+    html_text
+  
+  date <- mdy(paste(month, day, year))
+
+  print(date)
+
+ concert_urls$date[i] <- date
+
+# get venue
+  venue <- page %>%
+    html_nodes("div.infoContainer > div > h1 > span > span > a > span") %>%
+    html_text()
+  
+  concert_urls$venue[i] <- venue
+  
+  # get setlist
+  setlist <- page %>%
+      html_nodes(".songLabel") %>%
+      html_text()
+    
+  concert_urls$setlist[i] <- list(setlist)
+  
+  Sys.sleep(1)
+}
+```
+
+
+```{r}
+bu <- concert_urls
+
+concert_urls$date <- as.numeric(concert_urls$date)
+concert_urls$date <- as.Date(concert_urls$date, origin = "1969-12-30")
+concert_urls_new <- concert_urls
+
 
 ```
 
