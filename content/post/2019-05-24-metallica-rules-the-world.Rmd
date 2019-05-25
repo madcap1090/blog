@@ -86,7 +86,7 @@ max_date
 
 So now we can continue to prepare the scraping by getting the pages we need to download.
 
-```{r}
+```{r warning=FALSE}
 
 # selector
 #selector_url_concert <- ".url"
@@ -377,12 +377,13 @@ venues %>%
 
 ```
 
-Converting lat and lon (gives a warning because of the venue in Antartica if it is not sliced away).
+Converting lat and lon (gives a warning because of the venue in Antartica, so we slice it away).
+
 
 ```{r}
 
 venues_coord <- venues %>% 
-  slice(-178) %>% 
+  filter(venue != "Carlini Dome, King George Island, Antarctica") %>% 
   mutate(NS = str_extract(lat, "[[:alpha:]]"),
          EW = str_extract(lon, "[[:alpha:]]"),
          lat = ifelse(str_detect(venue, "Antartica"), "-62.2381424", lat),
@@ -481,6 +482,6 @@ So they played twice in Vorst, twice in Flanders Expo, three times in Kiewit and
 
 
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/FtUptw2ZmDM" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/-myxmLacD5E" frameborder="0" allowfullscreen></iframe>
 </center>
 

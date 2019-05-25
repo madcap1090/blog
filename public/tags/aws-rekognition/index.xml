@@ -28,7 +28,7 @@ As far as I understand at the moment, there are 11 packages bundled in a kit pub
       <pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/post/i-second-that-emotion/</guid>
-      <description>In an earlier post we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It’s time to look a little bit closer at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.
+      <description>In an earlier post we scraped the pictures of parliamentarians and used Rekognition to analyses their faces. It’s time to look a little bit closer at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.
 library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;magick&amp;quot;)library(&amp;quot;ggthemes&amp;quot;)library(&amp;quot;extrafont&amp;quot;)Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legislation) in order to have a slightly more objective representation.</description>
     </item>
     
