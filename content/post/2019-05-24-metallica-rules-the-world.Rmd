@@ -250,7 +250,7 @@ So we should have enough.
 library("opencage") # install.packages("opencage")
 ```
 
-Get you api key and set it as an environment variable "OPENCAGE_KEY"
+Get your api key and set it as an environment variable "OPENCAGE_KEY"
 
 ```{r}
 key <- readRDS("~/R/geo/secret/secrets.rds") %>% 
@@ -288,7 +288,7 @@ Although all that information might not be relevant for this blog subject. Excep
 output[["results"]][["components._type"]]
 ```
 
-A data frame can be used containig the unique venues to loop through or map and add the lat, lon and maybe 'componets._type' and 'formatted' which seems to be the estimation of the correct address.
+A data frame can be used containing the unique venues to loop through or map and add the lat, lon and maybe 'components._type' and 'formatted' which seems to be the estimation of the correct address.
 
 ```{r}
 output[["results"]][["formatted"]][1]
@@ -362,7 +362,7 @@ venues <-  readRDS("./data/20190524/venues.rds")
 ```
 
 
-Either they got real creative or the variable 'type' is not very usefull:
+Either they got real creative or the variable 'type' is not very useful:
 
 ```{r}
 unique(venues$type)
@@ -377,7 +377,7 @@ venues %>%
 
 ```
 
-Converting lat and lon (gives a warning because of the venue in Antartica, so we slice it away).
+Converting lat and lon (gives a warning because of the venue in Antarctica, so we slice it away).
 
 
 ```{r}
@@ -386,8 +386,6 @@ venues_coord <- venues %>%
   filter(venue != "Carlini Dome, King George Island, Antarctica") %>% 
   mutate(NS = str_extract(lat, "[[:alpha:]]"),
          EW = str_extract(lon, "[[:alpha:]]"),
-         lat = ifelse(str_detect(venue, "Antartica"), "-62.2381424", lat),
-         lon = ifelse(str_detect(venue, "Antartica"), "-58.6688106", lon),
          lat = str_remove(lat,'°'),
          lon = str_remove(lon,'°'),
          lat = str_remove(lat,"[[:alpha:]]"),
@@ -407,7 +405,7 @@ venues_coord <- venues %>%
 ```
 
 
-Adding Antartica:
+Adding Antarctica:
 
 ```{r}
 antartica <- venues %>% 
@@ -448,7 +446,7 @@ figure(width = 800, height = 450, padding_factor = 0) %>%
     hover = c(venue, tour, country, date))
 ```
 
-The darker the green the more recent the concert. They mainly play North America and Europe. But as we saw also in Antartica and in Tuktoyaktuk in Canada.
+The darker the green the more recent the concert. They mainly play North America and Europe. But as we saw also in Antarctica and in Tuktoyaktuk in Canada.
 
 Where have they played in Belgium?
 
