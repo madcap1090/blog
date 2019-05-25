@@ -358,9 +358,7 @@ Since we are limited and it took a while, we can save the results for later.
 ```
 
 ```{r}
-
-venues <-  readRDS(venues, "./data/20190524/venues.rds")
-
+venues <-  readRDS("./data/20190524/venues.rds")
 ```
 
 

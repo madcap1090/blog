@@ -22,11 +22,29 @@
     </item>
     
     <item>
+      <title>Metallica</title>
+      <link>/tags/metallica/</link>
+      <pubDate>Fri, 24 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/metallica/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>music</title>
       <link>/tags/music/</link>
       <pubDate>Fri, 24 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/music/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>opencage</title>
+      <link>/tags/opencage/</link>
+      <pubDate>Fri, 24 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/opencage/</guid>
       <description></description>
     </item>
     

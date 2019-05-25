@@ -12,7 +12,7 @@ tags:
   - Spread
 ---
 
-In an earlier [post](https://badtothecode.netlify.com/post/happy-faces-in-a-bucket/) we scraped the pictures of parliamentarians and used Recognition to analyses their faces. It's time to look a little bit closer at the data, test the usage of the 'gather' and 'spread' function and get to know ggplot a little bit more.
+In an earlier [post](https://badtothecode.netlify.com/post/happy-faces-in-a-bucket/) we scraped the pictures of parliamentarians and used Rekognition to analyses their faces. It's time to look a little bit closer at the data, test the usage of the 'gather' and 'spread' function and get to know ggplot a little bit more.
 
 ```{r message=FALSE, warning=FALSE}
 library("tidyverse")

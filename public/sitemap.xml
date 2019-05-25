@@ -9,6 +9,12 @@
   </url>
   
   <url>
+    <loc>/tags/metallica/</loc>
+    <lastmod>2019-05-24T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/post/metallica-rules-the-world/</loc>
     <lastmod>2019-05-24T00:00:00+00:00</lastmod>
   </url>
@@ -33,6 +39,12 @@
   
   <url>
     <loc>/tags/music/</loc>
+    <lastmod>2019-05-24T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/opencage/</loc>
     <lastmod>2019-05-24T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>

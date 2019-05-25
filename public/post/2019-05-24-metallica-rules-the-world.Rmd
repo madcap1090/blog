@@ -9,13 +9,18 @@ tags:
   - music
   - scraping
   - rbokeh
+  - opencage
+  - Metallica
 ---
 
-23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called [setlist](https://www.setlist.fm) that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy, perfect! 
+23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called [setlist](https://www.setlist.fm) that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. 
+
+And the site even says it cares about our privacy, that is just perfect! 
 
 <center>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/FtUptw2ZmDM" frameborder="0" allowfullscreen></iframe>
 </center>
+
 
 
 ```{r message=FALSE, warning=FALSE}
@@ -26,6 +31,8 @@ library("lubridate")
 library("rvest")
 library("httr")
 library("glue")
+library("measurements")  # install.packages("measurements")
+library("stringr")
 ```
 
 
@@ -35,7 +42,7 @@ In order to scrape the pages we want, a tibble of urls can be constructed in thi
 url <- "https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1"
 ```
 
-This is the first page showing the latests concerts of Metallica. On that page there is one element that can be used, the total number of Metallica pages on the website (today a whopping 202!). 
+This is the first page showing the latest concerts of Metallica. On that page there is one element that can be used, the total number of Metallica pages on the website (today a whopping 202!). 
 
 We read the page and get that element.
 
@@ -187,7 +194,7 @@ for(i in (1:n)) {
 }
 ```
 
-Ok, we can now do some data cleaning. And add the new data to the older data if we are not scaping in this way for the first time. 
+Ok, we can now do some data cleaning. And add the new data to the older data if we are not scraping in this way for the first time. 
 
 
 ```{r}
@@ -202,13 +209,278 @@ if(file.exists("./data/20190524/scraping.rds")){
   concert_urls_old <- data.frame()
   }
 
-concert_urls <- rbind(concert_urls_new,concert_urls_old)
+concerts <- rbind(concert_urls_new,concert_urls_old)
 ```
 
 Happy me I am. We tanked data on the 2K concerts of Metallica. And we know some more are coming. :metal: 
 
+Saving them for later.
+
 ```{r}
-saveRDS(concert_urls, "./data/20190524/scraping.rds")
+saveRDS(concerts, "./data/20190524/scraping.rds")
+```
+
+In data frame there are also the location of the concerts:
+
+```{r}
+set.seed(42)
+concerts %>% 
+  sample_n(10) %>% 
+  select(venue)
 
 ```
+
+
+This time we can use a different package and api to geocode the concert venues. I've been planning to test [opencage]("https://ropensci.org/tutorials/opencage_tutorial/") for a while.
+
+It offers 2.500 calls or queries per day using the free trail plan. 
+
+How many different venues do we have?
+
+```{r}
+concerts %>% 
+  select(venue) %>% 
+  unique %>% 
+  nrow()
+```
+
+So we should have enough.
+
+```{r}
+library("opencage") # install.packages("opencage")
+```
+
+Get you api key and set it as an environment variable "OPENCAGE_KEY"
+
+```{r}
+key <- readRDS("~/R/geo/secret/secrets.rds") %>% 
+  filter(name == "opencage") %>% 
+  select(key) %>% 
+  as.character()
+
+Sys.setenv(OPENCAGE_KEY = key)
+
+# check with
+#Sys.getenv("OPENCAGE_KEY")
+
+```
+
+
+
+A test on one venue:
+
+```{r}
+output <- opencage_forward(placename = "Göta Lejon, Stockholm, Sweden")
+output$rate_info
+```
+
+So one less request remaining.
+
+What interested me about opencage was that it gives us a whole range of information (73 variables). The output comes in lists and a data frame:
+
+```{r}
+str(output)
+```
+
+Although all that information might not be relevant for this blog subject. Except maybe for:
+
+```{r}
+output[["results"]][["components._type"]]
+```
+
+A data frame can be used containig the unique venues to loop through or map and add the lat, lon and maybe 'componets._type' and 'formatted' which seems to be the estimation of the correct address.
+
+```{r}
+output[["results"]][["formatted"]][1]
+```
+
+The data frame:
+
+```{r}
+venues <- concerts %>% 
+  select(venue) %>% 
+  unique
+```
+
+The loop:
+
+```{r}
+test_venues <- venues %>% 
+  slice(1:5) 
+
+# adding columns to fill them
+
+test_venues <- add_column(test_venues, lat = "", lon = ""
+                          , type = "", address = "")
+
+for (i in (1:5)){
+  print(test_venues$venue[i])
+  place <- test_venues$venue[i]
+  output <- opencage_forward(placename = place)
+  test_venues$lat[i] <- as.character(output[["results"]][["annotations.DMS.lat"]][1])
+  test_venues$lon[i] <- as.character(output[["results"]][["annotations.DMS.lng"]][1])
+  test_venues$type[i] <-as.character(output[["results"]][["components._type"]][1])
+  test_venues$address[i] <- as.character(output[["results"]][["formatted"]][1])
+}
+
+
+
+
+```
+
+Seems to work, 'do' them all. But an error was returned at "Carlini Dome, King George Island, Antarctica". So a 'next' is needed in the loop.
+
+```{r eval=FALSE}
+
+venues <- add_column(venues, lat = "", lon = ""
+                          , type = "", address = "")
+
+n <- nrow(venues)
+
+for (i in (1:n)){
+  print(venues$venue[i])
+  place <- venues$venue[i]
+  output <- opencage_forward(placename = place)
+  if (length(as.character(output[["results"]][["annotations.DMS.lat"]][1])) == 0) next
+  venues$lat[i] <- as.character(output[["results"]][["annotations.DMS.lat"]][1])
+  venues$lon[i] <- as.character(output[["results"]][["annotations.DMS.lng"]][1])
+  venues$type[i] <-as.character(output[["results"]][["components._type"]][1])
+  venues$address[i] <- as.character(output[["results"]][["formatted"]][1])
+}
+
+
+```
+
+Since we are limited and it took a while, we can save the results for later.
+
+```{r}
+# saveRDS(venues, "./data/20190524/venues.rds")
+```
+
+```{r}
+venues <-  readRDS("./data/20190524/venues.rds")
+```
+
+
+Either they got real creative or the variable 'type' is not very usefull:
+
+```{r}
+unique(venues$type)
+```
+
+
+```{r}
+venues %>% 
+   group_by(type) %>% 
+   summarise(count = n()) %>% 
+  arrange(desc(count))
+
+```
+
+Converting lat and lon (gives a warning because of the venue in Antartica if it is not sliced away).
+
+```{r}
+
+venues_coord <- venues %>% 
+  slice(-178) %>% 
+  mutate(NS = str_extract(lat, "[[:alpha:]]"),
+         EW = str_extract(lon, "[[:alpha:]]"),
+         lat = ifelse(str_detect(venue, "Antartica"), "-62.2381424", lat),
+         lon = ifelse(str_detect(venue, "Antartica"), "-58.6688106", lon),
+         lat = str_remove(lat,'°'),
+         lon = str_remove(lon,'°'),
+         lat = str_remove(lat,"[[:alpha:]]"),
+         lon = str_remove(lon,"[[:alpha:]]"),
+         lat = str_replace(lat,"''",' '),
+         lon = str_replace(lon,"''",' '),
+         lat = str_replace(lat,"'",' '),
+         lon = str_replace(lon,"'",' '),
+         lat = str_squish(lat),
+         lon = str_squish(lon),
+         lat = as.numeric(conv_unit(lat, from = "deg_min_sec", to = "dec_deg")),
+         lon = as.numeric(conv_unit(lon, from = "deg_min_sec", to = "dec_deg")),
+         lat = if_else(NS == "S", lat*-1, lat),
+         lon = if_else(EW == "W", lon*-1, lon),
+         )
+
+```
+
+
+Adding Antartica:
+
+```{r}
+antartica <- venues %>% 
+  slice(178) %>%
+  mutate(lat = -62.2381424,
+         lon = -58.6688106,
+         NS = "S",
+         EW = "W")
+
+venues_coord <- rbind(venues_coord, antartica)
+
+```
+
+Adding the venue data to the concerts data frame.
+
+```{r}
+concerts <- concerts %>% 
+  left_join(venues_coord)
+
+# add country 
+
+concerts <- concerts %>% 
+  mutate(country = word(venue,-1),
+         year = year(date))
+  
+
+
+```
+
+Now we can construct an interactive map to explore where Metallica has performed their 2028 concerts.
+
+
+```{r message=FALSE, warning=FALSE}
+figure(width = 800, height = 450, padding_factor = 0) %>%
+  ly_map("world", regions = ".", col = "gray") %>%
+  ly_points(lon, lat, data = concerts, size = 6,
+            color = year ,glyph = 8,
+    hover = c(venue, tour, country, date))
+```
+
+The darker the green the more recent the concert. They mainly play North America and Europe. But as we saw also in Antartica and in Tuktoyaktuk in Canada.
+
+Where have they played in Belgium?
+
+
+```{r message=FALSE, warning=FALSE}
+
+
+venues <- concerts$venue
+figure(xlim = (2:7.7), ylim = (49.5:51.5), width = 800, height = 450, padding_factor = 0) %>%
+  ly_map("world", regions = "belgium", col = "gray") %>%
+  ly_points(lon, lat, data = concerts, size = 6,
+            color = year(date) ,glyph = 8,
+    hover = c(venue, tour, country, date))
+
+
+
+```
+
+
+```{r}
+concerts %>% 
+  filter(country == "Belgium") %>% 
+  select(-url, -setlist, -lat, -lon, -type,
+         -address, -NS, -EW, -country, -year) %>% 
+  arrange(date)
+
+```
+
+
+So they played twice in Vorst, twice in Flanders Expo, three times in Kiewit and a bunch of times at Torhout/Wechter. But they started in Belgium by playing three times in 1984 in... Poperinge. Of all places.
+
+
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/FtUptw2ZmDM" frameborder="0" allowfullscreen></iframe>
+</center>
 

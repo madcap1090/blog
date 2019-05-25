@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>opencage on bad to the code</title>
+    <link>/tags/opencage/</link>
+    <description>Recent content in opencage on bad to the code</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
+    <lastBuildDate>Fri, 24 May 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/opencage/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Metallica rules the world</title>
+      <link>/post/metallica-rules-the-world/</link>
+      <pubDate>Fri, 24 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/metallica-rules-the-world/</guid>
+      <description>23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called setlist that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed.
+And the site even says it cares about our privacy, that is just perfect!</description>
+    </item>
+    
+  </channel>
+</rss>
