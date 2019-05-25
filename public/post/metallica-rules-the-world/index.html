@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>Metallica rules the world | bad to the code</title>
+
+<meta property='og:title' content='Metallica rules the world - bad to the code'>
+<meta property='og:description' content='23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called setlist that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy, perfect!'>
+<meta property='og:url' content='/post/metallica-rules-the-world/'>
+<meta property='og:site_name' content='bad to the code'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='Geocoding'><meta property='article:tag' content='music'><meta property='article:tag' content='scraping'><meta property='article:tag' content='rbokeh'><meta property='article:published_time' content='2019-05-24T00:00:00Z'/><meta property='article:modified_time' content='2019-05-24T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
+
+
+<link href="/index.xml" rel="alternate" type="application/rss+xml" title="bad to the code" />
+
+<link rel="stylesheet" href="/css/style.css"/><link rel='stylesheet' href='/css/custom.css'><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="theme-color" content="#ffffff">
+</head>
+<body>
+<section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="/">
+          <h1 class="title is-4">bad to the code</h1>
+        </a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile"><a class="level-item" aria-label="facebook" href='https://facebook.com/OClassicoOficial/videos/391802167961744/'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="email" href='mailto:madcap1090@gmail.com'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="linkedin" href='https://linkedin.com/in/williambourgeois'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path stroke-width="1.8" d="m5.839218,4.101561c0,1.211972 -0.974141,2.194011 -2.176459,2.194011s-2.176459,-0.982039 -2.176459,-2.194011c0,-1.211094 0.974141,-2.194011 2.176459,-2.194011s2.176459,0.982917 2.176459,2.194011zm0.017552,3.94922l-4.388022,0l0,14.04167l4.388022,0l0,-14.04167zm7.005038,0l-4.359939,0l0,14.04167l4.360816,0l0,-7.370999c0,-4.098413 5.291077,-4.433657 5.291077,0l0,7.370999l4.377491,0l0,-8.89101c0,-6.915523 -7.829986,-6.66365 -9.669445,-3.259423l0,-1.891237z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="twitter" href='https://twitter.com/WilliamBourgeoi'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="github" href='https://github.com/madcap1090'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+    
+  </svg></i>
+            </span>
+          </a></nav>
+      </div>
+    </nav>
+
+    <nav class="nav">
+      
+
+      
+    </nav>
+
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="subtitle tags is-6 is-pulled-right">
+      
+      
+<a class="subtitle is-6" href="/tags/geocoding">#Geocoding</a>
+
+
+
+  
+  | <a class="subtitle is-6" href="/tags/music">#music</a>
+  
+  | <a class="subtitle is-6" href="/tags/scraping">#scraping</a>
+  
+  | <a class="subtitle is-6" href="/tags/rbokeh">#rbokeh</a>
+  
+
+      
+    </div>
+    <h2 class="subtitle is-6">May 24, 2019</h2>
+    <h1 class="title">Metallica rules the world</h1>
+    
+    <div class="content">
+      
+
+
+<p>23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called <a href="https://www.setlist.fm">setlist</a> that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy, perfect!</p>
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/FtUptw2ZmDM" frameborder="0" allowfullscreen>
+</iframe>
+</center>
+<pre class="r"><code>library(&quot;rbokeh&quot;) # install.packages(&quot;rbokeh&quot;)
+library(&quot;tidyverse&quot;)
+library(&quot;maps&quot;)
+library(&quot;lubridate&quot;)
+library(&quot;rvest&quot;)
+library(&quot;httr&quot;)
+library(&quot;glue&quot;)</code></pre>
+<p>In order to scrape the pages we want, a tibble of urls can be constructed in this manner:</p>
+<pre class="r"><code>url &lt;- &quot;https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1&quot;</code></pre>
+<p>This is the first page showing the latests concerts of Metallica. On that page there is one element that can be used, the total number of Metallica pages on the website (today a whopping 202!).</p>
+<p>We read the page and get that element.</p>
+<pre class="r"><code>selector &lt;- &quot;body &gt; div.body &gt; div.container &gt; div.row.main &gt; div.mainColumn.col-xs-12.col-md-8 &gt; div:nth-child(2) &gt; div &gt; div &gt; div.col-xs-12.noTopBorder.noTopPadding.hidden-print.text-center.listPager-lg &gt; ul &gt; li:nth-child(9) &gt; a&quot;
+page &lt;- read_html(url)
+
+n_pages &lt;- page %&gt;% 
+  html_node(selector) %&gt;% 
+  html_text
+n_pages #number of pages</code></pre>
+<pre><code>## [1] &quot;202&quot;</code></pre>
+<p>So our object will have 202 rows. It’s also a nifty trick using the function glue.</p>
+<pre class="r"><code>pages &lt;- c(1:n_pages) # the vector of the pages
+urls &lt;-  glue(&quot;https://www.setlist.fm/setlists/metallica-3bd680c8.html?page={pages}&quot;) %&gt;% 
+  enframe(name = NULL)
+head(urls)</code></pre>
+<pre><code>## # A tibble: 6 x 1
+##   value                                                         
+##   &lt;S3: glue&gt;                                                    
+## 1 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1
+## 2 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=2
+## 3 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=3
+## 4 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=4
+## 5 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=5
+## 6 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=6</code></pre>
+<p>We also might want to use this code in the future not to scrape the 202 pages again, but just the latest concerts. So going back to the future we can look for a file where we stored our results from the latest scraping and extract the latest date.</p>
+<pre class="r"><code>if(file.exists(&quot;./data/20190524/scraping.rds&quot;)){
+  max_date &lt;- readRDS(&quot;./data/20190524/scraping.rds&quot;) %&gt;% 
+    select(&quot;date&quot;) %&gt;% 
+    filter(date == max(date)) %&gt;%
+    unique() %&gt;% 
+    &#39;[[&#39;(1) # funky ;-)
+    } else{
+  max_date &lt;- ymd(&quot;1966-01-01&quot;)
+  }
+max_date</code></pre>
+<pre><code>## [1] &quot;2019-05-10&quot;</code></pre>
+<p>So now we can continue to prepare the scraping by getting the pages we need to download.</p>
+<pre class="r"><code># selector
+#selector_url_concert &lt;- &quot;.url&quot;
+
+# function
+get_urls &lt;- function(x){
+  read_html(x) %&gt;% 
+  html_nodes(&quot;.url&quot;)
+  }
+concert_urls &lt;- tibble() # empty tibble to be filled
+
+for(i in urls$value){
+    # evaluate if we already have the data
+  selector &lt;- &quot;body &gt; div.body &gt; div.container &gt; div.row.main &gt; div.mainColumn.col-xs-12.col-md-8 &gt; div:nth-child(2) &gt; div &gt; div &gt; div:nth-child(1) &gt; div:nth-child(1) &gt; div&quot;
+  date &lt;- read_html(i) %&gt;% 
+    html_node(selector) %&gt;% 
+    html_text
+  date &lt;- str_replace_all(date, &quot;\\\n&quot;, &quot; &quot;) %&gt;% 
+    mdy()
+  
+  if (date &lt; max_date) break # break here if we have it, continue if we don&#39;t
+  
+  print(i)
+  new_url_nodes &lt;- get_urls(i) 
+  print(new_url_nodes)
+  
+  urls &lt;- tibble() # empty tibble to be filled
+  
+  for (j in (1:length(new_url_nodes))) {
+    url &lt;- xml_attrs(new_url_nodes[[j]])[[&quot;href&quot;]] %&gt;% 
+    as_tibble()  
+    urls &lt;- rbind(urls, url)
+  }
+  concert_urls &lt;- rbind(concert_urls, urls)
+}</code></pre>
+<pre><code>## [1] &quot;https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1&quot;
+## {xml_nodeset (10)}
+##  [1] &lt;a href=&quot;../setlist/metallica/2019/stade-de-france-saint-denis-fran ...
+##  [2] &lt;a href=&quot;../setlist/metallica/2019/letzigrund-stadion-zurich-switze ...
+##  [3] &lt;a href=&quot;../setlist/metallica/2019/ippodromo-del-galoppo-di-san-sir ...
+##  [4] &lt;a href=&quot;../setlist/metallica/2019/estadi-olimpic-lluis-companys-ba ...
+##  [5] &lt;a href=&quot;../setlist/metallica/2019/valdebebas-ifema-madrid-spain-43 ...
+##  [6] &lt;a href=&quot;../setlist/metallica/2019/estadio-do-restelo-lisbon-portug ...
+##  [7] &lt;a href=&quot;../setlist/metallica/2019/van-andel-arena-grand-rapids-mi- ...
+##  [8] &lt;a href=&quot;../setlist/metallica/2019/bankers-life-fieldhouse-indianap ...
+##  [9] &lt;a href=&quot;../setlist/metallica/2019/kfc-yum-center-louisville-ky-7b9 ...
+## [10] &lt;a href=&quot;../setlist/metallica/2019/sprint-center-kansas-city-mo-1b9 ...</code></pre>
+<pre><code>## Warning: Calling `as_tibble()` on a vector is discouraged, because the behavior is likely to change in the future. Use `enframe(name = NULL)` instead.
+## This warning is displayed once per session.</code></pre>
+<p>At this point ‘concert_url’ contains the urls of the concert we did not have in the data since our latest future scraping. We need to suffix it with “<a href="https://www.setlist.fm" class="uri">https://www.setlist.fm</a>”.</p>
+<pre class="r"><code>concert_urls &lt;- concert_urls %&gt;% 
+  mutate(url = str_replace(value,&quot;..&quot;,&quot;https://www.setlist.fm&quot;)) %&gt;% 
+  select(-value)</code></pre>
+<p>Getting there. All systems are go.</p>
+<pre class="r"><code>concert_urls &lt;- add_column(concert_urls, date = &quot;&quot;, tour =&quot;&quot;, venue =&quot;&quot;,
+                           setlist =&quot;&quot;) # create space to add to the df</code></pre>
+<pre class="r"><code>n &lt;- nrow(concert_urls)
+
+for(i in (1:n)) {
+  
+  # download page
+  url &lt;- concert_urls$url[i]
+  page &lt;- read_html(url)
+
+  # get tour
+  tour &lt;- page %&gt;%
+    html_node(&quot;p &gt; span:nth-child(2)&quot;) %&gt;%
+    html_text()
+  
+  concert_urls$tour[i] &lt;- tour
+
+  # get date
+  year &lt;- page %&gt;%
+    html_node(&quot;.year&quot;) %&gt;%
+    html_text
+  
+  month &lt;- page %&gt;%
+    html_node(&quot;.month&quot;) %&gt;%
+    html_text
+  
+  day &lt;- page %&gt;%
+    html_node(&quot;.day&quot;) %&gt;%
+    html_text
+  
+  date &lt;- mdy(paste(month, day, year))
+
+  print(date)
+
+ concert_urls$date[i] &lt;- date
+
+  # get venue
+  venue &lt;- page %&gt;%
+    html_nodes(&quot;div.infoContainer &gt; div &gt; h1 &gt; span &gt; span &gt; a &gt; span&quot;) %&gt;%
+    html_text()
+  
+  concert_urls$venue[i] &lt;- venue
+  
+  # get setlist
+  setlist &lt;- page %&gt;%
+      html_nodes(&quot;.songLabel&quot;) %&gt;%
+      html_text()
+    
+  concert_urls$setlist[i] &lt;- list(setlist)
+  
+  Sys.sleep(1) # do not stress the website, we have time
+}</code></pre>
+<pre><code>## [1] &quot;2019-05-12&quot;
+## [1] &quot;2019-05-10&quot;
+## [1] &quot;2019-05-08&quot;
+## [1] &quot;2019-05-05&quot;
+## [1] &quot;2019-05-03&quot;
+## [1] &quot;2019-05-01&quot;
+## [1] &quot;2019-03-13&quot;
+## [1] &quot;2019-03-11&quot;
+## [1] &quot;2019-03-09&quot;
+## [1] &quot;2019-03-06&quot;</code></pre>
+<p>Ok, we can now do some data cleaning. And add the new data to the older data if we are not scaping in this way for the first time.</p>
+<pre class="r"><code>concert_urls$date &lt;- as.numeric(concert_urls$date)
+concert_urls$date &lt;- as.Date(concert_urls$date, origin = &quot;1969-12-30&quot;)
+concert_urls_new &lt;- concert_urls
+
+if(file.exists(&quot;./data/20190524/scraping.rds&quot;)){
+  concert_urls_old &lt;- readRDS(&quot;./data/20190524/scraping.rds&quot;) %&gt;% 
+    filter(!date %in% concert_urls_new$date)
+    } else{
+  concert_urls_old &lt;- data.frame()
+  }
+
+concert_urls &lt;- rbind(concert_urls_new,concert_urls_old)</code></pre>
+<p>Happy me I am. We tanked data on the 2K concerts of Metallica. And we know some more are coming. 🤘</p>
+<pre class="r"><code>saveRDS(concert_urls, &quot;./data/20190524/scraping.rds&quot;)</code></pre>
+
+      
+      <div class="related">
+
+<h3>Similar articles:</h3>
+<ul>
+	
+	<li><a href="/post/rammstein-by-rammstein/">RAMMSTEIN by Rammstein</a></li>
+	
+	<li><a href="/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/">members of the chamber of representatives of Belgium, 54th legistlature</a></li>
+	
+	<li><a href="/post/am-i-getting-slower-going-to-work/">am I getting slower going to work?</a></li>
+	
+	<li><a href="/post/google-location-tracking/">google location tracking</a></li>
+	
+</ul>
+</div>
+      
+    </div>
+    
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container">
+    <aside><div id="disqus_thread"></div></aside>
+  
+    <div id="show_comments"><a id="load_comments" class="button is-link">Load comments</a></div>
+  
+    <script type="text/javascript">
+      var disqus_shortname = 'bad-to-the-code';
+      function disqus() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+  
+      
+      var hash = window.location.hash.substr(1);
+      if ((hash.length > 8) && (hash.substring(0, 8) === "comment-")) {
+        disqus();
+        document.getElementById("show_comments").style.display = "none";
+      } else {
+        document.getElementById('load_comments').onclick = function() {
+          disqus();
+          document.getElementById("show_comments").style.display = "none";
+        };
+      }
+  
+
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/madcap1090">William Bourgeois</a> 2019</p>
+    
+      <p>Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/ribice/kiss">Kiss</a>.</p>
+    
+  </div>
+</section>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-137981534-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="\/\/matomo.example.com\/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript>
+  <img src="//matomo.example.com/piwik.php?idsite=1&amp;rec=1" style="border:0" alt="" />
+</noscript>
+
+
+</body>
+</html>
+

@@ -9,18 +9,13 @@ tags:
   - music
   - scraping
   - rbokeh
-  - opencage
-  - Metallica
 ---
 
-23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called [setlist](https://www.setlist.fm) that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. 
-
-And the site even says it cares about our privacy, that is just perfect! 
+23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called [setlist](https://www.setlist.fm) that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy, perfect! 
 
 <center>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/FtUptw2ZmDM" frameborder="0" allowfullscreen></iframe>
 </center>
-
 
 
 ```{r message=FALSE, warning=FALSE}
@@ -40,7 +35,7 @@ In order to scrape the pages we want, a tibble of urls can be constructed in thi
 url <- "https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1"
 ```
 
-This is the first page showing the latest concerts of Metallica. On that page there is one element that can be used, the total number of Metallica pages on the website (today a whopping 202!). 
+This is the first page showing the latests concerts of Metallica. On that page there is one element that can be used, the total number of Metallica pages on the website (today a whopping 202!). 
 
 We read the page and get that element.
 
@@ -192,7 +187,7 @@ for(i in (1:n)) {
 }
 ```
 
-Ok, we can now do some data cleaning. And add the new data to the older data if we are not scraping in this way for the first time. 
+Ok, we can now do some data cleaning. And add the new data to the older data if we are not scaping in this way for the first time. 
 
 
 ```{r}
@@ -207,155 +202,13 @@ if(file.exists("./data/20190524/scraping.rds")){
   concert_urls_old <- data.frame()
   }
 
-concerts <- rbind(concert_urls_new,concert_urls_old)
+concert_urls <- rbind(concert_urls_new,concert_urls_old)
 ```
 
 Happy me I am. We tanked data on the 2K concerts of Metallica. And we know some more are coming. :metal: 
 
-Saving them for later.
-
 ```{r}
-saveRDS(concerts, "./data/20190524/scraping.rds")
-```
-
-In data frame there are also the location of the concerts:
-
-```{r}
-set.seed(42)
-concerts %>% 
-  sample_n(10) %>% 
-  select(venue)
+saveRDS(concert_urls, "./data/20190524/scraping.rds")
 
 ```
 
-
-This time we can use a different package and api to geocode the concert venues. I've been planning to test [opencage]("https://ropensci.org/tutorials/opencage_tutorial/") for a while.
-
-It offers 2.500 calls or queries per day using the free trail plan. 
-
-How many different venues do we have?
-
-```{r}
-concerts %>% 
-  select(venue) %>% 
-  unique %>% 
-  nrow()
-```
-
-So we should have enough.
-
-```{r}
-library("opencage") # install.packages("opencage")
-```
-
-Get you api key and set it as an environment variable "OPENCAGE_KEY"
-
-```{r}
-key <- readRDS("~/R/geo/secret/secrets.rds") %>% 
-  filter(name == "opencage") %>% 
-  select(key) %>% 
-  as.character()
-
-Sys.setenv(OPENCAGE_KEY = key)
-
-# check with
-#Sys.getenv("OPENCAGE_KEY")
-
-```
-
-
-
-A test on one venue:
-
-```{r}
-output <- opencage_forward(placename = "Göta Lejon, Stockholm, Sweden")
-output$rate_info
-```
-
-So one less request remaining.
-
-What interested me about opencage was that it gives us a whole range of information (73 variables). The output comes in lists and a data frame:
-
-```{r}
-str(output)
-```
-
-Although all that information might not be relevant for this blog subject. Except maybe for:
-
-```{r}
-output[["results"]][["components._type"]]
-```
-
-A data frame can be used containig the unique venues to loop through or map and add the lat, lon and maybe 'componets._type' and 'formatted' which seems to be the estimation of the correct address.
-
-```{r}
-output[["results"]][["formatted"]][1]
-```
-
-The data frame:
-
-```{r}
-venues <- concerts %>% 
-  select(venue) %>% 
-  unique
-```
-
-The loop:
-
-```{r}
-test_venues <- venues %>% 
-  slice(1:5) 
-
-# adding columns to fill them
-
-test_venues <- add_column(test_venues, lat = "", lon = ""
-                          , type = "", address = "")
-
-for (i in (1:5)){
-  print(test_venues$venue[i])
-  place <- test_venues$venue[i]
-  output <- opencage_forward(placename = place)
-  test_venues$lat[i] <- as.character(output[["results"]][["annotations.DMS.lat"]][1])
-  test_venues$lon[i] <- as.character(output[["results"]][["annotations.DMS.lng"]][1])
-  test_venues$type[i] <-as.character(output[["results"]][["components._type"]][1])
-  test_venues$address[i] <- as.character(output[["results"]][["formatted"]][1])
-}
-
-
-
-
-```
-
-Seems to work, 'do' them all. But an error was returned at "Carlini Dome, King George Island, Antarctica". So a 'next' is needed in the loop.
-
-```{r eval=FALSE}
-
-venues <- add_column(venues, lat = "", lon = ""
-                          , type = "", address = "")
-
-n <- nrow(venues)
-
-for (i in (1:n)){
-  print(venues$venue[i])
-  place <- venues$venue[i]
-  output <- opencage_forward(placename = place)
-  if (length(as.character(output[["results"]][["annotations.DMS.lat"]][1])) == 0) next
-  venues$lat[i] <- as.character(output[["results"]][["annotations.DMS.lat"]][1])
-  venues$lon[i] <- as.character(output[["results"]][["annotations.DMS.lng"]][1])
-  venues$type[i] <-as.character(output[["results"]][["components._type"]][1])
-  venues$address[i] <- as.character(output[["results"]][["formatted"]][1])
-}
-
-
-```
-
-Since we are limited and it took a while, we can save the results for later.
-
-```{r}
-# saveRDS(venues, "./data/20190524/venues.rds")
-```
-
-
-
-
-toDo = add Antartica

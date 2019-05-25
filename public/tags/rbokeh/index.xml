@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>music on bad to the code</title>
-    <link>/tags/music/</link>
-    <description>Recent content in music on bad to the code</description>
+    <title>rbokeh on bad to the code</title>
+    <link>/tags/rbokeh/</link>
+    <description>Recent content in rbokeh on bad to the code</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
     <lastBuildDate>Fri, 24 May 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/tags/music/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/rbokeh/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -19,18 +19,6 @@
       
       <guid>/post/metallica-rules-the-world/</guid>
       <description>23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called setlist that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy, perfect!</description>
-    </item>
-    
-    <item>
-      <title>RAMMSTEIN by Rammstein</title>
-      <link>/post/rammstein-by-rammstein/</link>
-      <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/rammstein-by-rammstein/</guid>
-      <description>Today Rammstein released ‘RAMMSTEIN’, first studio album since 10 years.
-Jetzt geht es mir gut, ja!I love it. Gave me a lot of pleasure today.
-Time for a small analysis. I got the code from Peer. And from plzbeemyfriend who is a cool dude, and made some insightful graphs based on Spotify data.
-library(spotifyr) # install.packages(&amp;quot;spotifyr&amp;quot;)library(tidyverse)library(factoextra)library(viridisLite)library(ggiraphExtra)Spotify also has an API and some interesting information can be downloaded from it.</description>
     </item>
     
   </channel>

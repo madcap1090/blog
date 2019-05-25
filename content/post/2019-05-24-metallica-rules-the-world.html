@@ -1,0 +1,196 @@
+---
+title: Metallica rules the world
+author: William Bourgeois
+date: '2019-05-24'
+slug: metallica-rules-the-world
+categories: []
+tags:
+  - Geocoding
+  - music
+  - scraping
+  - rbokeh
+---
+
+
+
+<p>23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called <a href="https://www.setlist.fm">setlist</a> that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed. And it even says it cares about our privacy, perfect!</p>
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/FtUptw2ZmDM" frameborder="0" allowfullscreen>
+</iframe>
+</center>
+<pre class="r"><code>library(&quot;rbokeh&quot;) # install.packages(&quot;rbokeh&quot;)
+library(&quot;tidyverse&quot;)
+library(&quot;maps&quot;)
+library(&quot;lubridate&quot;)
+library(&quot;rvest&quot;)
+library(&quot;httr&quot;)
+library(&quot;glue&quot;)</code></pre>
+<p>In order to scrape the pages we want, a tibble of urls can be constructed in this manner:</p>
+<pre class="r"><code>url &lt;- &quot;https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1&quot;</code></pre>
+<p>This is the first page showing the latests concerts of Metallica. On that page there is one element that can be used, the total number of Metallica pages on the website (today a whopping 202!).</p>
+<p>We read the page and get that element.</p>
+<pre class="r"><code>selector &lt;- &quot;body &gt; div.body &gt; div.container &gt; div.row.main &gt; div.mainColumn.col-xs-12.col-md-8 &gt; div:nth-child(2) &gt; div &gt; div &gt; div.col-xs-12.noTopBorder.noTopPadding.hidden-print.text-center.listPager-lg &gt; ul &gt; li:nth-child(9) &gt; a&quot;
+page &lt;- read_html(url)
+
+n_pages &lt;- page %&gt;% 
+  html_node(selector) %&gt;% 
+  html_text
+n_pages #number of pages</code></pre>
+<pre><code>## [1] &quot;202&quot;</code></pre>
+<p>So our object will have 202 rows. It’s also a nifty trick using the function glue.</p>
+<pre class="r"><code>pages &lt;- c(1:n_pages) # the vector of the pages
+urls &lt;-  glue(&quot;https://www.setlist.fm/setlists/metallica-3bd680c8.html?page={pages}&quot;) %&gt;% 
+  enframe(name = NULL)
+head(urls)</code></pre>
+<pre><code>## # A tibble: 6 x 1
+##   value                                                         
+##   &lt;S3: glue&gt;                                                    
+## 1 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1
+## 2 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=2
+## 3 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=3
+## 4 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=4
+## 5 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=5
+## 6 https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=6</code></pre>
+<p>We also might want to use this code in the future not to scrape the 202 pages again, but just the latest concerts. So going back to the future we can look for a file where we stored our results from the latest scraping and extract the latest date.</p>
+<pre class="r"><code>if(file.exists(&quot;./data/20190524/scraping.rds&quot;)){
+  max_date &lt;- readRDS(&quot;./data/20190524/scraping.rds&quot;) %&gt;% 
+    select(&quot;date&quot;) %&gt;% 
+    filter(date == max(date)) %&gt;%
+    unique() %&gt;% 
+    &#39;[[&#39;(1) # funky ;-)
+    } else{
+  max_date &lt;- ymd(&quot;1966-01-01&quot;)
+  }
+max_date</code></pre>
+<pre><code>## [1] &quot;2019-05-10&quot;</code></pre>
+<p>So now we can continue to prepare the scraping by getting the pages we need to download.</p>
+<pre class="r"><code># selector
+#selector_url_concert &lt;- &quot;.url&quot;
+
+# function
+get_urls &lt;- function(x){
+  read_html(x) %&gt;% 
+  html_nodes(&quot;.url&quot;)
+  }
+concert_urls &lt;- tibble() # empty tibble to be filled
+
+for(i in urls$value){
+    # evaluate if we already have the data
+  selector &lt;- &quot;body &gt; div.body &gt; div.container &gt; div.row.main &gt; div.mainColumn.col-xs-12.col-md-8 &gt; div:nth-child(2) &gt; div &gt; div &gt; div:nth-child(1) &gt; div:nth-child(1) &gt; div&quot;
+  date &lt;- read_html(i) %&gt;% 
+    html_node(selector) %&gt;% 
+    html_text
+  date &lt;- str_replace_all(date, &quot;\\\n&quot;, &quot; &quot;) %&gt;% 
+    mdy()
+  
+  if (date &lt; max_date) break # break here if we have it, continue if we don&#39;t
+  
+  print(i)
+  new_url_nodes &lt;- get_urls(i) 
+  print(new_url_nodes)
+  
+  urls &lt;- tibble() # empty tibble to be filled
+  
+  for (j in (1:length(new_url_nodes))) {
+    url &lt;- xml_attrs(new_url_nodes[[j]])[[&quot;href&quot;]] %&gt;% 
+    as_tibble()  
+    urls &lt;- rbind(urls, url)
+  }
+  concert_urls &lt;- rbind(concert_urls, urls)
+}</code></pre>
+<pre><code>## [1] &quot;https://www.setlist.fm/setlists/metallica-3bd680c8.html?page=1&quot;
+## {xml_nodeset (10)}
+##  [1] &lt;a href=&quot;../setlist/metallica/2019/stade-de-france-saint-denis-fran ...
+##  [2] &lt;a href=&quot;../setlist/metallica/2019/letzigrund-stadion-zurich-switze ...
+##  [3] &lt;a href=&quot;../setlist/metallica/2019/ippodromo-del-galoppo-di-san-sir ...
+##  [4] &lt;a href=&quot;../setlist/metallica/2019/estadi-olimpic-lluis-companys-ba ...
+##  [5] &lt;a href=&quot;../setlist/metallica/2019/valdebebas-ifema-madrid-spain-43 ...
+##  [6] &lt;a href=&quot;../setlist/metallica/2019/estadio-do-restelo-lisbon-portug ...
+##  [7] &lt;a href=&quot;../setlist/metallica/2019/van-andel-arena-grand-rapids-mi- ...
+##  [8] &lt;a href=&quot;../setlist/metallica/2019/bankers-life-fieldhouse-indianap ...
+##  [9] &lt;a href=&quot;../setlist/metallica/2019/kfc-yum-center-louisville-ky-7b9 ...
+## [10] &lt;a href=&quot;../setlist/metallica/2019/sprint-center-kansas-city-mo-1b9 ...</code></pre>
+<pre><code>## Warning: Calling `as_tibble()` on a vector is discouraged, because the behavior is likely to change in the future. Use `enframe(name = NULL)` instead.
+## This warning is displayed once per session.</code></pre>
+<p>At this point ‘concert_url’ contains the urls of the concert we did not have in the data since our latest future scraping. We need to suffix it with “<a href="https://www.setlist.fm" class="uri">https://www.setlist.fm</a>”.</p>
+<pre class="r"><code>concert_urls &lt;- concert_urls %&gt;% 
+  mutate(url = str_replace(value,&quot;..&quot;,&quot;https://www.setlist.fm&quot;)) %&gt;% 
+  select(-value)</code></pre>
+<p>Getting there. All systems are go.</p>
+<pre class="r"><code>concert_urls &lt;- add_column(concert_urls, date = &quot;&quot;, tour =&quot;&quot;, venue =&quot;&quot;,
+                           setlist =&quot;&quot;) # create space to add to the df</code></pre>
+<pre class="r"><code>n &lt;- nrow(concert_urls)
+
+for(i in (1:n)) {
+  
+  # download page
+  url &lt;- concert_urls$url[i]
+  page &lt;- read_html(url)
+
+  # get tour
+  tour &lt;- page %&gt;%
+    html_node(&quot;p &gt; span:nth-child(2)&quot;) %&gt;%
+    html_text()
+  
+  concert_urls$tour[i] &lt;- tour
+
+  # get date
+  year &lt;- page %&gt;%
+    html_node(&quot;.year&quot;) %&gt;%
+    html_text
+  
+  month &lt;- page %&gt;%
+    html_node(&quot;.month&quot;) %&gt;%
+    html_text
+  
+  day &lt;- page %&gt;%
+    html_node(&quot;.day&quot;) %&gt;%
+    html_text
+  
+  date &lt;- mdy(paste(month, day, year))
+
+  print(date)
+
+ concert_urls$date[i] &lt;- date
+
+  # get venue
+  venue &lt;- page %&gt;%
+    html_nodes(&quot;div.infoContainer &gt; div &gt; h1 &gt; span &gt; span &gt; a &gt; span&quot;) %&gt;%
+    html_text()
+  
+  concert_urls$venue[i] &lt;- venue
+  
+  # get setlist
+  setlist &lt;- page %&gt;%
+      html_nodes(&quot;.songLabel&quot;) %&gt;%
+      html_text()
+    
+  concert_urls$setlist[i] &lt;- list(setlist)
+  
+  Sys.sleep(1) # do not stress the website, we have time
+}</code></pre>
+<pre><code>## [1] &quot;2019-05-12&quot;
+## [1] &quot;2019-05-10&quot;
+## [1] &quot;2019-05-08&quot;
+## [1] &quot;2019-05-05&quot;
+## [1] &quot;2019-05-03&quot;
+## [1] &quot;2019-05-01&quot;
+## [1] &quot;2019-03-13&quot;
+## [1] &quot;2019-03-11&quot;
+## [1] &quot;2019-03-09&quot;
+## [1] &quot;2019-03-06&quot;</code></pre>
+<p>Ok, we can now do some data cleaning. And add the new data to the older data if we are not scaping in this way for the first time.</p>
+<pre class="r"><code>concert_urls$date &lt;- as.numeric(concert_urls$date)
+concert_urls$date &lt;- as.Date(concert_urls$date, origin = &quot;1969-12-30&quot;)
+concert_urls_new &lt;- concert_urls
+
+if(file.exists(&quot;./data/20190524/scraping.rds&quot;)){
+  concert_urls_old &lt;- readRDS(&quot;./data/20190524/scraping.rds&quot;) %&gt;% 
+    filter(!date %in% concert_urls_new$date)
+    } else{
+  concert_urls_old &lt;- data.frame()
+  }
+
+concert_urls &lt;- rbind(concert_urls_new,concert_urls_old)</code></pre>
+<p>Happy me I am. We tanked data on the 2K concerts of Metallica. And we know some more are coming. :metal:</p>
+<pre class="r"><code>saveRDS(concert_urls, &quot;./data/20190524/scraping.rds&quot;)</code></pre>
