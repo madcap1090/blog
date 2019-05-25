@@ -31,6 +31,8 @@ library("lubridate")
 library("rvest")
 library("httr")
 library("glue")
+library("measurements")  # install.packages("measurements")
+library("stringr")
 ```
 
 
@@ -355,7 +357,132 @@ Since we are limited and it took a while, we can save the results for later.
 # saveRDS(venues, "./data/20190524/venues.rds")
 ```
 
+```{r}
+
+venues <-  readRDS(venues, "./data/20190524/venues.rds")
+
+```
+
+
+Either they got real creative or the variable 'type' is not very usefull:
+
+```{r}
+unique(venues$type)
+```
+
+
+```{r}
+venues %>% 
+   group_by(type) %>% 
+   summarise(count = n()) %>% 
+  arrange(desc(count))
+
+```
+
+Converting lat and lon (gives a warning because of the venue in Antartica if it is not sliced away).
+
+```{r}
+
+venues_coord <- venues %>% 
+  slice(-178) %>% 
+  mutate(NS = str_extract(lat, "[[:alpha:]]"),
+         EW = str_extract(lon, "[[:alpha:]]"),
+         lat = ifelse(str_detect(venue, "Antartica"), "-62.2381424", lat),
+         lon = ifelse(str_detect(venue, "Antartica"), "-58.6688106", lon),
+         lat = str_remove(lat,'°'),
+         lon = str_remove(lon,'°'),
+         lat = str_remove(lat,"[[:alpha:]]"),
+         lon = str_remove(lon,"[[:alpha:]]"),
+         lat = str_replace(lat,"''",' '),
+         lon = str_replace(lon,"''",' '),
+         lat = str_replace(lat,"'",' '),
+         lon = str_replace(lon,"'",' '),
+         lat = str_squish(lat),
+         lon = str_squish(lon),
+         lat = as.numeric(conv_unit(lat, from = "deg_min_sec", to = "dec_deg")),
+         lon = as.numeric(conv_unit(lon, from = "deg_min_sec", to = "dec_deg")),
+         lat = if_else(NS == "S", lat*-1, lat),
+         lon = if_else(EW == "W", lon*-1, lon),
+         )
+
+```
+
+
+Adding Antartica:
+
+```{r}
+antartica <- venues %>% 
+  slice(178) %>%
+  mutate(lat = -62.2381424,
+         lon = -58.6688106,
+         NS = "S",
+         EW = "W")
+
+venues_coord <- rbind(venues_coord, antartica)
+
+```
+
+Adding the venue data to the concerts data frame.
+
+```{r}
+concerts <- concerts %>% 
+  left_join(venues_coord)
+
+# add country 
+
+concerts <- concerts %>% 
+  mutate(country = word(venue,-1),
+         year = year(date))
+  
+
+
+```
+
+Now we can construct an interactive map to explore where Metallica has performed their 2028 concerts.
+
+
+```{r message=FALSE, warning=FALSE}
+figure(width = 800, height = 450, padding_factor = 0) %>%
+  ly_map("world", regions = ".", col = "gray") %>%
+  ly_points(lon, lat, data = concerts, size = 6,
+            color = year ,glyph = 8,
+    hover = c(venue, tour, country, date))
+```
+
+The darker the green the more recent the concert. They mainly play North America and Europe. But as we saw also in Antartica and in Tuktoyaktuk in Canada.
+
+Where have they played in Belgium?
+
+
+```{r message=FALSE, warning=FALSE}
+
+
+venues <- concerts$venue
+figure(xlim = (2:7.7), ylim = (49.5:51.5), width = 800, height = 450, padding_factor = 0) %>%
+  ly_map("world", regions = "belgium", col = "gray") %>%
+  ly_points(lon, lat, data = concerts, size = 6,
+            color = year(date) ,glyph = 8,
+    hover = c(venue, tour, country, date))
 
 
 
-toDo = add Antartica
+```
+
+
+```{r}
+concerts %>% 
+  filter(country == "Belgium") %>% 
+  select(-url, -setlist, -lat, -lon, -type,
+         -address, -NS, -EW, -country, -year) %>% 
+  arrange(date)
+
+```
+
+
+So they played twice in Vorst, twice in Flanders Expo, three times in Kiewit and a bunch of times at Torhout/Wechter. But they started in Belgium by playing three times in 1984 in... Poperinge. Of all places.
+
+
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/FtUptw2ZmDM" frameborder="0" allowfullscreen></iframe>
+</center>
+
