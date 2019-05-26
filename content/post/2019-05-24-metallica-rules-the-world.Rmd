@@ -221,7 +221,7 @@ Saving them for later.
 saveRDS(concerts, "./data/20190524/scraping.rds")
 ```
 
-In data frame there are also the location of the concerts:
+In the data frame there are also the locations of the concerts:
 
 ```{r}
 set.seed(42)
@@ -234,7 +234,7 @@ concerts %>%
 
 This time we can use a different package and api to geocode the concert venues. I've been planning to test [opencage]("https://ropensci.org/tutorials/opencage_tutorial/") for a while.
 
-It offers 2.500 calls or queries per day using the free trail plan. 
+It offers 2.500 calls or queries per day using the free trial plan. 
 
 How many different venues do we have?
 
@@ -265,7 +265,6 @@ Sys.setenv(OPENCAGE_KEY = key)
 #Sys.getenv("OPENCAGE_KEY")
 
 ```
-
 
 
 A test on one venue:
@@ -431,9 +430,6 @@ concerts <- concerts %>%
 concerts <- concerts %>% 
   mutate(country = word(venue,-1),
          year = year(date))
-  
-
-
 ```
 
 Now we can construct an interactive map to explore where Metallica has performed their 2028 concerts.
