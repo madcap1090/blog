@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>gganimate on bad to the code</title>
+    <link>/tags/gganimate/</link>
+    <description>Recent content in gganimate on bad to the code</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
+    <lastBuildDate>Fri, 31 May 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/gganimate/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>soon, in a sports stadium near you!</title>
+      <link>/post/soon-in-a-sports-stadium-near-you/</link>
+      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/soon-in-a-sports-stadium-near-you/</guid>
+      <description>When I showed a colleague of mine the last post, he suggested to construct an animated map with the geo location of the different Metallica concerts. By the way it turns out that the guy also sometimes enjoys being a metalhead. We both were right in front of the stage at Dessel on the 6th June 2015 for the last concert of AC/DC in Belgium, that is more than three years before we first met.</description>
+    </item>
+    
+  </channel>
+</rss>

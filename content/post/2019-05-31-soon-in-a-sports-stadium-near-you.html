@@ -1,0 +1,60 @@
+---
+title: soon, in a sports stadium near you!
+author: William Bourgeois
+date: '2019-05-31'
+slug: soon-in-a-sports-stadium-near-you
+categories: []
+tags:
+  - Geocoding
+  - music
+  - gganimate
+  - Metallica
+---
+
+
+
+<p>When I showed a colleague of mine the last <a href="https://badtothecode.netlify.com/post/metallica-rules-the-world/">post</a>, he suggested to construct an animated map with the geo location of the different Metallica concerts. By the way it turns out that the guy also sometimes enjoys being a metalhead. We both were right in front of the stage at Dessel on the 6th June 2015 for the last concert of AC/DC in Belgium, that is more than three years before we first met.</p>
+<center>
+<img src="/img/20190531/dessel.jpg" alt="rock" />
+</center>
+<p>That is a coincidence. We could have found out if we had compared our Google location <a href="https://badtothecode.netlify.com/post/google-location-tracking/">history</a>. Hmm, an app could be made to do that.</p>
+<p>Anyway, back to a map &amp; Metallica. Challenge accepted, Mr. Goodyear.</p>
+<pre class="r"><code># libraries
+library(&quot;gganimate&quot;) #install.packages(&quot;gganimate&quot;)
+library(&quot;tidyverse&quot;)
+library(&quot;glue&quot;)
+library(&quot;directlabels&quot;)</code></pre>
+<p>The data from last post.</p>
+<pre class="r"><code>concerts &lt;- readRDS(&quot;./data/20190524/concerts.rds&quot;)</code></pre>
+<p>Plotting the Worldwired Tour.</p>
+<pre class="r"><code>worldwired &lt;- concerts %&gt;% 
+  filter(tour == &quot;Worldwired Tour&quot;) %&gt;% 
+  mutate(country = ifelse(country == &quot;Kong&quot;, &quot;Hong Kong&quot;, country),
+         country = ifelse(country == &quot;Rica&quot;, &quot;Costa Rica&quot;, country),
+         country = ifelse(country == &quot;Republic&quot;, &quot;Czech Republic&quot;, country),
+         country = paste(&quot;  &quot;, country))
+
+worlddata &lt;- map_data(&#39;world&#39;) %&gt;%
+  filter(region != &quot;Antarctica&quot;)
+
+p &lt;- ggplot() +
+    geom_map(data = worlddata, map = worlddata,
+                  aes(map_id=region),
+                  fill = &quot;white&quot;, colour = &quot;gray85&quot;, size = 0.4) + 
+    coord_map(&quot;rectangular&quot;, lat0=0, xlim=c(-180,180), ylim=c(-60, 90)) +
+    geom_point(data = worldwired, aes(x = lon, y = lat), 
+             alpha = 0.9, color = &quot;firebrick4&quot;, size = 2) +
+    theme_bw() +
+    geom_dl(data = worldwired, aes(x = lon, y = lat, label = country), 
+            method= &quot;last.points&quot;)
+
+z &lt;- p +
+  transition_states(date,
+                    transition_length = 1,
+                    state_length = 2)+
+  ggtitle(&quot;Worldwired tour: {current_frame} this must be:&quot;) +
+  transition_manual(date) 
+
+animate(z, fps =2, end_pause = 10)</code></pre>
+<p><img src="/post/2019-05-31-soon-in-a-sports-stadium-near-you_files/figure-html/unnamed-chunk-3-1.gif" style="display: block; margin: auto;" /></p>
+<p>Et voilà, an animated world map with the geo locations of Metallica’s concert. Don’t ask me to change the color of the little dots :smiling_imp:</p>

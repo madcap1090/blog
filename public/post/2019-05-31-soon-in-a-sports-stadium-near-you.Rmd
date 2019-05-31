@@ -1,0 +1,75 @@
+---
+title: soon, in a sports stadium near you!
+author: William Bourgeois
+date: '2019-05-31'
+slug: soon-in-a-sports-stadium-near-you
+categories: []
+tags:
+  - Geocoding
+  - music
+  - gganimate
+  - Metallica
+---
+
+When I showed a colleague of mine the last [post](https://badtothecode.netlify.com/post/metallica-rules-the-world/), he suggested to construct an animated map with the geo location of the different Metallica concerts. By the way it turns out that the guy also sometimes enjoys being a metalhead. We both were right in front of the stage at Dessel on the 6th June 2015 for the last concert of AC/DC in Belgium, that is more than three years before we first met. 
+
+<center>
+![rock](/img/20190531/dessel.jpg) 
+</center>
+
+
+That is a coincidence. We could have found out if we had compared our Google location [history](https://badtothecode.netlify.com/post/google-location-tracking/). Hmm, an app could be made to do that. 
+
+Anyway, back to a map & Metallica. Challenge accepted, Mr. Goodyear.
+
+```{r message=FALSE, warning=FALSE}
+# libraries
+library("gganimate") #install.packages("gganimate")
+library("tidyverse")
+library("glue")
+library("directlabels")
+```
+
+The data from last post.
+
+```{r}
+concerts <- readRDS("./data/20190524/concerts.rds")
+```
+
+Plotting the Worldwired Tour.
+
+```{r, fig.align='center', fig.height=10, fig.width=10}
+worldwired <- concerts %>% 
+  filter(tour == "Worldwired Tour") %>% 
+  mutate(country = ifelse(country == "Kong", "Hong Kong", country),
+         country = ifelse(country == "Rica", "Costa Rica", country),
+         country = ifelse(country == "Republic", "Czech Republic", country),
+         country = paste("  ", country))
+
+worlddata <- map_data('world') %>%
+  filter(region != "Antarctica")
+
+p <- ggplot() +
+    geom_map(data = worlddata, map = worlddata,
+                  aes(map_id=region),
+                  fill = "white", colour = "gray85", size = 0.4) + 
+    coord_map("rectangular", lat0=0, xlim=c(-180,180), ylim=c(-60, 90)) +
+    geom_point(data = worldwired, aes(x = lon, y = lat), 
+             alpha = 0.9, color = "firebrick4", size = 2) +
+    theme_bw() +
+    geom_dl(data = worldwired, aes(x = lon, y = lat, label = country), 
+            method= "last.points")
+
+z <- p +
+  transition_states(date,
+                    transition_length = 1,
+                    state_length = 2)+
+  ggtitle("Worldwired tour: {current_frame} this must be:") +
+  transition_manual(date) 
+
+animate(z, fps =2, end_pause = 10)
+
+```
+
+
+Et voilà, an animated world map with the geo locations of Metallica's concert. Don't ask me to change the color of the little dots :smiling_imp:

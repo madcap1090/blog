@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Fri, 24 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 31 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,7 +15,7 @@
     <item>
       <title>Geocoding</title>
       <link>/tags/geocoding/</link>
-      <pubDate>Fri, 24 May 2019 00:00:00 +0000</pubDate>
+      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/geocoding/</guid>
       <description></description>
@@ -24,16 +24,25 @@
     <item>
       <title>Metallica</title>
       <link>/tags/metallica/</link>
-      <pubDate>Fri, 24 May 2019 00:00:00 +0000</pubDate>
+      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/metallica/</guid>
       <description></description>
     </item>
     
     <item>
+      <title>gganimate</title>
+      <link>/tags/gganimate/</link>
+      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/gganimate/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>music</title>
       <link>/tags/music/</link>
-      <pubDate>Fri, 24 May 2019 00:00:00 +0000</pubDate>
+      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/music/</guid>
       <description></description>
