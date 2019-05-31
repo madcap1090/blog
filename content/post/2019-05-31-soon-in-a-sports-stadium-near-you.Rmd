@@ -72,4 +72,4 @@ animate(z, fps =2, end_pause = 10)
 ```
 
 
-Et voilà, an animated world map with the geo locations of Metallica's concert. Don't ask me to change the color of the little dots :smiling_imp:
+Et voilà, an animated world map with the geo locations of Metallica's concerts. Don't ask me to change the color of the little dots :smiling_imp:
