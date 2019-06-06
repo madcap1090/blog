@@ -1,0 +1,130 @@
+---
+title: Belgian May election results are published on Wikipedia
+author: William Bourgeois
+date: '2019-06-06'
+slug: belgian-may-election-results-are-published-on-wikipedia
+categories: []
+tags:
+  - scraping
+  - gganimate
+  - Belgian politics
+---
+
+They say there is a Chinese curse that says 'may you live in intersting times'. The results of the elections are in and they are, wel... interesting. 
+
+The part about 'living in interesting times' coming from China might however be [fake](https://quoteinvestigator.com/2015/12/18/live/). 
+
+The results of the federal parliamentarian elections have also been posted on Wikipedia. All the past results can also be found there, so the idea behind this post is to have an understanding of the evolution in Belgian politics through the evolution of the composition of the federal chamber. 
+
+If you are interested, the detailed results of May 2019 can also be found on the official governemental [website](https://verkiezingen2019.belgium.be"). I might get back to those, but Wikipedia seems to offer the best structural coherence for data in the past. 
+
+Attaching the libraries first:
+
+```{r}
+library("tidyverse")
+library("rvest")
+library("glue")
+library("XML")
+library("datapasta") #install.packages("datapasta")
+library("directlabels")
+library("gganimate")
+library("ggthemes")
+```
+
+At the very end of every relevant [page](https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2019-2024)) there are links to all the other relevant pages in the past. So I will get these links first.
+
+```{r}
+url <- "https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2019-2024)"
+
+table <- url %>% 
+  read_html() %>% 
+  html_nodes("#mw-content-text > div > div:nth-child(14) > table > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > td:nth-child(2)") 
+
+see <- table[[1]] 
+data <- xmlParse(see)
+xml_data <- xmlToList(data)
+df <- data.frame(matrix(unlist(xml_data), nrow=55, byrow=T)) 
+
+names(df) <- c("year", "url", "name", "delete")  
+
+df_url <- df %>% 
+  select(-delete) %>% 
+  mutate(url = as.character(url))
+df_url$url[55] <- "/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2019-2024)"
+
+head(df_url)
+
+```
+
+Done! 
+
+I found out that in this case, as in many, the best thing is to focus on the lowest granularity of the data. Here the individual members. This will yeald more information if we need it in the future. And here now concretely the ability to split the green fraction in a Flemish and French speaking part for easier comparison.
+
+If you don't know Belgian politics, consider yourself happy and just know that, on a national level, there are too many parties to start making any sense of evolutions, when plotting them together in a single graph. 
+
+The challange that the snippit below needs to address is that the Wikipedia pages all in all have a similar structures, but they still do vary from one election result to the other. The individual members of parliament are found in tables ranging from table 7 to 26. 
+
+So the tacktic below is to go through them and exit the loop when nothing is found, or when the result is not near the number of members of the chamber. 
+
+I'll also start from 1977 onwards, for reasons you may know. If you don't, you might not need to bother to find out. The geopolitics of energy resources, or the climate change to name but two are subjects worthier of your attention imho. 
+
+
+```{r}
+
+results_seats <- tibble() #empty for recieving info 
+
+for (i in(40:55)) {
+  print(i)
+  
+  for (j in c(7:26)) {
+    print(j)
+    
+    url <- df_url %>%
+      slice(i) %>%
+      select(url)
+    
+    url <- paste0("https://nl.wikipedia.org/", url[, 1])
+    
+    table <- as.character(url) %>%
+      read_html() %>%
+      html_nodes(glue("#mw-content-text > div > table:nth-child({j})")) %>%
+      html_table(fill = TRUE)
+    
+    see <- try(see <- table[[1]], silent = TRUE)
+    
+    if (class(see) == "try-error")
+      next
+    if (nrow(see) < 100)
+      next
+    if (nrow(see) > 1000)
+      next
+    if (ncol(see) == 4)
+    see <- see %>%  mutate(Taalgroep = "no_data")
+    
+    year_start_end <- str_extract_all(url, "\\d+")[[1]]
+    
+    see <- see %>%
+      mutate(start = year_start_end[1])
+    
+    if ("Partij" %in% colnames(see))
+      see <- see %>% rename("Fractie" = "Partij")
+    
+    results_seats <- rbind(results_seats, see)
+  }
+}
+
+
+```
+
+
+
+```{r}
+results_seats %>%
+  select(-Opmerkingen) %>% 
+  filter(start > 1968) %>% 
+  slice(1:5)
+```
+
+
+
+
