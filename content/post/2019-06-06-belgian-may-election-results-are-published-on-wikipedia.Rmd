@@ -258,7 +258,7 @@ animate(p, fps = 10, width = 800, height = 400, end_pause = 30)
 
 Now for French speaking parties.
 
-```{r}
+```{r echo=FALSE}
 fr_results <- e %>% 
   filter(Taalgroep == "Frans") %>% 
   arrange(start) %>% 
