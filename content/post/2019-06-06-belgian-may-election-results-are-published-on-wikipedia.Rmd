@@ -289,4 +289,4 @@ animate(p, fps = 10, width = 800, height = 400, end_pause = 30)
 ```
 
 
-Ther might be better vizzes to use for this data. I just hope you get a sences of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.  
+Ther might be better vizzes to use for this data. I just hope you get a sense of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.  
