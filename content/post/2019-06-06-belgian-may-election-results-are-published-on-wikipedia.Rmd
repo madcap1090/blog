@@ -38,7 +38,8 @@ url <- "https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenst
 
 table <- url %>% 
   read_html() %>% 
-  html_nodes("#mw-content-text > div > div:nth-child(14) > table > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > td:nth-child(2)") 
+  html_nodes(paste0("#mw-content-text > div > div:nth-child(15) > table > tbody >",
+                    " tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > td:nth-child(2)")) 
 
 see <- table[[1]] 
 data <- xmlParse(see)
@@ -66,10 +67,9 @@ The challenge that the snippet below needs to address is that the Wikipedia page
 
 So the tactic below is to go through them and exit the loop when nothing is found, or when the result is not near the number of members of the chamber. 
 
-I'll also start from 1977 onward, for reasons you may know. If you don't, you might not need to bother to find out. The geopolitics of energy resources, or the climate change to name but two are subjects worthier of your attention imho. 
+I'll also start from 1977 onward, for reasons you may know. 
 
-
-```{r warning=FALSE}
+```{r message=FALSE, warning=FALSE, results='hide'}
 
 results_seats <- tibble() #empty for recieving info 
 
@@ -117,7 +117,7 @@ for (i in(40:55)) {
 
 
 
-```{r}
+```{r paged.print=TRUE}
 set.seed(42)
 results_seats %>%
   select(-Opmerkingen) %>% 
@@ -226,7 +226,6 @@ So now we are ready to use the data to plot the evolution. I'm adapting the code
 
 
 ```{r}
-
 fl_results <- e %>% 
   filter(Taalgroep == "Nederlands") %>% 
   arrange(start) %>% 
@@ -236,11 +235,11 @@ fl_results <- e %>%
 # Set Theme
 theme_set(theme_minimal())
 
-
 p =  
   ggplot(data = fl_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
   geom_line(size=1.4, show.legend = FALSE) +
-  scale_color_manual(values=c("#ff9933", "forestgreen", "dodgerblue3", "black",  "orange4", "red", "red","orange4"))+
+  scale_color_manual(values=c("#ff9933", "forestgreen", "dodgerblue3", "black",
+                              "orange4", "red", "red","orange4"))+
   scale_x_discrete(position = "top") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(title = 'Flemish parties. Parliament % of seats won', 
@@ -253,9 +252,6 @@ p =
   coord_cartesian(clip = 'off') + 
   ease_aes('cubic-in-out')
 
-#p
-
-
 animate(p, fps = 10, width = 800, height = 400, end_pause = 30)
 
 ```
@@ -263,7 +259,6 @@ animate(p, fps = 10, width = 800, height = 400, end_pause = 30)
 Now for French speaking parties.
 
 ```{r}
-
 fr_results <- e %>% 
   filter(Taalgroep == "Frans") %>% 
   arrange(start) %>% 
@@ -273,11 +268,11 @@ fr_results <- e %>%
 # Set Theme
 theme_set(theme_minimal())
 
-
 p =  
   ggplot(data = fr_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
   geom_line(size=1.4, show.legend = FALSE) +
-  scale_color_manual(values=c("#ff9933", "forestgreen", "dodgerblue3", "deeppink1",  "red", "pink", "pink","orange4"))+
+  scale_color_manual(values=c("#ff9933", "forestgreen", "dodgerblue3", "deeppink1",
+                              "red", "pink", "pink","orange4"))+
   scale_x_discrete(position = "top") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(title = 'Francophone parties. Parliament % of seats won', 
@@ -290,9 +285,8 @@ p =
   coord_cartesian(clip = 'off') + 
   ease_aes('cubic-in-out')
 
-#p
-
-
 animate(p, fps = 10, width = 800, height = 400, end_pause = 30)
 ```
 
+
+Ther might be better vizzes to use for this data. I just hope you get a sences of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.  

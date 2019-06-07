@@ -7,7 +7,7 @@
 <title>Belgian May election results are published on Wikipedia | bad to the code</title>
 
 <meta property='og:title' content='Belgian May election results are published on Wikipedia - bad to the code'>
-<meta property='og:description' content='They say there is a Chinese curse that says ‘may you live in intersting times’. The results of the elections are in and they are, wel… interesting.
+<meta property='og:description' content='They say there is a Chinese curse that says ‘may you live in interesting times’. The results of the elections are in and they are, wel… interesting.
 The part about ‘living in interesting times’ coming from China might however be fake.
 The results of the federal parliamentarian elections have also been posted on Wikipedia. All the past results can also be found there, so the idea behind this post is to have an understanding of the evolution in Belgian politics through the evolution of the composition of the federal chamber.'>
 <meta property='og:url' content='/post/belgian-may-election-results-are-published-on-wikipedia/'>
@@ -117,43 +117,16 @@ The results of the federal parliamentarian elections have also been posted on Wi
       
 
 
-<p>They say there is a Chinese curse that says ‘may you live in intersting times’. The results of the elections are in and they are, wel… interesting.</p>
+<p>They say there is a Chinese curse that says ‘may you live in interesting times’. The results of the elections are in and they are, wel… interesting.</p>
 <p>The part about ‘living in interesting times’ coming from China might however be <a href="https://quoteinvestigator.com/2015/12/18/live/">fake</a>.</p>
 <p>The results of the federal parliamentarian elections have also been posted on Wikipedia. All the past results can also be found there, so the idea behind this post is to have an understanding of the evolution in Belgian politics through the evolution of the composition of the federal chamber.</p>
-<p>If you are interested, the detailed results of May 2019 can also be found on the official governemental <a href="https://verkiezingen2019.belgium.be%22">website</a>. I might get back to those, but Wikipedia seems to offer the best structural coherence for data in the past.</p>
+<p>If you are interested, the detailed results of May 2019 can also be found on the official governmental <a href="https://verkiezingen2019.belgium.be%22">website</a>. I might get back to those, but Wikipedia seems to offer the best structural coherence for data in the past.</p>
 <p>Attaching the libraries first:</p>
-<pre class="r"><code>library(&quot;tidyverse&quot;)</code></pre>
-<pre><code>## -- Attaching packages --------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
-<pre><code>## v ggplot2 3.1.1.9000     v purrr   0.3.1     
-## v tibble  2.1.2          v dplyr   0.8.0.1   
-## v tidyr   0.8.3          v stringr 1.4.0     
-## v readr   1.3.1          v forcats 0.3.0</code></pre>
-<pre><code>## -- Conflicts ------------------------------------------------------------ tidyverse_conflicts() --
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(&quot;rvest&quot;)</code></pre>
-<pre><code>## Loading required package: xml2</code></pre>
-<pre><code>## 
-## Attaching package: &#39;rvest&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:purrr&#39;:
-## 
-##     pluck</code></pre>
-<pre><code>## The following object is masked from &#39;package:readr&#39;:
-## 
-##     guess_encoding</code></pre>
-<pre class="r"><code>library(&quot;glue&quot;)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;glue&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
-## 
-##     collapse</code></pre>
-<pre class="r"><code>library(&quot;XML&quot;)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;XML&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:rvest&#39;:
-## 
-##     xml</code></pre>
-<pre class="r"><code>library(&quot;datapasta&quot;) #install.packages(&quot;datapasta&quot;)
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;rvest&quot;)
+library(&quot;glue&quot;)
+library(&quot;XML&quot;)
+library(&quot;datapasta&quot;) #install.packages(&quot;datapasta&quot;)
 library(&quot;directlabels&quot;)
 library(&quot;gganimate&quot;)
 library(&quot;ggthemes&quot;)</code></pre>
@@ -162,7 +135,8 @@ library(&quot;ggthemes&quot;)</code></pre>
 
 table &lt;- url %&gt;% 
   read_html() %&gt;% 
-  html_nodes(&quot;#mw-content-text &gt; div &gt; div:nth-child(14) &gt; table &gt; tbody &gt; tr:nth-child(2) &gt; td &gt; table &gt; tbody &gt; tr:nth-child(1) &gt; td:nth-child(2)&quot;) 
+  html_nodes(paste0(&quot;#mw-content-text &gt; div &gt; div:nth-child(15) &gt; table &gt; tbody &gt;&quot;,
+                    &quot; tr:nth-child(2) &gt; td &gt; table &gt; tbody &gt; tr:nth-child(1) &gt; td:nth-child(2)&quot;)) 
 
 see &lt;- table[[1]] 
 data &lt;- xmlParse(see)
@@ -192,11 +166,11 @@ head(df_url)</code></pre>
 ## 5 Kamer van volksvertegenwoordigers (samenstelling 1845-1848)
 ## 6 Kamer van volksvertegenwoordigers (samenstelling 1848-1852)</code></pre>
 <p>Done!</p>
-<p>I found out that in this case, as in many, the best thing is to focus on the lowest granularity of the data. Here the individual members. This will yeald more information if we need it in the future. And here now concretely the ability to split the green fraction in a Flemish and French speaking part for easier comparison.</p>
-<p>If you don’t know Belgian politics, consider yourself happy and just know that, on a national level, there are too many parties to start making any sense of evolutions, when plotting them together in a single graph.</p>
-<p>The challange that the snippit below needs to address is that the Wikipedia pages all in all have a similar structures, but they still do vary from one election result to the other. The individual members of parliament are found in tables ranging from table 7 to 26.</p>
-<p>So the tacktic below is to go through them and exit the loop when nothing is found, or when the result is not near the number of members of the chamber.</p>
-<p>I’ll also start from 1977 onwards, for reasons you may know. If you don’t, you might not need to bother to find out. The geopolitics of energy resources, or the climate change to name but two are subjects worthier of your attention imho.</p>
+<p>I found out that in this case, as in many, the best thing is to focus on the lowest granularity of the data. Here the individual members. This will yield more information if we need it in the future. And here now concretely the ability to split the green fraction in a Flemish and French speaking part for easier comparison.</p>
+<p>If you don’t know Belgian politics, consider yourself happy and just know that, on a national level, there are too many parties to start making any sense of evolution, when plotting them together in a single graph.</p>
+<p>The challenge that the snippet below needs to address is that the Wikipedia pages all in all have a similar structures, but they still do vary from one election result to the other. The individual members of parliament are found in tables ranging from table 7 to 26.</p>
+<p>So the tactic below is to go through them and exit the loop when nothing is found, or when the result is not near the number of members of the chamber.</p>
+<p>I’ll also start from 1977 onward, for reasons you may know.</p>
 <pre class="r"><code>results_seats &lt;- tibble() #empty for recieving info 
 
 for (i in(40:55)) {
@@ -238,342 +212,6 @@ for (i in(40:55)) {
     results_seats &lt;- rbind(results_seats, see)
   }
 }</code></pre>
-<pre><code>## [1] 40
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 41
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 42
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 43
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 44
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 45
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 46
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 47
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 48
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 49
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 50
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 51
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 52
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 53
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 54
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26
-## [1] 55
-## [1] 7
-## [1] 8
-## [1] 9
-## [1] 10
-## [1] 11
-## [1] 12
-## [1] 13
-## [1] 14
-## [1] 15
-## [1] 16
-## [1] 17
-## [1] 18
-## [1] 19
-## [1] 20
-## [1] 21
-## [1] 22
-## [1] 23
-## [1] 24
-## [1] 25
-## [1] 26</code></pre>
 <pre class="r"><code>set.seed(42)
 results_seats %&gt;%
   select(-Opmerkingen) %&gt;% 
@@ -686,11 +324,11 @@ e &lt;- rbind(d,to_add)</code></pre>
 # Set Theme
 theme_set(theme_minimal())
 
-
 p =  
   ggplot(data = fl_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
   geom_line(size=1.4, show.legend = FALSE) +
-  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;black&quot;,  &quot;orange4&quot;, &quot;red&quot;, &quot;red&quot;,&quot;orange4&quot;))+
+  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;black&quot;,
+                              &quot;orange4&quot;, &quot;red&quot;, &quot;red&quot;,&quot;orange4&quot;))+
   scale_x_discrete(position = &quot;top&quot;) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(title = &#39;Flemish parties. Parliament % of seats won&#39;, 
@@ -702,9 +340,6 @@ p =
   transition_reveal(start) +
   coord_cartesian(clip = &#39;off&#39;) + 
   ease_aes(&#39;cubic-in-out&#39;)
-
-#p
-
 
 animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
 <p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-7-1.gif" /><!-- --></p>
@@ -718,11 +353,11 @@ animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
 # Set Theme
 theme_set(theme_minimal())
 
-
 p =  
   ggplot(data = fr_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
   geom_line(size=1.4, show.legend = FALSE) +
-  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;deeppink1&quot;,  &quot;red&quot;, &quot;pink&quot;, &quot;pink&quot;,&quot;orange4&quot;))+
+  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;deeppink1&quot;,
+                              &quot;red&quot;, &quot;pink&quot;, &quot;pink&quot;,&quot;orange4&quot;))+
   scale_x_discrete(position = &quot;top&quot;) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(title = &#39;Francophone parties. Parliament % of seats won&#39;, 
@@ -735,11 +370,9 @@ p =
   coord_cartesian(clip = &#39;off&#39;) + 
   ease_aes(&#39;cubic-in-out&#39;)
 
-#p
-
-
 animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
 <p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-8-1.gif" /><!-- --></p>
+<p>Ther might be better vizzes to use for this data. I just hope you get a sences of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.</p>
 
       
       <div class="related">
