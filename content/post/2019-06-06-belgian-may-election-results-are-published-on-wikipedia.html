@@ -223,7 +223,7 @@ p =
   ggplot(data = fl_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
   geom_line(size=1.4, show.legend = FALSE) +
   scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;black&quot;,
-                              &quot;orange4&quot;, &quot;red&quot;, &quot;red&quot;,&quot;orange4&quot;))+
+                              &quot;orange4&quot;, &quot;red&quot;, &quot;pink&quot;,&quot;orange4&quot;))+
   scale_x_discrete(position = &quot;top&quot;) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(title = &#39;Flemish parties. Parliament % of seats won&#39;, 
@@ -239,5 +239,32 @@ p =
 animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
 <p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-7-1.gif" /><!-- --></p>
 <p>Now for French speaking parties.</p>
+<pre class="r"><code>fr_results &lt;- e %&gt;% 
+  filter(Taalgroep == &quot;Frans&quot;) %&gt;% 
+  arrange(start) %&gt;% 
+  mutate(start = as.integer(start)) %&gt;% 
+  filter(family != &quot;  others&quot;) # for now
+ 
+# Set Theme
+theme_set(theme_minimal())
+
+p =  
+  ggplot(data = fr_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
+  geom_line(size=1.4, show.legend = FALSE) +
+  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;deeppink1&quot;,
+                              &quot;red&quot;, &quot;pink&quot;, &quot;pink&quot;,&quot;orange4&quot;))+
+  scale_x_discrete(position = &quot;top&quot;) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = &#39;Francophone parties. Parliament % of seats won&#39;, 
+        x = NULL, y = NULL) +
+  geom_text(aes(label=scales::percent(prc, accuracy = 1),
+                vjust= -2), show.legend = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_dl(aes(label=family), method=&quot;last.points&quot;) +
+  transition_reveal(start) +
+  coord_cartesian(clip = &#39;off&#39;) + 
+  ease_aes(&#39;cubic-in-out&#39;)
+
+animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
 <p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-8-1.gif" /><!-- --></p>
 <p>Ther might be better vizzes to use for this data. I just hope you get a sences of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.</p>
