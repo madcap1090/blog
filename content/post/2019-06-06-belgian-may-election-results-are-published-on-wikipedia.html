@@ -1,0 +1,637 @@
+---
+title: Belgian May election results are published on Wikipedia
+author: William Bourgeois
+date: '2019-06-06'
+slug: belgian-may-election-results-are-published-on-wikipedia
+categories: []
+tags:
+  - scraping
+  - gganimate
+  - Belgian politics
+---
+
+
+
+<p>They say there is a Chinese curse that says ‘may you live in intersting times’. The results of the elections are in and they are, wel… interesting.</p>
+<p>The part about ‘living in interesting times’ coming from China might however be <a href="https://quoteinvestigator.com/2015/12/18/live/">fake</a>.</p>
+<p>The results of the federal parliamentarian elections have also been posted on Wikipedia. All the past results can also be found there, so the idea behind this post is to have an understanding of the evolution in Belgian politics through the evolution of the composition of the federal chamber.</p>
+<p>If you are interested, the detailed results of May 2019 can also be found on the official governemental <a href="https://verkiezingen2019.belgium.be%22">website</a>. I might get back to those, but Wikipedia seems to offer the best structural coherence for data in the past.</p>
+<p>Attaching the libraries first:</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)</code></pre>
+<pre><code>## -- Attaching packages --------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
+<pre><code>## v ggplot2 3.1.1.9000     v purrr   0.3.1     
+## v tibble  2.1.2          v dplyr   0.8.0.1   
+## v tidyr   0.8.3          v stringr 1.4.0     
+## v readr   1.3.1          v forcats 0.3.0</code></pre>
+<pre><code>## -- Conflicts ------------------------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(&quot;rvest&quot;)</code></pre>
+<pre><code>## Loading required package: xml2</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rvest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     pluck</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     guess_encoding</code></pre>
+<pre class="r"><code>library(&quot;glue&quot;)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;glue&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     collapse</code></pre>
+<pre class="r"><code>library(&quot;XML&quot;)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;XML&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:rvest&#39;:
+## 
+##     xml</code></pre>
+<pre class="r"><code>library(&quot;datapasta&quot;) #install.packages(&quot;datapasta&quot;)
+library(&quot;directlabels&quot;)
+library(&quot;gganimate&quot;)
+library(&quot;ggthemes&quot;)</code></pre>
+<p>At the very end of every relevant <a href="https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2019-2024)">page</a> there are links to all the other relevant pages in the past. So I will get these links first.</p>
+<pre class="r"><code>url &lt;- &quot;https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2019-2024)&quot;
+
+table &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(&quot;#mw-content-text &gt; div &gt; div:nth-child(14) &gt; table &gt; tbody &gt; tr:nth-child(2) &gt; td &gt; table &gt; tbody &gt; tr:nth-child(1) &gt; td:nth-child(2)&quot;) 
+
+see &lt;- table[[1]] 
+data &lt;- xmlParse(see)
+xml_data &lt;- xmlToList(data)
+df &lt;- data.frame(matrix(unlist(xml_data), nrow=55, byrow=T)) 
+
+names(df) &lt;- c(&quot;year&quot;, &quot;url&quot;, &quot;name&quot;, &quot;delete&quot;)  
+
+df_url &lt;- df %&gt;% 
+  select(-delete) %&gt;% 
+  mutate(url = as.character(url))
+df_url$url[55] &lt;- &quot;/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2019-2024)&quot;
+
+head(df_url)</code></pre>
+<pre><code>##   year                                                               url
+## 1 1831 /wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_1831-1833)
+## 2 1833 /wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_1833-1837)
+## 3 1837 /wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_1837-1841)
+## 4 1841 /wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_1841-1845)
+## 5 1845 /wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_1845-1848)
+## 6 1848 /wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_1848-1852)
+##                                                          name
+## 1 Kamer van volksvertegenwoordigers (samenstelling 1831-1833)
+## 2 Kamer van volksvertegenwoordigers (samenstelling 1833-1837)
+## 3 Kamer van volksvertegenwoordigers (samenstelling 1837-1841)
+## 4 Kamer van volksvertegenwoordigers (samenstelling 1841-1845)
+## 5 Kamer van volksvertegenwoordigers (samenstelling 1845-1848)
+## 6 Kamer van volksvertegenwoordigers (samenstelling 1848-1852)</code></pre>
+<p>Done!</p>
+<p>I found out that in this case, as in many, the best thing is to focus on the lowest granularity of the data. Here the individual members. This will yeald more information if we need it in the future. And here now concretely the ability to split the green fraction in a Flemish and French speaking part for easier comparison.</p>
+<p>If you don’t know Belgian politics, consider yourself happy and just know that, on a national level, there are too many parties to start making any sense of evolutions, when plotting them together in a single graph.</p>
+<p>The challange that the snippit below needs to address is that the Wikipedia pages all in all have a similar structures, but they still do vary from one election result to the other. The individual members of parliament are found in tables ranging from table 7 to 26.</p>
+<p>So the tacktic below is to go through them and exit the loop when nothing is found, or when the result is not near the number of members of the chamber.</p>
+<p>I’ll also start from 1977 onwards, for reasons you may know. If you don’t, you might not need to bother to find out. The geopolitics of energy resources, or the climate change to name but two are subjects worthier of your attention imho.</p>
+<pre class="r"><code>results_seats &lt;- tibble() #empty for recieving info 
+
+for (i in(40:55)) {
+  print(i)
+  
+  for (j in c(7:26)) {
+    print(j)
+    
+    url &lt;- df_url %&gt;%
+      slice(i) %&gt;%
+      select(url)
+    
+    url &lt;- paste0(&quot;https://nl.wikipedia.org/&quot;, url[, 1])
+    
+    table &lt;- as.character(url) %&gt;%
+      read_html() %&gt;%
+      html_nodes(glue(&quot;#mw-content-text &gt; div &gt; table:nth-child({j})&quot;)) %&gt;%
+      html_table(fill = TRUE)
+    
+    see &lt;- try(see &lt;- table[[1]], silent = TRUE)
+    
+    if (class(see) == &quot;try-error&quot;)
+      next
+    if (nrow(see) &lt; 100)
+      next
+    if (nrow(see) &gt; 1000)
+      next
+    if (ncol(see) == 4)
+    see &lt;- see %&gt;%  mutate(Taalgroep = &quot;no_data&quot;)
+    
+    year_start_end &lt;- str_extract_all(url, &quot;\\d+&quot;)[[1]]
+    
+    see &lt;- see %&gt;%
+      mutate(start = year_start_end[1])
+    
+    if (&quot;Partij&quot; %in% colnames(see))
+      see &lt;- see %&gt;% rename(&quot;Fractie&quot; = &quot;Partij&quot;)
+    
+    results_seats &lt;- rbind(results_seats, see)
+  }
+}</code></pre>
+<pre><code>## [1] 40
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 41
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 42
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 43
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 44
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 45
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 46
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 47
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 48
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 49
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 50
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 51
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 52
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 53
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 54
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26
+## [1] 55
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
+## [1] 21
+## [1] 22
+## [1] 23
+## [1] 24
+## [1] 25
+## [1] 26</code></pre>
+<pre class="r"><code>set.seed(42)
+results_seats %&gt;%
+  select(-Opmerkingen) %&gt;% 
+  filter(start &gt; 1974) %&gt;% 
+  sample_n(5)</code></pre>
+<pre><code>##                         Volksvertegenwoordiger Fractie
+## 1                       Gustin, Luc Luc Gustin      MR
+## 2       Bacquelaine, Daniel Daniel Bacquelaine      MR
+## 3           Van Rompaey, Hugo Hugo Van Rompaey     CVP
+## 4 De Permentier, Corinne Corinne De Permentier      MR
+## 5                     Barzin, Anne Anne Barzin     PRL
+##                 Kieskring  Taalgroep start
+## 1                    Luik      Frans  2014
+## 2                    Luik      Frans  2019
+## 3                Turnhout Nederlands  1985
+## 4 Brussel-Halle-Vilvoorde      Frans  2010
+## 5   Namen-Dinant-Philippe      Frans  1999</code></pre>
+<p>Nice.</p>
+<p>Save it for posterity.</p>
+<pre class="r"><code>#saveRDS(results_seats, &quot;./data/20190606/results.rds&quot;)</code></pre>
+<p>Since there were unified coalition lists and a number of party name changes, if we want to see an evolution over time we need to regroup political parties in some groups that have stability. That is what the code below is about.</p>
+<pre class="r"><code>a &lt;- results_seats %&gt;%
+  group_by(Fractie, Taalgroep, start) %&gt;% 
+  summarise(count = n())
+
+b &lt;- results_seats %&gt;% 
+  group_by(start) %&gt;% 
+  summarise(sum_seats = n())
+
+c &lt;- a %&gt;% 
+  left_join(b) %&gt;% 
+  mutate(prc = count/sum_seats) %&gt;% 
+  filter(start &gt; 1976) %&gt;% 
+  mutate(family = case_when(Fractie == &quot;CVP&quot; ~ &quot;fl_chris_dem&quot;,
+                            Fractie == &quot;CD&amp;V&quot; ~ &quot;fl_chris_dem&quot;,
+                            Fractie == &quot;PVV&quot; ~ &quot;fl_lib_dem&quot;,
+                            Fractie == &quot;VLD&quot; ~ &quot;fl_lib_dem&quot;,
+                            Fractie == &quot;Open Vld&quot; ~ &quot;fl_lib_dem&quot;,
+                            Fractie == &quot;Volksunie&quot; ~ &quot;fl_nat_dem&quot;,
+                            Fractie == &quot;VU-ID&quot; ~ &quot;fl_nat_dem&quot;,
+                            Fractie == &quot;N-VA&quot; ~ &quot;fl_nat_dem&quot;,
+                            Fractie == &quot;CD&amp;V/N-VA&quot; ~ &quot;fl_chris_dem&quot;,
+                            Fractie == &quot;Vlaams Blok&quot; ~ &quot;fl_nat&quot;,
+                            Fractie == &quot;Vlaams Belang&quot; ~ &quot;fl_nat&quot;,
+                            Fractie == &quot;BSP&quot; ~ &quot;fl_soc_dem&quot;,
+                            Fractie == &quot;SP&quot; ~ &quot;fl_soc_dem&quot;,
+                            Fractie == &quot;sp.a-Spirit&quot; ~ &quot;fl_soc_dem&quot;,
+                            Fractie == &quot;sp.a&quot; ~ &quot;fl_soc_dem&quot;,
+                            Fractie == &quot;Agalev&quot; ~ &quot;fl_greens&quot;,
+                            Fractie == &quot;Groen&quot; ~ &quot;fl_greens&quot;,
+                            Fractie == &quot;Groen!&quot; ~ &quot;fl_greens&quot;,
+                            Fractie == &quot;PS&quot; ~ &quot;fr_soc_dem&quot;,
+                            Fractie == &quot;PSB&quot; ~ &quot;fr_soc_dem&quot;,
+                            Fractie == &quot;cdH&quot; ~ &quot;fr_chris_dem&quot;,
+                            Fractie == &quot;PSC&quot; ~ &quot;fr_chris_dem&quot;,
+                            Fractie == &quot;DéFI&quot; ~ &quot;fr_nat_dem&quot;,
+                            Fractie == &quot;FDF&quot; ~ &quot;fr_nat_dem&quot;,
+                            Fractie == &quot;FDF/PPW&quot; ~ &quot;fr_nat_dem&quot;,
+                            #Fractie == &quot;Front National&quot; ~ &quot;fr_nat&quot;,
+                            Fractie == &quot;MR&quot; ~ &quot;fr_lib_dem&quot;,
+                            Fractie == &quot;PRL&quot; ~ &quot;fr_lib_dem&quot;,
+                            Fractie == &quot;PRLW&quot; ~ &quot;fr_lib_dem&quot;,
+                            Fractie == &quot;Ecolo&quot; ~ &quot;fr_greens&quot;,
+                            Fractie == &quot;PTB-go!&quot; ~ &quot;fr_reds&quot;,
+                            (Fractie == &quot;PVDA/PTB&quot; &amp; Taalgroep == &quot;Frans&quot;) ~ &quot;fr_reds&quot;,
+                            (Fractie == &quot;KPB-PCB&quot; &amp; Taalgroep == &quot;Frans&quot;) ~ &quot;fr_reds&quot;,
+                            #(Fractie == &quot;PVDA/PTB&quot; &amp; Taalgroep == &quot;Nederlands&quot;) ~ &quot;fl_reds&quot;,
+                            #(Fractie == &quot;KPB-PCB&quot; &amp; Taalgroep == &quot;Nederlands&quot;) ~ &quot;fl_reds&quot;,
+                            TRUE ~ &quot;others&quot;)) %&gt;% 
+  mutate(family = paste(&quot; &quot;,family))</code></pre>
+<pre><code>## Joining, by = &quot;start&quot;</code></pre>
+<pre class="r"><code>to_add &lt;- data.frame(Fractie = &quot;Groen&quot;,
+                 Taalgroep = &quot;Nederlands&quot;,
+                 start = &quot;2003&quot;,
+                 count = 0,
+                 sum_seats= 150,
+                 prc = 0,
+                 family = &quot;  fl_greens&quot;)
+
+
+
+d &lt;- rbind(as.data.frame(c),to_add)
+
+# since the ptb has some sucess this year I need to add them so in the years
+# where they had no seats they need to be included also
+
+to_add &lt;- data.frame(Fractie = &quot;ptb&quot;,
+                 Taalgroep = &quot;Frans&quot;,
+                 start = c(&quot;1985&quot;,
+                           &quot;1988&quot;,
+                           &quot;1991&quot;,
+                           &quot;1995&quot;,
+                           &quot;1999&quot;,
+                           &quot;2003&quot;,
+                           &quot;2007&quot;,
+                           &quot;2010&quot;), #this will luckily multiplate rows
+                 count = 0,
+                 sum_seats= 150,
+                 prc = 0,
+                 family = &quot;  fr_reds&quot;)
+
+e &lt;- rbind(d,to_add)</code></pre>
+<p>So now we are ready to use the data to plot the evolution. I’m adapting the code from this <a href="https://www.listendata.com/2019/05/create-animation-in-r-learn-with.html">post</a>. Thank you, Deepanshu Bhalla.</p>
+<pre class="r"><code>fl_results &lt;- e %&gt;% 
+  filter(Taalgroep == &quot;Nederlands&quot;) %&gt;% 
+  arrange(start) %&gt;% 
+  mutate(start = as.integer(start)) %&gt;% 
+  filter(family != &quot;  others&quot;) # for now
+ 
+# Set Theme
+theme_set(theme_minimal())
+
+
+p =  
+  ggplot(data = fl_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
+  geom_line(size=1.4, show.legend = FALSE) +
+  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;black&quot;,  &quot;orange4&quot;, &quot;red&quot;, &quot;red&quot;,&quot;orange4&quot;))+
+  scale_x_discrete(position = &quot;top&quot;) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = &#39;Flemish parties. Parliament % of seats won&#39;, 
+        x = NULL, y = NULL) +
+  geom_text(aes(label=scales::percent(prc, accuracy = 1),
+                vjust= -2), show.legend = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_dl(aes(label=family), method=&quot;last.points&quot;) +
+  transition_reveal(start) +
+  coord_cartesian(clip = &#39;off&#39;) + 
+  ease_aes(&#39;cubic-in-out&#39;)
+
+#p
+
+
+animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
+<p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-7-1.gif" /><!-- --></p>
+<p>Now for French speaking parties.</p>
+<pre class="r"><code>fr_results &lt;- e %&gt;% 
+  filter(Taalgroep == &quot;Frans&quot;) %&gt;% 
+  arrange(start) %&gt;% 
+  mutate(start = as.integer(start)) %&gt;% 
+  filter(family != &quot;  others&quot;) # for now
+ 
+# Set Theme
+theme_set(theme_minimal())
+
+
+p =  
+  ggplot(data = fr_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
+  geom_line(size=1.4, show.legend = FALSE) +
+  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;deeppink1&quot;,  &quot;red&quot;, &quot;pink&quot;, &quot;pink&quot;,&quot;orange4&quot;))+
+  scale_x_discrete(position = &quot;top&quot;) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = &#39;Francophone parties. Parliament % of seats won&#39;, 
+        x = NULL, y = NULL) +
+  geom_text(aes(label=scales::percent(prc, accuracy = 1),
+                vjust= -2), show.legend = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_dl(aes(label=family), method=&quot;last.points&quot;) +
+  transition_reveal(start) +
+  coord_cartesian(clip = &#39;off&#39;) + 
+  ease_aes(&#39;cubic-in-out&#39;)
+
+#p
+
+
+animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
+<p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-8-1.gif" /><!-- --></p>

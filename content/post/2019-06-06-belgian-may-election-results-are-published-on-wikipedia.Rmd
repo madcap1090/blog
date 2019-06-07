@@ -10,17 +10,17 @@ tags:
   - Belgian politics
 ---
 
-They say there is a Chinese curse that says 'may you live in intersting times'. The results of the elections are in and they are, wel... interesting. 
+They say there is a Chinese curse that says 'may you live in interesting times'. The results of the elections are in and they are, wel... interesting. 
 
 The part about 'living in interesting times' coming from China might however be [fake](https://quoteinvestigator.com/2015/12/18/live/). 
 
 The results of the federal parliamentarian elections have also been posted on Wikipedia. All the past results can also be found there, so the idea behind this post is to have an understanding of the evolution in Belgian politics through the evolution of the composition of the federal chamber. 
 
-If you are interested, the detailed results of May 2019 can also be found on the official governemental [website](https://verkiezingen2019.belgium.be"). I might get back to those, but Wikipedia seems to offer the best structural coherence for data in the past. 
+If you are interested, the detailed results of May 2019 can also be found on the official governmental [website](https://verkiezingen2019.belgium.be"). I might get back to those, but Wikipedia seems to offer the best structural coherence for data in the past. 
 
 Attaching the libraries first:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library("tidyverse")
 library("rvest")
 library("glue")
@@ -58,18 +58,18 @@ head(df_url)
 
 Done! 
 
-I found out that in this case, as in many, the best thing is to focus on the lowest granularity of the data. Here the individual members. This will yeald more information if we need it in the future. And here now concretely the ability to split the green fraction in a Flemish and French speaking part for easier comparison.
+I found out that in this case, as in many, the best thing is to focus on the lowest granularity of the data. Here the individual members. This will yield more information if we need it in the future. And here now concretely the ability to split the green fraction in a Flemish and French speaking part for easier comparison.
 
-If you don't know Belgian politics, consider yourself happy and just know that, on a national level, there are too many parties to start making any sense of evolutions, when plotting them together in a single graph. 
+If you don't know Belgian politics, consider yourself happy and just know that, on a national level, there are too many parties to start making any sense of evolution, when plotting them together in a single graph. 
 
-The challange that the snippit below needs to address is that the Wikipedia pages all in all have a similar structures, but they still do vary from one election result to the other. The individual members of parliament are found in tables ranging from table 7 to 26. 
+The challenge that the snippet below needs to address is that the Wikipedia pages all in all have a similar structures, but they still do vary from one election result to the other. The individual members of parliament are found in tables ranging from table 7 to 26. 
 
-So the tacktic below is to go through them and exit the loop when nothing is found, or when the result is not near the number of members of the chamber. 
+So the tactic below is to go through them and exit the loop when nothing is found, or when the result is not near the number of members of the chamber. 
 
-I'll also start from 1977 onwards, for reasons you may know. If you don't, you might not need to bother to find out. The geopolitics of energy resources, or the climate change to name but two are subjects worthier of your attention imho. 
+I'll also start from 1977 onward, for reasons you may know. If you don't, you might not need to bother to find out. The geopolitics of energy resources, or the climate change to name but two are subjects worthier of your attention imho. 
 
 
-```{r}
+```{r warning=FALSE}
 
 results_seats <- tibble() #empty for recieving info 
 
@@ -113,18 +113,186 @@ for (i in(40:55)) {
   }
 }
 
-
 ```
 
 
 
 ```{r}
+set.seed(42)
 results_seats %>%
   select(-Opmerkingen) %>% 
-  filter(start > 1968) %>% 
-  slice(1:5)
+  filter(start > 1974) %>% 
+  sample_n(5)
 ```
 
 
+Nice.
 
+Save it for posterity.
+
+```{r}
+#saveRDS(results_seats, "./data/20190606/results.rds")
+```
+
+Since there were unified coalition lists and a number of party name changes, if we want to see an evolution over time we need to regroup political parties in some groups that have stability. That is what the code below is about.
+
+```{r}
+
+a <- results_seats %>%
+  group_by(Fractie, Taalgroep, start) %>% 
+  summarise(count = n())
+
+b <- results_seats %>% 
+  group_by(start) %>% 
+  summarise(sum_seats = n())
+
+c <- a %>% 
+  left_join(b) %>% 
+  mutate(prc = count/sum_seats) %>% 
+  filter(start > 1976) %>% 
+  mutate(family = case_when(Fractie == "CVP" ~ "fl_chris_dem",
+                            Fractie == "CD&V" ~ "fl_chris_dem",
+                            Fractie == "PVV" ~ "fl_lib_dem",
+                            Fractie == "VLD" ~ "fl_lib_dem",
+                            Fractie == "Open Vld" ~ "fl_lib_dem",
+                            Fractie == "Volksunie" ~ "fl_nat_dem",
+                            Fractie == "VU-ID" ~ "fl_nat_dem",
+                            Fractie == "N-VA" ~ "fl_nat_dem",
+                            Fractie == "CD&V/N-VA" ~ "fl_chris_dem",
+                            Fractie == "Vlaams Blok" ~ "fl_nat",
+                            Fractie == "Vlaams Belang" ~ "fl_nat",
+                            Fractie == "BSP" ~ "fl_soc_dem",
+                            Fractie == "SP" ~ "fl_soc_dem",
+                            Fractie == "sp.a-Spirit" ~ "fl_soc_dem",
+                            Fractie == "sp.a" ~ "fl_soc_dem",
+                            Fractie == "Agalev" ~ "fl_greens",
+                            Fractie == "Groen" ~ "fl_greens",
+                            Fractie == "Groen!" ~ "fl_greens",
+                            Fractie == "PS" ~ "fr_soc_dem",
+                            Fractie == "PSB" ~ "fr_soc_dem",
+                            Fractie == "cdH" ~ "fr_chris_dem",
+                            Fractie == "PSC" ~ "fr_chris_dem",
+                            Fractie == "DéFI" ~ "fr_nat_dem",
+                            Fractie == "FDF" ~ "fr_nat_dem",
+                            Fractie == "FDF/PPW" ~ "fr_nat_dem",
+                            #Fractie == "Front National" ~ "fr_nat",
+                            Fractie == "MR" ~ "fr_lib_dem",
+                            Fractie == "PRL" ~ "fr_lib_dem",
+                            Fractie == "PRLW" ~ "fr_lib_dem",
+                            Fractie == "Ecolo" ~ "fr_greens",
+                            Fractie == "PTB-go!" ~ "fr_reds",
+                            (Fractie == "PVDA/PTB" & Taalgroep == "Frans") ~ "fr_reds",
+                            (Fractie == "KPB-PCB" & Taalgroep == "Frans") ~ "fr_reds",
+                            #(Fractie == "PVDA/PTB" & Taalgroep == "Nederlands") ~ "fl_reds",
+                            #(Fractie == "KPB-PCB" & Taalgroep == "Nederlands") ~ "fl_reds",
+                            TRUE ~ "others")) %>% 
+  mutate(family = paste(" ",family))
+
+to_add <- data.frame(Fractie = "Groen",
+                 Taalgroep = "Nederlands",
+                 start = "2003",
+                 count = 0,
+                 sum_seats= 150,
+                 prc = 0,
+                 family = "  fl_greens")
+
+
+
+d <- rbind(as.data.frame(c),to_add)
+
+# since the ptb has some sucess this year I need to add them so in the years
+# where they had no seats they need to be included also
+
+to_add <- data.frame(Fractie = "ptb",
+                 Taalgroep = "Frans",
+                 start = c("1985",
+                           "1988",
+                           "1991",
+                           "1995",
+                           "1999",
+                           "2003",
+                           "2007",
+                           "2010"), #this will luckily multiplate rows
+                 count = 0,
+                 sum_seats= 150,
+                 prc = 0,
+                 family = "  fr_reds")
+
+e <- rbind(d,to_add)
+
+```
+
+So now we are ready to use the data to plot the evolution. I'm adapting the code from this [post](https://www.listendata.com/2019/05/create-animation-in-r-learn-with.html). Thank you, Deepanshu Bhalla.
+
+
+```{r}
+
+fl_results <- e %>% 
+  filter(Taalgroep == "Nederlands") %>% 
+  arrange(start) %>% 
+  mutate(start = as.integer(start)) %>% 
+  filter(family != "  others") # for now
+ 
+# Set Theme
+theme_set(theme_minimal())
+
+
+p =  
+  ggplot(data = fl_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
+  geom_line(size=1.4, show.legend = FALSE) +
+  scale_color_manual(values=c("#ff9933", "forestgreen", "dodgerblue3", "black",  "orange4", "red", "red","orange4"))+
+  scale_x_discrete(position = "top") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = 'Flemish parties. Parliament % of seats won', 
+        x = NULL, y = NULL) +
+  geom_text(aes(label=scales::percent(prc, accuracy = 1),
+                vjust= -2), show.legend = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_dl(aes(label=family), method="last.points") +
+  transition_reveal(start) +
+  coord_cartesian(clip = 'off') + 
+  ease_aes('cubic-in-out')
+
+#p
+
+
+animate(p, fps = 10, width = 800, height = 400, end_pause = 30)
+
+```
+
+Now for French speaking parties.
+
+```{r}
+
+fr_results <- e %>% 
+  filter(Taalgroep == "Frans") %>% 
+  arrange(start) %>% 
+  mutate(start = as.integer(start)) %>% 
+  filter(family != "  others") # for now
+ 
+# Set Theme
+theme_set(theme_minimal())
+
+
+p =  
+  ggplot(data = fr_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
+  geom_line(size=1.4, show.legend = FALSE) +
+  scale_color_manual(values=c("#ff9933", "forestgreen", "dodgerblue3", "deeppink1",  "red", "pink", "pink","orange4"))+
+  scale_x_discrete(position = "top") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = 'Francophone parties. Parliament % of seats won', 
+        x = NULL, y = NULL) +
+  geom_text(aes(label=scales::percent(prc, accuracy = 1),
+                vjust= -2), show.legend = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_dl(aes(label=family), method="last.points") +
+  transition_reveal(start) +
+  coord_cartesian(clip = 'off') + 
+  ease_aes('cubic-in-out')
+
+#p
+
+
+animate(p, fps = 10, width = 800, height = 400, end_pause = 30)
+```
 
