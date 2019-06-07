@@ -254,8 +254,8 @@ c &lt;- a %&gt;%
                             Fractie == &quot;VU-ID&quot; ~ &quot;fl_nat_dem&quot;,
                             Fractie == &quot;N-VA&quot; ~ &quot;fl_nat_dem&quot;,
                             Fractie == &quot;CD&amp;V/N-VA&quot; ~ &quot;fl_chris_dem&quot;,
-                            Fractie == &quot;Vlaams Blok&quot; ~ &quot;fl_nat&quot;,
-                            Fractie == &quot;Vlaams Belang&quot; ~ &quot;fl_nat&quot;,
+                            Fractie == &quot;Vlaams Blok&quot; ~ &quot;fl_fasc&quot;,
+                            Fractie == &quot;Vlaams Belang&quot; ~ &quot;fl_fasc&quot;,
                             Fractie == &quot;BSP&quot; ~ &quot;fl_soc_dem&quot;,
                             Fractie == &quot;SP&quot; ~ &quot;fl_soc_dem&quot;,
                             Fractie == &quot;sp.a-Spirit&quot; ~ &quot;fl_soc_dem&quot;,
@@ -328,7 +328,7 @@ p =
   ggplot(data = fl_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
   geom_line(size=1.4, show.legend = FALSE) +
   scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;black&quot;,
-                              &quot;orange4&quot;, &quot;red&quot;, &quot;pink&quot;,&quot;orange4&quot;))+
+                              &quot;orange4&quot;, &quot;pink&quot;, &quot;pink&quot;,&quot;orange4&quot;))+
   scale_x_discrete(position = &quot;top&quot;) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(title = &#39;Flemish parties. Parliament % of seats won&#39;, 

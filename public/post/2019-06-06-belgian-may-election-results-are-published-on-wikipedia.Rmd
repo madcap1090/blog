@@ -159,8 +159,8 @@ c <- a %>%
                             Fractie == "VU-ID" ~ "fl_nat_dem",
                             Fractie == "N-VA" ~ "fl_nat_dem",
                             Fractie == "CD&V/N-VA" ~ "fl_chris_dem",
-                            Fractie == "Vlaams Blok" ~ "fl_nat",
-                            Fractie == "Vlaams Belang" ~ "fl_nat",
+                            Fractie == "Vlaams Blok" ~ "fl_fasc",
+                            Fractie == "Vlaams Belang" ~ "fl_fasc",
                             Fractie == "BSP" ~ "fl_soc_dem",
                             Fractie == "SP" ~ "fl_soc_dem",
                             Fractie == "sp.a-Spirit" ~ "fl_soc_dem",
@@ -239,7 +239,7 @@ p =
   ggplot(data = fl_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
   geom_line(size=1.4, show.legend = FALSE) +
   scale_color_manual(values=c("#ff9933", "forestgreen", "dodgerblue3", "black",
-                              "orange4", "red", "pink","orange4"))+
+                              "orange4", "pink", "pink","orange4"))+
   scale_x_discrete(position = "top") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(title = 'Flemish parties. Parliament % of seats won', 
