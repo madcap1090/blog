@@ -63,7 +63,7 @@ head(df_url)</code></pre>
 <p>Done!</p>
 <p>I found out that in this case, as in many, the best thing is to focus on the lowest granularity of the data. Here the individual members. This will yield more information if we need it in the future. And here now concretely the ability to split the green fraction in a Flemish and French speaking part for easier comparison.</p>
 <p>If you don’t know Belgian politics, consider yourself happy and just know that, on a national level, there are too many parties to start making any sense of evolution, when plotting them together in a single graph.</p>
-<p>The challenge that the snippet below needs to address is that the Wikipedia pages all in all have a similar structures, but they still do vary from one election result to the other. The individual members of parliament are found in tables ranging from table 7 to 26.</p>
+<p>The challenge that the snippet below needs to address is that the Wikipedia pages all in all have similar structures, but they still do vary from one election result to the other. The individual members of parliament are found in tables ranging from table 7 to 26.</p>
 <p>So the tactic below is to go through them and exit the loop when nothing is found, or when the result is not near the number of members of the chamber.</p>
 <p>I’ll also start from 1977 onward, for reasons you may know.</p>
 <pre class="r"><code>results_seats &lt;- tibble() #empty for recieving info 
@@ -303,5 +303,5 @@ p =
 
 animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
 <p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-9-1.gif" /><!-- --></p>
-<p>Ther might be better vizzes to use for this data. I just hope you get a sense of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.</p>
+<p>There might be better vizzes to use for this data. I just hope you get a sense of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.</p>
 <p>This, combined with the demise of the traditional parties is making these political times, well, let’s say interesting.</p>
