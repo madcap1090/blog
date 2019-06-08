@@ -222,7 +222,7 @@ theme_set(theme_minimal())
 p =  
   ggplot(data = fl_results, aes(x= factor(start), y=prc, group=family, colour=family)) +
   geom_line(size=1.4, show.legend = FALSE) +
-  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;forestgreen&quot;, &quot;dodgerblue3&quot;, &quot;black&quot;,
+  scale_color_manual(values=c(&quot;#ff9933&quot;, &quot;black&quot;, &quot;forestgreen&quot;, &quot;dodgerblue&quot;,
                               &quot;orange4&quot;, &quot;pink&quot;, &quot;pink&quot;,&quot;orange4&quot;))+
   scale_x_discrete(position = &quot;top&quot;) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
