@@ -222,8 +222,53 @@ e <- rbind(d,to_add)
 
 ```
 
-So now we are ready to use the data to plot the evolution. I'm adapting the code from this [post](https://www.listendata.com/2019/05/create-animation-in-r-learn-with.html). Thank you, Deepanshu Bhalla.
 
+One of the important political facts of the May 2019 election results, is that for the first time, the traditional political families (socialist, catholic & liberal) drop well blow 50% of the total seats. 
+
+We are ready to use the data to plot this evolution. I'm adapting the code from this [post](https://www.listendata.com/2019/05/create-animation-in-r-learn-with.html). Thank you, Deepanshu Bhalla.
+
+```{r}
+
+trad_party <- c("  fl_soc_dem",
+  "  fl_chis_dem",
+  "  fr_chris_dem",
+  "  fr_lib_dem",
+  "  fl_lib_dem",
+  "  fr_soc_dem")
+
+trad <- e %>% 
+  filter(family %in% trad_party)
+
+trad_cal <- trad %>% 
+  group_by(start) %>% 
+  summarise(sum =sum(prc)) %>% 
+  mutate(start = as.numeric(start))
+
+theme_set(theme_minimal())
+
+p =  
+  ggplot(data = trad_cal, aes(x= factor(start), y=sum, group=1)) +
+  geom_line(size=1.2, show.legend = FALSE, color = "dodgerblue3") +
+  scale_x_discrete(position = "top") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = 'Traditional political families. Parliament % of seats won', 
+       x = NULL, y = NULL) +
+  geom_text(aes(label=scales::percent(sum, accuracy = 1),
+                vjust= -2), show.legend = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_dl(aes(label="  traditional"), method="last.points") +
+  transition_reveal(start) +
+  ease_aes('cubic-in-out')
+
+animate(p, fps = 6, width = 800, height = 400, end_pause = 30)
+
+
+
+```
+
+Another polical fact is that the evolution in the Flemish part and in the french speaking part differ significantly.
+
+Here the Flemish part.
 
 ```{r}
 fl_results <- e %>% 
@@ -290,3 +335,11 @@ animate(p, fps = 10, width = 800, height = 400, end_pause = 30)
 
 
 Ther might be better vizzes to use for this data. I just hope you get a sense of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.  
+
+This, combined with the demise of the traditional parties is making these political times, well, let's say interesting. 
+
+
+```{r}
+
+```
+

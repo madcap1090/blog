@@ -314,7 +314,43 @@ to_add &lt;- data.frame(Fractie = &quot;ptb&quot;,
                  family = &quot;  fr_reds&quot;)
 
 e &lt;- rbind(d,to_add)</code></pre>
-<p>So now we are ready to use the data to plot the evolution. I’m adapting the code from this <a href="https://www.listendata.com/2019/05/create-animation-in-r-learn-with.html">post</a>. Thank you, Deepanshu Bhalla.</p>
+<p>One of the important political facts of the May 2019 election results, is that for the first time, the traditional political families (socialist, catholic &amp; liberal) drop well blow 50% of the total seats.</p>
+<p>We are ready to use the data to plot this evolution. I’m adapting the code from this <a href="https://www.listendata.com/2019/05/create-animation-in-r-learn-with.html">post</a>. Thank you, Deepanshu Bhalla.</p>
+<pre class="r"><code>trad_party &lt;- c(&quot;  fl_soc_dem&quot;,
+  &quot;  fl_chis_dem&quot;,
+  &quot;  fr_chris_dem&quot;,
+  &quot;  fr_lib_dem&quot;,
+  &quot;  fl_lib_dem&quot;,
+  &quot;  fr_soc_dem&quot;)
+
+trad &lt;- e %&gt;% 
+  filter(family %in% trad_party)
+
+trad_cal &lt;- trad %&gt;% 
+  group_by(start) %&gt;% 
+  summarise(sum =sum(prc)) %&gt;% 
+  mutate(start = as.numeric(start))
+
+theme_set(theme_minimal())
+
+p =  
+  ggplot(data = trad_cal, aes(x= factor(start), y=sum, group=1)) +
+  geom_line(size=1.2, show.legend = FALSE, color = &quot;dodgerblue3&quot;) +
+  scale_x_discrete(position = &quot;top&quot;) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = &#39;Traditional political families. Parliament % of seats won&#39;, 
+       x = NULL, y = NULL) +
+  geom_text(aes(label=scales::percent(sum, accuracy = 1),
+                vjust= -2), show.legend = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_dl(aes(label=&quot;  traditional&quot;), method=&quot;last.points&quot;) +
+  transition_reveal(start) +
+  ease_aes(&#39;cubic-in-out&#39;)
+
+animate(p, fps = 6, width = 800, height = 400, end_pause = 30)</code></pre>
+<p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-7-1.gif" /><!-- --></p>
+<p>Another polical fact is that the evolution in the Flemish part and in the french speaking part differ significantly.</p>
+<p>Here the Flemish part.</p>
 <pre class="r"><code>fl_results &lt;- e %&gt;% 
   filter(Taalgroep == &quot;Nederlands&quot;) %&gt;% 
   arrange(start) %&gt;% 
@@ -342,7 +378,7 @@ p =
   ease_aes(&#39;cubic-in-out&#39;)
 
 animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
-<p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-7-1.gif" /><!-- --></p>
+<p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-8-1.gif" /><!-- --></p>
 <p>Now for French speaking parties.</p>
 <pre class="r"><code>fr_results &lt;- e %&gt;% 
   filter(Taalgroep == &quot;Frans&quot;) %&gt;% 
@@ -371,8 +407,9 @@ p =
   ease_aes(&#39;cubic-in-out&#39;)
 
 animate(p, fps = 10, width = 800, height = 400, end_pause = 30)</code></pre>
-<p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-8-1.gif" /><!-- --></p>
+<p><img src="/post/2019-06-06-belgian-may-election-results-are-published-on-wikipedia_files/figure-html/unnamed-chunk-9-1.gif" /><!-- --></p>
 <p>Ther might be better vizzes to use for this data. I just hope you get a sense of how, at the national level, the way people vote has evolved very differently in the northern and southern part of the country.</p>
+<p>This, combined with the demise of the traditional parties is making these political times, well, let’s say interesting.</p>
 
       
       <div class="related">
