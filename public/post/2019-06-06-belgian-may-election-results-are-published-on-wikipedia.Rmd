@@ -16,6 +16,13 @@ The part about 'living in interesting times' coming from China might however be 
 
 The results of the federal parliamentarian elections have also been posted on Wikipedia. All the past results can also be found there, so the idea behind this post is to have an understanding of the evolution in Belgian politics through the evolution of the composition of the federal chamber. 
 
+
+<center>
+![elections](/img/201900606/poster.jpg)
+
+</center>
+
+
 If you are interested, the detailed results of May 2019 can also be found on the official governmental [website](https://verkiezingen2019.belgium.be"). I might get back to those, but Wikipedia seems to offer the best structural coherence for data in the past. 
 
 Attaching the libraries first:
