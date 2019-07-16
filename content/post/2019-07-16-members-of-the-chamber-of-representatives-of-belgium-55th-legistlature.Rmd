@@ -21,9 +21,9 @@ The names of the new parliamentarians have been published on the official websit
 library("tidyverse")
 library("rvest")
 library("scales")
-#library("XML")
+library("rtweet")
 #library("glue")
-#library("magick")
+
 ```
 
 
@@ -95,7 +95,6 @@ newer_members <- reps_55 %>%
 
 head(newer_members) # have a peek
 
-
 ```
 
 Of course joining on names is not ideal, since this is error prone, but the results look more or less correct and the method will give a ball park figure to work with.
@@ -132,4 +131,28 @@ newer_members %>%
 ```
 
 # check because the 100% are here on the bottom?
+
+Interesting. Of course the VB and PVDA-PTB have very high ratios, but so has the sp.a and others. But the point was to get the Twitter handles. 
+
+A function can be created to tweek the search_user function of the rtweet pachage. This tweak also limits the result to one, so that most obvious ones can be harvested. 
+
+```{r}
+search_one <- function(x){print (x)
+  search_users(x, n=1) %>% # only return one line per name
+    mutate(ln_fn = x)} # keep track of who we searched for
+```
+
+
+
+```{r message=FALSE}
+twitter_users_new <- map_df(missing_handles$ln_fn,possibly(.f= search_one, otherwise = NULL))
+```
+
+The result contains 89 variables, so let's looks at only some of them to see if we catched some reps Twitter handles. 
+
+```{r}
+twitter_users_new %>% 
+  select(name, ln_fn, description, text, screen_name)
+
+```
 
