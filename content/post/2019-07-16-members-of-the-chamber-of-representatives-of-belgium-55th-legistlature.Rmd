@@ -1,0 +1,135 @@
+---
+title: members of the chamber of representatives of Belgium, 55th legistlature
+author: William Bourgeois
+date: '2019-07-16'
+slug: members-of-the-chamber-of-representatives-of-belgium-55th-legistlature
+categories: []
+tags:
+  - scraping
+  - Belgian politics
+  - Twitter
+---
+
+On 20/06/2019 the new chamber of representative was constituded for the 55th legistlature. There are a fair number of new members in this assembly. In this post we will get their Twitter handles if they have one. This will make it possible to get their tweets and information about their accounts to be used in various anlyses. 
+
+The process can get a tiny bit tidious because as far as I know there is no website regrouping the handles, we need to search for them using the rtweet package, roughly in the same way in which it was done for the last legistlature. 
+
+The names of the new parliamentarians have been published on the official website (dekamer.be), but a lot of pictures are still missing so let's focuss on Twitter and get a list of names first.
+
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("rvest")
+library("scales")
+#library("XML")
+#library("glue")
+#library("magick")
+```
+
+
+
+```{r}
+
+url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/",
+              "depute&language=nl&cfm=cvlist54.cfm?legis=55&today=y") # url to the current members
+
+table <- url %>% 
+  read_html() %>% 
+  html_nodes("#story > table") %>% 
+  html_table()
+
+table <- table[[1]] # extracting the dataframe
+
+names(table) <- c("ln_fn", "party", "d1", "d2")
+
+reps_55<- table %>% 
+  select(ln_fn, party) %>% 
+  arrange(ln_fn)
+
+head(reps_55) # have a peek
+
+```
+
+
+Some members were also part of the last legistlature, and their handles were already found in a past post.
+
+
+```{r}
+twitter_users <- readRDS("~/R/blogs/content/post/data/20190502/twitter_users.rds") # the pre-exiting data
+
+handles <- twitter_users %>% 
+  select(ln_fn, screen_name)
+
+missing_handles <- reps_55 %>% 
+  left_join(handles) %>% 
+  filter(is.na(screen_name))
+
+```
+
+```{r}
+nrow(missing_handles)
+```
+
+So of the 150 current members, we are missing 83 handles. Makes you wonder how much current members did not seat in the last legistlature...
+
+```{r message=FALSE, warning=FALSE}
+url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=cvlist54.cfm?legis=54&today=n") # url to the members of 54
+
+table <- url %>% 
+  read_html() %>% 
+  html_nodes("#story > table") %>% 
+  html_table()
+
+table <- table[[1]] # extracting the dataframe
+
+names(table) <- c("ln_fn", "party", "d1", "d2")
+
+reps_54<- table %>% 
+  select(ln_fn) %>% 
+  arrange(ln_fn) %>% 
+  mutate(legist = 54)
+
+newer_members <- reps_55 %>% 
+  left_join(reps_54) 
+
+
+head(newer_members) # have a peek
+
+
+```
+
+Of course joining on names is not ideal, since this is error prone, but the results look more or less correct and the method will give a ball park figure to work with.
+
+```{r}
+newer_members %>% filter(is.na(legist)) %>% 
+  nrow()/150
+```
+
+So that is 55% members who did not seat in the past legistlature. What are the parties with the most new members? 
+
+```{r}
+
+newer_members %>% filter(is.na(legist)) %>% 
+  group_by(party) %>% 
+  summarise(new = n()) %>% 
+  arrange(desc(new))
+
+```
+
+And what are the parties with the highest ratio of new members?
+
+```{r message=FALSE, warning=FALSE}
+newer_members %>%  
+  group_by(party) %>% 
+  summarise(total = n()) %>% 
+  arrange(desc(total)) %>% left_join(newer_members
+                                     %>% filter(is.na(legist)) %>% 
+                                       group_by(party) %>% 
+                                       summarise(new = n())) %>% 
+  mutate(prct = percent(new/total)) %>% # using scales package
+  arrange(desc(prct))
+
+```
+
+# check because the 100% are here on the bottom?
+
