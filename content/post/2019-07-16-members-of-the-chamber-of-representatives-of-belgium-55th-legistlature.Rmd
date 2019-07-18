@@ -151,8 +151,86 @@ twitter_users_new <- map_df(missing_handles$ln_fn,possibly(.f= search_one, other
 The result contains 89 variables, so let's looks at only some of them to see if we catched some reps Twitter handles. 
 
 ```{r}
-twitter_users_new %>% 
+inspect <- twitter_users_new %>% 
   select(name, ln_fn, description, text, screen_name)
 
+head(inspect)
+```
+
+These handels are not correct:
+
+```{r}
+no <- c("BOUKILINABIL1", "RobertoDAmicoMx","devuysts", "NathalieDewulf1","mvandillen", "M_Freilich",
+        "HanusMelissa","SamynEllen", "Sneptje", "VicaireAlbert")
+
+```
+
+
+So there is a need to dig a bit deeper.
+
+```{r}
+
+not_correct <- inspect %>% 
+  filter(screen_name %in% no) %>% 
+  select(ln_fn)
+
+twitter_users_correct <- twitter_users_new %>% 
+  filter(!ln_fn %in% not_correct$ln_fn)
+
+search_ten <- function(x){print (x)
+  search_users(x, n=10) %>% # only return one line per name
+    mutate(ln_fn = x)} # keep track of who we searched for
+
+twitter_users_10 <- map_df(not_correct$ln_fn,possibly(.f= search_ten, otherwise = NULL))
+
+inspect_10 <- twitter_users_10 %>% 
+  select(name, ln_fn, description, text, screen_name)
+
+
+```
+
+```{r}
+
+# handels that seem correct:
+
+on_twitter <- c("NDewulf","dillenm", "MichaelFreilich", "e_samyn", 
+                "DewulfNathalie", "VicaireAlbert")
+
+
+not_on_twitter <- c("Boukili Nabil", "D'Amico Roberto", "Sneppe Dominiek", 
+                     "De Vuyst Steven")
+```
+
+```{r}
+add_users <- twitter_users_10 %>% 
+  filter(screen_name %in% on_twitter)
+
+twitter_users_correct <- rbind(twitter_users_correct, add_users)
+```
+
+```{r}
+check <- missing_handles %>% 
+  filter(!ln_fn %in% not_on_twitter) %>% 
+  filter(!ln_fn %in% twitter_users_correct$ln_fn)
+
+```
+
+We still have 20 that gave no results? Try again
+
+```{r}
+
+twitter_users_again <- map_df(check$ln_fn,possibly(.f= search_ten, otherwise = NULL))
+
+```
+```{r}
+inspect_again <- twitter_users_again %>% 
+  select(name, ln_fn, description, text, screen_name)
+
+on_twitter_again <- c("peter_mertens", "WouterVermeersc")
+
+add_users <- twitter_users_again %>% 
+  filter(screen_name %in% on_twitter)
+
+twitter_users_correct <- rbind(twitter_users_correct, add_users)
 ```
 
