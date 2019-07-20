@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Thu, 06 Jun 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 16 Jul 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/belgian-politics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>members of the chamber of representatives of Belgium, 55th legistlature</title>
+      <link>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature/</guid>
+      <description>On 20/06/2019 the new chamber of representative was constituted for the 55th legislature. There are a fair number of new members in this assembly. In this post we will get their Twitter handles if they have one. This will make it possible to get their tweets and information about their accounts to be used in various analyses.
+The process can get a tiny bit tedious because as far as I know there is no website regrouping the handles, we need to search for them using the rtweet package, roughly in the same way in which it was done for the last legislature.</description>
+    </item>
     
     <item>
       <title>Belgian May election results are published on Wikipedia</title>

@@ -1,0 +1,430 @@
+---
+title: members of the chamber of representatives of Belgium, 55th legistlature
+author: William Bourgeois
+date: '2019-07-16'
+slug: members-of-the-chamber-of-representatives-of-belgium-55th-legistlature
+categories: []
+tags:
+  - scraping
+  - Belgian politics
+  - Twitter
+---
+
+
+
+<p>On 20/06/2019 the new chamber of representative was constituted for the 55th legislature. There are a fair number of new members in this assembly. In this post we will get their Twitter handles if they have one. This will make it possible to get their tweets and information about their accounts to be used in various analyses.</p>
+<p>The process can get a tiny bit tedious because as far as I know there is no website regrouping the handles, we need to search for them using the rtweet package, roughly in the same way in which it was done for the last legislature.</p>
+<p>The names of the new parliamentarians have been published on the official website (dekamer.be), but a lot of pictures are still missing so let’s focus on Twitter and get a list of names first.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;rvest&quot;)
+library(&quot;scales&quot;)
+library(&quot;rtweet&quot;)
+#library(&quot;glue&quot;)</code></pre>
+<pre class="r"><code>url &lt;- paste0(&quot;https://www.dekamer.be/kvvcr/showpage.cfm?section=/&quot;,
+              &quot;depute&amp;language=nl&amp;cfm=cvlist54.cfm?legis=55&amp;today=y&quot;) # url to the current members
+
+table &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(&quot;#story &gt; table&quot;) %&gt;% 
+  html_table()
+
+table &lt;- table[[1]] # extracting the dataframe
+
+names(table) &lt;- c(&quot;ln_fn&quot;, &quot;party&quot;, &quot;d1&quot;, &quot;d2&quot;)
+
+reps_55&lt;- table %&gt;% 
+  select(ln_fn, party) %&gt;% 
+  arrange(ln_fn)
+
+head(reps_55) # have a peek</code></pre>
+<pre><code>##                ln_fn party
+## 1      Anseeuw Björn  N-VA
+## 2         Arens Josy   cdH
+## 3 Bacquelaine Daniel    MR
+## 4       Bayet Hugues    PS
+## 5        Beke Wouter  CD&amp;V
+## 6   Ben Achour Malik    PS</code></pre>
+<p>Some members were also part of the last legislature, and their handles were already found in a past post.</p>
+<pre class="r"><code>twitter_users &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190502/twitter_users.rds&quot;) # the pre-exiting data
+
+handles &lt;- twitter_users %&gt;% 
+  select(ln_fn, screen_name)
+
+missing_handles &lt;- reps_55 %&gt;% 
+  left_join(handles) %&gt;% 
+  filter(is.na(screen_name))</code></pre>
+<pre><code>## Joining, by = &quot;ln_fn&quot;</code></pre>
+<pre class="r"><code>nrow(missing_handles)</code></pre>
+<pre><code>## [1] 83</code></pre>
+<p>Of the 150 current members, 83 handles are missing. Makes you wonder how much current members did not seat in the last legislature…</p>
+<pre class="r"><code>url &lt;- paste0(&quot;https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=cvlist54.cfm?legis=54&amp;today=n&quot;) # url to the members of 54
+
+table &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(&quot;#story &gt; table&quot;) %&gt;% 
+  html_table()
+
+table &lt;- table[[1]] # extracting the dataframe
+
+names(table) &lt;- c(&quot;ln_fn&quot;, &quot;party&quot;, &quot;d1&quot;, &quot;d2&quot;)
+
+reps_54&lt;- table %&gt;% 
+  select(ln_fn) %&gt;% 
+  arrange(ln_fn) %&gt;% 
+  mutate(legist = 54)
+
+newer_members &lt;- reps_55 %&gt;% 
+  left_join(reps_54) 
+
+
+head(newer_members) # have a peek</code></pre>
+<pre><code>##                ln_fn party legist
+## 1      Anseeuw Björn  N-VA     NA
+## 2         Arens Josy   cdH     NA
+## 3 Bacquelaine Daniel    MR     54
+## 4       Bayet Hugues    PS     NA
+## 5        Beke Wouter  CD&amp;V     54
+## 6   Ben Achour Malik    PS     NA</code></pre>
+<p>Of course joining on names is not ideal, since this is error prone, but the results look more or less correct and the method will give a ball park figure to work with.</p>
+<pre class="r"><code>newer_members %&gt;% filter(is.na(legist)) %&gt;% 
+  nrow()/150</code></pre>
+<pre><code>## [1] 0.5466667</code></pre>
+<p>So that is 55% members who did not seat in the past legislature. What are the parties with the most new members?</p>
+<pre class="r"><code>newer_members %&gt;% filter(is.na(legist)) %&gt;% 
+  group_by(party) %&gt;% 
+  summarise(new = n()) %&gt;% 
+  arrange(desc(new))</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##    party         new
+##    &lt;chr&gt;       &lt;int&gt;
+##  1 VB             17
+##  2 Ecolo-Groen    12
+##  3 PS             11
+##  4 N-VA           10
+##  5 PVDA-PTB       10
+##  6 sp.a            7
+##  7 Open Vld        5
+##  8 MR              3
+##  9 CD&amp;V            2
+## 10 cdH             2
+## 11 DéFI            2
+## 12 INDEP           1</code></pre>
+<p>And what are the parties with the highest ratio of new members?</p>
+<pre class="r"><code>newer_members %&gt;%  
+  group_by(party) %&gt;% 
+  summarise(total = n()) %&gt;% 
+  arrange(desc(total)) %&gt;% left_join(newer_members
+                                     %&gt;% filter(is.na(legist)) %&gt;% 
+                                       group_by(party) %&gt;% 
+                                       summarise(new = n())) %&gt;% 
+  mutate(prct = percent(new/total)) %&gt;% # using scales package
+  arrange(desc(prct))</code></pre>
+<pre><code>## # A tibble: 12 x 4
+##    party       total   new prct  
+##    &lt;chr&gt;       &lt;int&gt; &lt;int&gt; &lt;chr&gt; 
+##  1 VB             18    17 94.4% 
+##  2 PVDA-PTB       12    10 83.3% 
+##  3 sp.a            9     7 77.8% 
+##  4 Ecolo-Groen    21    12 57.1% 
+##  5 PS             20    11 55.0% 
+##  6 N-VA           24    10 41.7% 
+##  7 Open Vld       12     5 41.7% 
+##  8 cdH             5     2 40.0% 
+##  9 MR             14     3 21.4% 
+## 10 CD&amp;V           12     2 16.7% 
+## 11 DéFI            2     2 100.0%
+## 12 INDEP           1     1 100.0%</code></pre>
+<pre class="r"><code>df &lt;- newer_members %&gt;%  
+  group_by(party) %&gt;% 
+  summarise(total = n()) %&gt;% 
+  arrange(desc(total)) %&gt;% left_join(newer_members
+                                     %&gt;% filter(is.na(legist)) %&gt;% 
+                                       group_by(party) %&gt;% 
+                                       summarise(new = n())) %&gt;% 
+  mutate(percentt = percent(new/total)) %&gt;% # using scales package
+  mutate(prct = (new/total)) %&gt;%
+  arrange(desc(prct)) </code></pre>
+<pre><code>## Joining, by = &quot;party&quot;</code></pre>
+<pre class="r"><code>ggplot(df, aes(x = party, y = total, fill = prct)) +
+  geom_bar(width=0.75, stat =  &quot;identity&quot;) +
+  scale_fill_gradient(low = &quot;green&quot;, high = &quot;red&quot;) +
+  theme_minimal() + 
+  theme(axis.text=element_text(size=8)) + 
+  labs(title=&quot;number of seats by party, color = % of newer members&quot;, 
+         y = &quot;total seats&quot;)</code></pre>
+<p><img src="/post/2019-07-16-members-of-the-chamber-of-representatives-of-belgium-55th-legistlature_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Interesting. Of course the VB and PVDA-PTB have very high ratios, but so has the sp.a and others. But the point was to get the Twitter handles.</p>
+<p>A function can be created to tweak the search_user function of the rtweet package. This tweak also limits the result to one, so that most obvious ones can be harvested.</p>
+<pre class="r"><code>search_one &lt;- function(x){print (x)
+  search_users(x, n=1) %&gt;% # only return one line per name
+    mutate(ln_fn = x)} # keep track of who we searched for</code></pre>
+<pre class="r"><code>twitter_users_new &lt;- map_df(missing_handles$ln_fn,possibly(.f= search_one, otherwise = NULL))</code></pre>
+<pre><code>## [1] &quot;Anseeuw Björn&quot;
+## [1] &quot;Arens Josy&quot;
+## [1] &quot;Bayet Hugues&quot;
+## [1] &quot;Ben Achour Malik&quot;
+## [1] &quot;Bertels Jan&quot;
+## [1] &quot;Boukili Nabil&quot;
+## [1] &quot;Briers Jan&quot;
+## [1] &quot;Bury Katleen&quot;
+## [1] &quot;Buyst Kim&quot;
+## [1] &quot;Chanson Julie&quot;
+## [1] &quot;Cogolati Samuel&quot;
+## [1] &quot;Colebunders Gaby&quot;
+## [1] &quot;Creemers Barbara&quot;
+## [1] &quot;Creyelman Steven&quot;
+## [1] &quot;Crombez John&quot;
+## [1] &quot;D&#39;Amico Roberto&quot;
+## [1] &quot;D&#39;Haese Christoph&quot;
+## [1] &quot;Daems Greet&quot;
+## [1] &quot;De Caluwé Robby&quot;
+## [1] &quot;de Laveleye Séverine&quot;
+## [1] &quot;De Maegd Michel&quot;
+## [1] &quot;De Smet François&quot;
+## [1] &quot;De Spiegeleer Pieter&quot;
+## [1] &quot;De Vuyst Steven&quot;
+## [1] &quot;Dedecker Jean-Marie&quot;
+## [1] &quot;Dedonder Ludivine&quot;
+## [1] &quot;Depoorter Kathleen&quot;
+## [1] &quot;Depoortere Ortwin&quot;
+## [1] &quot;Depraetere Melissa&quot;
+## [1] &quot;Désir Caroline&quot;
+## [1] &quot;Dewulf Nathalie&quot;
+## [1] &quot;Dillen Marijke&quot;
+## [1] &quot;Farih Nawal&quot;
+## [1] &quot;Freilich Michael&quot;
+## [1] &quot;Gijbels Frieda&quot;
+## [1] &quot;Gilissen Erik&quot;
+## [1] &quot;Goblet Marc&quot;
+## [1] &quot;Hanus Mélissa&quot;
+## [1] &quot;Houtmeyers Katrien&quot;
+## [1] &quot;Ingels Yngvild&quot;
+## [1] &quot;Kherbache Yasmine&quot;
+## [1] &quot;Lacroix Christophe&quot;
+## [1] &quot;Leroy Marie-Colline&quot;
+## [1] &quot;Leysen Christian&quot;
+## [1] &quot;Liekens Goedele&quot;
+## [1] &quot;Loones Sander&quot;
+## [1] &quot;Merckx Sofie&quot;
+## [1] &quot;Mertens Peter&quot;
+## [1] &quot;Moscufo Nadia&quot;
+## [1] &quot;Moutquin Simon&quot;
+## [1] &quot;Ponthier Annick&quot;
+## [1] &quot;Prévot Maxime&quot;
+## [1] &quot;Prévot Patrick&quot;
+## [1] &quot;Ravyts Kurt&quot;
+## [1] &quot;Reuter Florence&quot;
+## [1] &quot;Roggeman Tomas&quot;
+## [1] &quot;Rohonyi Sophie&quot;
+## [1] &quot;Safai Darya&quot;
+## [1] &quot;Samyn Ellen&quot;
+## [1] &quot;Sneppe Dominiek&quot;
+## [1] &quot;Soors Jessika&quot;
+## [1] &quot;Taquin Caroline&quot;
+## [1] &quot;Thémont Sophie&quot;
+## [1] &quot;Thibaut Cécile&quot;
+## [1] &quot;Tillieux Eliane&quot;
+## [1] &quot;Troosters Frank&quot;
+## [1] &quot;Van Bossuyt Anneleen&quot;
+## [1] &quot;Van der Straeten Tinne&quot;
+## [1] &quot;Van Grieken Tom&quot;
+## [1] &quot;Van Langenhove Dries&quot;
+## [1] &quot;Van Lommel Reccino&quot;
+## [1] &quot;Vanbesien Dieter&quot;
+## [1] &quot;Vandenbroucke Joris&quot;
+## [1] &quot;Vanrobaeys Anja&quot;
+## [1] &quot;Verduyckt Kris&quot;
+## [1] &quot;Verhaert Marianne&quot;
+## [1] &quot;Verhelst Kathleen&quot;
+## [1] &quot;Vermeersch Wouter&quot;
+## [1] &quot;Verreyt Hans&quot;
+## [1] &quot;Vicaire Albert&quot;
+## [1] &quot;Vindevoghel Maria&quot;
+## [1] &quot;Warmoes Thierry&quot;
+## [1] &quot;Zanchetta Laurence&quot;</code></pre>
+<p>The result contains 89 variables, so let’s looks at only some of them to see if we catched some reps Twitter handles.</p>
+<pre class="r"><code># returns 7 empty columns too mucj
+# names_users &lt;- names(twitter_users_new)[1:89]
+# names_clean &lt;- c(names_users, &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,&quot;5&quot;,&quot;6&quot;,&quot;7&quot;)
+# to_delete &lt;- c(&quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,&quot;5&quot;,&quot;6&quot;,&quot;7&quot;)
+# 
+# names(twitter_users_new) &lt;- names_clean
+# 
+# twitter_users_new &lt;- twitter_users_new %&gt;% 
+#   select(-to_delete)
+  
+
+inspect &lt;- twitter_users_new %&gt;% 
+  select(name, ln_fn, description, text, screen_name)
+
+
+head(inspect)</code></pre>
+<pre><code>##            name         ln_fn
+## 1    Josy Arens    Arens Josy
+## 2  Hugues Bayet  Bayet Hugues
+## 3   jan bertels   Bertels Jan
+## 4 boukili nabil Boukili Nabil
+## 5    Jan Briers    Briers Jan
+## 6  Katleen Bury  Bury Katleen
+##                                                                                                                                       description
+## 1                                                                                                            Député Wallon - Bourgmestre d&#39;Attert
+## 2 Député européen - Bourgmestre de Farciennes Membre des commissions Transports, Affaires Économiques et de la commission d’enquête #PanamaPapers
+## 3                                                                                        federaal parlementslid, herentals, twitter in eigen naam
+## 4                                                                                                                                                
+## 5                                                                                                        Ere-Gouverneur Provincie Oost-Vlaanderen
+## 6                                                                                                                                                
+##                                                                                                                                                                                                                                                                                                        text
+## 1                                                                                                                                                                                                               &quot;Je n&#39;ai qu&#39;un homme à convaincre: Maxime Prévot&quot; (Josy Arens, cdH) https://t.co/WsFxN41qGz
+## 2 Les multinationales devraient payer leurs impôts dans tous les pays où elles font des profits. La déclaration pays par pays #CBCR aurait permis d’y arriver, mais les gouvernements UE bloquent toujours malgré l&#39;insistance du PE et @TheProgressives. Halte au shopping fiscal! https://t.co/GwmkvPxDHx
+## 3                                                                Een minister moet idd niet alleen minimaliseren, maar vooral concrete oplossingen aanleveren voor op het terrein. Nu veel onzekerheid, ten koste van zorgverleners en patiënt. #notok #onbeschikbaregeneesmiddelen https://t.co/ig7VKyRFYz
+## 4                                                                                                                                                                                                                                     I HOPE THAT ALL HUMANS SHALL SEEK THE TRUTH IN THIS LIFE OR THE OTHER
+## 5                                                                                                               Feestje #parkbosgent ? Neem dan ook je rommel mee dan kan het sociaal maatwerkbedrijf en deze boswachter nuttiger werk uitvoeren. #gent #deboswachters #natuurenbos https://t.co/MAAoGpkHvV
+## 6                                                                                                                                                                                                                                                            De Vlaamse zaak aan het verdedigen in Brussel!
+##     screen_name
+## 1     JosyArens
+## 2   HuguesBayet
+## 3   jan_bertels
+## 4 BOUKILINABIL1
+## 5 JanBriersGouv
+## 6   KatleenBury</code></pre>
+<p>These handles are not correct:</p>
+<pre class="r"><code>no &lt;- c(&quot;BOUKILINABIL1&quot;, &quot;RobertoDAmicoMx&quot;,&quot;devuysts&quot;, &quot;NathalieDewulf1&quot;,&quot;mvandillen&quot;, &quot;M_Freilich&quot;,
+        &quot;HanusMelissa&quot;,&quot;SamynEllen&quot;, &quot;Sneptje&quot;, &quot;VicaireAlbert&quot;)</code></pre>
+<p>So there is a need to dig a bit deeper.</p>
+<pre class="r"><code>not_correct &lt;- inspect %&gt;% 
+  filter(screen_name %in% no) %&gt;% 
+  select(ln_fn)
+
+twitter_users_correct &lt;- twitter_users_new %&gt;% 
+  filter(!ln_fn %in% not_correct$ln_fn)
+
+search_ten &lt;- function(x){print (x)
+  search_users(x, n=10) %&gt;% # only return one line per name
+    mutate(ln_fn = x)} # keep track of who we searched for
+
+twitter_users_10 &lt;- map_df(not_correct$ln_fn,possibly(.f= search_ten, otherwise = NULL))</code></pre>
+<pre><code>## [1] &quot;Boukili Nabil&quot;</code></pre>
+<pre><code>## Searching for users...</code></pre>
+<pre><code>## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;D&#39;Amico Roberto&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;De Vuyst Steven&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Dewulf Nathalie&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Dillen Marijke&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Freilich Michael&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Hanus Mélissa&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Samyn Ellen&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Sneppe Dominiek&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Vicaire Albert&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre class="r"><code>inspect_10 &lt;- twitter_users_10 %&gt;% 
+  select(name, ln_fn, description, text, screen_name)</code></pre>
+<pre class="r"><code># handels that seem correct:
+
+on_twitter &lt;- c(&quot;NDewulf&quot;,&quot;dillenm&quot;, &quot;MichaelFreilich&quot;, &quot;e_samyn&quot;, 
+                &quot;DewulfNathalie&quot;, &quot;VicaireAlbert&quot;)
+
+
+not_on_twitter &lt;- c(&quot;Boukili Nabil&quot;, &quot;D&#39;Amico Roberto&quot;, &quot;Sneppe Dominiek&quot;, 
+                     &quot;De Vuyst Steven&quot;)</code></pre>
+<pre class="r"><code>add_users &lt;- twitter_users_10 %&gt;% 
+  filter(screen_name %in% on_twitter)
+
+twitter_users_correct &lt;- rbind(twitter_users_correct, add_users)</code></pre>
+<pre class="r"><code>check &lt;- missing_handles %&gt;% 
+  filter(!ln_fn %in% not_on_twitter) %&gt;% 
+  filter(!ln_fn %in% twitter_users_correct$ln_fn)</code></pre>
+<p>We still have 20 that gave no results? Try again</p>
+<pre class="r"><code>twitter_users_again &lt;- map_df(check$ln_fn,possibly(.f= search_ten, otherwise = NULL))</code></pre>
+<pre><code>## [1] &quot;Anseeuw Björn&quot;</code></pre>
+<pre><code>## Searching for users...</code></pre>
+<pre><code>## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Ben Achour Malik&quot;</code></pre>
+<pre><code>## Searching for users...</code></pre>
+<pre><code>## [1] &quot;Chanson Julie&quot;</code></pre>
+<pre><code>## Searching for users...</code></pre>
+<pre><code>## [1] &quot;D&#39;Haese Christoph&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Daems Greet&quot;</code></pre>
+<pre><code>## Searching for users...</code></pre>
+<pre><code>## [1] &quot;de Laveleye Séverine&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Dedonder Ludivine&quot;</code></pre>
+<pre><code>## Searching for users...</code></pre>
+<pre><code>## [1] &quot;Hanus Mélissa&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Houtmeyers Katrien&quot;</code></pre>
+<pre><code>## Searching for users...</code></pre>
+<pre><code>## [1] &quot;Leroy Marie-Colline&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Mertens Peter&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Moscufo Nadia&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Ravyts Kurt&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Thémont Sophie&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Thibaut Cécile&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Vanbesien Dieter&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Vermeersch Wouter&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Vindevoghel Maria&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Zanchetta Laurence&quot;</code></pre>
+<pre><code>## Searching for users...
+## Finished collecting users!</code></pre>
+<pre class="r"><code>inspect_again &lt;- twitter_users_again %&gt;% 
+  select(name, ln_fn, description, text, screen_name)
+
+on_twitter_again &lt;- c(&quot;peter_mertens&quot;, &quot;WouterVermeersc&quot;)
+
+add_users &lt;- twitter_users_again %&gt;% 
+  filter(screen_name %in% on_twitter)
+
+twitter_users_correct &lt;- rbind(twitter_users_correct, add_users)</code></pre>
+<p>So this gives 60 twitter handles of the 83 missing handles of our representatives in the 55th legislature. So we should have 127 twitter handles on a possible total of 150.</p>
+<pre class="r"><code>existing_handles &lt;- reps_55 %&gt;% 
+  left_join(handles) %&gt;% 
+  filter(!is.na(screen_name))</code></pre>
+<pre><code>## Joining, by = &quot;ln_fn&quot;</code></pre>
+<pre class="r"><code>handles_55 &lt;- existing_handles %&gt;%
+  select(-party) %&gt;% 
+  rbind(twitter_users_correct %&gt;% 
+          select(ln_fn, screen_name)) %&gt;% 
+  filter(screen_name  != &quot;NDewulf&quot;) #two accounts?
+
+reps_55 &lt;- reps_55 %&gt;% 
+  left_join(handles_55)</code></pre>
+<pre><code>## Joining, by = &quot;ln_fn&quot;</code></pre>
+<pre class="r"><code>saveRDS(reps_55, &quot;./data/20190716/reps_55.rds&quot;)</code></pre>

@@ -10,11 +10,11 @@ tags:
   - Twitter
 ---
 
-On 20/06/2019 the new chamber of representative was constituded for the 55th legistlature. There are a fair number of new members in this assembly. In this post we will get their Twitter handles if they have one. This will make it possible to get their tweets and information about their accounts to be used in various anlyses. 
+On 20/06/2019 the new chamber of representative was constituted for the 55th legislature. There are a fair number of new members in this assembly. In this post we will get their Twitter handles if they have one. This will make it possible to get their tweets and information about their accounts to be used in various analyses. 
 
-The process can get a tiny bit tidious because as far as I know there is no website regrouping the handles, we need to search for them using the rtweet package, roughly in the same way in which it was done for the last legistlature. 
+The process can get a tiny bit tedious because as far as I know there is no website regrouping the handles, we need to search for them using the rtweet package, roughly in the same way in which it was done for the last legislature. 
 
-The names of the new parliamentarians have been published on the official website (dekamer.be), but a lot of pictures are still missing so let's focuss on Twitter and get a list of names first.
+The names of the new parliamentarians have been published on the official website (dekamer.be), but a lot of pictures are still missing so let's focus on Twitter and get a list of names first.
 
 
 ```{r message=FALSE, warning=FALSE}
@@ -51,7 +51,7 @@ head(reps_55) # have a peek
 ```
 
 
-Some members were also part of the last legistlature, and their handles were already found in a past post.
+Some members were also part of the last legislature, and their handles were already found in a past post.
 
 
 ```{r}
@@ -70,7 +70,7 @@ missing_handles <- reps_55 %>%
 nrow(missing_handles)
 ```
 
-Of the 150 current members, 83 handles are missing. Makes you wonder how much current members did not seat in the last legistlature...
+Of the 150 current members, 83 handles are missing. Makes you wonder how much current members did not seat in the last legislature...
 
 ```{r message=FALSE, warning=FALSE}
 url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=cvlist54.cfm?legis=54&today=n") # url to the members of 54
@@ -104,7 +104,7 @@ newer_members %>% filter(is.na(legist)) %>%
   nrow()/150
 ```
 
-So that is 55% members who did not seat in the past legistlature. What are the parties with the most new members? 
+So that is 55% members who did not seat in the past legislature. What are the parties with the most new members? 
 
 ```{r}
 
@@ -158,7 +158,7 @@ ggplot(df, aes(x = party, y = total, fill = prct)) +
 
 Interesting. Of course the VB and PVDA-PTB have very high ratios, but so has the sp.a and others. But the point was to get the Twitter handles. 
 
-A function can be created to tweek the search_user function of the rtweet pachage. This tweak also limits the result to one, so that most obvious ones can be harvested. 
+A function can be created to tweak the search_user function of the rtweet package. This tweak also limits the result to one, so that most obvious ones can be harvested. 
 
 ```{r}
 search_one <- function(x){print (x)
@@ -176,14 +176,14 @@ The result contains 89 variables, so let's looks at only some of them to see if 
 
 ```{r}
 # returns 7 empty columns too mucj
-names_users <- names(twitter_users_new)[1:89]
-names_clean <- c(names_users, "1","2","3","4","5","6","7")
-to_delete <- c("1","2","3","4","5","6","7")
-
-names(twitter_users_new) <- names_clean
-
-twitter_users_new <- twitter_users_new %>% 
-  select(-to_delete)
+# names_users <- names(twitter_users_new)[1:89]
+# names_clean <- c(names_users, "1","2","3","4","5","6","7")
+# to_delete <- c("1","2","3","4","5","6","7")
+# 
+# names(twitter_users_new) <- names_clean
+# 
+# twitter_users_new <- twitter_users_new %>% 
+#   select(-to_delete)
   
 
 inspect <- twitter_users_new %>% 
@@ -193,7 +193,7 @@ inspect <- twitter_users_new %>%
 head(inspect)
 ```
 
-These handels are not correct:
+These handles are not correct:
 
 ```{r}
 no <- c("BOUKILINABIL1", "RobertoDAmicoMx","devuysts", "NathalieDewulf1","mvandillen", "M_Freilich",
@@ -270,7 +270,7 @@ add_users <- twitter_users_again %>%
 twitter_users_correct <- rbind(twitter_users_correct, add_users)
 ```
 
-So this gives 60 twitter handles of the 83 missing handels of our representatives in the 55th legistlature. So we should have 127 twitter handels on a possible total of 150.
+So this gives 60 twitter handles of the 83 missing handles of our representatives in the 55th legislature. So we should have 127 twitter handles on a possible total of 150.
 
 ```{r}
 existing_handles <- reps_55 %>% 

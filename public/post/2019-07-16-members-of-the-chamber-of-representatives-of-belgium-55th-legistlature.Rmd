@@ -1,0 +1,293 @@
+---
+title: members of the chamber of representatives of Belgium, 55th legistlature
+author: William Bourgeois
+date: '2019-07-16'
+slug: members-of-the-chamber-of-representatives-of-belgium-55th-legistlature
+categories: []
+tags:
+  - scraping
+  - Belgian politics
+  - Twitter
+---
+
+On 20/06/2019 the new chamber of representative was constituted for the 55th legislature. There are a fair number of new members in this assembly. In this post we will get their Twitter handles if they have one. This will make it possible to get their tweets and information about their accounts to be used in various analyses. 
+
+The process can get a tiny bit tedious because as far as I know there is no website regrouping the handles, we need to search for them using the rtweet package, roughly in the same way in which it was done for the last legislature. 
+
+The names of the new parliamentarians have been published on the official website (dekamer.be), but a lot of pictures are still missing so let's focus on Twitter and get a list of names first.
+
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("rvest")
+library("scales")
+library("rtweet")
+#library("glue")
+
+```
+
+
+
+```{r}
+
+url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/",
+              "depute&language=nl&cfm=cvlist54.cfm?legis=55&today=y") # url to the current members
+
+table <- url %>% 
+  read_html() %>% 
+  html_nodes("#story > table") %>% 
+  html_table()
+
+table <- table[[1]] # extracting the dataframe
+
+names(table) <- c("ln_fn", "party", "d1", "d2")
+
+reps_55<- table %>% 
+  select(ln_fn, party) %>% 
+  arrange(ln_fn)
+
+head(reps_55) # have a peek
+
+```
+
+
+Some members were also part of the last legislature, and their handles were already found in a past post.
+
+
+```{r}
+twitter_users <- readRDS("~/R/blogs/content/post/data/20190502/twitter_users.rds") # the pre-exiting data
+
+handles <- twitter_users %>% 
+  select(ln_fn, screen_name)
+
+missing_handles <- reps_55 %>% 
+  left_join(handles) %>% 
+  filter(is.na(screen_name))
+
+```
+
+```{r}
+nrow(missing_handles)
+```
+
+Of the 150 current members, 83 handles are missing. Makes you wonder how much current members did not seat in the last legislature...
+
+```{r message=FALSE, warning=FALSE}
+url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=cvlist54.cfm?legis=54&today=n") # url to the members of 54
+
+table <- url %>% 
+  read_html() %>% 
+  html_nodes("#story > table") %>% 
+  html_table()
+
+table <- table[[1]] # extracting the dataframe
+
+names(table) <- c("ln_fn", "party", "d1", "d2")
+
+reps_54<- table %>% 
+  select(ln_fn) %>% 
+  arrange(ln_fn) %>% 
+  mutate(legist = 54)
+
+newer_members <- reps_55 %>% 
+  left_join(reps_54) 
+
+
+head(newer_members) # have a peek
+
+```
+
+Of course joining on names is not ideal, since this is error prone, but the results look more or less correct and the method will give a ball park figure to work with.
+
+```{r}
+newer_members %>% filter(is.na(legist)) %>% 
+  nrow()/150
+```
+
+So that is 55% members who did not seat in the past legislature. What are the parties with the most new members? 
+
+```{r}
+
+newer_members %>% filter(is.na(legist)) %>% 
+  group_by(party) %>% 
+  summarise(new = n()) %>% 
+  arrange(desc(new))
+
+```
+
+And what are the parties with the highest ratio of new members?
+
+```{r message=FALSE, warning=FALSE}
+newer_members %>%  
+  group_by(party) %>% 
+  summarise(total = n()) %>% 
+  arrange(desc(total)) %>% left_join(newer_members
+                                     %>% filter(is.na(legist)) %>% 
+                                       group_by(party) %>% 
+                                       summarise(new = n())) %>% 
+  mutate(prct = percent(new/total)) %>% # using scales package
+  arrange(desc(prct))
+
+```
+
+```{r}
+
+df <- newer_members %>%  
+  group_by(party) %>% 
+  summarise(total = n()) %>% 
+  arrange(desc(total)) %>% left_join(newer_members
+                                     %>% filter(is.na(legist)) %>% 
+                                       group_by(party) %>% 
+                                       summarise(new = n())) %>% 
+  mutate(percentt = percent(new/total)) %>% # using scales package
+  mutate(prct = (new/total)) %>%
+  arrange(desc(prct)) 
+
+
+ggplot(df, aes(x = party, y = total, fill = prct)) +
+  geom_bar(width=0.75, stat =  "identity") +
+  scale_fill_gradient(low = "green", high = "red") +
+  theme_minimal() + 
+  theme(axis.text=element_text(size=8)) + 
+  labs(title="number of seats by party, color = % of newer members", 
+         y = "total seats")
+  
+
+```
+
+
+Interesting. Of course the VB and PVDA-PTB have very high ratios, but so has the sp.a and others. But the point was to get the Twitter handles. 
+
+A function can be created to tweak the search_user function of the rtweet package. This tweak also limits the result to one, so that most obvious ones can be harvested. 
+
+```{r}
+search_one <- function(x){print (x)
+  search_users(x, n=1) %>% # only return one line per name
+    mutate(ln_fn = x)} # keep track of who we searched for
+```
+
+
+
+```{r message=FALSE}
+twitter_users_new <- map_df(missing_handles$ln_fn,possibly(.f= search_one, otherwise = NULL))
+```
+
+The result contains 89 variables, so let's looks at only some of them to see if we catched some reps Twitter handles. 
+
+```{r}
+# returns 7 empty columns too mucj
+# names_users <- names(twitter_users_new)[1:89]
+# names_clean <- c(names_users, "1","2","3","4","5","6","7")
+# to_delete <- c("1","2","3","4","5","6","7")
+# 
+# names(twitter_users_new) <- names_clean
+# 
+# twitter_users_new <- twitter_users_new %>% 
+#   select(-to_delete)
+  
+
+inspect <- twitter_users_new %>% 
+  select(name, ln_fn, description, text, screen_name)
+
+
+head(inspect)
+```
+
+These handles are not correct:
+
+```{r}
+no <- c("BOUKILINABIL1", "RobertoDAmicoMx","devuysts", "NathalieDewulf1","mvandillen", "M_Freilich",
+        "HanusMelissa","SamynEllen", "Sneptje", "VicaireAlbert")
+
+```
+
+
+So there is a need to dig a bit deeper.
+
+```{r}
+
+not_correct <- inspect %>% 
+  filter(screen_name %in% no) %>% 
+  select(ln_fn)
+
+twitter_users_correct <- twitter_users_new %>% 
+  filter(!ln_fn %in% not_correct$ln_fn)
+
+search_ten <- function(x){print (x)
+  search_users(x, n=10) %>% # only return one line per name
+    mutate(ln_fn = x)} # keep track of who we searched for
+
+twitter_users_10 <- map_df(not_correct$ln_fn,possibly(.f= search_ten, otherwise = NULL))
+
+inspect_10 <- twitter_users_10 %>% 
+  select(name, ln_fn, description, text, screen_name)
+
+
+```
+
+```{r}
+
+# handels that seem correct:
+
+on_twitter <- c("NDewulf","dillenm", "MichaelFreilich", "e_samyn", 
+                "DewulfNathalie", "VicaireAlbert")
+
+
+not_on_twitter <- c("Boukili Nabil", "D'Amico Roberto", "Sneppe Dominiek", 
+                     "De Vuyst Steven")
+```
+
+```{r}
+add_users <- twitter_users_10 %>% 
+  filter(screen_name %in% on_twitter)
+
+twitter_users_correct <- rbind(twitter_users_correct, add_users)
+```
+
+```{r}
+check <- missing_handles %>% 
+  filter(!ln_fn %in% not_on_twitter) %>% 
+  filter(!ln_fn %in% twitter_users_correct$ln_fn)
+
+```
+
+We still have 20 that gave no results? Try again
+
+```{r}
+
+twitter_users_again <- map_df(check$ln_fn,possibly(.f= search_ten, otherwise = NULL))
+
+```
+```{r}
+inspect_again <- twitter_users_again %>% 
+  select(name, ln_fn, description, text, screen_name)
+
+on_twitter_again <- c("peter_mertens", "WouterVermeersc")
+
+add_users <- twitter_users_again %>% 
+  filter(screen_name %in% on_twitter)
+
+twitter_users_correct <- rbind(twitter_users_correct, add_users)
+```
+
+So this gives 60 twitter handles of the 83 missing handles of our representatives in the 55th legislature. So we should have 127 twitter handles on a possible total of 150.
+
+```{r}
+existing_handles <- reps_55 %>% 
+  left_join(handles) %>% 
+  filter(!is.na(screen_name))
+```
+
+```{r}
+handles_55 <- existing_handles %>%
+  select(-party) %>% 
+  rbind(twitter_users_correct %>% 
+          select(ln_fn, screen_name)) %>% 
+  filter(screen_name  != "NDewulf") #two accounts?
+
+reps_55 <- reps_55 %>% 
+  left_join(handles_55)
+
+saveRDS(reps_55, "./data/20190716/reps_55.rds")
+```
+
