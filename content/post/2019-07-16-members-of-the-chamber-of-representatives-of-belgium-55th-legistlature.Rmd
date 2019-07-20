@@ -192,7 +192,7 @@ no <- c("BOUKILINABIL1", "RobertoDAmicoMx","devuysts",
 
 So there is a need to dig a bit deeper.
 
-```{r, results= FALSE}
+```{r message=FALSE, warning=FALSE}
 not_correct <- inspect %>% 
   filter(screen_name %in% no) %>% 
   select(ln_fn)

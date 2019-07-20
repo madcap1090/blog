@@ -285,26 +285,16 @@ search_ten &lt;- function(x){print (x)
     mutate(ln_fn = x)} # keep track of who we searched for
 
 twitter_users_10 &lt;- map_df(not_correct$ln_fn,possibly(.f= search_ten, otherwise = NULL))</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
+<pre><code>## [1] &quot;Boukili Nabil&quot;
+## [1] &quot;D&#39;Amico Roberto&quot;
+## [1] &quot;De Vuyst Steven&quot;
+## [1] &quot;Dewulf Nathalie&quot;
+## [1] &quot;Dillen Marijke&quot;
+## [1] &quot;Freilich Michael&quot;
+## [1] &quot;Hanus Mélissa&quot;
+## [1] &quot;Samyn Ellen&quot;
+## [1] &quot;Sneppe Dominiek&quot;
+## [1] &quot;Vicaire Albert&quot;</code></pre>
 <pre class="r"><code>inspect_10 &lt;- twitter_users_10 %&gt;% 
   select(name, ln_fn, description, text, screen_name)</code></pre>
 <pre class="r"><code># handels that seem correct:
