@@ -70,7 +70,7 @@ missing_handles <- reps_55 %>%
 nrow(missing_handles)
 ```
 
-So of the 150 current members, we are missing 83 handles. Makes you wonder how much current members did not seat in the last legistlature...
+Of the 150 current members, 83 handles are missing. Makes you wonder how much current members did not seat in the last legistlature...
 
 ```{r message=FALSE, warning=FALSE}
 url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=cvlist54.cfm?legis=54&today=n") # url to the members of 54
@@ -130,7 +130,31 @@ newer_members %>%
 
 ```
 
-# check because the 100% are here on the bottom?
+```{r}
+
+df <- newer_members %>%  
+  group_by(party) %>% 
+  summarise(total = n()) %>% 
+  arrange(desc(total)) %>% left_join(newer_members
+                                     %>% filter(is.na(legist)) %>% 
+                                       group_by(party) %>% 
+                                       summarise(new = n())) %>% 
+  mutate(percentt = percent(new/total)) %>% # using scales package
+  mutate(prct = (new/total)) %>%
+  arrange(desc(prct)) 
+
+
+ggplot(df, aes(x = party, y = total, fill = prct)) +
+  geom_bar(width=0.75, stat =  "identity") +
+  scale_fill_gradient(low = "green", high = "red") +
+  theme_minimal() + 
+  theme(axis.text=element_text(size=8)) + 
+  labs(title="number of seats by party, color = % of newer members", 
+         y = "total seats")
+  
+
+```
+
 
 Interesting. Of course the VB and PVDA-PTB have very high ratios, but so has the sp.a and others. But the point was to get the Twitter handles. 
 
@@ -151,8 +175,20 @@ twitter_users_new <- map_df(missing_handles$ln_fn,possibly(.f= search_one, other
 The result contains 89 variables, so let's looks at only some of them to see if we catched some reps Twitter handles. 
 
 ```{r}
+# returns 7 empty columns too mucj
+names_users <- names(twitter_users_new)[1:89]
+names_clean <- c(names_users, "1","2","3","4","5","6","7")
+to_delete <- c("1","2","3","4","5","6","7")
+
+names(twitter_users_new) <- names_clean
+
+twitter_users_new <- twitter_users_new %>% 
+  select(-to_delete)
+  
+
 inspect <- twitter_users_new %>% 
   select(name, ln_fn, description, text, screen_name)
+
 
 head(inspect)
 ```
@@ -232,5 +268,26 @@ add_users <- twitter_users_again %>%
   filter(screen_name %in% on_twitter)
 
 twitter_users_correct <- rbind(twitter_users_correct, add_users)
+```
+
+So this gives 60 twitter handles of the 83 missing handels of our representatives in the 55th legistlature. So we should have 127 twitter handels on a possible total of 150.
+
+```{r}
+existing_handles <- reps_55 %>% 
+  left_join(handles) %>% 
+  filter(!is.na(screen_name))
+```
+
+```{r}
+handles_55 <- existing_handles %>%
+  select(-party) %>% 
+  rbind(twitter_users_correct %>% 
+          select(ln_fn, screen_name)) %>% 
+  filter(screen_name  != "NDewulf") #two accounts?
+
+reps_55 <- reps_55 %>% 
+  left_join(handles_55)
+
+saveRDS(reps_55, "./data/20190716/reps_55.rds")
 ```
 
