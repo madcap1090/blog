@@ -22,16 +22,13 @@ library("tidyverse")
 library("rvest")
 library("scales")
 library("rtweet")
-#library("glue")
-
 ```
 
 
 
 ```{r}
-
 url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/",
-              "depute&language=nl&cfm=cvlist54.cfm?legis=55&today=y") # url to the current members
+              "depute&language=nl&cfm=cvlist54.cfm?legis=55&today=y") # url to the members
 
 table <- url %>% 
   read_html() %>% 
@@ -55,7 +52,8 @@ Some members were also part of the last legislature, and their handles were alre
 
 
 ```{r}
-twitter_users <- readRDS("~/R/blogs/content/post/data/20190502/twitter_users.rds") # the pre-exiting data
+# the pre-exiting data
+twitter_users <- readRDS("~/R/blogs/content/post/data/20190502/twitter_users.rds") 
 
 handles <- twitter_users %>% 
   select(ln_fn, screen_name)
@@ -73,8 +71,9 @@ nrow(missing_handles)
 Of the 150 current members, 83 handles are missing. Makes you wonder how much current members did not seat in the last legislature...
 
 ```{r message=FALSE, warning=FALSE}
-url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=cvlist54.cfm?legis=54&today=n") # url to the members of 54
-
+# url to the members of 54
+url <- paste0("https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&",
+              "language=nl&cfm=cvlist54.cfm?legis=54&today=n") 
 table <- url %>% 
   read_html() %>% 
   html_nodes("#story > table") %>% 
@@ -168,44 +167,32 @@ search_one <- function(x){print (x)
 
 
 
-```{r message=FALSE}
+```{r message=FALSE, warning=FALSE, results= FALSE}
 twitter_users_new <- map_df(missing_handles$ln_fn,possibly(.f= search_one, otherwise = NULL))
 ```
 
 The result contains 89 variables, so let's looks at only some of them to see if we catched some reps Twitter handles. 
 
 ```{r}
-# returns 7 empty columns too mucj
-# names_users <- names(twitter_users_new)[1:89]
-# names_clean <- c(names_users, "1","2","3","4","5","6","7")
-# to_delete <- c("1","2","3","4","5","6","7")
-# 
-# names(twitter_users_new) <- names_clean
-# 
-# twitter_users_new <- twitter_users_new %>% 
-#   select(-to_delete)
-  
-
 inspect <- twitter_users_new %>% 
   select(name, ln_fn, description, text, screen_name)
 
-
-head(inspect)
 ```
 
 These handles are not correct:
 
 ```{r}
-no <- c("BOUKILINABIL1", "RobertoDAmicoMx","devuysts", "NathalieDewulf1","mvandillen", "M_Freilich",
-        "HanusMelissa","SamynEllen", "Sneptje", "VicaireAlbert")
+no <- c("BOUKILINABIL1", "RobertoDAmicoMx","devuysts",
+        "NathalieDewulf1","mvandillen", "M_Freilich",
+        "HanusMelissa","SamynEllen", "Sneptje",
+        "VicaireAlbert")
 
 ```
 
 
 So there is a need to dig a bit deeper.
 
-```{r}
-
+```{r, results= FALSE}
 not_correct <- inspect %>% 
   filter(screen_name %in% no) %>% 
   select(ln_fn)
@@ -222,11 +209,9 @@ twitter_users_10 <- map_df(not_correct$ln_fn,possibly(.f= search_ten, otherwise 
 inspect_10 <- twitter_users_10 %>% 
   select(name, ln_fn, description, text, screen_name)
 
-
 ```
 
 ```{r}
-
 # handels that seem correct:
 
 on_twitter <- c("NDewulf","dillenm", "MichaelFreilich", "e_samyn", 
@@ -291,3 +276,4 @@ reps_55 <- reps_55 %>%
 saveRDS(reps_55, "./data/20190716/reps_55.rds")
 ```
 
+So now we have some Twitter handles of our representatives. That enables us to harverst their tweets. More soon.
