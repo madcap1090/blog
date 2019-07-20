@@ -238,7 +238,7 @@ check <- missing_handles %>%
 
 We still have 20 that gave no results? Try again
 
-```{r}
+```{r message=FALSE, warning=FALSE, results=FALSE}
 
 twitter_users_again <- map_df(check$ln_fn,possibly(.f= search_ten, otherwise = NULL))
 

@@ -314,58 +314,6 @@ twitter_users_correct &lt;- rbind(twitter_users_correct, add_users)</code></pre>
   filter(!ln_fn %in% twitter_users_correct$ln_fn)</code></pre>
 <p>We still have 20 that gave no results? Try again</p>
 <pre class="r"><code>twitter_users_again &lt;- map_df(check$ln_fn,possibly(.f= search_ten, otherwise = NULL))</code></pre>
-<pre><code>## [1] &quot;Anseeuw Björn&quot;</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Ben Achour Malik&quot;</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## [1] &quot;Chanson Julie&quot;</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## [1] &quot;D&#39;Haese Christoph&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Daems Greet&quot;</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## [1] &quot;de Laveleye Séverine&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Dedonder Ludivine&quot;</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## [1] &quot;Hanus Mélissa&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Houtmeyers Katrien&quot;</code></pre>
-<pre><code>## Searching for users...</code></pre>
-<pre><code>## [1] &quot;Leroy Marie-Colline&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Mertens Peter&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Moscufo Nadia&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Ravyts Kurt&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Thémont Sophie&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Thibaut Cécile&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Vanbesien Dieter&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Vermeersch Wouter&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Vindevoghel Maria&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
-<pre><code>## [1] &quot;Zanchetta Laurence&quot;</code></pre>
-<pre><code>## Searching for users...
-## Finished collecting users!</code></pre>
 <pre class="r"><code>inspect_again &lt;- twitter_users_again %&gt;% 
   select(name, ln_fn, description, text, screen_name)
 
