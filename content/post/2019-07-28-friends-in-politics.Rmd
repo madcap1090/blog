@@ -11,7 +11,7 @@ tags:
 ---
 In the last post we tried hard to find out all the Twitter handles of our current parlamantarians. A number of interesting analysises can be done with the texts they tweet. But the legistlature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.
 
-One of the things we can analyse now are the links on Twitter between membres of parlaiment as demonstated by the excellent blog posts of Markus Konrad starting [here]{https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/}
+One of the things we can analyse now are the links on Twitter between membres of parlaiment as demonstated by the excellent blog posts/code of Markus Konrad starting [here]{https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/}
 
 Let us see what can learn from using his analysis on the Belgian parliament. I am curious to find out. 
 
@@ -183,6 +183,8 @@ friends <- filter(friends, !is.na(screen_name))
 
 retain only the connections between deputies, not to other Twitter accounts
 
+CHECK dep-acoounts SEEMS too much
+
 ```{r}
 dep_accounts <- unique(friends$user)   
 dep_friends <- filter(friends, screen_name %in% dep_accounts) 
@@ -280,3 +282,61 @@ counts_p2p <- gather(p2p_mat, 'to_party', 'prop', 2:ncol(p2p_mat)) %>%
 head(counts_p2p, 10)
 
 ```
+
+
+```{r}
+p <- ggplot(counts_p2p, aes(x = to_party, y = from_party, fill = perc)) +
+    geom_raster() +
+    geom_text(aes(label = perc_label), color = 'white') +
+    scale_fill_viridis_c(guide = guide_legend(title = 'Followers / following\nshare in percent')) +
+    labs(x = 'party in column is followed by party in row', y = 'party in row follows party in column',
+         title = 'Proportion of followings / followers between parties',
+         subtitle = paste('In percent as of', "2019-07-22")) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+p
+
+#ggsave(sprintf('plots/p2p_follower_shares_%s.png', "2019-07-25"), p, width = 8, height = 6)
+```
+
+Remove accounts that are not connected to any other deputy account.
+
+```{r}
+accounts_connected <- unique(c(edges_parties$from_account, edges_parties$to_account))
+accounts_not_connected <- dep_twitter$screen_name[!(dep_twitter$screen_name %in% accounts_connected)]
+accounts_not_connected
+
+```
+
+[Dillen marijke](https://twitter.com/dillenm), seems correct, very few followers, but it might also have been a false positive. [Albert Vicaire](https://twitter.com/VicaireAlbert) lloks less like a false positive, but also has very little activity. 
+
+
+# these accounts are used as vertices (aka nodes)
+
+```{r}
+dep_twitter_connected <- filter(dep_twitter, screen_name %in% accounts_connected)
+```
+
+https://igraph.org/r/doc/graph_from_data_frame.html
+
+```{r}
+
+vertices <- dep_twitter_connected %>% 
+    select(screen_name, ln_fn, party)
+
+#g <- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
+g <- graph_from_data_frame(edges_parties, vertices = vertices)
+g
+```
+
+```{r}
+class(g)
+```
+
+
+So if I'm reading this right, what we've got here is 125 nodes and 2.839 links. Thant's a little bit too much nodes. 
+
+```{r}
+check_nodes <- V(g)$name
+```
+
