@@ -1,0 +1,282 @@
+---
+title: friends in politics
+author: William Bourgeois
+date: '2019-07-28'
+slug: friends-in-politics
+categories: []
+tags:
+  - Twitter
+  - Network analysis
+  - Belgian politics
+---
+In the last post we tried hard to find out all the Twitter handles of our current parlamantarians. A number of interesting analysises can be done with the texts they tweet. But the legistlature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.
+
+One of the things we can analyse now are the links on Twitter between membres of parlaiment as demonstated by the excellent blog posts of Markus Konrad starting [here]{https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/}
+
+Let us see what can learn from using his analysis on the Belgian parliament. I am curious to find out. 
+
+So gentlepersons, attach you libraries. 
+
+```{r message=FALSE}
+library("rtweet")
+library("tidyverse")
+library("dplyr")
+library("tidyr")
+library("ggplot2")
+library("igraph")
+library("visNetwork")
+```
+
+Loading our reps data.
+
+```{r}
+reps_55 <- readRDS("~/R/blogs/content/post/data/20190716/reps_55.rds")
+```
+
+Getting their friends (you need to authenticate first).
+
+```{r, eval=FALSE}
+friends <- get_friends(reps_55$screen_name, retryonratelimit = TRUE)
+```
+
+So that leaves a pause of about 15 minutes per 10 Twitter handles analysed in order to stay within the rate limits. The data of the analysis. 
+
+```{r, eval=FALSE}
+friends$fetch_friends_date <- Sys.Date() 
+saveRDS(friends, "friends.rds")
+```
+
+So we have (on 2019-07-22) 103.840 friends of our reps. Now we can get the Twitter information of these one hunderd thousand accounts, with some heavy mechanics from Markus. Hau ruck! 
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+friends_ids <- unique(friends$user_id)
+#friends_ids <- friends_ids[1:1000]   # subset for testing
+n_friends_ids <- length(friends_ids)
+
+# ---- look up information about each friend user ID ----
+
+n_retries <- 5          # maximum number of *subsequent* retries when an API call failed
+sleep_sec <- 16 * 60    # 15 minutes is the time window for rate limit reset; add a little time buffer of 1 min.
+chunksize <- 100        # number of user IDs per request; the docs say 300 requests with 100 IDs each per 15 min.
+n_max_requests <- 280   # max. number of requests within a 15 min. time frame; we stay a bit below the 300 requests threshold
+chunk_idx <- 0          # current chunk index
+cur_retry <- 0          # current number of retries; is reset to 0 once a successful API call was made
+friendsdata <- tibble() 0# collected data
+
+print('fetching data from Twitter API...')
+
+request_i <- 0   # current number of requests
+
+# repeat API requests until all data was collected or too many retries happened due to request failures
+while(TRUE) {
+    # get chunk of friends IDs
+    chunk_start <- chunk_idx * chunksize + 1
+    chunk_end <- min(c((chunk_idx + 1) * chunksize, n_friends_ids))
+    friends_ids_chunk <- friends_ids[chunk_start:chunk_end]
+    print(sprintf('fetching data for friends IDs in range [%d, %d] (%d ids)',
+                  chunk_start, chunk_end, length(friends_ids_chunk)))
+    
+    # make an API request for user ID lookup
+    # if it successes, add the data to the "friendsdata" data frame set "success" to TRUE,
+    # else do not add data and set "success" to FALSE
+    success <- tryCatch({
+        request_i <- request_i + 1
+        friendsdata_chunk <- lookup_users(friends_ids_chunk)
+        friendsdata <- bind_rows(friendsdata, friendsdata_chunk)
+        TRUE
+    }, error = function(cond) {
+        FALSE
+    })
+    
+    if (success) {  # on success
+        cur_retry <- 0   # reset number of retries
+        
+        # check if we collected data for all IDs
+        if (chunk_start + chunksize >= n_friends_ids) {
+            break()
+        }
+    } else {  # on failure
+        # increment the number of retries
+        cur_retry <- cur_retry + 1
+        
+        # check if number of retries reached maximum
+        if (cur_retry >= n_retries) {
+            print(sprintf('failed after %d retries', cur_retry))
+            break()
+        }
+        
+        print(sprintf('will advance with retry %d', cur_retry))
+    }
+    
+    if (request_i %% n_max_requests == 0 || !success) {    # wait after max. num. requests or when no success
+        print(sprintf('waiting for %d sec.', sleep_sec))
+        Sys.sleep(sleep_sec)
+    }
+    
+    if (success) {   # if no success, retry with same chunk, otherwise increment chunk index
+        chunk_idx <- chunk_idx + 1
+    }
+}
+
+# ---- process collected friends data ----
+
+n_fetched <- sum(!is.na(friendsdata$screen_name))
+print(sprintf('got data for %d out of %d unique friends accounts', n_fetched, n_friends_ids))
+
+friendsdata$fetch_friendsdata_timestamp <- Sys.time()   # add timestamp
+
+# join friends user data by user ID
+print('joining data...')
+friendsfull <- left_join(friends, friendsdata, by = 'user_id')
+n_matched <- sum(!is.na(friendsfull$screen_name))
+print(sprintf('matching successful for %d out of %d rows', n_matched, nrow(friends)))
+
+# save as RDS
+saveRDS(friendsfull, './data/20190728/deputies_twitter_friends_full_20190722.RDS')
+
+```
+
+Define the party colors. I'm sure you can improve my choice by using this [service](https://www.google.com/search?q=hex+color+picker&oq=hex&aqs=chrome.5.69i57j0l5.5855j0j1&sourceid=chrome&ie=UTF-8)
+
+```{r}
+party_colors <-  c("N-VA" = "#b0a66d", 
+              "cdH" = "#db991d", 
+              "MR" = "#1d7cdb", 
+              "PS" = "#f27490", 
+              "CD&V" = "#cf6e2d", 
+              "sp.a" = "#ed74a7", 
+              "PVDA-PTB" = "#e31017",
+              "DéFi"="#e31080",
+              "INDEP" = "#f5f5ed",
+              "VB" = "#0f0f0f",
+              "Ecolo-Groen" = "#2ead03")
+
+party_colors_semitransp <- paste0(party_colors, '40')   # add transparency as hex code (25% transparency)
+names(party_colors_semitransp) <- names(party_colors)
+```
+
+Treating the data that was collected. 
+
+```{r}
+deputies_twitter_friends_full_20190722 <- readRDS("./data/20190728/deputies_twitter_friends_full_20190722.RDS")
+
+friends_full <- deputies_twitter_friends_full_20190722
+
+# in this dataset, "user" is the Twitter handle of the deputy and "screen_name" and further variables
+# refer to the data of the deputy's Twitter "friend" (i.e. the account she/he follows)
+friends <- select(friends_full, user, fetch_friends_date,
+                  fetch_friendsdata_timestamp,
+                  created_at, screen_name, name,
+                  location, description,
+                  protected, followers_count, 
+                  friends_count, statuses_count, 
+                  account_created_at, verified,
+                  account_lang)  # these may be variables of interest
+head(friends)
+```
+
+Some friends did not return a handle. 
+
+```{r}
+friends <- filter(friends, !is.na(screen_name))
+```
+
+retain only the connections between deputies, not to other Twitter accounts
+
+```{r}
+dep_accounts <- unique(friends$user)   
+dep_friends <- filter(friends, screen_name %in% dep_accounts) 
+head(dep_friends)
+
+```
+
+Select twitter handles and parties
+
+```{r}
+dep_twitter_full <-  readRDS("~/R/blogs/content/post/data/20190716/reps_55.rds")
+
+dep_twitter <- filter(dep_twitter_full, !is.na(screen_name))
+
+dep_accounts_parties <- select(dep_twitter, screen_name, party)
+
+```
+
+Construct a data frame containing edges and nodes, of people but also of parties (through people). 
+
+```{r}
+edges_parties <- select(dep_friends, from_account = user, to_account = screen_name) %>%
+    left_join(dep_accounts_parties, by = c('from_account' = 'screen_name')) %>%
+    rename(from_party = party) %>%
+    left_join(dep_accounts_parties, by = c('to_account' = 'screen_name')) %>%
+    rename(to_party = party)
+
+head(edges_parties)
+```
+
+Number of nodes:
+
+```{r}
+length(unique(edges_parties$from_account))
+```
+
+Number of edges:
+
+```{r}
+nrow(edges_parties)
+```
+
+
+Number of edges between parties:
+
+```{r}
+counts_p2p <- group_by(edges_parties, from_party, to_party) %>%
+  count() %>% 
+  ungroup() %>% 
+  arrange(desc(n))
+
+head(counts_p2p, 10)
+```
+
+Count the absolute number of edges per "from_party" (so the accounts followed, the 'friends', per party) this is required to calculate the proportions
+
+
+```{r}
+counts_party_edges <- group_by(counts_p2p, from_party) %>% 
+  summarise(n_edges = sum(n)) %>% 
+  arrange(desc(n_edges))
+counts_party_edges
+```
+
+add a column "prop" for the "from_party" -> "to_party" edges proportions
+
+```{r}
+counts_p2p <- left_join(counts_p2p, counts_party_edges, by = 'from_party') %>%
+  mutate(prop = n/n_edges) %>% 
+  select(-n_edges) %>%
+  arrange(desc(prop))
+
+
+head(counts_p2p, 10)
+```
+
+The 'INDEP' is Jean-Marie Dedecker who ran on a N-VA list. So the high proption of links to the N-VA is not surprising. What is interesting on the other hand is that people from the cdH tend to follow people from the MR more than they do people from their own party.  
+
+
+So now Markus creates a matrix with the proportions of friends 'from_party' in rows and 'to_party in columns.
+
+```{r}
+p2p_mat <- select(counts_p2p, -n) %>% spread(to_party, prop) %>%
+    mutate_all(function(x) { ifelse(is.na(x), 0, x) })   # some edge combinations do not occur -> replace NAs with 0
+p2p_mat
+```
+
+Converting back to a data frame with the function 'gather' to use ggplot, and preparing to make a heat map. 
+
+```{r}
+counts_p2p <- gather(p2p_mat, 'to_party', 'prop', 2:ncol(p2p_mat)) %>%
+  arrange(from_party, to_party) %>%
+    mutate(perc = prop * 100,                     # we use percent in the plot
+           perc_label = sprintf('%.1f', perc))    # a label to display the rounded number in the cells
+head(counts_p2p, 10)
+
+```
