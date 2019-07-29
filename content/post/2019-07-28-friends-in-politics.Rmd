@@ -333,10 +333,59 @@ g
 class(g)
 ```
 
+So if I'm reading this right, what we've got here is 125 nodes and 2.839 links in an "igraph" object.  
 
-So if I'm reading this right, what we've got here is 125 nodes and 2.839 links. Thant's a little bit too much nodes. 
+
+So now for some graph scores. The degree score of a vertex is the number of its adjacent edges. The function 'degree' can count the in/outbound and total edges. 
 
 ```{r}
-check_nodes <- V(g)$name
+degree_score <- sort(degree(g, mode = 'total'), decreasing = TRUE)
 ```
+
+So the following have the most edges:
+
+```{r}
+head(degree_score, 15)
+```
+
+And these are the parlemantiarians that follow the most collegues:
+
+```{r}
+degree_score <- sort(degree(g, mode = 'out'), decreasing = TRUE)
+head(degree_score, 15)
+```
+
+And the most followed:
+
+```{r}
+degree_score <- sort(degree(g, mode = 'in'), decreasing = TRUE)
+head(degree_score, 15)
+
+```
+
+Betweenness seems to be defined as the number of shortest paths going through a vertex. So I understand it as a measure of centrality at least in the web that is spun by the Twitter accounts. 
+
+```{r}
+betw_score <- sort(floor(betweenness(g)), decreasing = TRUE) 
+head(betw_score)
+```
+
+So the president of the Flemisch fascist party seems to be an interesting node to inspect, because having relatively lower degree scores (total being 46) his account has a very high betweenness score.  
+
+
+```{r}
+stopifnot(all(names(betw_score) == names(degree_score)))
+graph_scores <- data.frame(screen_name = names(degree_score),
+                           degr_score = degree_score,
+                           betw_score = betw_score,
+                           row.names = NULL, stringsAsFactors = FALSE)
+graph_scores <- left_join(dep_twitter_connected, graph_scores, by = 'screen_name')%>%
+    mutate(full_name = ln_fn) %>%
+    select(screen_name, full_name, degr_score, betw_score, party)
+
+graph_scores %>% arrange(desc(degree_score)) %>% head(10)
+graph_scores %>% arrange(desc(betw_score)) %>% head(10)
+
+```
+
 
