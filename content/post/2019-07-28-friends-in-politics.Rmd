@@ -8,14 +8,15 @@ tags:
   - Twitter
   - Network analysis
   - Belgian politics
+  - igraph
 ---
-In the last post we tried hard to find out all the Twitter handles of our current parlamantarians. A number of interesting analysises can be done with the texts they tweet. But the legistlature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.
+In the last post we tried hard to find out all the Twitter handles of our current parliamentarians. A number of interesting analysis's can be done with the texts they tweet. But the legislature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.
 
-One of the things we can analyse now are the links on Twitter between membres of parlaiment as demonstated by the excellent blog posts/code of Markus Konrad starting [here]{https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/}
+One of the things we can analyse now are the links on Twitter between members of parliament as demonstrated by the excellent blog posts/code of Markus Konrad starting [here]{https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/}
 
 Let us see what can learn from using his analysis on the Belgian parliament. I am curious to find out. 
 
-So gentlepersons, attach you libraries. 
+So gentle persons, attach you libraries. 
 
 ```{r message=FALSE}
 library("rtweet")
@@ -46,7 +47,7 @@ friends$fetch_friends_date <- Sys.Date()
 saveRDS(friends, "friends.rds")
 ```
 
-So we have (on 2019-07-22) 103.840 friends of our reps. Now we can get the Twitter information of these one hunderd thousand accounts, with some heavy mechanics from Markus. Hau ruck! 
+So we have (on 2019-07-22) 103.840 friends of our reps. Now we can get the Twitter information of these one hundred thousand accounts, with some heavy mechanics from Markus. Hau ruck! 
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
 friends_ids <- unique(friends$user_id)
@@ -139,20 +140,7 @@ saveRDS(friendsfull, './data/20190728/deputies_twitter_friends_full_20190722.RDS
 Define the party colors. I'm sure you can improve my choice by using this [service](https://www.google.com/search?q=hex+color+picker&oq=hex&aqs=chrome.5.69i57j0l5.5855j0j1&sourceid=chrome&ie=UTF-8)
 
 ```{r}
-party_colors <-  c("N-VA" = "#b0a66d", 
-              "cdH" = "#db991d", 
-              "MR" = "#1d7cdb", 
-              "PS" = "#f27490", 
-              "CD&V" = "#cf6e2d", 
-              "sp.a" = "#ed74a7", 
-              "PVDA-PTB" = "#e31017",
-              "DéFi"="#e31080",
-              "INDEP" = "#f5f5ed",
-              "VB" = "#0f0f0f",
-              "Ecolo-Groen" = "#2ead03")
 
-party_colors_semitransp <- paste0(party_colors, '40')   # add transparency as hex code (25% transparency)
-names(party_colors_semitransp) <- names(party_colors)
 ```
 
 Treating the data that was collected. 
@@ -261,7 +249,7 @@ counts_p2p <- left_join(counts_p2p, counts_party_edges, by = 'from_party') %>%
 head(counts_p2p, 10)
 ```
 
-The 'INDEP' is Jean-Marie Dedecker who ran on a N-VA list. So the high proption of links to the N-VA is not surprising. What is interesting on the other hand is that people from the cdH tend to follow people from the MR more than they do people from their own party.  
+The 'INDEP' is Jean-Marie Dedecker who ran on a N-VA list. So the high pr option of links to the N-VA is not surprising. What is interesting on the other hand is that people from the cdH tend to follow people from the MR more than they do people from their own party.  
 
 
 So now Markus creates a matrix with the proportions of friends 'from_party' in rows and 'to_party in columns.
@@ -308,7 +296,7 @@ accounts_not_connected
 
 ```
 
-[Dillen marijke](https://twitter.com/dillenm), seems correct, very few followers, but it might also have been a false positive. [Albert Vicaire](https://twitter.com/VicaireAlbert) lloks less like a false positive, but also has very little activity. 
+[Dillen marijke](https://twitter.com/dillenm), seems correct, very few followers, but it might also have been a false positive. [Albert Vicaire](https://twitter.com/VicaireAlbert) looks less like a false positive, but also has very little activity. 
 
 
 # these accounts are used as vertices (aka nodes)
@@ -348,7 +336,7 @@ So the following have the most edges:
 head(degree_score, 15)
 ```
 
-And these are the parlemantiarians that follow the most collegues:
+And these are the parliamentarians that follow the most colleagues:
 
 ```{r}
 degree_score <- sort(degree(g, mode = 'out'), decreasing = TRUE)
@@ -370,11 +358,10 @@ betw_score <- sort(floor(betweenness(g)), decreasing = TRUE)
 head(betw_score)
 ```
 
-So the president of the Flemisch fascist party seems to be an interesting node to inspect, because having relatively lower degree scores (total being 46) his account has a very high betweenness score.  
+So the president of the Flemish fascist party seems to be an interesting node to inspect, because having relatively lower degree scores (total being 46) his account has a very high betweenness score. Find out more [here](https://igraph.org/r/doc/betweenness.html).  
 
 
 ```{r}
-stopifnot(all(names(betw_score) == names(degree_score)))
 graph_scores <- data.frame(screen_name = names(degree_score),
                            degr_score = degree_score,
                            betw_score = betw_score,
@@ -388,4 +375,88 @@ graph_scores %>% arrange(desc(betw_score)) %>% head(10)
 
 ```
 
+ Setting the vertices and edge colors according to party membership
 
+```{r}
+party_colors <-  c("N-VA" = "#b0a66d", 
+              "cdH" = "#db991d", 
+              "MR" = "#1d7cdb", 
+              "PS" = "#f27490", 
+              "CD&V" = "#cf6e2d", 
+              "sp.a" = "#ed74a7", 
+              "PVDA-PTB" = "#e31017",
+              "DéFi"="#e31080",
+              "INDEP" = "#f5f5ed",
+              "VB" = "#0f0f0f",
+              "Ecolo-Groen" = "#2ead03")
+
+party_colors_semitransp <- paste0(party_colors, '40')   # add transparency as hex code (25% transparency)
+names(party_colors_semitransp) <- names(party_colors)
+
+V(g)$color <- party_colors[V(g)$party]
+E(g)$color <- party_colors_semitransp[E(g)$from_party]
+
+```
+
+
+```{r}
+#- keep this one
+lay <- layout_with_kk(g)  # okay
+plot(g, layout = lay,
+     vertex.size = 4, vertex.label.cex = 0.7,
+     vertex.label.color = 'black', vertex.label.family = 'sans',
+     vertex.label.dist = 0.5, vertex.frame.color = 'white',
+     edge.arrow.size = 0.2, edge.curved = TRUE)
+```
+
+Obviously too small. But you can look at a larger image [here](). The colors of the incoming arows indicate which party they are from and 
+
+https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown
+
+and if memory serves me right put the image and html file (?) in static?
+
+And now for the interactive (html) plot, with the visNetwork package.
+
+
+```{r}
+# convert igraph object to visNetwork data
+vis_nw_data <- toVisNetworkData(g)
+
+# add a title to be displayed when mouse is over a node
+# vis_nw_data$nodes$title <- sprintf('@%s (%s %s)', vis_nw_data$nodes$id,
+#                                    vis_nw_data$nodes$personal.first_name,
+#                                    vis_nw_data$nodes$personal.last_name)
+# head(vis_nw_data$nodes)
+
+vis_nw_data$nodes$title <- sprintf('@%s (%s)', vis_nw_data$nodes$id,
+                                    vis_nw_data$nodes$ln_fn)
+head(vis_nw_data$nodes)
+```
+
+
+```{r}
+# strip transparency from edge color because visNetwork can't handle it
+vis_nw_data$edges$color <- substr(vis_nw_data$edges$color, 0, 7)
+head(vis_nw_data$edges)
+
+# create a data frame for the legend
+vis_legend_data <- data.frame(label = names(party_colors), color = unname(party_colors), shape = 'square')
+
+# create the network
+vis_nw <- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = '700px', width = '90%') %>%
+    visIgraphLayout(layout = 'layout_with_drl', options=list(simmer.attraction=0)) %>%   # use same layout as above
+    visEdges(color = list(opacity = 0.25), arrows = 'to') %>%                            # and same transparency
+    visNodes(labelHighlightBold = TRUE, borderWidth = 1, borderWidthSelected = 12) %>%   # set node highlighting
+    visLegend(addNodes = vis_legend_data, useGroups = FALSE, zoom = FALSE, width = 0.2) %>%   # add legend
+    visOptions(nodesIdSelection = TRUE, highlightNearest = TRUE, selectedBy = 'party') %>%    # further options
+    visInteraction(dragNodes = TRUE)   # enable dragging of nodes
+```
+
+```{r}
+getwd()
+```
+
+
+```{r}
+visSave(vis_nw, file = "~R/blogs/static/post/friends.html")
+```
