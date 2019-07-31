@@ -13,8 +13,8 @@ tags:
 
 
 
-<p>In the last post we tried hard to find out all the Twitter handles of our current parliamentarians. A number of interesting analysis’s can be done with the texts they tweet. But the legislature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.</p>
-<p>One of the things we can analyse now are the links on Twitter between members of parliament as demonstrated by the excellent blog posts/code of Markus Konrad starting [here]{<a href="https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/" class="uri">https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/</a>}</p>
+<p>In the last post we tried hard to find out all the Twitter handles of our current parliamentarians. A number of interesting analyses can be done with the texts they tweet. But the legislature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.</p>
+<p>One of the things we can analyse now are the links on Twitter between members of parliament as demonstrated by the excellent blog posts/code of Markus Konrad starting <a href="https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/">here</a></p>
 <p>Let us see what can learn from using his analysis on the Belgian parliament. I am curious to find out.</p>
 <p>So gentle persons, attach you libraries.</p>
 <pre class="r"><code>library(&quot;rtweet&quot;)
@@ -39,18 +39,21 @@ n_friends_ids &lt;- length(friends_ids)
 # ---- look up information about each friend user ID ----
 
 n_retries &lt;- 5          # maximum number of *subsequent* retries when an API call failed
-sleep_sec &lt;- 16 * 60    # 15 minutes is the time window for rate limit reset; add a little time buffer of 1 min.
-chunksize &lt;- 100        # number of user IDs per request; the docs say 300 requests with 100 IDs each per 15 min.
-n_max_requests &lt;- 280   # max. number of requests within a 15 min. time frame; we stay a bit below the 300 requests threshold
+sleep_sec &lt;- 16 * 60    # 15 minutes is the time window for rate limit reset; add a
+#little time buffer of 1 min.
+chunksize &lt;- 100        # number of user IDs per request; the docs say 300 requests with
+#100 IDs each per 15 min.
+n_max_requests &lt;- 280   # max. number of requests within a 15 min. time frame; we stay a
+#bit below the 300 requests threshold
 chunk_idx &lt;- 0          # current chunk index
-cur_retry &lt;- 0          # current number of retries; is reset to 0 once a successful API call was made
+cur_retry &lt;- 0          # current number of retries; is reset to 0 once a successful API
+#call was made
 friendsdata &lt;- tibble() 0# collected data
 
 print(&#39;fetching data from Twitter API...&#39;)
 
 request_i &lt;- 0   # current number of requests
 
-# repeat API requests until all data was collected or too many retries happened due to request failures
 while(TRUE) {
     # get chunk of friends IDs
     chunk_start &lt;- chunk_idx * chunksize + 1
@@ -259,7 +262,8 @@ head(counts_p2p, 10)</code></pre>
 <p>The ‘INDEP’ is Jean-Marie Dedecker who ran on a N-VA list. So the high pr option of links to the N-VA is not surprising. What is interesting on the other hand is that people from the cdH tend to follow people from the MR more than they do people from their own party.</p>
 <p>So now Markus creates a matrix with the proportions of friends ‘from_party’ in rows and ’to_party in columns.</p>
 <pre class="r"><code>p2p_mat &lt;- select(counts_p2p, -n) %&gt;% spread(to_party, prop) %&gt;%
-    mutate_all(function(x) { ifelse(is.na(x), 0, x) })   # some edge combinations do not occur -&gt; replace NAs with 0
+    mutate_all(function(x) { ifelse(is.na(x), 0, x) })   
+# some edge combinations do not occur -&gt; replace NAs with 0
 p2p_mat</code></pre>
 <pre><code>## # A tibble: 12 x 13
 ##    from_party `CD&amp;V`     cdH    DéFI `Ecolo-Groen`   INDEP      MR `N-VA`
@@ -281,8 +285,10 @@ p2p_mat</code></pre>
 <p>Converting back to a data frame with the function ‘gather’ to use ggplot, and preparing to make a heat map.</p>
 <pre class="r"><code>counts_p2p &lt;- gather(p2p_mat, &#39;to_party&#39;, &#39;prop&#39;, 2:ncol(p2p_mat)) %&gt;%
   arrange(from_party, to_party) %&gt;%
-    mutate(perc = prop * 100,                     # we use percent in the plot
-           perc_label = sprintf(&#39;%.1f&#39;, perc))    # a label to display the rounded number in the cells
+    mutate(perc = prop * 100,                     
+# we use percent in the plot
+           perc_label = sprintf(&#39;%.1f&#39;, perc))    
+# a label to display the rounded number in the cells
 head(counts_p2p, 10)</code></pre>
 <pre><code>## # A tibble: 10 x 5
 ##    from_party to_party       prop   perc perc_label
@@ -307,16 +313,13 @@ head(counts_p2p, 10)</code></pre>
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 p</code></pre>
-<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
-<pre class="r"><code>#ggsave(sprintf(&#39;plots/p2p_follower_shares_%s.png&#39;, &quot;2019-07-25&quot;), p, width = 8, height = 6)</code></pre>
+<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 <p>Remove accounts that are not connected to any other deputy account.</p>
 <pre class="r"><code>accounts_connected &lt;- unique(c(edges_parties$from_account, edges_parties$to_account))
 accounts_not_connected &lt;- dep_twitter$screen_name[!(dep_twitter$screen_name %in% accounts_connected)]
 accounts_not_connected</code></pre>
 <pre><code>## [1] &quot;dillenm&quot;       &quot;VicaireAlbert&quot;</code></pre>
 <p><a href="https://twitter.com/dillenm">Dillen marijke</a>, seems correct, very few followers, but it might also have been a false positive. <a href="https://twitter.com/VicaireAlbert">Albert Vicaire</a> looks less like a false positive, but also has very little activity.</p>
-<div id="these-accounts-are-used-as-vertices-aka-nodes" class="section level1">
-<h1>these accounts are used as vertices (aka nodes)</h1>
 <pre class="r"><code>dep_twitter_connected &lt;- filter(dep_twitter, screen_name %in% accounts_connected)</code></pre>
 <p><a href="https://igraph.org/r/doc/graph_from_data_frame.html" class="uri">https://igraph.org/r/doc/graph_from_data_frame.html</a></p>
 <pre class="r"><code>vertices &lt;- dep_twitter_connected %&gt;% 
@@ -325,10 +328,10 @@ accounts_not_connected</code></pre>
 #g &lt;- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
 g &lt;- graph_from_data_frame(edges_parties, vertices = vertices)
 g</code></pre>
-<pre><code>## IGRAPH d2f8193 DN-- 125 2839 -- 
+<pre><code>## IGRAPH 0dd37c1 DN-- 125 2839 -- 
 ## + attr: name (v/c), ln_fn (v/c), party (v/c), from_party (e/c),
 ## | to_party (e/c)
-## + edges from d2f8193 (vertex names):
+## + edges from 0dd37c1 (vertex names):
 ##  [1] JosyArens     -&gt;vanessmatz     DanBacquelaine-&gt;DeMaegdMichel 
 ##  [3] DanBacquelaine-&gt;SpoorenJan     DanBacquelaine-&gt;BurtonEmmanuel
 ##  [5] DanBacquelaine-&gt;prevotmaxime   DanBacquelaine-&gt;OzlemOzen1    
@@ -337,8 +340,6 @@ g</code></pre>
 ## [11] DanBacquelaine-&gt;valerievanpeel DanBacquelaine-&gt;andreflahaut  
 ## [13] DanBacquelaine-&gt;Sophie_Wilmes  DanBacquelaine-&gt;PPrevot       
 ## + ... omitted several edges</code></pre>
-<pre class="r"><code>class(g)</code></pre>
-<pre><code>## [1] &quot;igraph&quot;</code></pre>
 <p>So if I’m reading this right, what we’ve got here is 125 nodes and 2.839 links in an “igraph” object.</p>
 <p>So now for some graph scores. The degree score of a vertex is the number of its adjacent edges. The function ‘degree’ can count the in/outbound and total edges.</p>
 <pre class="r"><code>degree_score &lt;- sort(degree(g, mode = &#39;total&#39;), decreasing = TRUE)</code></pre>
@@ -434,7 +435,8 @@ graph_scores %&gt;% arrange(desc(degree_score)) %&gt;% head(10)</code></pre>
               &quot;VB&quot; = &quot;#0f0f0f&quot;,
               &quot;Ecolo-Groen&quot; = &quot;#2ead03&quot;)
 
-party_colors_semitransp &lt;- paste0(party_colors, &#39;40&#39;)   # add transparency as hex code (25% transparency)
+party_colors_semitransp &lt;- paste0(party_colors, &#39;40&#39;)   
+# add transparency as hex code (25% transparency)
 names(party_colors_semitransp) &lt;- names(party_colors)
 
 V(g)$color &lt;- party_colors[V(g)$party]
@@ -446,8 +448,8 @@ plot(g, layout = lay,
      vertex.label.color = &#39;black&#39;, vertex.label.family = &#39;sans&#39;,
      vertex.label.dist = 0.5, vertex.frame.color = &#39;white&#39;,
      edge.arrow.size = 0.2, edge.curved = TRUE)</code></pre>
-<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
-<p><a href="%22http://google.be%22"><embed src="%22./static/img/20190728/graph_small.png%22" /></a></p>
+<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
+<p><a href="%22http://google.be%22"><embed src="%22./img/20190728/graph_small.png%22" /></a></p>
 <p>Obviously too small. But you can look at a larger image <a href="">here</a>. The colors of the incoming arows indicate which party they are from and</p>
 <p><a href="https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown" class="uri">https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown</a></p>
 <p>and if memory serves me right put the image and html file (?) in static?</p>
@@ -503,5 +505,7 @@ vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, he
 
 file.copy(&quot;friends.html&quot;, &quot;./files/20190728/friends.html&quot;)</code></pre>
 <pre><code>## [1] FALSE</code></pre>
-<pre class="r"><code>unlink(&quot;friends.html&quot;)</code></pre>
-</div>
+<pre class="r"><code>unlink(&quot;friends.html&quot;)
+
+# https://badtothecode.netlify.com/post/files/20190728/friends/
+# there is somting there</code></pre>

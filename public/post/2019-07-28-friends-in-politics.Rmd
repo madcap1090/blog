@@ -10,9 +10,9 @@ tags:
   - Belgian politics
   - igraph
 ---
-In the last post we tried hard to find out all the Twitter handles of our current parliamentarians. A number of interesting analysis's can be done with the texts they tweet. But the legislature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.
+In the last post we tried hard to find out all the Twitter handles of our current parliamentarians. A number of interesting analyses can be done with the texts they tweet. But the legislature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.
 
-One of the things we can analyse now are the links on Twitter between members of parliament as demonstrated by the excellent blog posts/code of Markus Konrad starting [here]{https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/}
+One of the things we can analyse now are the links on Twitter between members of parliament as demonstrated by the excellent blog posts/code of Markus Konrad starting [here](https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/)
 
 Let us see what can learn from using his analysis on the Belgian parliament. I am curious to find out. 
 
@@ -57,18 +57,21 @@ n_friends_ids <- length(friends_ids)
 # ---- look up information about each friend user ID ----
 
 n_retries <- 5          # maximum number of *subsequent* retries when an API call failed
-sleep_sec <- 16 * 60    # 15 minutes is the time window for rate limit reset; add a little time buffer of 1 min.
-chunksize <- 100        # number of user IDs per request; the docs say 300 requests with 100 IDs each per 15 min.
-n_max_requests <- 280   # max. number of requests within a 15 min. time frame; we stay a bit below the 300 requests threshold
+sleep_sec <- 16 * 60    # 15 minutes is the time window for rate limit reset; add a
+#little time buffer of 1 min.
+chunksize <- 100        # number of user IDs per request; the docs say 300 requests with
+#100 IDs each per 15 min.
+n_max_requests <- 280   # max. number of requests within a 15 min. time frame; we stay a
+#bit below the 300 requests threshold
 chunk_idx <- 0          # current chunk index
-cur_retry <- 0          # current number of retries; is reset to 0 once a successful API call was made
+cur_retry <- 0          # current number of retries; is reset to 0 once a successful API
+#call was made
 friendsdata <- tibble() 0# collected data
 
 print('fetching data from Twitter API...')
 
 request_i <- 0   # current number of requests
 
-# repeat API requests until all data was collected or too many retries happened due to request failures
 while(TRUE) {
     # get chunk of friends IDs
     chunk_start <- chunk_idx * chunksize + 1
@@ -138,10 +141,6 @@ saveRDS(friendsfull, './data/20190728/deputies_twitter_friends_full_20190722.RDS
 ```
 
 Define the party colors. I'm sure you can improve my choice by using this [service](https://www.google.com/search?q=hex+color+picker&oq=hex&aqs=chrome.5.69i57j0l5.5855j0j1&sourceid=chrome&ie=UTF-8)
-
-```{r}
-
-```
 
 Treating the data that was collected. 
 
@@ -256,7 +255,8 @@ So now Markus creates a matrix with the proportions of friends 'from_party' in r
 
 ```{r}
 p2p_mat <- select(counts_p2p, -n) %>% spread(to_party, prop) %>%
-    mutate_all(function(x) { ifelse(is.na(x), 0, x) })   # some edge combinations do not occur -> replace NAs with 0
+    mutate_all(function(x) { ifelse(is.na(x), 0, x) })   
+# some edge combinations do not occur -> replace NAs with 0
 p2p_mat
 ```
 
@@ -265,8 +265,10 @@ Converting back to a data frame with the function 'gather' to use ggplot, and pr
 ```{r}
 counts_p2p <- gather(p2p_mat, 'to_party', 'prop', 2:ncol(p2p_mat)) %>%
   arrange(from_party, to_party) %>%
-    mutate(perc = prop * 100,                     # we use percent in the plot
-           perc_label = sprintf('%.1f', perc))    # a label to display the rounded number in the cells
+    mutate(perc = prop * 100,                     
+# we use percent in the plot
+           perc_label = sprintf('%.1f', perc))    
+# a label to display the rounded number in the cells
 head(counts_p2p, 10)
 
 ```
@@ -284,7 +286,6 @@ p <- ggplot(counts_p2p, aes(x = to_party, y = from_party, fill = perc)) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 p
 
-#ggsave(sprintf('plots/p2p_follower_shares_%s.png', "2019-07-25"), p, width = 8, height = 6)
 ```
 
 Remove accounts that are not connected to any other deputy account.
@@ -297,9 +298,6 @@ accounts_not_connected
 ```
 
 [Dillen marijke](https://twitter.com/dillenm), seems correct, very few followers, but it might also have been a false positive. [Albert Vicaire](https://twitter.com/VicaireAlbert) looks less like a false positive, but also has very little activity. 
-
-
-# these accounts are used as vertices (aka nodes)
 
 ```{r}
 dep_twitter_connected <- filter(dep_twitter, screen_name %in% accounts_connected)
@@ -317,12 +315,7 @@ g <- graph_from_data_frame(edges_parties, vertices = vertices)
 g
 ```
 
-```{r}
-class(g)
-```
-
 So if I'm reading this right, what we've got here is 125 nodes and 2.839 links in an "igraph" object.  
-
 
 So now for some graph scores. The degree score of a vertex is the number of its adjacent edges. The function 'degree' can count the in/outbound and total edges. 
 
@@ -390,7 +383,8 @@ party_colors <-  c("N-VA" = "#b0a66d",
               "VB" = "#0f0f0f",
               "Ecolo-Groen" = "#2ead03")
 
-party_colors_semitransp <- paste0(party_colors, '40')   # add transparency as hex code (25% transparency)
+party_colors_semitransp <- paste0(party_colors, '40')   
+# add transparency as hex code (25% transparency)
 names(party_colors_semitransp) <- names(party_colors)
 
 V(g)$color <- party_colors[V(g)$party]
@@ -409,7 +403,7 @@ plot(g, layout = lay,
      edge.arrow.size = 0.2, edge.curved = TRUE)
 ```
 
-[![small_pic]("./static/img/20190728/graph_small.png")]("http://google.be")
+[![small_pic]("./img/20190728/graph_small.png")]("http://google.be")
 
 
 Obviously too small. But you can look at a larger image [here](). The colors of the incoming arows indicate which party they are from and 
@@ -461,5 +455,8 @@ visSave(vis_nw, file = "friends.html")
 
 file.copy("friends.html", "./files/20190728/friends.html")
 unlink("friends.html")
+
+# https://badtothecode.netlify.com/post/files/20190728/friends/
+# there is somting there
 ```
 
