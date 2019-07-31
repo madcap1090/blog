@@ -56,33 +56,22 @@ n_friends_ids <- length(friends_ids)
 
 # ---- look up information about each friend user ID ----
 
-n_retries <- 5          # maximum number of *subsequent* retries when an API call failed
-sleep_sec <- 16 * 60    # 15 minutes is the time window for rate limit reset; add a
-#little time buffer of 1 min.
-chunksize <- 100        # number of user IDs per request; the docs say 300 requests with
-#100 IDs each per 15 min.
-n_max_requests <- 280   # max. number of requests within a 15 min. time frame; we stay a
-#bit below the 300 requests threshold
-chunk_idx <- 0          # current chunk index
-cur_retry <- 0          # current number of retries; is reset to 0 once a successful API
-#call was made
-friendsdata <- tibble() 0# collected data
-
+n_retries <- 5         
+sleep_sec <- 16 * 60   
+chunksize <- 100        
+n_max_requests <- 280   
+chunk_idx <- 0          
+cur_retry <- 0          
+friendsdata <- tibble() 0
 print('fetching data from Twitter API...')
-
-request_i <- 0   # current number of requests
+request_i <- 0   
 
 while(TRUE) {
-    # get chunk of friends IDs
     chunk_start <- chunk_idx * chunksize + 1
     chunk_end <- min(c((chunk_idx + 1) * chunksize, n_friends_ids))
     friends_ids_chunk <- friends_ids[chunk_start:chunk_end]
     print(sprintf('fetching data for friends IDs in range [%d, %d] (%d ids)',
                   chunk_start, chunk_end, length(friends_ids_chunk)))
-    
-    # make an API request for user ID lookup
-    # if it successes, add the data to the "friendsdata" data frame set "success" to TRUE,
-    # else do not add data and set "success" to FALSE
     success <- tryCatch({
         request_i <- request_i + 1
         friendsdata_chunk <- lookup_users(friends_ids_chunk)
@@ -92,18 +81,17 @@ while(TRUE) {
         FALSE
     })
     
-    if (success) {  # on success
-        cur_retry <- 0   # reset number of retries
+    if (success) {  
+        cur_retry <- 0   
         
-        # check if we collected data for all IDs
+
         if (chunk_start + chunksize >= n_friends_ids) {
             break()
         }
     } else {  # on failure
-        # increment the number of retries
         cur_retry <- cur_retry + 1
-        
-        # check if number of retries reached maximum
+  
+
         if (cur_retry >= n_retries) {
             print(sprintf('failed after %d retries', cur_retry))
             break()
@@ -112,22 +100,21 @@ while(TRUE) {
         print(sprintf('will advance with retry %d', cur_retry))
     }
     
-    if (request_i %% n_max_requests == 0 || !success) {    # wait after max. num. requests or when no success
+    if (request_i %% n_max_requests == 0 || !success) {    
         print(sprintf('waiting for %d sec.', sleep_sec))
         Sys.sleep(sleep_sec)
     }
     
-    if (success) {   # if no success, retry with same chunk, otherwise increment chunk index
+    if (success) {   
         chunk_idx <- chunk_idx + 1
     }
 }
 
-# ---- process collected friends data ----
 
 n_fetched <- sum(!is.na(friendsdata$screen_name))
 print(sprintf('got data for %d out of %d unique friends accounts', n_fetched, n_friends_ids))
 
-friendsdata$fetch_friendsdata_timestamp <- Sys.time()   # add timestamp
+friendsdata$fetch_friendsdata_timestamp <- Sys.time()   
 
 # join friends user data by user ID
 print('joining data...')
@@ -149,8 +136,7 @@ deputies_twitter_friends_full_20190722 <- readRDS("./data/20190728/deputies_twit
 
 friends_full <- deputies_twitter_friends_full_20190722
 
-# in this dataset, "user" is the Twitter handle of the deputy and "screen_name" and further variables
-# refer to the data of the deputy's Twitter "friend" (i.e. the account she/he follows)
+
 friends <- select(friends_full, user, fetch_friends_date,
                   fetch_friendsdata_timestamp,
                   created_at, screen_name, name,
@@ -158,7 +144,7 @@ friends <- select(friends_full, user, fetch_friends_date,
                   protected, followers_count, 
                   friends_count, statuses_count, 
                   account_created_at, verified,
-                  account_lang)  # these may be variables of interest
+                  account_lang) 
 head(friends)
 ```
 
@@ -291,8 +277,10 @@ p
 Remove accounts that are not connected to any other deputy account.
 
 ```{r}
-accounts_connected <- unique(c(edges_parties$from_account, edges_parties$to_account))
-accounts_not_connected <- dep_twitter$screen_name[!(dep_twitter$screen_name %in% accounts_connected)]
+accounts_connected <- unique(c(edges_parties$from_account, 
+                               edges_parties$to_account))
+accounts_not_connected <- dep_twitter$screen_name[!(dep_twitter$screen_name 
+                                                    %in% accounts_connected)]
 accounts_not_connected
 
 ```
