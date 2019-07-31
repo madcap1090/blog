@@ -4,31 +4,48 @@
   
   <url>
     <loc>/tags/belgian-politics/</loc>
-    <lastmod>2019-07-16T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/network-analysis/</loc>
+    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2019-07-16T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/</loc>
-    <lastmod>2019-07-16T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/twitter/</loc>
-    <lastmod>2019-07-16T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/</loc>
-    <lastmod>2019-07-16T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/post/friends-in-politics/</loc>
+    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/igraph/</loc>
+    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -250,6 +267,11 @@
   <url>
     <loc>/about/</loc>
     <lastmod>2016-05-05T21:48:51-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/files/20190728/friends/</loc>
+    <priority>0</priority>
   </url>
   
 </urlset>

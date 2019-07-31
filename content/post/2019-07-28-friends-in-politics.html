@@ -1,0 +1,507 @@
+---
+title: friends in politics
+author: William Bourgeois
+date: '2019-07-28'
+slug: friends-in-politics
+categories: []
+tags:
+  - Twitter
+  - Network analysis
+  - Belgian politics
+  - igraph
+---
+
+
+
+<p>In the last post we tried hard to find out all the Twitter handles of our current parliamentarians. A number of interesting analysis’s can be done with the texts they tweet. But the legislature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.</p>
+<p>One of the things we can analyse now are the links on Twitter between members of parliament as demonstrated by the excellent blog posts/code of Markus Konrad starting [here]{<a href="https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/" class="uri">https://datascience.blog.wzb.eu/2019/07/11/a-twitter-network-of-members-of-the-19th-german-bundestag-part-i/</a>}</p>
+<p>Let us see what can learn from using his analysis on the Belgian parliament. I am curious to find out.</p>
+<p>So gentle persons, attach you libraries.</p>
+<pre class="r"><code>library(&quot;rtweet&quot;)
+library(&quot;tidyverse&quot;)
+library(&quot;dplyr&quot;)
+library(&quot;tidyr&quot;)
+library(&quot;ggplot2&quot;)
+library(&quot;igraph&quot;)
+library(&quot;visNetwork&quot;)</code></pre>
+<p>Loading our reps data.</p>
+<pre class="r"><code>reps_55 &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190716/reps_55.rds&quot;)</code></pre>
+<p>Getting their friends (you need to authenticate first).</p>
+<pre class="r"><code>friends &lt;- get_friends(reps_55$screen_name, retryonratelimit = TRUE)</code></pre>
+<p>So that leaves a pause of about 15 minutes per 10 Twitter handles analysed in order to stay within the rate limits. The data of the analysis.</p>
+<pre class="r"><code>friends$fetch_friends_date &lt;- Sys.Date() 
+saveRDS(friends, &quot;friends.rds&quot;)</code></pre>
+<p>So we have (on 2019-07-22) 103.840 friends of our reps. Now we can get the Twitter information of these one hundred thousand accounts, with some heavy mechanics from Markus. Hau ruck!</p>
+<pre class="r"><code>friends_ids &lt;- unique(friends$user_id)
+#friends_ids &lt;- friends_ids[1:1000]   # subset for testing
+n_friends_ids &lt;- length(friends_ids)
+
+# ---- look up information about each friend user ID ----
+
+n_retries &lt;- 5          # maximum number of *subsequent* retries when an API call failed
+sleep_sec &lt;- 16 * 60    # 15 minutes is the time window for rate limit reset; add a little time buffer of 1 min.
+chunksize &lt;- 100        # number of user IDs per request; the docs say 300 requests with 100 IDs each per 15 min.
+n_max_requests &lt;- 280   # max. number of requests within a 15 min. time frame; we stay a bit below the 300 requests threshold
+chunk_idx &lt;- 0          # current chunk index
+cur_retry &lt;- 0          # current number of retries; is reset to 0 once a successful API call was made
+friendsdata &lt;- tibble() 0# collected data
+
+print(&#39;fetching data from Twitter API...&#39;)
+
+request_i &lt;- 0   # current number of requests
+
+# repeat API requests until all data was collected or too many retries happened due to request failures
+while(TRUE) {
+    # get chunk of friends IDs
+    chunk_start &lt;- chunk_idx * chunksize + 1
+    chunk_end &lt;- min(c((chunk_idx + 1) * chunksize, n_friends_ids))
+    friends_ids_chunk &lt;- friends_ids[chunk_start:chunk_end]
+    print(sprintf(&#39;fetching data for friends IDs in range [%d, %d] (%d ids)&#39;,
+                  chunk_start, chunk_end, length(friends_ids_chunk)))
+    
+    # make an API request for user ID lookup
+    # if it successes, add the data to the &quot;friendsdata&quot; data frame set &quot;success&quot; to TRUE,
+    # else do not add data and set &quot;success&quot; to FALSE
+    success &lt;- tryCatch({
+        request_i &lt;- request_i + 1
+        friendsdata_chunk &lt;- lookup_users(friends_ids_chunk)
+        friendsdata &lt;- bind_rows(friendsdata, friendsdata_chunk)
+        TRUE
+    }, error = function(cond) {
+        FALSE
+    })
+    
+    if (success) {  # on success
+        cur_retry &lt;- 0   # reset number of retries
+        
+        # check if we collected data for all IDs
+        if (chunk_start + chunksize &gt;= n_friends_ids) {
+            break()
+        }
+    } else {  # on failure
+        # increment the number of retries
+        cur_retry &lt;- cur_retry + 1
+        
+        # check if number of retries reached maximum
+        if (cur_retry &gt;= n_retries) {
+            print(sprintf(&#39;failed after %d retries&#39;, cur_retry))
+            break()
+        }
+        
+        print(sprintf(&#39;will advance with retry %d&#39;, cur_retry))
+    }
+    
+    if (request_i %% n_max_requests == 0 || !success) {    # wait after max. num. requests or when no success
+        print(sprintf(&#39;waiting for %d sec.&#39;, sleep_sec))
+        Sys.sleep(sleep_sec)
+    }
+    
+    if (success) {   # if no success, retry with same chunk, otherwise increment chunk index
+        chunk_idx &lt;- chunk_idx + 1
+    }
+}
+
+# ---- process collected friends data ----
+
+n_fetched &lt;- sum(!is.na(friendsdata$screen_name))
+print(sprintf(&#39;got data for %d out of %d unique friends accounts&#39;, n_fetched, n_friends_ids))
+
+friendsdata$fetch_friendsdata_timestamp &lt;- Sys.time()   # add timestamp
+
+# join friends user data by user ID
+print(&#39;joining data...&#39;)
+friendsfull &lt;- left_join(friends, friendsdata, by = &#39;user_id&#39;)
+n_matched &lt;- sum(!is.na(friendsfull$screen_name))
+print(sprintf(&#39;matching successful for %d out of %d rows&#39;, n_matched, nrow(friends)))
+
+# save as RDS
+saveRDS(friendsfull, &#39;./data/20190728/deputies_twitter_friends_full_20190722.RDS&#39;)</code></pre>
+<p>Define the party colors. I’m sure you can improve my choice by using this <a href="https://www.google.com/search?q=hex+color+picker&amp;oq=hex&amp;aqs=chrome.5.69i57j0l5.5855j0j1&amp;sourceid=chrome&amp;ie=UTF-8">service</a></p>
+<p>Treating the data that was collected.</p>
+<pre class="r"><code>deputies_twitter_friends_full_20190722 &lt;- readRDS(&quot;./data/20190728/deputies_twitter_friends_full_20190722.RDS&quot;)
+
+friends_full &lt;- deputies_twitter_friends_full_20190722
+
+# in this dataset, &quot;user&quot; is the Twitter handle of the deputy and &quot;screen_name&quot; and further variables
+# refer to the data of the deputy&#39;s Twitter &quot;friend&quot; (i.e. the account she/he follows)
+friends &lt;- select(friends_full, user, fetch_friends_date,
+                  fetch_friendsdata_timestamp,
+                  created_at, screen_name, name,
+                  location, description,
+                  protected, followers_count, 
+                  friends_count, statuses_count, 
+                  account_created_at, verified,
+                  account_lang)  # these may be variables of interest
+head(friends)</code></pre>
+<pre><code>## # A tibble: 6 x 15
+##   user  fetch_friends_d~ fetch_friendsdata_~ created_at         
+##   &lt;chr&gt; &lt;date&gt;           &lt;dttm&gt;              &lt;dttm&gt;             
+## 1 Josy~ 2019-07-22       2019-07-22 21:49:07 NA                 
+## 2 Josy~ 2019-07-22       2019-07-22 21:49:07 2019-07-22 13:51:31
+## 3 Josy~ 2019-07-22       2019-07-22 21:49:07 2019-07-17 08:58:06
+## 4 Josy~ 2019-07-22       2019-07-22 21:49:07 2019-07-22 16:40:34
+## 5 Josy~ 2019-07-22       2019-07-22 21:49:07 2019-06-24 13:46:30
+## 6 Josy~ 2019-07-22       2019-07-22 21:49:07 2019-07-22 13:44:35
+## # ... with 11 more variables: screen_name &lt;chr&gt;, name &lt;chr&gt;,
+## #   location &lt;chr&gt;, description &lt;chr&gt;, protected &lt;lgl&gt;,
+## #   followers_count &lt;int&gt;, friends_count &lt;int&gt;, statuses_count &lt;int&gt;,
+## #   account_created_at &lt;dttm&gt;, verified &lt;lgl&gt;, account_lang &lt;lgl&gt;</code></pre>
+<p>Some friends did not return a handle.</p>
+<pre class="r"><code>friends &lt;- filter(friends, !is.na(screen_name))</code></pre>
+<p>retain only the connections between deputies, not to other Twitter accounts</p>
+<p>CHECK dep-acoounts SEEMS too much</p>
+<pre class="r"><code>dep_accounts &lt;- unique(friends$user)   
+dep_friends &lt;- filter(friends, screen_name %in% dep_accounts) 
+head(dep_friends)</code></pre>
+<pre><code>## # A tibble: 6 x 15
+##   user  fetch_friends_d~ fetch_friendsdata_~ created_at         
+##   &lt;chr&gt; &lt;date&gt;           &lt;dttm&gt;              &lt;dttm&gt;             
+## 1 Josy~ 2019-07-22       2019-07-22 21:49:07 2019-07-19 06:08:39
+## 2 DanB~ 2019-07-22       2019-07-22 21:49:07 2019-06-27 13:38:22
+## 3 DanB~ 2019-07-22       2019-07-22 21:49:07 2019-05-29 10:14:45
+## 4 DanB~ 2019-07-22       2019-07-22 21:49:07 2019-07-14 15:31:43
+## 5 DanB~ 2019-07-22       2019-07-22 21:49:07 2019-07-19 13:07:00
+## 6 DanB~ 2019-07-22       2019-07-22 21:49:07 2019-04-13 09:06:05
+## # ... with 11 more variables: screen_name &lt;chr&gt;, name &lt;chr&gt;,
+## #   location &lt;chr&gt;, description &lt;chr&gt;, protected &lt;lgl&gt;,
+## #   followers_count &lt;int&gt;, friends_count &lt;int&gt;, statuses_count &lt;int&gt;,
+## #   account_created_at &lt;dttm&gt;, verified &lt;lgl&gt;, account_lang &lt;lgl&gt;</code></pre>
+<p>Select twitter handles and parties</p>
+<pre class="r"><code>dep_twitter_full &lt;-  readRDS(&quot;~/R/blogs/content/post/data/20190716/reps_55.rds&quot;)
+
+dep_twitter &lt;- filter(dep_twitter_full, !is.na(screen_name))
+
+dep_accounts_parties &lt;- select(dep_twitter, screen_name, party)</code></pre>
+<p>Construct a data frame containing edges and nodes, of people but also of parties (through people).</p>
+<pre class="r"><code>edges_parties &lt;- select(dep_friends, from_account = user, to_account = screen_name) %&gt;%
+    left_join(dep_accounts_parties, by = c(&#39;from_account&#39; = &#39;screen_name&#39;)) %&gt;%
+    rename(from_party = party) %&gt;%
+    left_join(dep_accounts_parties, by = c(&#39;to_account&#39; = &#39;screen_name&#39;)) %&gt;%
+    rename(to_party = party)
+
+head(edges_parties)</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   from_account   to_account     from_party to_party
+##   &lt;chr&gt;          &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt;   
+## 1 JosyArens      vanessmatz     cdH        cdH     
+## 2 DanBacquelaine DeMaegdMichel  MR         MR      
+## 3 DanBacquelaine SpoorenJan     MR         N-VA    
+## 4 DanBacquelaine BurtonEmmanuel MR         MR      
+## 5 DanBacquelaine prevotmaxime   MR         cdH     
+## 6 DanBacquelaine OzlemOzen1     MR         PS</code></pre>
+<p>Number of nodes:</p>
+<pre class="r"><code>length(unique(edges_parties$from_account))</code></pre>
+<pre><code>## [1] 123</code></pre>
+<p>Number of edges:</p>
+<pre class="r"><code>nrow(edges_parties)</code></pre>
+<pre><code>## [1] 2839</code></pre>
+<p>Number of edges between parties:</p>
+<pre class="r"><code>counts_p2p &lt;- group_by(edges_parties, from_party, to_party) %&gt;%
+  count() %&gt;% 
+  ungroup() %&gt;% 
+  arrange(desc(n))
+
+head(counts_p2p, 10)</code></pre>
+<pre><code>## # A tibble: 10 x 3
+##    from_party  to_party        n
+##    &lt;chr&gt;       &lt;chr&gt;       &lt;int&gt;
+##  1 N-VA        N-VA          321
+##  2 PS          PS            170
+##  3 Ecolo-Groen Ecolo-Groen   139
+##  4 CD&amp;V        CD&amp;V          102
+##  5 MR          MR             99
+##  6 VB          VB             88
+##  7 N-VA        CD&amp;V           78
+##  8 N-VA        Open Vld       76
+##  9 CD&amp;V        N-VA           71
+## 10 Open Vld    Open Vld       64</code></pre>
+<p>Count the absolute number of edges per “from_party” (so the accounts followed, the ‘friends’, per party) this is required to calculate the proportions</p>
+<pre class="r"><code>counts_party_edges &lt;- group_by(counts_p2p, from_party) %&gt;% 
+  summarise(n_edges = sum(n)) %&gt;% 
+  arrange(desc(n_edges))
+counts_party_edges</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##    from_party  n_edges
+##    &lt;chr&gt;         &lt;int&gt;
+##  1 N-VA            676
+##  2 Ecolo-Groen     377
+##  3 PS              360
+##  4 CD&amp;V            342
+##  5 MR              306
+##  6 Open Vld        241
+##  7 sp.a            159
+##  8 VB              157
+##  9 PVDA-PTB         90
+## 10 cdH              61
+## 11 DéFI             51
+## 12 INDEP            19</code></pre>
+<p>add a column “prop” for the “from_party” -&gt; “to_party” edges proportions</p>
+<pre class="r"><code>counts_p2p &lt;- left_join(counts_p2p, counts_party_edges, by = &#39;from_party&#39;) %&gt;%
+  mutate(prop = n/n_edges) %&gt;% 
+  select(-n_edges) %&gt;%
+  arrange(desc(prop))
+
+
+head(counts_p2p, 10)</code></pre>
+<pre><code>## # A tibble: 10 x 4
+##    from_party  to_party        n  prop
+##    &lt;chr&gt;       &lt;chr&gt;       &lt;int&gt; &lt;dbl&gt;
+##  1 VB          VB             88 0.561
+##  2 N-VA        N-VA          321 0.475
+##  3 INDEP       N-VA            9 0.474
+##  4 PS          PS            170 0.472
+##  5 sp.a        sp.a           61 0.384
+##  6 Ecolo-Groen Ecolo-Groen   139 0.369
+##  7 MR          MR             99 0.324
+##  8 CD&amp;V        CD&amp;V          102 0.298
+##  9 Open Vld    Open Vld       64 0.266
+## 10 cdH         MR             14 0.230</code></pre>
+<p>The ‘INDEP’ is Jean-Marie Dedecker who ran on a N-VA list. So the high pr option of links to the N-VA is not surprising. What is interesting on the other hand is that people from the cdH tend to follow people from the MR more than they do people from their own party.</p>
+<p>So now Markus creates a matrix with the proportions of friends ‘from_party’ in rows and ’to_party in columns.</p>
+<pre class="r"><code>p2p_mat &lt;- select(counts_p2p, -n) %&gt;% spread(to_party, prop) %&gt;%
+    mutate_all(function(x) { ifelse(is.na(x), 0, x) })   # some edge combinations do not occur -&gt; replace NAs with 0
+p2p_mat</code></pre>
+<pre><code>## # A tibble: 12 x 13
+##    from_party `CD&amp;V`     cdH    DéFI `Ecolo-Groen`   INDEP      MR `N-VA`
+##    &lt;chr&gt;       &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+##  1 CD&amp;V       0.298  0.0292  0             0.0936  0.0117  0.105   0.208 
+##  2 cdH        0.148  0.197   0             0.164   0       0.230   0.0656
+##  3 DéFI       0.0784 0.0588  0.0392        0.157   0       0.176   0.118 
+##  4 Ecolo-Gro~ 0.0796 0.0318  0.0159        0.369   0.0133  0.0902  0.119 
+##  5 INDEP      0      0       0             0.158   0       0       0.474 
+##  6 MR         0.0784 0.0359  0.00980       0.121   0.00327 0.324   0.131 
+##  7 N-VA       0.115  0.00888 0.00296       0.0607  0.0266  0.0902  0.475 
+##  8 Open Vld   0.124  0.0166  0.00415       0.0871  0.0166  0.178   0.203 
+##  9 PS         0.0361 0.0528  0.0167        0.106   0       0.147   0.0333
+## 10 PVDA-PTB   0.0444 0.0667  0             0.167   0       0.167   0.0889
+## 11 sp.a       0.119  0       0             0.126   0.00629 0.0252  0.0692
+## 12 VB         0.0764 0.00637 0             0.00637 0.0573  0.00637 0.153 
+## # ... with 5 more variables: `Open Vld` &lt;dbl&gt;, PS &lt;dbl&gt;, `PVDA-PTB` &lt;dbl&gt;,
+## #   sp.a &lt;dbl&gt;, VB &lt;dbl&gt;</code></pre>
+<p>Converting back to a data frame with the function ‘gather’ to use ggplot, and preparing to make a heat map.</p>
+<pre class="r"><code>counts_p2p &lt;- gather(p2p_mat, &#39;to_party&#39;, &#39;prop&#39;, 2:ncol(p2p_mat)) %&gt;%
+  arrange(from_party, to_party) %&gt;%
+    mutate(perc = prop * 100,                     # we use percent in the plot
+           perc_label = sprintf(&#39;%.1f&#39;, perc))    # a label to display the rounded number in the cells
+head(counts_p2p, 10)</code></pre>
+<pre><code>## # A tibble: 10 x 5
+##    from_party to_party       prop   perc perc_label
+##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;     
+##  1 CD&amp;V       CD&amp;V        0.298   29.8   29.8      
+##  2 CD&amp;V       cdH         0.0292   2.92  2.9       
+##  3 CD&amp;V       DéFI        0        0     0.0       
+##  4 CD&amp;V       Ecolo-Groen 0.0936   9.36  9.4       
+##  5 CD&amp;V       INDEP       0.0117   1.17  1.2       
+##  6 CD&amp;V       MR          0.105   10.5   10.5      
+##  7 CD&amp;V       N-VA        0.208   20.8   20.8      
+##  8 CD&amp;V       Open Vld    0.117   11.7   11.7      
+##  9 CD&amp;V       PS          0.0380   3.80  3.8       
+## 10 CD&amp;V       PVDA-PTB    0.00877  0.877 0.9</code></pre>
+<pre class="r"><code>p &lt;- ggplot(counts_p2p, aes(x = to_party, y = from_party, fill = perc)) +
+    geom_raster() +
+    geom_text(aes(label = perc_label), color = &#39;white&#39;) +
+    scale_fill_viridis_c(guide = guide_legend(title = &#39;Followers / following\nshare in percent&#39;)) +
+    labs(x = &#39;party in column is followed by party in row&#39;, y = &#39;party in row follows party in column&#39;,
+         title = &#39;Proportion of followings / followers between parties&#39;,
+         subtitle = paste(&#39;In percent as of&#39;, &quot;2019-07-22&quot;)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+p</code></pre>
+<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<pre class="r"><code>#ggsave(sprintf(&#39;plots/p2p_follower_shares_%s.png&#39;, &quot;2019-07-25&quot;), p, width = 8, height = 6)</code></pre>
+<p>Remove accounts that are not connected to any other deputy account.</p>
+<pre class="r"><code>accounts_connected &lt;- unique(c(edges_parties$from_account, edges_parties$to_account))
+accounts_not_connected &lt;- dep_twitter$screen_name[!(dep_twitter$screen_name %in% accounts_connected)]
+accounts_not_connected</code></pre>
+<pre><code>## [1] &quot;dillenm&quot;       &quot;VicaireAlbert&quot;</code></pre>
+<p><a href="https://twitter.com/dillenm">Dillen marijke</a>, seems correct, very few followers, but it might also have been a false positive. <a href="https://twitter.com/VicaireAlbert">Albert Vicaire</a> looks less like a false positive, but also has very little activity.</p>
+<div id="these-accounts-are-used-as-vertices-aka-nodes" class="section level1">
+<h1>these accounts are used as vertices (aka nodes)</h1>
+<pre class="r"><code>dep_twitter_connected &lt;- filter(dep_twitter, screen_name %in% accounts_connected)</code></pre>
+<p><a href="https://igraph.org/r/doc/graph_from_data_frame.html" class="uri">https://igraph.org/r/doc/graph_from_data_frame.html</a></p>
+<pre class="r"><code>vertices &lt;- dep_twitter_connected %&gt;% 
+    select(screen_name, ln_fn, party)
+
+#g &lt;- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
+g &lt;- graph_from_data_frame(edges_parties, vertices = vertices)
+g</code></pre>
+<pre><code>## IGRAPH d2f8193 DN-- 125 2839 -- 
+## + attr: name (v/c), ln_fn (v/c), party (v/c), from_party (e/c),
+## | to_party (e/c)
+## + edges from d2f8193 (vertex names):
+##  [1] JosyArens     -&gt;vanessmatz     DanBacquelaine-&gt;DeMaegdMichel 
+##  [3] DanBacquelaine-&gt;SpoorenJan     DanBacquelaine-&gt;BurtonEmmanuel
+##  [5] DanBacquelaine-&gt;prevotmaxime   DanBacquelaine-&gt;OzlemOzen1    
+##  [7] DanBacquelaine-&gt;jmdelizee      DanBacquelaine-&gt;ZakiaKhattabi 
+##  [9] DanBacquelaine-&gt;MeryameKitir   DanBacquelaine-&gt;johncrombez   
+## [11] DanBacquelaine-&gt;valerievanpeel DanBacquelaine-&gt;andreflahaut  
+## [13] DanBacquelaine-&gt;Sophie_Wilmes  DanBacquelaine-&gt;PPrevot       
+## + ... omitted several edges</code></pre>
+<pre class="r"><code>class(g)</code></pre>
+<pre><code>## [1] &quot;igraph&quot;</code></pre>
+<p>So if I’m reading this right, what we’ve got here is 125 nodes and 2.839 links in an “igraph” object.</p>
+<p>So now for some graph scores. The degree score of a vertex is the number of its adjacent edges. The function ‘degree’ can count the in/outbound and total edges.</p>
+<pre class="r"><code>degree_score &lt;- sort(degree(g, mode = &#39;total&#39;), decreasing = TRUE)</code></pre>
+<p>So the following have the most edges:</p>
+<pre class="r"><code>head(degree_score, 15)</code></pre>
+<pre><code>##   FranckenTheo   kristofcalvo  CharlesMichel egbertlachaert          wbeke 
+##            127            121            118            103            102 
+##      JanJambon     eliodirupo       Zu_Demir     Gilles_VDB valerievanpeel 
+##            101             98             96             96             94 
+##      VincentVQ    Koen_Geens1   SanderLoones PeterDeRoover1    johncrombez 
+##             89             87             85             84             83</code></pre>
+<p>And these are the parliamentarians that follow the most colleagues:</p>
+<pre class="r"><code>degree_score &lt;- sort(degree(g, mode = &#39;out&#39;), decreasing = TRUE)
+head(degree_score, 15)</code></pre>
+<pre><code>##     Gilles_VDB egbertlachaert    leendierick valerievanpeel   FranckenTheo 
+##             68             58             57             57             56 
+##   kristofcalvo   SanderLoones DanBacquelaine       Yngvild8   BertWollants 
+##             53             50             46             46             44 
+##  kris10vanvaer     OzlemOzen1       Zu_Demir hendrikbogaert  RaoulHedebouw 
+##             42             41             40             39             39</code></pre>
+<p>And the most followed:</p>
+<pre class="r"><code>degree_score &lt;- sort(degree(g, mode = &#39;in&#39;), decreasing = TRUE)
+head(degree_score, 15)</code></pre>
+<pre><code>##   CharlesMichel      eliodirupo alexanderdecroo    FranckenTheo 
+##              81              74              72              71 
+##           wbeke    kristofcalvo     johncrombez       JanJambon 
+##              69              68              66              66 
+##       dreynders       VincentVQ        Zu_Demir     Koen_Geens1 
+##              62              59              56              55 
+##  PeterDeRoover1   PatrickDewael  egbertlachaert 
+##              54              50              45</code></pre>
+<p>Betweenness seems to be defined as the number of shortest paths going through a vertex. So I understand it as a measure of centrality at least in the web that is spun by the Twitter accounts.</p>
+<pre class="r"><code>betw_score &lt;- sort(floor(betweenness(g)), decreasing = TRUE) 
+head(betw_score)</code></pre>
+<pre><code>##  FranckenTheo tomvangrieken CharlesMichel  kristofcalvo    eliodirupo 
+##          1189           945           849           689           673 
+##     VincentVQ 
+##           623</code></pre>
+<p>So the president of the Flemish fascist party seems to be an interesting node to inspect, because having relatively lower degree scores (total being 46) his account has a very high betweenness score. Find out more <a href="https://igraph.org/r/doc/betweenness.html">here</a>.</p>
+<pre class="r"><code>graph_scores &lt;- data.frame(screen_name = names(degree_score),
+                           degr_score = degree_score,
+                           betw_score = betw_score,
+                           row.names = NULL, stringsAsFactors = FALSE)
+graph_scores &lt;- left_join(dep_twitter_connected, graph_scores, by = &#39;screen_name&#39;)%&gt;%
+    mutate(full_name = ln_fn) %&gt;%
+    select(screen_name, full_name, degr_score, betw_score, party)
+
+graph_scores %&gt;% arrange(desc(degree_score)) %&gt;% head(10)</code></pre>
+<pre><code>##       screen_name          full_name degr_score betw_score party
+## 1       JosyArens         Arens Josy          2          0   cdH
+## 2  DanBacquelaine Bacquelaine Daniel         29        161    MR
+## 3     HuguesBayet       Bayet Hugues         15         33    PS
+## 4           wbeke        Beke Wouter         69        673  CD&amp;V
+## 5     jan_bertels        Bertels Jan          9         16  sp.a
+## 6  hendrikbogaert    Bogaert Hendrik         43        306  CD&amp;V
+## 7   JanBriersGouv         Briers Jan          7          7  CD&amp;V
+## 8  BurtonEmmanuel    Burton Emmanuel          6          5    MR
+## 9     KatleenBury       Bury Katleen          1          0    VB
+## 10 PeterBuysrogge    Buysrogge Peter         17         43  N-VA</code></pre>
+<pre class="r"><code>graph_scores %&gt;% arrange(desc(betw_score)) %&gt;% head(10)</code></pre>
+<pre><code>##        screen_name                full_name degr_score betw_score
+## 1    CharlesMichel           Michel Charles         81       1189
+## 2       eliodirupo             Di Rupo Elio         74        945
+## 3  alexanderdecroo        De Croo Alexander         72        849
+## 4     FranckenTheo            Francken Theo         71        689
+## 5            wbeke              Beke Wouter         69        673
+## 6     kristofcalvo            Calvo Kristof         68        623
+## 7      johncrombez             Crombez John         66        522
+## 8        JanJambon               Jambon Jan         66        504
+## 9        dreynders          Reynders Didier         62        484
+## 10       VincentVQ Van Quickenborne Vincent         59        453
+##          party
+## 1           MR
+## 2           PS
+## 3     Open Vld
+## 4         N-VA
+## 5         CD&amp;V
+## 6  Ecolo-Groen
+## 7         sp.a
+## 8         N-VA
+## 9           MR
+## 10    Open Vld</code></pre>
+<p>Setting the vertices and edge colors according to party membership</p>
+<pre class="r"><code>party_colors &lt;-  c(&quot;N-VA&quot; = &quot;#b0a66d&quot;, 
+              &quot;cdH&quot; = &quot;#db991d&quot;, 
+              &quot;MR&quot; = &quot;#1d7cdb&quot;, 
+              &quot;PS&quot; = &quot;#f27490&quot;, 
+              &quot;CD&amp;V&quot; = &quot;#cf6e2d&quot;, 
+              &quot;sp.a&quot; = &quot;#ed74a7&quot;, 
+              &quot;PVDA-PTB&quot; = &quot;#e31017&quot;,
+              &quot;DéFi&quot;=&quot;#e31080&quot;,
+              &quot;INDEP&quot; = &quot;#f5f5ed&quot;,
+              &quot;VB&quot; = &quot;#0f0f0f&quot;,
+              &quot;Ecolo-Groen&quot; = &quot;#2ead03&quot;)
+
+party_colors_semitransp &lt;- paste0(party_colors, &#39;40&#39;)   # add transparency as hex code (25% transparency)
+names(party_colors_semitransp) &lt;- names(party_colors)
+
+V(g)$color &lt;- party_colors[V(g)$party]
+E(g)$color &lt;- party_colors_semitransp[E(g)$from_party]</code></pre>
+<pre class="r"><code>#- keep this one
+lay &lt;- layout_with_kk(g)  # okay
+plot(g, layout = lay,
+     vertex.size = 4, vertex.label.cex = 0.7,
+     vertex.label.color = &#39;black&#39;, vertex.label.family = &#39;sans&#39;,
+     vertex.label.dist = 0.5, vertex.frame.color = &#39;white&#39;,
+     edge.arrow.size = 0.2, edge.curved = TRUE)</code></pre>
+<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
+<p><a href="%22http://google.be%22"><embed src="%22./static/img/20190728/graph_small.png%22" /></a></p>
+<p>Obviously too small. But you can look at a larger image <a href="">here</a>. The colors of the incoming arows indicate which party they are from and</p>
+<p><a href="https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown" class="uri">https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown</a></p>
+<p>and if memory serves me right put the image and html file (?) in static?</p>
+<p>And now for the interactive (html) plot, with the visNetwork package.</p>
+<pre class="r"><code># convert igraph object to visNetwork data
+vis_nw_data &lt;- toVisNetworkData(g)
+
+# add a title to be displayed when mouse is over a node
+# vis_nw_data$nodes$title &lt;- sprintf(&#39;@%s (%s %s)&#39;, vis_nw_data$nodes$id,
+#                                    vis_nw_data$nodes$personal.first_name,
+#                                    vis_nw_data$nodes$personal.last_name)
+# head(vis_nw_data$nodes)
+
+vis_nw_data$nodes$title &lt;- sprintf(&#39;@%s (%s)&#39;, vis_nw_data$nodes$id,
+                                    vis_nw_data$nodes$ln_fn)
+head(vis_nw_data$nodes)</code></pre>
+<pre><code>##                            id              ln_fn party   color
+## JosyArens           JosyArens         Arens Josy   cdH #db991d
+## DanBacquelaine DanBacquelaine Bacquelaine Daniel    MR #1d7cdb
+## HuguesBayet       HuguesBayet       Bayet Hugues    PS #f27490
+## wbeke                   wbeke        Beke Wouter  CD&amp;V #cf6e2d
+## jan_bertels       jan_bertels        Bertels Jan  sp.a #ed74a7
+## hendrikbogaert hendrikbogaert    Bogaert Hendrik  CD&amp;V #cf6e2d
+##                         label                                title
+## JosyArens           JosyArens              @JosyArens (Arens Josy)
+## DanBacquelaine DanBacquelaine @DanBacquelaine (Bacquelaine Daniel)
+## HuguesBayet       HuguesBayet          @HuguesBayet (Bayet Hugues)
+## wbeke                   wbeke                 @wbeke (Beke Wouter)
+## jan_bertels       jan_bertels           @jan_bertels (Bertels Jan)
+## hendrikbogaert hendrikbogaert    @hendrikbogaert (Bogaert Hendrik)</code></pre>
+<pre class="r"><code># strip transparency from edge color because visNetwork can&#39;t handle it
+vis_nw_data$edges$color &lt;- substr(vis_nw_data$edges$color, 0, 7)
+head(vis_nw_data$edges)</code></pre>
+<pre><code>##             from             to from_party to_party   color
+## 1      JosyArens     vanessmatz        cdH      cdH #db991d
+## 2 DanBacquelaine  DeMaegdMichel         MR       MR #1d7cdb
+## 3 DanBacquelaine     SpoorenJan         MR     N-VA #1d7cdb
+## 4 DanBacquelaine BurtonEmmanuel         MR       MR #1d7cdb
+## 5 DanBacquelaine   prevotmaxime         MR      cdH #1d7cdb
+## 6 DanBacquelaine     OzlemOzen1         MR       PS #1d7cdb</code></pre>
+<pre class="r"><code># create a data frame for the legend
+vis_legend_data &lt;- data.frame(label = names(party_colors), color = unname(party_colors), shape = &#39;square&#39;)
+
+# create the network
+vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = &#39;700px&#39;, width = &#39;90%&#39;) %&gt;%
+    visIgraphLayout(layout = &#39;layout_with_drl&#39;, options=list(simmer.attraction=0)) %&gt;%   # use same layout as above
+    visEdges(color = list(opacity = 0.25), arrows = &#39;to&#39;) %&gt;%                            # and same transparency
+    visNodes(labelHighlightBold = TRUE, borderWidth = 1, borderWidthSelected = 12) %&gt;%   # set node highlighting
+    visLegend(addNodes = vis_legend_data, useGroups = FALSE, zoom = FALSE, width = 0.2) %&gt;%   # add legend
+    visOptions(nodesIdSelection = TRUE, highlightNearest = TRUE, selectedBy = &#39;party&#39;) %&gt;%    # further options
+    visInteraction(dragNodes = TRUE)   # enable dragging of nodes</code></pre>
+<pre class="r"><code>visSave(vis_nw, file = &quot;friends.html&quot;)
+
+file.copy(&quot;friends.html&quot;, &quot;./files/20190728/friends.html&quot;)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>unlink(&quot;friends.html&quot;)</code></pre>
+</div>

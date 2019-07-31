@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Tue, 16 Jul 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 28 Jul 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/twitter/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>friends in politics</title>
+      <link>/post/friends-in-politics/</link>
+      <pubDate>Sun, 28 Jul 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/friends-in-politics/</guid>
+      <description>In the last post we tried hard to find out all the Twitter handles of our current parliamentarians. A number of interesting analysis’s can be done with the texts they tweet. But the legislature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.
+One of the things we can analyse now are the links on Twitter between members of parliament as demonstrated by the excellent blog posts/code of Markus Konrad starting [here]{https://datascience.</description>
+    </item>
     
     <item>
       <title>members of the chamber of representatives of Belgium, 55th legistlature</title>
