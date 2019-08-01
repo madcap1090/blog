@@ -420,10 +420,10 @@ accounts_not_connected</code></pre>
 #g &lt;- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
 g &lt;- graph_from_data_frame(edges_parties, vertices = vertices)
 g</code></pre>
-<pre><code>## IGRAPH 888b25c DN-- 125 2839 -- 
+<pre><code>## IGRAPH 63f9213 DN-- 125 2839 -- 
 ## + attr: name (v/c), ln_fn (v/c), party (v/c), from_party (e/c),
 ## | to_party (e/c)
-## + edges from 888b25c (vertex names):
+## + edges from 63f9213 (vertex names):
 ##  [1] JosyArens     -&gt;vanessmatz     DanBacquelaine-&gt;DeMaegdMichel 
 ##  [3] DanBacquelaine-&gt;SpoorenJan     DanBacquelaine-&gt;BurtonEmmanuel
 ##  [5] DanBacquelaine-&gt;prevotmaxime   DanBacquelaine-&gt;OzlemOzen1    
@@ -541,8 +541,8 @@ plot(g, layout = lay,
      vertex.label.dist = 0.5, vertex.frame.color = &#39;white&#39;,
      edge.arrow.size = 0.2, edge.curved = TRUE)</code></pre>
 <p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
-<p><a href="%22/img/20190728/graph_big.png%22"><embed src="%22/img/20190728/graph_small.png%22" /></a></p>
-<p>Obviously too small. But you can look at a larger image <a href="%22/img/20190728/graph_big.png%22">here</a>. The colors of the incoming arows indicate which party they are from and</p>
+<p><a href="/img/20190728/graph_big.png"><img src="/img/20190728/graph_small.png" alt="small_pic" /></a></p>
+<p>Obviously too small. But you can look at a larger image <a href="https://badtothecode.netlify.com/img/20190728/graph_big.png">here</a>. The colors of the incoming arows indicate which party they are from and</p>
 <p><a href="https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown" class="uri">https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown</a></p>
 <p>and if memory serves me right put the image and html file (?) in static?</p>
 <p>And now for the interactive (html) plot, with the visNetwork package.</p>
@@ -597,10 +597,8 @@ vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, he
 
 file.copy(&quot;friends.html&quot;, &quot;./files/20190728/friends.html&quot;)</code></pre>
 <pre><code>## [1] FALSE</code></pre>
-<pre class="r"><code>unlink(&quot;friends.html&quot;)
-
-# https://badtothecode.netlify.com/post/files/20190728/friends/
-# there is somthing there</code></pre>
+<pre class="r"><code>unlink(&quot;friends.html&quot;)</code></pre>
+<p>Click <a href="https://badtothecode.netlify.com/img/20190728/friends">here</a> for the interactie graph (hover for handle and name, and drag for fun)</p>
 
       
       <div class="related">

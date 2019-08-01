@@ -389,10 +389,10 @@ plot(g, layout = lay,
      edge.arrow.size = 0.2, edge.curved = TRUE)
 ```
 
-[![small_pic]("/img/20190728/graph_small.png")]("/img/20190728/graph_big.png")
+[![small_pic](/img/20190728/graph_small.png)](/img/20190728/graph_big.png)
 
 
-Obviously too small. But you can look at a larger image [here]("/img/20190728/graph_big.png"). The colors of the incoming arows indicate which party they are from and 
+Obviously too small. But you can look at a larger image [here](https://badtothecode.netlify.com/img/20190728/graph_big.png). The colors of the incoming arows indicate which party they are from and 
 
 https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown
 
@@ -442,7 +442,6 @@ visSave(vis_nw, file = "friends.html")
 file.copy("friends.html", "./files/20190728/friends.html")
 unlink("friends.html")
 
-# https://badtothecode.netlify.com/post/files/20190728/friends/
-# there is somthing there
 ```
 
+Click [here](https://badtothecode.netlify.com/img/20190728/friends) for the interactie graph (hover for handle and name, and drag for fun)
