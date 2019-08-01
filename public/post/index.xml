@@ -158,23 +158,5 @@ library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;lubridate&amp;quot;)li
 So I downloaded the data, that comes in json format, and had a go at it. You can download your Google location data from your Google account.</description>
     </item>
     
-    <item>
-      <title></title>
-      <link>/post/files/20190728/friends/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/post/files/20190728/friends/</guid>
-      <description>visNetwork(function() {// If window.HTMLWidgets is already defined, then use it; otherwise create a// new object. This allows preceding code to set options that affect the// initialization process (though none currently exist).window.HTMLWidgets = window.HTMLWidgets || {};// See if we&#39;re running in a viewer pane. If not, we&#39;re in a web browser.var viewerMode = window.HTMLWidgets.viewerMode =/\bviewer_pane=1\b/.test(window.location);// See if we&#39;re running in Shiny mode.</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>/post/files/20190728/friends_ll/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/post/files/20190728/friends_ll/</guid>
-      <description>visNetwork(function() {// If window.HTMLWidgets is already defined, then use it; otherwise create a// new object. This allows preceding code to set options that affect the// initialization process (though none currently exist).window.HTMLWidgets = window.HTMLWidgets || {};// See if we&#39;re running in a viewer pane. If not, we&#39;re in a web browser.var viewerMode = window.HTMLWidgets.viewerMode =/\bviewer_pane=1\b/.test(window.location);// See if we&#39;re running in Shiny mode.</description>
-    </item>
-    
   </channel>
 </rss>
