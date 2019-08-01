@@ -40,7 +40,7 @@ Getting their friends (you need to authenticate first).
 friends <- get_friends(reps_55$screen_name, retryonratelimit = TRUE)
 ```
 
-So that leaves a pause of about 15 minutes per 10 Twitter handles analysed in order to stay within the rate limits. The data of the analysis. 
+So that leaves a pause of about 15 minutes per 10 Twitter handles analysed in order to stay within the rate limits. 
 
 ```{r, eval=FALSE}
 friends$fetch_friends_date <- Sys.Date() 
@@ -117,7 +117,7 @@ print(sprintf('matching successful for %d out of %d rows', n_matched, nrow(frien
 saveRDS(friendsfull, './data/20190728/deputies_twitter_friends_full_20190722.RDS')
 ```
 
-Treating the data that was collected. 
+Wrangling the data that was collected. 
 
 ```{r}
 deputies_twitter_friends_full_20190722 <- 
@@ -136,21 +136,16 @@ friends <- select(friends_full, user, fetch_friends_date,
 head(friends)
 ```
 
-Some friends did not return a handle. 
-
-```{r}
-friends <- filter(friends, !is.na(screen_name))
-```
-
 Retain only the connections between deputies, not to other Twitter accounts
 
 ```{r}
+friends <- filter(friends, !is.na(screen_name))
 dep_accounts <- unique(friends$user)   
 dep_friends <- filter(friends, screen_name %in% dep_accounts) 
 head(dep_friends)
 ```
 
-Select twitter handles and parties
+Select twitter handles and parties:
 
 ```{r}
 dep_twitter_full <-  readRDS("~/R/blogs/content/post/data/20190716/reps_55.rds")
@@ -161,7 +156,7 @@ dep_accounts_parties <- select(dep_twitter, screen_name, party)
 
 ```
 
-Construct a data frame containing edges and nodes, of people but also of parties (through people). 
+Construct a data frame containing edges and nodes, of people but also of parties (through people): 
 
 ```{r}
 edges_parties <- select(dep_friends, from_account = user, to_account = screen_name) %>%
@@ -185,7 +180,6 @@ Number of edges:
 nrow(edges_parties)
 ```
 
-
 Number of edges between parties:
 
 ```{r}
@@ -207,7 +201,7 @@ counts_party_edges <- group_by(counts_p2p, from_party) %>%
 counts_party_edges
 ```
 
-add a column "prop" for the "from_party" -> "to_party" edges proportions
+Add a column "prop" for the "from_party" -> "to_party" edges proportions:
 
 ```{r}
 counts_p2p <- left_join(counts_p2p, counts_party_edges, by = 'from_party') %>%
@@ -220,7 +214,6 @@ head(counts_p2p, 10)
 ```
 
 The 'INDEP' is Jean-Marie Dedecker who ran on a N-VA list. So the high proportion of links to the N-VA is not surprising. What is interesting on the other hand is that people from the cdH tend to follow people from the MR more than they do people from their own party.  
-
 
 So now Markus creates a matrix with the proportions of friends 'from_party' in rows and 'to_party' in columns.
 
@@ -278,10 +271,8 @@ accounts_not_connected
 dep_twitter_connected <- filter(dep_twitter, screen_name %in% accounts_connected)
 ```
 
-https://igraph.org/r/doc/graph_from_data_frame.html
 
 ```{r}
-
 vertices <- dep_twitter_connected %>% 
     select(screen_name, ln_fn, party)
 
@@ -338,7 +329,7 @@ graph_scores %>%
 
 ```
 
-So the Prime Minister and President-elect of the European Council has the highest betweenness score and degree score. Find out more about betweenness  [here](https://igraph.org/r/doc/betweenness.html).  
+The Prime Minister and President-elect of the European Council has clearly the highest betweenness score and degree score. Find out more about betweenness  [here](https://igraph.org/r/doc/betweenness.html).  
 
 Define the party colors. I'm sure you can improve my choice by using this [service](https://www.google.com/search?q=hex+color+picker&oq=hex&aqs=chrome.5.69i57j0l5.5855j0j1&sourceid=chrome&ie=UTF-8)
 

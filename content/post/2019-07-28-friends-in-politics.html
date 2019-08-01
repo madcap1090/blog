@@ -28,7 +28,7 @@ library(&quot;visNetwork&quot;)</code></pre>
 <pre class="r"><code>reps_55 &lt;- readRDS(&quot;~/R/blogs/content/post/data/20190716/reps_55.rds&quot;)</code></pre>
 <p>Getting their friends (you need to authenticate first).</p>
 <pre class="r"><code>friends &lt;- get_friends(reps_55$screen_name, retryonratelimit = TRUE)</code></pre>
-<p>So that leaves a pause of about 15 minutes per 10 Twitter handles analysed in order to stay within the rate limits. The data of the analysis.</p>
+<p>So that leaves a pause of about 15 minutes per 10 Twitter handles analysed in order to stay within the rate limits.</p>
 <pre class="r"><code>friends$fetch_friends_date &lt;- Sys.Date() 
 saveRDS(friends, &quot;friends.rds&quot;)</code></pre>
 <p>So we have (on 2019-07-22) 103.840 friends of our reps. Now we can get the Twitter information of these one hundred thousand accounts, with some heavy mechanics from Markus. Hau ruck!</p>
@@ -97,7 +97,7 @@ print(sprintf(&#39;matching successful for %d out of %d rows&#39;, n_matched, nr
 
 # save as RDS
 saveRDS(friendsfull, &#39;./data/20190728/deputies_twitter_friends_full_20190722.RDS&#39;)</code></pre>
-<p>Treating the data that was collected.</p>
+<p>Wrangling the data that was collected.</p>
 <pre class="r"><code>deputies_twitter_friends_full_20190722 &lt;- 
   readRDS(&quot;./data/20190728/deputies_twitter_friends_full_20190722.RDS&quot;)
 
@@ -125,10 +125,9 @@ head(friends)</code></pre>
 ## #   location &lt;chr&gt;, description &lt;chr&gt;, protected &lt;lgl&gt;,
 ## #   followers_count &lt;int&gt;, friends_count &lt;int&gt;, statuses_count &lt;int&gt;,
 ## #   account_created_at &lt;dttm&gt;, verified &lt;lgl&gt;, account_lang &lt;lgl&gt;</code></pre>
-<p>Some friends did not return a handle.</p>
-<pre class="r"><code>friends &lt;- filter(friends, !is.na(screen_name))</code></pre>
 <p>Retain only the connections between deputies, not to other Twitter accounts</p>
-<pre class="r"><code>dep_accounts &lt;- unique(friends$user)   
+<pre class="r"><code>friends &lt;- filter(friends, !is.na(screen_name))
+dep_accounts &lt;- unique(friends$user)   
 dep_friends &lt;- filter(friends, screen_name %in% dep_accounts) 
 head(dep_friends)</code></pre>
 <pre><code>## # A tibble: 6 x 15
@@ -144,13 +143,13 @@ head(dep_friends)</code></pre>
 ## #   location &lt;chr&gt;, description &lt;chr&gt;, protected &lt;lgl&gt;,
 ## #   followers_count &lt;int&gt;, friends_count &lt;int&gt;, statuses_count &lt;int&gt;,
 ## #   account_created_at &lt;dttm&gt;, verified &lt;lgl&gt;, account_lang &lt;lgl&gt;</code></pre>
-<p>Select twitter handles and parties</p>
+<p>Select twitter handles and parties:</p>
 <pre class="r"><code>dep_twitter_full &lt;-  readRDS(&quot;~/R/blogs/content/post/data/20190716/reps_55.rds&quot;)
 
 dep_twitter &lt;- filter(dep_twitter_full, !is.na(screen_name))
 
 dep_accounts_parties &lt;- select(dep_twitter, screen_name, party)</code></pre>
-<p>Construct a data frame containing edges and nodes, of people but also of parties (through people).</p>
+<p>Construct a data frame containing edges and nodes, of people but also of parties (through people):</p>
 <pre class="r"><code>edges_parties &lt;- select(dep_friends, from_account = user, to_account = screen_name) %&gt;%
     left_join(dep_accounts_parties, by = c(&#39;from_account&#39; = &#39;screen_name&#39;)) %&gt;%
     rename(from_party = party) %&gt;%
@@ -213,7 +212,7 @@ counts_party_edges</code></pre>
 ## 10 cdH              61
 ## 11 DéFI             51
 ## 12 INDEP            19</code></pre>
-<p>add a column “prop” for the “from_party” -&gt; “to_party” edges proportions</p>
+<p>Add a column “prop” for the “from_party” -&gt; “to_party” edges proportions:</p>
 <pre class="r"><code>counts_p2p &lt;- left_join(counts_p2p, counts_party_edges, by = &#39;from_party&#39;) %&gt;%
   mutate(prop = n/n_edges) %&gt;% 
   select(-n_edges) %&gt;%
@@ -290,7 +289,7 @@ head(counts_p2p, 10)</code></pre>
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 p</code></pre>
-<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <p>Remove accounts that are not connected to any other deputy account.</p>
 <pre class="r"><code>accounts_connected &lt;- unique(c(edges_parties$from_account, 
                                edges_parties$to_account))
@@ -300,17 +299,16 @@ accounts_not_connected</code></pre>
 <pre><code>## [1] &quot;dillenm&quot;       &quot;VicaireAlbert&quot;</code></pre>
 <p><a href="https://twitter.com/dillenm">Dillen marijke</a>, seems correct, very few followers, but it might also have been a false positive. <a href="https://twitter.com/VicaireAlbert">Albert Vicaire</a> looks less like a false positive, but also has very little activity.</p>
 <pre class="r"><code>dep_twitter_connected &lt;- filter(dep_twitter, screen_name %in% accounts_connected)</code></pre>
-<p><a href="https://igraph.org/r/doc/graph_from_data_frame.html" class="uri">https://igraph.org/r/doc/graph_from_data_frame.html</a></p>
 <pre class="r"><code>vertices &lt;- dep_twitter_connected %&gt;% 
     select(screen_name, ln_fn, party)
 
 #g &lt;- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
 g &lt;- graph_from_data_frame(edges_parties, vertices = vertices)
 g</code></pre>
-<pre><code>## IGRAPH 64b141e DN-- 125 2839 -- 
+<pre><code>## IGRAPH 24bfe3b DN-- 125 2839 -- 
 ## + attr: name (v/c), ln_fn (v/c), party (v/c), from_party (e/c),
 ## | to_party (e/c)
-## + edges from 64b141e (vertex names):
+## + edges from 24bfe3b (vertex names):
 ##  [1] JosyArens     -&gt;vanessmatz     DanBacquelaine-&gt;DeMaegdMichel 
 ##  [3] DanBacquelaine-&gt;SpoorenJan     DanBacquelaine-&gt;BurtonEmmanuel
 ##  [5] DanBacquelaine-&gt;prevotmaxime   DanBacquelaine-&gt;OzlemOzen1    
@@ -381,7 +379,7 @@ graph_scores %&gt;%
 ## 13          De Roover Peter         54        380        N-VA
 ## 14           Dewael Patrick         50        376    Open Vld
 ## 15          Lachaert Egbert         45        314    Open Vld</code></pre>
-<p>So the Prime Minister and President-elect of the European Council has the highest betweenness score and degree score. Find out more about betweenness <a href="https://igraph.org/r/doc/betweenness.html">here</a>.</p>
+<p>The Prime Minister and President-elect of the European Council has clearly the highest betweenness score and degree score. Find out more about betweenness <a href="https://igraph.org/r/doc/betweenness.html">here</a>.</p>
 <p>Define the party colors. I’m sure you can improve my choice by using this <a href="https://www.google.com/search?q=hex+color+picker&amp;oq=hex&amp;aqs=chrome.5.69i57j0l5.5855j0j1&amp;sourceid=chrome&amp;ie=UTF-8">service</a></p>
 <pre class="r"><code>party_colors &lt;-  c(&quot;N-VA&quot; = &quot;#b0a66d&quot;, 
               &quot;cdH&quot; = &quot;#db991d&quot;, 
