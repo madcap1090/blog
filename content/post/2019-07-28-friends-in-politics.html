@@ -62,36 +62,27 @@ while(TRUE) {
     }, error = function(cond) {
         FALSE
     })
-    
     if (success) {  
         cur_retry &lt;- 0   
-        
-
         if (chunk_start + chunksize &gt;= n_friends_ids) {
             break()
         }
     } else {  # on failure
         cur_retry &lt;- cur_retry + 1
-  
-
         if (cur_retry &gt;= n_retries) {
             print(sprintf(&#39;failed after %d retries&#39;, cur_retry))
             break()
         }
-        
         print(sprintf(&#39;will advance with retry %d&#39;, cur_retry))
     }
-    
     if (request_i %% n_max_requests == 0 || !success) {    
         print(sprintf(&#39;waiting for %d sec.&#39;, sleep_sec))
         Sys.sleep(sleep_sec)
     }
-    
     if (success) {   
         chunk_idx &lt;- chunk_idx + 1
     }
 }
-
 
 n_fetched &lt;- sum(!is.na(friendsdata$screen_name))
 print(sprintf(&#39;got data for %d out of %d unique friends accounts&#39;, n_fetched, n_friends_ids))
@@ -106,12 +97,10 @@ print(sprintf(&#39;matching successful for %d out of %d rows&#39;, n_matched, nr
 
 # save as RDS
 saveRDS(friendsfull, &#39;./data/20190728/deputies_twitter_friends_full_20190722.RDS&#39;)</code></pre>
-<p>Define the party colors. I’m sure you can improve my choice by using this <a href="https://www.google.com/search?q=hex+color+picker&amp;oq=hex&amp;aqs=chrome.5.69i57j0l5.5855j0j1&amp;sourceid=chrome&amp;ie=UTF-8">service</a></p>
 <p>Treating the data that was collected.</p>
 <pre class="r"><code>deputies_twitter_friends_full_20190722 &lt;- readRDS(&quot;./data/20190728/deputies_twitter_friends_full_20190722.RDS&quot;)
 
 friends_full &lt;- deputies_twitter_friends_full_20190722
-
 
 friends &lt;- select(friends_full, user, fetch_friends_date,
                   fetch_friendsdata_timestamp,
@@ -137,7 +126,7 @@ head(friends)</code></pre>
 ## #   account_created_at &lt;dttm&gt;, verified &lt;lgl&gt;, account_lang &lt;lgl&gt;</code></pre>
 <p>Some friends did not return a handle.</p>
 <pre class="r"><code>friends &lt;- filter(friends, !is.na(screen_name))</code></pre>
-<p>retain only the connections between deputies, not to other Twitter accounts</p>
+<p>Retain only the connections between deputies, not to other Twitter accounts</p>
 <pre class="r"><code>dep_accounts &lt;- unique(friends$user)   
 dep_friends &lt;- filter(friends, screen_name %in% dep_accounts) 
 head(dep_friends)</code></pre>
@@ -292,7 +281,8 @@ head(counts_p2p, 10)</code></pre>
     geom_raster() +
     geom_text(aes(label = perc_label), color = &#39;white&#39;) +
     scale_fill_viridis_c(guide = guide_legend(title = &#39;Followers / following\nshare in percent&#39;)) +
-    labs(x = &#39;party in column is followed by party in row&#39;, y = &#39;party in row follows party in column&#39;,
+    labs(x = &#39;party in column is followed by party in row&#39;, 
+         y = &#39;party in row follows party in column&#39;,
          title = &#39;Proportion of followings / followers between parties&#39;,
          subtitle = paste(&#39;In percent as of&#39;, &quot;2019-07-22&quot;)) +
     theme_minimal() +
@@ -315,10 +305,10 @@ accounts_not_connected</code></pre>
 #g &lt;- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
 g &lt;- graph_from_data_frame(edges_parties, vertices = vertices)
 g</code></pre>
-<pre><code>## IGRAPH b0aeb9d DN-- 125 2839 -- 
+<pre><code>## IGRAPH 769d061 DN-- 125 2839 -- 
 ## + attr: name (v/c), ln_fn (v/c), party (v/c), from_party (e/c),
 ## | to_party (e/c)
-## + edges from b0aeb9d (vertex names):
+## + edges from 769d061 (vertex names):
 ##  [1] JosyArens     -&gt;vanessmatz     DanBacquelaine-&gt;DeMaegdMichel 
 ##  [3] DanBacquelaine-&gt;SpoorenJan     DanBacquelaine-&gt;BurtonEmmanuel
 ##  [5] DanBacquelaine-&gt;prevotmaxime   DanBacquelaine-&gt;OzlemOzen1    
@@ -409,13 +399,14 @@ graph_scores %&gt;% arrange(desc(degree_score)) %&gt;% head(10)</code></pre>
 ## 8         N-VA
 ## 9           MR
 ## 10    Open Vld</code></pre>
-<p>Setting the vertices and edge colors according to party membership</p>
+<p>Setting the vertices and edge colors according to party membership.</p>
+<p>Define the party colors. I’m sure you can improve my choice by using this <a href="https://www.google.com/search?q=hex+color+picker&amp;oq=hex&amp;aqs=chrome.5.69i57j0l5.5855j0j1&amp;sourceid=chrome&amp;ie=UTF-8">service</a></p>
 <pre class="r"><code>party_colors &lt;-  c(&quot;N-VA&quot; = &quot;#b0a66d&quot;, 
               &quot;cdH&quot; = &quot;#db991d&quot;, 
               &quot;MR&quot; = &quot;#1d7cdb&quot;, 
               &quot;PS&quot; = &quot;#f27490&quot;, 
               &quot;CD&amp;V&quot; = &quot;#cf6e2d&quot;, 
-              &quot;sp.a&quot; = &quot;#ed74a7&quot;, 
+              &quot;sp.a&quot; = &quot;#ffd4e0&quot;, 
               &quot;PVDA-PTB&quot; = &quot;#e31017&quot;,
               &quot;DéFi&quot;=&quot;#e31080&quot;,
               &quot;INDEP&quot; = &quot;#f5f5ed&quot;,
@@ -428,16 +419,8 @@ names(party_colors_semitransp) &lt;- names(party_colors)
 
 V(g)$color &lt;- party_colors[V(g)$party]
 E(g)$color &lt;- party_colors_semitransp[E(g)$from_party]</code></pre>
-<pre class="r"><code>#- keep this one
-lay &lt;- layout_with_kk(g)  # okay
-p &lt;- plot(g, layout = lay,
-     vertex.size = 4, vertex.label.cex = 0.7,
-     vertex.label.color = &#39;black&#39;, vertex.label.family = &#39;sans&#39;,
-     vertex.label.dist = 0.5, vertex.frame.color = &#39;white&#39;,
-     edge.arrow.size = 0.2, edge.curved = TRUE)</code></pre>
-<p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <p><a href="/img/20190728/graph_big.png"><img src="/img/20190728/graph_small.png" alt="small_pic" /></a></p>
-<p>Obviously too small. But you can look at a larger image <a href="https://badtothecode.netlify.com/img/20190728/graph_big.png">here</a>. The colors of the incoming arows indicate which party they are from and</p>
+<p>Obviously too small. But you can look at a larger image <a href="https://badtothecode.netlify.com/img/20190728/graph_big.png">here</a>. The colors of the incoming arrows indicate which party they are from.</p>
 <p>And now for the interactive plot, with the visNetwork package.</p>
 <pre class="r"><code># convert igraph object to visNetwork data
 vis_nw_data &lt;- toVisNetworkData(g)
@@ -450,7 +433,7 @@ head(vis_nw_data$nodes)</code></pre>
 ## DanBacquelaine DanBacquelaine Bacquelaine Daniel    MR #1d7cdb
 ## HuguesBayet       HuguesBayet       Bayet Hugues    PS #f27490
 ## wbeke                   wbeke        Beke Wouter  CD&amp;V #cf6e2d
-## jan_bertels       jan_bertels        Bertels Jan  sp.a #ed74a7
+## jan_bertels       jan_bertels        Bertels Jan  sp.a #ffd4e0
 ## hendrikbogaert hendrikbogaert    Bogaert Hendrik  CD&amp;V #cf6e2d
 ##                         label                                title
 ## JosyArens           JosyArens              @JosyArens (Arens Josy)
@@ -470,10 +453,12 @@ head(vis_nw_data$edges)</code></pre>
 ## 5 DanBacquelaine   prevotmaxime         MR      cdH #1d7cdb
 ## 6 DanBacquelaine     OzlemOzen1         MR       PS #1d7cdb</code></pre>
 <pre class="r"><code># create a data frame for the legend
-vis_legend_data &lt;- data.frame(label = names(party_colors), color = unname(party_colors), shape = &#39;square&#39;)
+vis_legend_data &lt;- data.frame(label = names(party_colors), color = unname(party_colors), 
+                              shape = &#39;square&#39;)
 
 # create the network
-vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = &#39;700px&#39;, width = &#39;90%&#39;) %&gt;%
+vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = &#39;700px&#39;,
+                     width = &#39;90%&#39;) %&gt;%
     visIgraphLayout(layout = &#39;layout_with_drl&#39;, options=list(simmer.attraction=0)) %&gt;%   
 # use same layout as above
     visEdges(color = list(opacity = 0.25), arrows = &#39;to&#39;) %&gt;%                            
@@ -490,4 +475,34 @@ vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, he
 file.copy(&quot;friends.html&quot;, &quot;./files/20190728/friends.html&quot;)</code></pre>
 <pre><code>## [1] FALSE</code></pre>
 <pre class="r"><code>unlink(&quot;friends.html&quot;)</code></pre>
-<p>Click <a href="https://badtothecode.netlify.com/img/20190728/friends">here</a> for the interactie graph (hover for handle and name, and drag for fun)</p>
+<p><a href="/img/20190728/friends.html"><img src="/img/20190728/visNetwork_star.png" alt="interactive_graph" /></a></p>
+<p>Click <a href="https://badtothecode.netlify.com/img/20190728/friends">here</a> for the interactive graph (hover or click for handle and name, control roll mouse wheel for zoom and drag for fun)</p>
+<p>There is also a more organic looking dynamic version to be made using the option ‘physics’.</p>
+<pre class="r"><code># strip transparency from edge color because visNetwork can&#39;t handle it
+vis_nw_data$edges$color &lt;- substr(vis_nw_data$edges$color, 0, 7)
+#head(vis_nw_data$edges)
+
+# create a data frame for the legend
+vis_legend_data &lt;- data.frame(label = names(party_colors), color = unname(party_colors), shape = &#39;square&#39;)
+
+# create the network
+vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = &#39;700px&#39;,
+                     width = &#39;90%&#39;) %&gt;%
+     visIgraphLayout(physics = TRUE, smooth = TRUE) %&gt;% 
+# use same layout as above
+    visEdges(color = list(opacity = 0.75), arrows = &#39;to&#39;) %&gt;%                            
+# and same transparency
+    visNodes(labelHighlightBold = TRUE, borderWidth = 1, borderWidthSelected = 12) %&gt;%   
+# set node highlighting
+    visLegend(addNodes = vis_legend_data, useGroups = FALSE, zoom = FALSE, width = 0.2) %&gt;%   
+# add legend
+    visOptions(nodesIdSelection = TRUE, highlightNearest = TRUE, selectedBy = &#39;party&#39;) %&gt;%    
+# further options
+    visInteraction(dragNodes = TRUE)   # enable dragging of nodes</code></pre>
+<pre class="r"><code>visSave(vis_nw, file = &quot;friends_ll.html&quot;)
+
+file.copy(&quot;friends_ll.html&quot;, &quot;./files/20190728/friends_ll.html&quot;)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>unlink(&quot;friends_ll.html&quot;)</code></pre>
+<p><a href="/img/20190728/friends_ll.html"><img src="/img/20190728/visNetwork_physics.png" alt="interactive_graph" /></a></p>
+<p>Click <a href="https://badtothecode.netlify.com/img/20190728/friends_ll">here</a> for the interactive graph (hover or click for handle and name, control roll mouse wheel for zoom and drag for fun)</p>

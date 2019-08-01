@@ -80,36 +80,27 @@ while(TRUE) {
     }, error = function(cond) {
         FALSE
     })
-    
     if (success) {  
         cur_retry <- 0   
-        
-
         if (chunk_start + chunksize >= n_friends_ids) {
             break()
         }
     } else {  # on failure
         cur_retry <- cur_retry + 1
-  
-
         if (cur_retry >= n_retries) {
             print(sprintf('failed after %d retries', cur_retry))
             break()
         }
-        
         print(sprintf('will advance with retry %d', cur_retry))
     }
-    
     if (request_i %% n_max_requests == 0 || !success) {    
         print(sprintf('waiting for %d sec.', sleep_sec))
         Sys.sleep(sleep_sec)
     }
-    
     if (success) {   
         chunk_idx <- chunk_idx + 1
     }
 }
-
 
 n_fetched <- sum(!is.na(friendsdata$screen_name))
 print(sprintf('got data for %d out of %d unique friends accounts', n_fetched, n_friends_ids))
@@ -124,10 +115,7 @@ print(sprintf('matching successful for %d out of %d rows', n_matched, nrow(frien
 
 # save as RDS
 saveRDS(friendsfull, './data/20190728/deputies_twitter_friends_full_20190722.RDS')
-
 ```
-
-Define the party colors. I'm sure you can improve my choice by using this [service](https://www.google.com/search?q=hex+color+picker&oq=hex&aqs=chrome.5.69i57j0l5.5855j0j1&sourceid=chrome&ie=UTF-8)
 
 Treating the data that was collected. 
 
@@ -135,7 +123,6 @@ Treating the data that was collected.
 deputies_twitter_friends_full_20190722 <- readRDS("./data/20190728/deputies_twitter_friends_full_20190722.RDS")
 
 friends_full <- deputies_twitter_friends_full_20190722
-
 
 friends <- select(friends_full, user, fetch_friends_date,
                   fetch_friendsdata_timestamp,
@@ -154,13 +141,12 @@ Some friends did not return a handle.
 friends <- filter(friends, !is.na(screen_name))
 ```
 
-retain only the connections between deputies, not to other Twitter accounts
+Retain only the connections between deputies, not to other Twitter accounts
 
 ```{r}
 dep_accounts <- unique(friends$user)   
 dep_friends <- filter(friends, screen_name %in% dep_accounts) 
 head(dep_friends)
-
 ```
 
 Select twitter handles and parties
@@ -263,7 +249,8 @@ p <- ggplot(counts_p2p, aes(x = to_party, y = from_party, fill = perc)) +
     geom_raster() +
     geom_text(aes(label = perc_label), color = 'white') +
     scale_fill_viridis_c(guide = guide_legend(title = 'Followers / following\nshare in percent')) +
-    labs(x = 'party in column is followed by party in row', y = 'party in row follows party in column',
+    labs(x = 'party in column is followed by party in row', 
+         y = 'party in row follows party in column',
          title = 'Proportion of followings / followers between parties',
          subtitle = paste('In percent as of', "2019-07-22")) +
     theme_minimal() +
@@ -327,7 +314,6 @@ And the most followed:
 ```{r}
 degree_score <- sort(degree(g, mode = 'in'), decreasing = TRUE)
 head(degree_score, 15)
-
 ```
 
 Betweenness seems to be defined as the number of shortest paths going through a vertex. So I understand it as a measure of centrality at least in the web that is spun by the Twitter accounts. 
@@ -354,7 +340,9 @@ graph_scores %>% arrange(desc(betw_score)) %>% head(10)
 
 ```
 
- Setting the vertices and edge colors according to party membership
+Setting the vertices and edge colors according to party membership.
+ 
+Define the party colors. I'm sure you can improve my choice by using this [service](https://www.google.com/search?q=hex+color+picker&oq=hex&aqs=chrome.5.69i57j0l5.5855j0j1&sourceid=chrome&ie=UTF-8)
 
 ```{r}
 party_colors <-  c("N-VA" = "#b0a66d", 
@@ -362,7 +350,7 @@ party_colors <-  c("N-VA" = "#b0a66d",
               "MR" = "#1d7cdb", 
               "PS" = "#f27490", 
               "CD&V" = "#cf6e2d", 
-              "sp.a" = "#ed74a7", 
+              "sp.a" = "#ffd4e0", 
               "PVDA-PTB" = "#e31017",
               "DéFi"="#e31080",
               "INDEP" = "#f5f5ed",
@@ -375,14 +363,12 @@ names(party_colors_semitransp) <- names(party_colors)
 
 V(g)$color <- party_colors[V(g)$party]
 E(g)$color <- party_colors_semitransp[E(g)$from_party]
-
 ```
 
-
-```{r}
+```{r include=FALSE}
 #- keep this one
-lay <- layout_with_kk(g)  # okay
-p <- plot(g, layout = lay,
+lay <- layout_with_kk(g)   
+plot(g, layout = lay,
      vertex.size = 4, vertex.label.cex = 0.7,
      vertex.label.color = 'black', vertex.label.family = 'sans',
      vertex.label.dist = 0.5, vertex.frame.color = 'white',
@@ -392,8 +378,7 @@ p <- plot(g, layout = lay,
 [![small_pic](/img/20190728/graph_small.png)](/img/20190728/graph_big.png)
 
 
-Obviously too small. But you can look at a larger image [here](https://badtothecode.netlify.com/img/20190728/graph_big.png). The colors of the incoming arows indicate which party they are from and 
-
+Obviously too small. But you can look at a larger image [here](https://badtothecode.netlify.com/img/20190728/graph_big.png). The colors of the incoming arrows indicate which party they are from. 
 
 And now for the interactive plot, with the visNetwork package.
 
@@ -413,10 +398,12 @@ vis_nw_data$edges$color <- substr(vis_nw_data$edges$color, 0, 7)
 head(vis_nw_data$edges)
 
 # create a data frame for the legend
-vis_legend_data <- data.frame(label = names(party_colors), color = unname(party_colors), shape = 'square')
+vis_legend_data <- data.frame(label = names(party_colors), color = unname(party_colors), 
+                              shape = 'square')
 
 # create the network
-vis_nw <- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = '700px', width = '90%') %>%
+vis_nw <- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = '700px',
+                     width = '90%') %>%
     visIgraphLayout(layout = 'layout_with_drl', options=list(simmer.attraction=0)) %>%   
 # use same layout as above
     visEdges(color = list(opacity = 0.25), arrows = 'to') %>%                            
@@ -439,4 +426,50 @@ unlink("friends.html")
 
 ```
 
-Click [here](https://badtothecode.netlify.com/img/20190728/friends) for the interactie graph (hover for handle and name, and drag for fun)
+[![interactive_graph](/img/20190728/visNetwork_star.png)](/img/20190728/friends.html)
+
+Click [here](https://badtothecode.netlify.com/img/20190728/friends) for the interactive graph (hover or click for handle and name, control roll mouse wheel for zoom and drag for fun)
+
+There is also a more organic looking dynamic version to be made using the option 'physics'.
+
+
+```{r}
+# strip transparency from edge color because visNetwork can't handle it
+vis_nw_data$edges$color <- substr(vis_nw_data$edges$color, 0, 7)
+#head(vis_nw_data$edges)
+
+# create a data frame for the legend
+vis_legend_data <- data.frame(label = names(party_colors), color = unname(party_colors), shape = 'square')
+
+# create the network
+vis_nw <- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = '700px',
+                     width = '90%') %>%
+     visIgraphLayout(physics = TRUE, smooth = TRUE) %>% 
+# use same layout as above
+    visEdges(color = list(opacity = 0.75), arrows = 'to') %>%                            
+# and same transparency
+    visNodes(labelHighlightBold = TRUE, borderWidth = 1, borderWidthSelected = 12) %>%   
+# set node highlighting
+    visLegend(addNodes = vis_legend_data, useGroups = FALSE, zoom = FALSE, width = 0.2) %>%   
+# add legend
+    visOptions(nodesIdSelection = TRUE, highlightNearest = TRUE, selectedBy = 'party') %>%    
+# further options
+    visInteraction(dragNodes = TRUE)   # enable dragging of nodes
+```
+
+
+```{r}
+visSave(vis_nw, file = "friends_ll.html")
+
+file.copy("friends_ll.html", "./files/20190728/friends_ll.html")
+unlink("friends_ll.html")
+```
+
+
+
+[![interactive_graph](/img/20190728/visNetwork_physics.png)](/img/20190728/friends_ll.html)
+
+Click [here](https://badtothecode.netlify.com/img/20190728/friends_ll) for the interactive graph (hover or click for handle and name, control roll mouse wheel for zoom and drag for fun)
+
+
+
