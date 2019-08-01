@@ -203,7 +203,8 @@ print(sprintf(&#39;matching successful for %d out of %d rows&#39;, n_matched, nr
 # save as RDS
 saveRDS(friendsfull, &#39;./data/20190728/deputies_twitter_friends_full_20190722.RDS&#39;)</code></pre>
 <p>Treating the data that was collected.</p>
-<pre class="r"><code>deputies_twitter_friends_full_20190722 &lt;- readRDS(&quot;./data/20190728/deputies_twitter_friends_full_20190722.RDS&quot;)
+<pre class="r"><code>deputies_twitter_friends_full_20190722 &lt;- 
+  readRDS(&quot;./data/20190728/deputies_twitter_friends_full_20190722.RDS&quot;)
 
 friends_full &lt;- deputies_twitter_friends_full_20190722
 
@@ -338,8 +339,8 @@ head(counts_p2p, 10)</code></pre>
 ##  8 CD&amp;V        CD&amp;V          102 0.298
 ##  9 Open Vld    Open Vld       64 0.266
 ## 10 cdH         MR             14 0.230</code></pre>
-<p>The ‘INDEP’ is Jean-Marie Dedecker who ran on a N-VA list. So the high pr option of links to the N-VA is not surprising. What is interesting on the other hand is that people from the cdH tend to follow people from the MR more than they do people from their own party.</p>
-<p>So now Markus creates a matrix with the proportions of friends ‘from_party’ in rows and ’to_party in columns.</p>
+<p>The ‘INDEP’ is Jean-Marie Dedecker who ran on a N-VA list. So the high proportion of links to the N-VA is not surprising. What is interesting on the other hand is that people from the cdH tend to follow people from the MR more than they do people from their own party.</p>
+<p>So now Markus creates a matrix with the proportions of friends ‘from_party’ in rows and ‘to_party’ in columns.</p>
 <pre class="r"><code>p2p_mat &lt;- select(counts_p2p, -n) %&gt;% spread(to_party, prop) %&gt;%
     mutate_all(function(x) { ifelse(is.na(x), 0, x) })   
 # some edge combinations do not occur -&gt; replace NAs with 0
@@ -385,7 +386,8 @@ head(counts_p2p, 10)</code></pre>
 <pre class="r"><code>p &lt;- ggplot(counts_p2p, aes(x = to_party, y = from_party, fill = perc)) +
     geom_raster() +
     geom_text(aes(label = perc_label), color = &#39;white&#39;) +
-    scale_fill_viridis_c(guide = guide_legend(title = &#39;Followers / following\nshare in percent&#39;)) +
+    scale_fill_viridis_c(guide = 
+                           guide_legend(title = &#39;Followers / following\nshare in percent&#39;)) +
     labs(x = &#39;party in column is followed by party in row&#39;, 
          y = &#39;party in row follows party in column&#39;,
          title = &#39;Proportion of followings / followers between parties&#39;,
@@ -410,10 +412,10 @@ accounts_not_connected</code></pre>
 #g &lt;- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
 g &lt;- graph_from_data_frame(edges_parties, vertices = vertices)
 g</code></pre>
-<pre><code>## IGRAPH 769d061 DN-- 125 2839 -- 
+<pre><code>## IGRAPH 64b141e DN-- 125 2839 -- 
 ## + attr: name (v/c), ln_fn (v/c), party (v/c), from_party (e/c),
 ## | to_party (e/c)
-## + edges from 769d061 (vertex names):
+## + edges from 64b141e (vertex names):
 ##  [1] JosyArens     -&gt;vanessmatz     DanBacquelaine-&gt;DeMaegdMichel 
 ##  [3] DanBacquelaine-&gt;SpoorenJan     DanBacquelaine-&gt;BurtonEmmanuel
 ##  [5] DanBacquelaine-&gt;prevotmaxime   DanBacquelaine-&gt;OzlemOzen1    
@@ -443,7 +445,8 @@ head(degree_score, 15)</code></pre>
 ##  kris10vanvaer     OzlemOzen1       Zu_Demir hendrikbogaert  RaoulHedebouw 
 ##             42             41             40             39             39</code></pre>
 <p>And the most followed:</p>
-<pre class="r"><code>degree_score &lt;- sort(degree(g, mode = &#39;in&#39;), decreasing = TRUE)
+<pre class="r"><code>betw_score &lt;- sort(floor(betweenness(g)), decreasing = TRUE) 
+degree_score &lt;- sort(degree(g, mode = &#39;in&#39;), decreasing = TRUE)
 head(degree_score, 15)</code></pre>
 <pre><code>##   CharlesMichel      eliodirupo alexanderdecroo    FranckenTheo 
 ##              81              74              72              71 
@@ -454,13 +457,6 @@ head(degree_score, 15)</code></pre>
 ##  PeterDeRoover1   PatrickDewael  egbertlachaert 
 ##              54              50              45</code></pre>
 <p>Betweenness seems to be defined as the number of shortest paths going through a vertex. So I understand it as a measure of centrality at least in the web that is spun by the Twitter accounts.</p>
-<pre class="r"><code>betw_score &lt;- sort(floor(betweenness(g)), decreasing = TRUE) 
-head(betw_score)</code></pre>
-<pre><code>##  FranckenTheo tomvangrieken CharlesMichel  kristofcalvo    eliodirupo 
-##          1189           945           849           689           673 
-##     VincentVQ 
-##           623</code></pre>
-<p>So the president of the Flemish fascist party seems to be an interesting node to inspect, because having relatively lower degree scores (total being 46) his account has a very high betweenness score. Find out more <a href="https://igraph.org/r/doc/betweenness.html">here</a>.</p>
 <pre class="r"><code>graph_scores &lt;- data.frame(screen_name = names(degree_score),
                            degr_score = degree_score,
                            betw_score = betw_score,
@@ -469,42 +465,28 @@ graph_scores &lt;- left_join(dep_twitter_connected, graph_scores, by = &#39;scre
     mutate(full_name = ln_fn) %&gt;%
     select(screen_name, full_name, degr_score, betw_score, party)
 
-graph_scores %&gt;% arrange(desc(degree_score)) %&gt;% head(10)</code></pre>
-<pre><code>##       screen_name          full_name degr_score betw_score party
-## 1       JosyArens         Arens Josy          2          0   cdH
-## 2  DanBacquelaine Bacquelaine Daniel         29        161    MR
-## 3     HuguesBayet       Bayet Hugues         15         33    PS
-## 4           wbeke        Beke Wouter         69        673  CD&amp;V
-## 5     jan_bertels        Bertels Jan          9         16  sp.a
-## 6  hendrikbogaert    Bogaert Hendrik         43        306  CD&amp;V
-## 7   JanBriersGouv         Briers Jan          7          7  CD&amp;V
-## 8  BurtonEmmanuel    Burton Emmanuel          6          5    MR
-## 9     KatleenBury       Bury Katleen          1          0    VB
-## 10 PeterBuysrogge    Buysrogge Peter         17         43  N-VA</code></pre>
-<pre class="r"><code>graph_scores %&gt;% arrange(desc(betw_score)) %&gt;% head(10)</code></pre>
-<pre><code>##        screen_name                full_name degr_score betw_score
-## 1    CharlesMichel           Michel Charles         81       1189
-## 2       eliodirupo             Di Rupo Elio         74        945
-## 3  alexanderdecroo        De Croo Alexander         72        849
-## 4     FranckenTheo            Francken Theo         71        689
-## 5            wbeke              Beke Wouter         69        673
-## 6     kristofcalvo            Calvo Kristof         68        623
-## 7      johncrombez             Crombez John         66        522
-## 8        JanJambon               Jambon Jan         66        504
-## 9        dreynders          Reynders Didier         62        484
-## 10       VincentVQ Van Quickenborne Vincent         59        453
-##          party
-## 1           MR
-## 2           PS
-## 3     Open Vld
-## 4         N-VA
-## 5         CD&amp;V
-## 6  Ecolo-Groen
-## 7         sp.a
-## 8         N-VA
-## 9           MR
-## 10    Open Vld</code></pre>
-<p>Setting the vertices and edge colors according to party membership.</p>
+#graph_scores %&gt;% arrange(desc(degree_score)) %&gt;% head(10)
+graph_scores %&gt;% 
+  arrange(desc(betw_score)) %&gt;%
+  select(-screen_name) %&gt;% 
+  head(15)</code></pre>
+<pre><code>##                   full_name degr_score betw_score       party
+## 1            Michel Charles         81       1189          MR
+## 2              Di Rupo Elio         74        945          PS
+## 3         De Croo Alexander         72        849    Open Vld
+## 4             Francken Theo         71        689        N-VA
+## 5               Beke Wouter         69        673        CD&amp;V
+## 6             Calvo Kristof         68        623 Ecolo-Groen
+## 7              Crombez John         66        522        sp.a
+## 8                Jambon Jan         66        504        N-VA
+## 9           Reynders Didier         62        484          MR
+## 10 Van Quickenborne Vincent         59        453    Open Vld
+## 11              Demir Zuhal         56        427        N-VA
+## 12               Geens Koen         55        386        CD&amp;V
+## 13          De Roover Peter         54        380        N-VA
+## 14           Dewael Patrick         50        376    Open Vld
+## 15          Lachaert Egbert         45        314    Open Vld</code></pre>
+<p>So the Prime Minister and President-elect of the European Council has the highest betweenness score and degree score. Find out more about betweenness <a href="https://igraph.org/r/doc/betweenness.html">here</a>.</p>
 <p>Define the party colors. I’m sure you can improve my choice by using this <a href="https://www.google.com/search?q=hex+color+picker&amp;oq=hex&amp;aqs=chrome.5.69i57j0l5.5855j0j1&amp;sourceid=chrome&amp;ie=UTF-8">service</a></p>
 <pre class="r"><code>party_colors &lt;-  c(&quot;N-VA&quot; = &quot;#b0a66d&quot;, 
               &quot;cdH&quot; = &quot;#db991d&quot;, 
@@ -525,39 +507,19 @@ names(party_colors_semitransp) &lt;- names(party_colors)
 V(g)$color &lt;- party_colors[V(g)$party]
 E(g)$color &lt;- party_colors_semitransp[E(g)$from_party]</code></pre>
 <p><a href="/img/20190728/graph_big.png"><img src="/img/20190728/graph_small.png" alt="small_pic" /></a></p>
-<p>Obviously too small. But you can look at a larger image <a href="https://badtothecode.netlify.com/img/20190728/graph_big.png">here</a>. The colors of the incoming arrows indicate which party they are from.</p>
+<p>Obviously too small a picture. But you can look at a larger image <a href="https://badtothecode.netlify.com/img/20190728/graph_big.png">here</a>. The colors of the incoming arrows indicate which party they are from.</p>
 <p>And now for the interactive plot, with the visNetwork package.</p>
 <pre class="r"><code># convert igraph object to visNetwork data
 vis_nw_data &lt;- toVisNetworkData(g)
 
 vis_nw_data$nodes$title &lt;- sprintf(&#39;@%s (%s)&#39;, vis_nw_data$nodes$id,
                                     vis_nw_data$nodes$ln_fn)
-head(vis_nw_data$nodes)</code></pre>
-<pre><code>##                            id              ln_fn party   color
-## JosyArens           JosyArens         Arens Josy   cdH #db991d
-## DanBacquelaine DanBacquelaine Bacquelaine Daniel    MR #1d7cdb
-## HuguesBayet       HuguesBayet       Bayet Hugues    PS #f27490
-## wbeke                   wbeke        Beke Wouter  CD&amp;V #cf6e2d
-## jan_bertels       jan_bertels        Bertels Jan  sp.a #ffd4e0
-## hendrikbogaert hendrikbogaert    Bogaert Hendrik  CD&amp;V #cf6e2d
-##                         label                                title
-## JosyArens           JosyArens              @JosyArens (Arens Josy)
-## DanBacquelaine DanBacquelaine @DanBacquelaine (Bacquelaine Daniel)
-## HuguesBayet       HuguesBayet          @HuguesBayet (Bayet Hugues)
-## wbeke                   wbeke                 @wbeke (Beke Wouter)
-## jan_bertels       jan_bertels           @jan_bertels (Bertels Jan)
-## hendrikbogaert hendrikbogaert    @hendrikbogaert (Bogaert Hendrik)</code></pre>
+#head(vis_nw_data$nodes)</code></pre>
 <pre class="r"><code># strip transparency from edge color because visNetwork can&#39;t handle it
 vis_nw_data$edges$color &lt;- substr(vis_nw_data$edges$color, 0, 7)
-head(vis_nw_data$edges)</code></pre>
-<pre><code>##             from             to from_party to_party   color
-## 1      JosyArens     vanessmatz        cdH      cdH #db991d
-## 2 DanBacquelaine  DeMaegdMichel         MR       MR #1d7cdb
-## 3 DanBacquelaine     SpoorenJan         MR     N-VA #1d7cdb
-## 4 DanBacquelaine BurtonEmmanuel         MR       MR #1d7cdb
-## 5 DanBacquelaine   prevotmaxime         MR      cdH #1d7cdb
-## 6 DanBacquelaine     OzlemOzen1         MR       PS #1d7cdb</code></pre>
-<pre class="r"><code># create a data frame for the legend
+#head(vis_nw_data$edges)
+
+# create a data frame for the legend
 vis_legend_data &lt;- data.frame(label = names(party_colors), color = unname(party_colors), 
                               shape = &#39;square&#39;)
 
@@ -588,7 +550,8 @@ vis_nw_data$edges$color &lt;- substr(vis_nw_data$edges$color, 0, 7)
 #head(vis_nw_data$edges)
 
 # create a data frame for the legend
-vis_legend_data &lt;- data.frame(label = names(party_colors), color = unname(party_colors), shape = &#39;square&#39;)
+vis_legend_data &lt;- data.frame(label = names(party_colors), color = unname(party_colors), 
+                              shape = &#39;square&#39;)
 
 # create the network
 vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = &#39;700px&#39;,
@@ -610,7 +573,8 @@ file.copy(&quot;friends_ll.html&quot;, &quot;./files/20190728/friends_ll.html&qu
 <pre><code>## [1] FALSE</code></pre>
 <pre class="r"><code>unlink(&quot;friends_ll.html&quot;)</code></pre>
 <p><a href="/img/20190728/friends_ll.html"><img src="/img/20190728/visNetwork_physics.png" alt="interactive_graph" /></a></p>
-<p>Click <a href="https://badtothecode.netlify.com/img/20190728/friends_ll">here</a> for the interactive graph (hover or click for handle and name, control roll mouse wheel for zoom and drag for fun)</p>
+<p>Click <a href="https://badtothecode.netlify.com/img/20190728/friends_ll">here</a> for the more ‘organic’ interactive graph. I enjoy this one too. When you click on some parlemantairians with average or below average degree scores, you get an immediate visualisation of their personal filter bubble. Or rather, their professional filter bubble.</p>
+<p>Thank you for your attention.</p>
 
       
       <div class="related">
