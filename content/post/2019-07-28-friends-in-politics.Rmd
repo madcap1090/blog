@@ -379,10 +379,10 @@ E(g)$color <- party_colors_semitransp[E(g)$from_party]
 ```
 
 
-```{r}
+```{r include=FALSE}
 #- keep this one
-lay <- layout_with_kk(g)  # okay
-p <- plot(g, layout = lay,
+lay <- layout_with_kk(g)   
+plot(g, layout = lay,
      vertex.size = 4, vertex.label.cex = 0.7,
      vertex.label.color = 'black', vertex.label.family = 'sans',
      vertex.label.dist = 0.5, vertex.frame.color = 'white',
