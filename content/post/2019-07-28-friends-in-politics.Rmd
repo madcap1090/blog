@@ -156,8 +156,6 @@ friends <- filter(friends, !is.na(screen_name))
 
 retain only the connections between deputies, not to other Twitter accounts
 
-CHECK dep-acoounts SEEMS too much
-
 ```{r}
 dep_accounts <- unique(friends$user)   
 dep_friends <- filter(friends, screen_name %in% dep_accounts) 
@@ -391,10 +389,10 @@ plot(g, layout = lay,
      edge.arrow.size = 0.2, edge.curved = TRUE)
 ```
 
-[![small_pic]("./img/20190728/graph_small.png")]("http://google.be")
+[![small_pic]("/img/20190728/graph_small.png")]("/img/20190728/graph_big.png")
 
 
-Obviously too small. But you can look at a larger image [here](). The colors of the incoming arows indicate which party they are from and 
+Obviously too small. But you can look at a larger image [here]("/img/20190728/graph_big.png"). The colors of the incoming arows indicate which party they are from and 
 
 https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown
 
@@ -445,6 +443,6 @@ file.copy("friends.html", "./files/20190728/friends.html")
 unlink("friends.html")
 
 # https://badtothecode.netlify.com/post/files/20190728/friends/
-# there is somting there
+# there is somthing there
 ```
 
