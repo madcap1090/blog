@@ -420,10 +420,10 @@ accounts_not_connected</code></pre>
 #g &lt;- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
 g &lt;- graph_from_data_frame(edges_parties, vertices = vertices)
 g</code></pre>
-<pre><code>## IGRAPH 63f9213 DN-- 125 2839 -- 
+<pre><code>## IGRAPH b0aeb9d DN-- 125 2839 -- 
 ## + attr: name (v/c), ln_fn (v/c), party (v/c), from_party (e/c),
 ## | to_party (e/c)
-## + edges from 63f9213 (vertex names):
+## + edges from b0aeb9d (vertex names):
 ##  [1] JosyArens     -&gt;vanessmatz     DanBacquelaine-&gt;DeMaegdMichel 
 ##  [3] DanBacquelaine-&gt;SpoorenJan     DanBacquelaine-&gt;BurtonEmmanuel
 ##  [5] DanBacquelaine-&gt;prevotmaxime   DanBacquelaine-&gt;OzlemOzen1    
@@ -535,7 +535,7 @@ V(g)$color &lt;- party_colors[V(g)$party]
 E(g)$color &lt;- party_colors_semitransp[E(g)$from_party]</code></pre>
 <pre class="r"><code>#- keep this one
 lay &lt;- layout_with_kk(g)  # okay
-plot(g, layout = lay,
+p &lt;- plot(g, layout = lay,
      vertex.size = 4, vertex.label.cex = 0.7,
      vertex.label.color = &#39;black&#39;, vertex.label.family = &#39;sans&#39;,
      vertex.label.dist = 0.5, vertex.frame.color = &#39;white&#39;,
@@ -543,17 +543,9 @@ plot(g, layout = lay,
 <p><img src="/post/2019-07-28-friends-in-politics_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <p><a href="/img/20190728/graph_big.png"><img src="/img/20190728/graph_small.png" alt="small_pic" /></a></p>
 <p>Obviously too small. But you can look at a larger image <a href="https://badtothecode.netlify.com/img/20190728/graph_big.png">here</a>. The colors of the incoming arows indicate which party they are from and</p>
-<p><a href="https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown" class="uri">https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown</a></p>
-<p>and if memory serves me right put the image and html file (?) in static?</p>
-<p>And now for the interactive (html) plot, with the visNetwork package.</p>
+<p>And now for the interactive plot, with the visNetwork package.</p>
 <pre class="r"><code># convert igraph object to visNetwork data
 vis_nw_data &lt;- toVisNetworkData(g)
-
-# add a title to be displayed when mouse is over a node
-# vis_nw_data$nodes$title &lt;- sprintf(&#39;@%s (%s %s)&#39;, vis_nw_data$nodes$id,
-#                                    vis_nw_data$nodes$personal.first_name,
-#                                    vis_nw_data$nodes$personal.last_name)
-# head(vis_nw_data$nodes)
 
 vis_nw_data$nodes$title &lt;- sprintf(&#39;@%s (%s)&#39;, vis_nw_data$nodes$id,
                                     vis_nw_data$nodes$ln_fn)
@@ -587,11 +579,16 @@ vis_legend_data &lt;- data.frame(label = names(party_colors), color = unname(par
 
 # create the network
 vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = &#39;700px&#39;, width = &#39;90%&#39;) %&gt;%
-    visIgraphLayout(layout = &#39;layout_with_drl&#39;, options=list(simmer.attraction=0)) %&gt;%   # use same layout as above
-    visEdges(color = list(opacity = 0.25), arrows = &#39;to&#39;) %&gt;%                            # and same transparency
-    visNodes(labelHighlightBold = TRUE, borderWidth = 1, borderWidthSelected = 12) %&gt;%   # set node highlighting
-    visLegend(addNodes = vis_legend_data, useGroups = FALSE, zoom = FALSE, width = 0.2) %&gt;%   # add legend
-    visOptions(nodesIdSelection = TRUE, highlightNearest = TRUE, selectedBy = &#39;party&#39;) %&gt;%    # further options
+    visIgraphLayout(layout = &#39;layout_with_drl&#39;, options=list(simmer.attraction=0)) %&gt;%   
+# use same layout as above
+    visEdges(color = list(opacity = 0.25), arrows = &#39;to&#39;) %&gt;%                            
+# and same transparency
+    visNodes(labelHighlightBold = TRUE, borderWidth = 1, borderWidthSelected = 12) %&gt;%   
+# set node highlighting
+    visLegend(addNodes = vis_legend_data, useGroups = FALSE, zoom = FALSE, width = 0.2) %&gt;%   
+# add legend
+    visOptions(nodesIdSelection = TRUE, highlightNearest = TRUE, selectedBy = &#39;party&#39;) %&gt;%    
+# further options
     visInteraction(dragNodes = TRUE)   # enable dragging of nodes</code></pre>
 <pre class="r"><code>visSave(vis_nw, file = &quot;friends.html&quot;)
 

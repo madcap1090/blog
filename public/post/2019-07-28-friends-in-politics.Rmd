@@ -382,7 +382,7 @@ E(g)$color <- party_colors_semitransp[E(g)$from_party]
 ```{r}
 #- keep this one
 lay <- layout_with_kk(g)  # okay
-plot(g, layout = lay,
+p <- plot(g, layout = lay,
      vertex.size = 4, vertex.label.cex = 0.7,
      vertex.label.color = 'black', vertex.label.family = 'sans',
      vertex.label.dist = 0.5, vertex.frame.color = 'white',
@@ -394,22 +394,12 @@ plot(g, layout = lay,
 
 Obviously too small. But you can look at a larger image [here](https://badtothecode.netlify.com/img/20190728/graph_big.png). The colors of the incoming arows indicate which party they are from and 
 
-https://stackoverflow.com/questions/42235301/how-to-hyperlink-an-image-in-r-markdown
 
-and if memory serves me right put the image and html file (?) in static?
-
-And now for the interactive (html) plot, with the visNetwork package.
-
+And now for the interactive plot, with the visNetwork package.
 
 ```{r}
 # convert igraph object to visNetwork data
 vis_nw_data <- toVisNetworkData(g)
-
-# add a title to be displayed when mouse is over a node
-# vis_nw_data$nodes$title <- sprintf('@%s (%s %s)', vis_nw_data$nodes$id,
-#                                    vis_nw_data$nodes$personal.first_name,
-#                                    vis_nw_data$nodes$personal.last_name)
-# head(vis_nw_data$nodes)
 
 vis_nw_data$nodes$title <- sprintf('@%s (%s)', vis_nw_data$nodes$id,
                                     vis_nw_data$nodes$ln_fn)
@@ -427,11 +417,16 @@ vis_legend_data <- data.frame(label = names(party_colors), color = unname(party_
 
 # create the network
 vis_nw <- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, height = '700px', width = '90%') %>%
-    visIgraphLayout(layout = 'layout_with_drl', options=list(simmer.attraction=0)) %>%   # use same layout as above
-    visEdges(color = list(opacity = 0.25), arrows = 'to') %>%                            # and same transparency
-    visNodes(labelHighlightBold = TRUE, borderWidth = 1, borderWidthSelected = 12) %>%   # set node highlighting
-    visLegend(addNodes = vis_legend_data, useGroups = FALSE, zoom = FALSE, width = 0.2) %>%   # add legend
-    visOptions(nodesIdSelection = TRUE, highlightNearest = TRUE, selectedBy = 'party') %>%    # further options
+    visIgraphLayout(layout = 'layout_with_drl', options=list(simmer.attraction=0)) %>%   
+# use same layout as above
+    visEdges(color = list(opacity = 0.25), arrows = 'to') %>%                            
+# and same transparency
+    visNodes(labelHighlightBold = TRUE, borderWidth = 1, borderWidthSelected = 12) %>%   
+# set node highlighting
+    visLegend(addNodes = vis_legend_data, useGroups = FALSE, zoom = FALSE, width = 0.2) %>%   
+# add legend
+    visOptions(nodesIdSelection = TRUE, highlightNearest = TRUE, selectedBy = 'party') %>%    
+# further options
     visInteraction(dragNodes = TRUE)   # enable dragging of nodes
 ```
 
