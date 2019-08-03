@@ -1,0 +1,310 @@
+---
+title: members of the chamber of representatives of Belgium, 55th legistlature
+author: William Bourgeois
+date: '2019-08-03'
+slug: members-of-the-chamber-of-representatives-of-belgium-55th-legistlature
+categories: []
+tags:
+  - magick
+  - scraping
+  - Belgian politics
+---
+
+We are one good month into Belgiums 55th parlamentairian legistlature and the chamber's website has been updated, so it is time to get to know our representatives just a litte bit better. 
+
+A list can be found [here](https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm).
+
+Attach the libraries and stiffen the sinews.
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("rvest")
+library("magick")
+library("glue")
+```
+
+A first table is scraped with their name, party and sometimes email.
+
+```{r}
+url <- paste0("http://www.dekamer.be/kvvcr/showpage.cfm?section=/",
+"depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm")
+
+table_55 <- url %>% 
+  read_html() %>% 
+  html_nodes("#story > table") %>% 
+  html_table()
+
+table_55 <- table_55[[1]] # extracting the dataframe
+
+names(table_55) <- c("ln_fn", "party", "email", "website")
+table_55 <- table_55 %>%
+  arrange(ln_fn)
+
+head(table_55)
+```
+
+Now, scraping their personal webpages on the website of the chamber.
+
+```{r}
+page <- url %>% 
+  read_html() %>% 
+  html_nodes(xpath=  '//*[@id="story"]/table') 
+
+# loop to get urls
+urls <- tibble()
+
+for(i in 1:nrow(table_55)){
+  url <- xml_attrs(xml_child(xml_child(xml_child(page[[1]], i), 1), 1))
+  url <- unname(url)
+  name <- table_55$ln_fn[i]
+  url <- cbind(name, url)
+  urls <- rbind(urls, url)
+}
+
+# constructing the url
+table_ids <- urls %>%
+  mutate(url = paste0("http://www.dekamer.be/kvvcr/", url)) %>% 
+  rename("ln_fn" ="name") %>% 
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url))
+  
+table_ids %>%
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url)) %>%
+  select(ln_fn, id, url) %>% 
+  slice(29:39) %>% 
+  head()
+
+```
+
+So there is the same problem as last time, the names do not correspond exactly to the urls. So the work around is to use the list of urls to scrape their names there.
+
+```{r}
+table_ids <- table_ids %>% 
+  select(-ln_fn)
+
+x <- table_ids
+
+names <- tibble()
+
+for (i in (1:nrow(x))){
+  url <- x$url[i]
+  fn_ln <- url %>%
+    read_html() %>%
+    html_nodes(xpath=  '//*[@id="myform"]/center/h2') %>% 
+    html_text() %>% 
+    as.data.frame()
+  info <- cbind(fn_ln, url)
+  names <- rbind(names, info)
+}
+
+names(names) <- c("fn_ln","url")
+names <- names %>% 
+  mutate(fn_ln =(str_replace_all(fn_ln,"  +"," ")))
+
+names <- names %>%
+  mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url)) %>%
+  mutate(row = rownames(.)) 
+
+names %>%
+  select(fn_ln, id) %>% 
+  slice(57:62)
+```
+
+'table_ids' can now be disregarded. And we can join the information we have on a key constructed with the lastnames and firstnames, keeping in mind that the urls and ids are correct in the 'names' data frame.
+
+```{r message=FALSE}
+rm(table_ids)
+
+str_sort <- function(x)
+  sapply(lapply(strsplit(x, NULL), sort), paste, collapse="")
+
+table_55_w_key <- table_55 %>% 
+  mutate(key = tolower(str_replace_all(ln_fn," ",""))) %>% 
+  mutate(key = str_sort(key)) 
+
+names_w_key <- names %>% 
+  mutate(key = tolower(str_replace_all(fn_ln," ",""))) %>% 
+  mutate(key = str_sort(key)) 
+
+reps_55 <- names_w_key %>% 
+  left_join(table_55_w_key)
+
+reps_55 %>% 
+  select(key, fn_ln, ln_fn, party) %>% 
+  head()
+
+```
+
+Let us get their language now we're at it, and save our reps in an rds file for later use. 
+
+```{r}
+get_language <- function (url){
+  as.character(url) %>% 
+  read_html() %>% 
+  html_node("td > p ") %>% 
+  html_text() %>% 
+  str_extract('(?<=Taal:\\s)\\w+') 
+ }
+
+languages <- map_chr(reps_55$url, get_language) %>% 
+  as.data.frame()
+
+reps_55 <- languages %>%
+  rename("language" = ".") %>% 
+  cbind(reps_55)
+
+dir.create("./data/20190802", showWarnings = FALSE)
+saveRDS(names, "./data/20190802/reps_55.rds")
+```
+
+Now there is some space left to look at their mug shots. Let's scrape them of the website.
+
+```{r message=FALSE, warning=FALSE, results=FALSE}
+# create a function for purrr map2
+download_jpgs_with_0 <- function (name, id){
+  url_pic <- glue("https://www.dekamer.be/site/wwwroot/images/cv/ksegna_55/{id}.jpg")
+  download.file(url_pic, destfile = glue("./data/20190802/down_1/{name}.jpg"), 
+                mode = "wb")
+}
+
+getwd()
+dir.create("./data/20190802/down_1", showWarnings = FALSE)
+map2(.x = reps_55$ln_fn, .y = reps_55$id, safely(.f = download_jpgs_with_0, otherwise = NULL))
+
+```
+
+```{r}
+length(list.files("./data/20190802/down_1"))
+```
+
+There are 12 missing in the folder. Seems some still use their older gifs, in an older folder of the website. 
+
+```{r message=FALSE, warning=FALSE, results=FALSE}
+dir.create("./data/20190802/down_2", showWarnings = FALSE)
+
+download_gifs_with_0 <- function (name, id){
+  url_pic <- glue("http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
+  download.file(url_pic, destfile = glue("./data/20190802/down_2/{name}.gif"), 
+                mode = "wb")
+}
+
+map2(.x = reps_55$ln_fn, .y = reps_55$id, safely(.f = download_gifs_with_0, otherwise = NULL))
+
+```
+
+So a number of older pictures were downloaded, but which ones do we need.
+
+```{r}
+jpegs <- str_remove(list.files("./data/20190802/down_1"),".jpg")
+gifs <-  str_remove(list.files("./data/20190802/down_2"),".gif")
+gifs_needed <- setdiff(gifs, jpegs)
+gifs_needed
+```
+
+
+So only interested in these and we are still missing a few. The Magick package cannot read accents. But I don't see any in the list.
+
+We should change the format of these 10 pictures and move them.
+
+```{r}
+
+for(i in gifs_needed){
+  print(paste0("./data/20190802/down_2/",i, ".gif"))
+  pic <- image_read(paste0("./data/20190802/down_2/",i, ".gif"))
+  image_write(pic, path = paste0("./data/20190802/down_1/",i,".jpg"), format = "jpg")
+}
+
+length(list.files("./data/20190802/down_1"))
+```
+
+Missing 2. Who are they?
+
+
+```{r}
+jpegs <- str_remove(list.files("./data/20190802/down_1"),".jpg")
+reps <- reps_55$ln_fn
+two_missing <- setdiff(reps, jpegs)
+two_missing
+```
+
+It's because they have no heading 0 in the name of their gif...
+
+```{r, results=FALSE}
+dir.create("./data/20190802/down_3")
+two_missing <- reps_55 %>% 
+  filter(ln_fn %in% two_missing)
+download_gifs_no_0 <- function (name, id){
+  id <- as.numeric(id)
+  url_pic <- glue("https://www.dekamer.be/site/wwwroot/images/cv/{id}.gif")
+  download.file(url_pic, destfile = glue("./data/20190802/down_3/{name}.gif"), 
+                mode = "wb")
+}
+map2(.x = two_missing$ln_fn, .y = two_missing$id, safely(.f = download_gifs_no_0, otherwise = NULL))
+# treat the è
+
+file.rename("./data/20190802/down_3/Wilmès Sophie.gif", 
+            "./data/20190802/down_3/Wilmes Sophie.gif" )
+
+pic <- image_read("./data/20190802/down_3/Van Hoof Els.gif")
+image_write(pic, path = paste0("./data/20190802/down_1/Van Hoof Els.jpg"), format = "jpg")
+pic <- image_read("./data/20190802/down_3/Wilmes Sophie.gif")
+image_write(pic, path = paste0("./data/20190802/down_1/Wilmès Sophie.jpg"), format = "jpg")
+
+```
+
+
+Bingo, looks like we have a picture of all of them. For starters a patchwork can be created to have an overall view.
+
+
+```{r message=FALSE, warning=FALSE}
+dir.create("./data/20190802/num_rep", showWarnings = FALSE)
+
+files <- dir("./data/20190802/down_1/", full.names = TRUE)
+
+file.copy(files, "./data/20190802/num_rep")
+
+list.files("./data/20190802/num_rep")
+
+file.rename(list.files("./data/20190802/num_rep"), 
+            paste0(1:150,".jpg"))
+
+resize_rep <- function(x){
+  img <- image_scale(image_read(x), "145x190!")
+  image_write(img, x)        
+}
+
+reps_pics <- list.files("./data/20190802/num_rep/", full.names = TRUE)
+
+map(reps_pics, resize_rep)
+```
+
+
+```{r}
+dir.create("./data/20190802/cols_rep", showWarnings = FALSE)
+
+getwd()
+
+files <- dir("data/20190802/num_rep", full.names = TRUE)
+set.seed(42)
+
+files <- sample(files, 150) # 176 will make a nice patch
+gmp::factorize(length(files))
+
+no_rows <- 10
+no_cols <- 15
+
+
+fun <- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %>%
+  image_append(stack = TRUE) %>%
+    image_write(paste0("./data/20190802/cols_rep/", i, ".jpg"))
+}
+
+ for(i in (0:(no_cols-1))) {
+ fun(i, files, no_rows)
+ }
+```
+
+
+
+
+It looks like they finaly voted to legalise it, but are laughing because they did not tell us.
