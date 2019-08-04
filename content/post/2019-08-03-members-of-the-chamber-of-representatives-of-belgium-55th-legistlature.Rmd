@@ -357,7 +357,6 @@ This can also be illustrated by the remarkable evolution of Mr Calvo.
 
 <center>
 ![Young Mr Calvo](/img/20190417/Calvo Kristof_young.gif) ![Old Mr Calvo](/img/20190417/Calvo Kristof_06128_old.gif) ![Oldest Mr Calvo](/img/20190802/Calvo Kristof.jpg)
-
 </center>
 
 
@@ -419,7 +418,6 @@ image_write(morph, "./data/20190802/150.gif")
 
 <center>
 ![morph1](/img/20190802/50.gif) ![morph2](/img/20190802/100.gif) ![morph3](/img/20190802/150.gif)
-
 </center>
 
 At first sight, they are indeed not very ethnically diverse.
