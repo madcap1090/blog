@@ -1,8 +1,8 @@
 ---
-title: members of the chamber of representatives of Belgium, 55th legistlature
+title: members of the chamber of representatives of Belgium, 55th legistlature, in pictures
 author: William Bourgeois
 date: '2019-08-03'
-slug: members-of-the-chamber-of-representatives-of-belgium-55th-legistlature
+slug: members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures
 categories: []
 tags:
   - magick
@@ -10,7 +10,7 @@ tags:
   - Belgian politics
 ---
 
-We are one good month into Belgiums 55th parlamentairian legistlature and the chamber's website has been updated, so it is time to get to know our representatives just a litte bit better. 
+We are one good month into Belgium's 55th parliamentarian legislature and the chamber's website has been updated, so it is time to get to know our representatives just a little bit better. 
 
 A list can be found [here](https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&language=nl&cfm=/site/wwwcfm/depute/cvlist54.cfm).
 
@@ -23,7 +23,7 @@ library("magick")
 library("glue")
 ```
 
-A first table is scraped with their name, party and sometimes email.
+A first table is scraped with their name, party and sometimes email (nicely protected from my scraping as seen in the results below).
 
 ```{r}
 url <- paste0("http://www.dekamer.be/kvvcr/showpage.cfm?section=/",
@@ -69,7 +69,7 @@ table_ids <- urls %>%
   
 table_ids %>%
   mutate(id = gsub('^.*key=*|\\s*&lact.*$','', url)) %>%
-  select(ln_fn, id, url) %>% 
+  select(ln_fn, id) %>% 
   slice(29:39) %>% 
   head()
 
@@ -109,7 +109,7 @@ names %>%
   slice(57:62)
 ```
 
-'table_ids' can now be disregarded. And we can join the information we have on a key constructed with the lastnames and firstnames, keeping in mind that the urls and ids are correct in the 'names' data frame.
+'table_ids' can now be disregarded. And we can join the information we have on a key constructed with the last names and first names, keeping in mind that the urls and ids are correct in the 'names' data frame.
 
 ```{r message=FALSE}
 rm(table_ids)
@@ -153,12 +153,12 @@ reps_55 <- languages %>%
   cbind(reps_55)
 
 dir.create("./data/20190802", showWarnings = FALSE)
-saveRDS(names, "./data/20190802/reps_55.rds")
+#saveRDS(reps_55, "./data/20190802/reps_55.rds")
 ```
 
 Now there is some space left to look at their mug shots. Let's scrape them of the website.
 
-```{r message=FALSE, warning=FALSE, results=FALSE}
+```{r message=FALSE, warning=FALSE, results=FALSE, eval=FALSE}
 # create a function for purrr map2
 download_jpgs_with_0 <- function (name, id){
   url_pic <- glue("https://www.dekamer.be/site/wwwroot/images/cv/ksegna_55/{id}.jpg")
@@ -178,7 +178,7 @@ length(list.files("./data/20190802/down_1"))
 
 There are 12 missing in the folder. Seems some still use their older gifs, in an older folder of the website. 
 
-```{r message=FALSE, warning=FALSE, results=FALSE}
+```{r message=FALSE, warning=FALSE, results=FALSE, eval=FALSE}
 dir.create("./data/20190802/down_2", showWarnings = FALSE)
 
 download_gifs_with_0 <- function (name, id){
@@ -187,7 +187,8 @@ download_gifs_with_0 <- function (name, id){
                 mode = "wb")
 }
 
-map2(.x = reps_55$ln_fn, .y = reps_55$id, safely(.f = download_gifs_with_0, otherwise = NULL))
+map2(.x = reps_55$ln_fn, .y = reps_55$id, 
+     safely(.f = download_gifs_with_0, otherwise = NULL))
 
 ```
 
@@ -200,27 +201,31 @@ gifs_needed <- setdiff(gifs, jpegs)
 gifs_needed
 ```
 
-
 So only interested in these and we are still missing a few. The Magick package cannot read accents. But I don't see any in the list.
 
 We should change the format of these 10 pictures and move them.
 
-```{r}
-
+```{r message=FALSE, warning=FALSE}
+dir.create("./data/20190802/level_1", showWarnings = FALSE)
 for(i in gifs_needed){
-  print(paste0("./data/20190802/down_2/",i, ".gif"))
   pic <- image_read(paste0("./data/20190802/down_2/",i, ".gif"))
-  image_write(pic, path = paste0("./data/20190802/down_1/",i,".jpg"), format = "jpg")
+  image_write(pic, path = paste0("./data/20190802/level_1/",i,".jpg"), format = "jpg")
 }
+```
 
-length(list.files("./data/20190802/down_1"))
+
+```{r message=FALSE, warning=FALSE, eval= FALSE}
+files <- dir("./data/20190802/down_1", full.names = TRUE)
+file.copy(files, "./data/20190802/level_1/", overwrite = TRUE)
+
+length(list.files("./data/20190802/level_1"))
 ```
 
 Missing 2. Who are they?
 
 
 ```{r}
-jpegs <- str_remove(list.files("./data/20190802/down_1"),".jpg")
+jpegs <- str_remove(list.files("./data/20190802/level_1"),".jpg")
 reps <- reps_55$ln_fn
 two_missing <- setdiff(reps, jpegs)
 two_missing
@@ -228,8 +233,8 @@ two_missing
 
 It's because they have no heading 0 in the name of their gif...
 
-```{r, results=FALSE}
-dir.create("./data/20190802/down_3")
+```{r, results=FALSE, eval=FALSE}
+dir.create("./data/20190802/down_3", showWarnings = FALSE)
 two_missing <- reps_55 %>% 
   filter(ln_fn %in% two_missing)
 download_gifs_no_0 <- function (name, id){
@@ -238,35 +243,51 @@ download_gifs_no_0 <- function (name, id){
   download.file(url_pic, destfile = glue("./data/20190802/down_3/{name}.gif"), 
                 mode = "wb")
 }
-map2(.x = two_missing$ln_fn, .y = two_missing$id, safely(.f = download_gifs_no_0, otherwise = NULL))
+map2(.x = two_missing$ln_fn, .y = two_missing$id, 
+     safely(.f = download_gifs_no_0, otherwise = NULL))
 # treat the è
 
 file.rename("./data/20190802/down_3/Wilmès Sophie.gif", 
             "./data/20190802/down_3/Wilmes Sophie.gif" )
 
 pic <- image_read("./data/20190802/down_3/Van Hoof Els.gif")
-image_write(pic, path = paste0("./data/20190802/down_1/Van Hoof Els.jpg"), format = "jpg")
+image_write(pic, path = paste0("./data/20190802/final_jpg/Van Hoof Els.jpg"), format = "jpg")
 pic <- image_read("./data/20190802/down_3/Wilmes Sophie.gif")
-image_write(pic, path = paste0("./data/20190802/down_1/Wilmès Sophie.jpg"), format = "jpg")
+image_write(pic, path = paste0("./data/20190802/final_jpg/Wilmès Sophie.jpg"), format = "jpg")
 
 ```
 
 
+```{r message=FALSE, warning=FALSE, eval= FALSE}
+files <- dir("./data/20190802/level_1", full.names = TRUE)
+file.copy(files, "./data/20190802/final_jpg/", overwrite = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE, eval= TRUE}
+length(list.files("./data/20190802/final_jpg"))
+```
+
 Bingo, looks like we have a picture of all of them. For starters a patchwork can be created to have an overall view.
 
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, eval=FALSE}
 dir.create("./data/20190802/num_rep", showWarnings = FALSE)
 
-files <- dir("./data/20190802/down_1/", full.names = TRUE)
+setwd(dir = "./data/20190802/num_rep" )
+
+files <- dir("./data/20190802/final_jpg/", full.names = TRUE)
 
 file.copy(files, "./data/20190802/num_rep")
 
-list.files("./data/20190802/num_rep")
-
-file.rename(list.files("./data/20190802/num_rep"), 
+file.rename(files, 
             paste0(1:150,".jpg"))
+```
 
+
+Re-size them for good measure (one is huge).
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
 resize_rep <- function(x){
   img <- image_scale(image_read(x), "145x190!")
   image_write(img, x)        
@@ -278,15 +299,13 @@ map(reps_pics, resize_rep)
 ```
 
 
-```{r}
+```{r, results=FALSE}
 dir.create("./data/20190802/cols_rep", showWarnings = FALSE)
 
 getwd()
-
 files <- dir("data/20190802/num_rep", full.names = TRUE)
 set.seed(42)
-
-files <- sample(files, 150) # 176 will make a nice patch
+files <- sample(files, 150)
 gmp::factorize(length(files))
 
 no_rows <- 10
@@ -304,7 +323,105 @@ fun <- function(i, files, no_rows){
  }
 ```
 
+```{r}
+img <- image_read(dir("./data/20190802/cols_rep/", full.names = TRUE)) %>%
+  image_append(stack = FALSE) 
+
+setwd("./data/20190802/")
+image_write(img,"2019-08-02-faces_of_55.jpg")
+```
+
+
+```{r}
+dir.create("~/R/blogs/static/img/20190802/", )
+image_write(img,"~/R/blogs/static/img/20190802/2019-08-02-faces_of_55.jpg")
+```
+
+
+<center>
+![reps_55](/img/20190802/2019-08-02-faces_of_55.jpg)
+</center>
+
+They look like a very happy bunch of people. We can compare with the representatives of last legislature.
+
+
+<center>
+![reps_45](/img/20190417/2019-04-17-faces_of_54.jpg)
+</center>
 
 
 
-It looks like they finaly voted to legalise it, but are laughing because they did not tell us.
+I think they seem now a bit younger and also more women are in the latest picture. In terms of racial mix not much change to be seen. But, hey, most of them seem happy. Lot's of smiling faces again. Or rather it looks like they finally voted to legalise it, but are laughing because they did not tell us.
+
+This can also be illustrated by the remarkable evolution of Mr Calvo. 
+
+<center>
+![Young Mr Calvo](/img/20190417/Calvo Kristof_young.gif) ![Old Mr Calvo](/img/20190417/Calvo Kristof_06128_old.gif) ![Oldest Mr Calvo](/img/20190802/Calvo Kristof.jpg)
+
+</center>
+
+
+As seen in another post, we can do much more with the pictures, but for now let's end with the construction of a morphing gif.
+
+```{r, eval=FALSE}
+files_list <- dir("./data/20190802/num_rep/", full.names = TRUE)[1:50]
+
+x <- image_read("./data/20190802/num_rep/1.jpg")
+images <- c(x)
+for(i in files_list){
+  print(i)
+  x <- image_read(i)
+  images <- c(images, x)
+}
+
+frames <- image_morph(images, frames = 25)
+morph <- image_animate(frames)
+image_write(morph, "./data/20190802/50.gif")
+
+#image_animate(frames)
+
+```
+
+```{r, eval=FALSE}
+files_list <- dir("./data/20190802/num_rep/", full.names = TRUE)[52:100]
+
+x <- image_read("./data/20190802/num_rep/144.jpg")
+images <- c(x)
+for(i in files_list){
+  print(i)
+  x <- image_read(i)
+  images <- c(images, x)
+}
+
+frames <- image_morph(images, frames = 25)
+morph <- image_animate(frames)
+image_write(morph, "./data/20190802/100.gif")
+
+```
+
+```{r, eval=FALSE}
+
+files_list <- dir("./data/20190802/num_rep/", full.names = TRUE)[102:150]
+
+x <- image_read("./data/20190802/num_rep/54.jpg")
+images <- c(x)
+for(i in files_list){
+  print(i)
+  x <- image_read(i)
+  images <- c(images, x)
+}
+
+frames <- image_morph(images, frames = 25)
+morph <- image_animate(frames)
+image_write(morph, "./data/20190802/150.gif")
+
+```
+
+<center>
+![morph1](/img/20190802/50.gif) ![morph2](/img/20190802/100.gif) ![morph3](/img/20190802/150.gif)
+
+</center>
+
+At first sight, they are indeed not very ethnically diverse.
+
+Thank you for your attention.

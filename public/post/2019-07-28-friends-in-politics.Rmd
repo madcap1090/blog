@@ -406,7 +406,7 @@ vis_nw <- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, heigh
 ```
 
 
-```{r message=FALSE}
+```{r message=FALSE, warning=FALSE, eval=FALSE}
 visSave(vis_nw, file = "friends.html")
 
 file.copy("friends.html", "./files/20190728/friends.html")

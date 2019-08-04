@@ -1,0 +1,345 @@
+---
+title: members of the chamber of representatives of Belgium, 55th legistlature, in pictures
+author: William Bourgeois
+date: '2019-08-03'
+slug: members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures
+categories: []
+tags:
+  - magick
+  - scraping
+  - Belgian politics
+---
+
+
+
+<p>We are one good month into Belgium’s 55th parliamentarian legislature and the chamber’s website has been updated, so it is time to get to know our representatives just a little bit better.</p>
+<p>A list can be found <a href="https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm">here</a>.</p>
+<p>Attach the libraries and stiffen the sinews.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;rvest&quot;)
+library(&quot;magick&quot;)
+library(&quot;glue&quot;)</code></pre>
+<p>A first table is scraped with their name, party and sometimes email (nicely protected from my scraping as seen in the results below).</p>
+<pre class="r"><code>url &lt;- paste0(&quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/&quot;,
+&quot;depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm&quot;)
+
+table_55 &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(&quot;#story &gt; table&quot;) %&gt;% 
+  html_table()
+
+table_55 &lt;- table_55[[1]] # extracting the dataframe
+
+names(table_55) &lt;- c(&quot;ln_fn&quot;, &quot;party&quot;, &quot;email&quot;, &quot;website&quot;)
+table_55 &lt;- table_55 %&gt;%
+  arrange(ln_fn)
+
+head(table_55)</code></pre>
+<pre><code>##                ln_fn party                           email    website
+## 1      Anseeuw Björn  N-VA                                           
+## 2         Arens Josy   cdH         eb.erbmahcal@snera.ysoj           
+## 3 Bacquelaine Daniel    MR eb.erbmahcal@enialeuqcab.leinad Website(*)
+## 4       Bayet Hugues    PS                                           
+## 5        Beke Wouter  CD&amp;V          eb.remaked@ekeb.retuow Website(*)
+## 6   Ben Achour Malik    PS</code></pre>
+<p>Now, scraping their personal webpages on the website of the chamber.</p>
+<pre class="r"><code>page &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(xpath=  &#39;//*[@id=&quot;story&quot;]/table&#39;) 
+
+# loop to get urls
+urls &lt;- tibble()
+
+for(i in 1:nrow(table_55)){
+  url &lt;- xml_attrs(xml_child(xml_child(xml_child(page[[1]], i), 1), 1))
+  url &lt;- unname(url)
+  name &lt;- table_55$ln_fn[i]
+  url &lt;- cbind(name, url)
+  urls &lt;- rbind(urls, url)
+}
+
+# constructing the url
+table_ids &lt;- urls %&gt;%
+  mutate(url = paste0(&quot;http://www.dekamer.be/kvvcr/&quot;, url)) %&gt;% 
+  rename(&quot;ln_fn&quot; =&quot;name&quot;) %&gt;% 
+  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url))
+  
+table_ids %&gt;%
+  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url)) %&gt;%
+  select(ln_fn, id) %&gt;% 
+  slice(29:39) %&gt;% 
+  head()</code></pre>
+<pre><code>##                  ln_fn    id
+## 1      De Caluwé Robby 06447
+## 2    De Croo Alexander 00954
+## 3 de Laveleye Séverine 06336
+## 4      De Maegd Michel 07111
+## 5      De Roover Peter 00746
+## 6     De Smet François 07122</code></pre>
+<p>So there is the same problem as last time, the names do not correspond exactly to the urls. So the work around is to use the list of urls to scrape their names there.</p>
+<pre class="r"><code>table_ids &lt;- table_ids %&gt;% 
+  select(-ln_fn)
+
+x &lt;- table_ids
+
+names &lt;- tibble()
+
+for (i in (1:nrow(x))){
+  url &lt;- x$url[i]
+  fn_ln &lt;- url %&gt;%
+    read_html() %&gt;%
+    html_nodes(xpath=  &#39;//*[@id=&quot;myform&quot;]/center/h2&#39;) %&gt;% 
+    html_text() %&gt;% 
+    as.data.frame()
+  info &lt;- cbind(fn_ln, url)
+  names &lt;- rbind(names, info)
+}
+
+names(names) &lt;- c(&quot;fn_ln&quot;,&quot;url&quot;)
+names &lt;- names %&gt;% 
+  mutate(fn_ln =(str_replace_all(fn_ln,&quot;  +&quot;,&quot; &quot;)))
+
+names &lt;- names %&gt;%
+  mutate(id = gsub(&#39;^.*key=*|\\s*&amp;lact.*$&#39;,&#39;&#39;, url)) %&gt;%
+  mutate(row = rownames(.)) 
+
+names %&gt;%
+  select(fn_ln, id) %&gt;% 
+  slice(57:62)</code></pre>
+<pre><code>##              fn_ln    id
+## 1    Theo Francken 04666
+## 2 Michael Freilich 07022
+## 3   Katja Gabriëls 06885
+## 4       Koen Geens 06850
+## 5   Frieda Gijbels 06499
+## 6    Erik Gilissen 07228</code></pre>
+<p>‘table_ids’ can now be disregarded. And we can join the information we have on a key constructed with the last names and first names, keeping in mind that the urls and ids are correct in the ‘names’ data frame.</p>
+<pre class="r"><code>rm(table_ids)
+
+str_sort &lt;- function(x)
+  sapply(lapply(strsplit(x, NULL), sort), paste, collapse=&quot;&quot;)
+
+table_55_w_key &lt;- table_55 %&gt;% 
+  mutate(key = tolower(str_replace_all(ln_fn,&quot; &quot;,&quot;&quot;))) %&gt;% 
+  mutate(key = str_sort(key)) 
+
+names_w_key &lt;- names %&gt;% 
+  mutate(key = tolower(str_replace_all(fn_ln,&quot; &quot;,&quot;&quot;))) %&gt;% 
+  mutate(key = str_sort(key)) 
+
+reps_55 &lt;- names_w_key %&gt;% 
+  left_join(table_55_w_key)
+
+reps_55 %&gt;% 
+  select(key, fn_ln, ln_fn, party) %&gt;% 
+  head()</code></pre>
+<pre><code>##                 key              fn_ln              ln_fn party
+## 1      abeejnnörsuw      Björn Anseeuw      Anseeuw Björn  N-VA
+## 2         aejnorssy         Josy Arens         Arens Josy   cdH
+## 3 aaabcdeeeiillnnqu Daniel Bacquelaine Bacquelaine Daniel    MR
+## 4       abeeghstuuy       Hugues Bayet       Bayet Hugues    PS
+## 5        beeekortuw        Wouter Beke        Beke Wouter  CD&amp;V
+## 6    aabcehiklmnoru   Malik Ben Achour   Ben Achour Malik    PS</code></pre>
+<p>Let us get their language now we’re at it, and save our reps in an rds file for later use.</p>
+<pre class="r"><code>get_language &lt;- function (url){
+  as.character(url) %&gt;% 
+  read_html() %&gt;% 
+  html_node(&quot;td &gt; p &quot;) %&gt;% 
+  html_text() %&gt;% 
+  str_extract(&#39;(?&lt;=Taal:\\s)\\w+&#39;) 
+ }
+
+languages &lt;- map_chr(reps_55$url, get_language) %&gt;% 
+  as.data.frame()
+
+reps_55 &lt;- languages %&gt;%
+  rename(&quot;language&quot; = &quot;.&quot;) %&gt;% 
+  cbind(reps_55)
+
+dir.create(&quot;./data/20190802&quot;, showWarnings = FALSE)
+#saveRDS(reps_55, &quot;./data/20190802/reps_55.rds&quot;)</code></pre>
+<p>Now there is some space left to look at their mug shots. Let’s scrape them of the website.</p>
+<pre class="r"><code># create a function for purrr map2
+download_jpgs_with_0 &lt;- function (name, id){
+  url_pic &lt;- glue(&quot;https://www.dekamer.be/site/wwwroot/images/cv/ksegna_55/{id}.jpg&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/20190802/down_1/{name}.jpg&quot;), 
+                mode = &quot;wb&quot;)
+}
+
+getwd()
+dir.create(&quot;./data/20190802/down_1&quot;, showWarnings = FALSE)
+map2(.x = reps_55$ln_fn, .y = reps_55$id, safely(.f = download_jpgs_with_0, otherwise = NULL))</code></pre>
+<pre class="r"><code>length(list.files(&quot;./data/20190802/down_1&quot;))</code></pre>
+<pre><code>## [1] 138</code></pre>
+<p>There are 12 missing in the folder. Seems some still use their older gifs, in an older folder of the website.</p>
+<pre class="r"><code>dir.create(&quot;./data/20190802/down_2&quot;, showWarnings = FALSE)
+
+download_gifs_with_0 &lt;- function (name, id){
+  url_pic &lt;- glue(&quot;http://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/20190802/down_2/{name}.gif&quot;), 
+                mode = &quot;wb&quot;)
+}
+
+map2(.x = reps_55$ln_fn, .y = reps_55$id, 
+     safely(.f = download_gifs_with_0, otherwise = NULL))</code></pre>
+<p>So a number of older pictures were downloaded, but which ones do we need.</p>
+<pre class="r"><code>jpegs &lt;- str_remove(list.files(&quot;./data/20190802/down_1&quot;),&quot;.jpg&quot;)
+gifs &lt;-  str_remove(list.files(&quot;./data/20190802/down_2&quot;),&quot;.gif&quot;)
+gifs_needed &lt;- setdiff(gifs, jpegs)
+gifs_needed</code></pre>
+<pre><code>##  [1] &quot;Bacquelaine Daniel&quot;      &quot;Beke Wouter&quot;            
+##  [3] &quot;De Block Maggie&quot;         &quot;De Croo Alexander&quot;      
+##  [5] &quot;Ducarme Denis&quot;           &quot;Geens Koen&quot;             
+##  [7] &quot;Kir Emir&quot;                &quot;Marghem Marie-Christine&quot;
+##  [9] &quot;Michel Charles&quot;          &quot;Reynders Didier&quot;</code></pre>
+<p>So only interested in these and we are still missing a few. The Magick package cannot read accents. But I don’t see any in the list.</p>
+<p>We should change the format of these 10 pictures and move them.</p>
+<pre class="r"><code>dir.create(&quot;./data/20190802/level_1&quot;, showWarnings = FALSE)
+for(i in gifs_needed){
+  pic &lt;- image_read(paste0(&quot;./data/20190802/down_2/&quot;,i, &quot;.gif&quot;))
+  image_write(pic, path = paste0(&quot;./data/20190802/level_1/&quot;,i,&quot;.jpg&quot;), format = &quot;jpg&quot;)
+}</code></pre>
+<pre class="r"><code>files &lt;- dir(&quot;./data/20190802/down_1&quot;, full.names = TRUE)
+file.copy(files, &quot;./data/20190802/level_1/&quot;, overwrite = TRUE)
+
+length(list.files(&quot;./data/20190802/level_1&quot;))</code></pre>
+<p>Missing 2. Who are they?</p>
+<pre class="r"><code>jpegs &lt;- str_remove(list.files(&quot;./data/20190802/level_1&quot;),&quot;.jpg&quot;)
+reps &lt;- reps_55$ln_fn
+two_missing &lt;- setdiff(reps, jpegs)
+two_missing</code></pre>
+<pre><code>## [1] &quot;Van Hoof Els&quot;  &quot;Wilmès Sophie&quot;</code></pre>
+<p>It’s because they have no heading 0 in the name of their gif…</p>
+<pre class="r"><code>dir.create(&quot;./data/20190802/down_3&quot;, showWarnings = FALSE)
+two_missing &lt;- reps_55 %&gt;% 
+  filter(ln_fn %in% two_missing)
+download_gifs_no_0 &lt;- function (name, id){
+  id &lt;- as.numeric(id)
+  url_pic &lt;- glue(&quot;https://www.dekamer.be/site/wwwroot/images/cv/{id}.gif&quot;)
+  download.file(url_pic, destfile = glue(&quot;./data/20190802/down_3/{name}.gif&quot;), 
+                mode = &quot;wb&quot;)
+}
+map2(.x = two_missing$ln_fn, .y = two_missing$id, 
+     safely(.f = download_gifs_no_0, otherwise = NULL))
+# treat the è
+
+file.rename(&quot;./data/20190802/down_3/Wilmès Sophie.gif&quot;, 
+            &quot;./data/20190802/down_3/Wilmes Sophie.gif&quot; )
+
+pic &lt;- image_read(&quot;./data/20190802/down_3/Van Hoof Els.gif&quot;)
+image_write(pic, path = paste0(&quot;./data/20190802/final_jpg/Van Hoof Els.jpg&quot;), format = &quot;jpg&quot;)
+pic &lt;- image_read(&quot;./data/20190802/down_3/Wilmes Sophie.gif&quot;)
+image_write(pic, path = paste0(&quot;./data/20190802/final_jpg/Wilmès Sophie.jpg&quot;), format = &quot;jpg&quot;)</code></pre>
+<pre class="r"><code>files &lt;- dir(&quot;./data/20190802/level_1&quot;, full.names = TRUE)
+file.copy(files, &quot;./data/20190802/final_jpg/&quot;, overwrite = TRUE)</code></pre>
+<pre class="r"><code>length(list.files(&quot;./data/20190802/final_jpg&quot;))</code></pre>
+<pre><code>## [1] 150</code></pre>
+<p>Bingo, looks like we have a picture of all of them. For starters a patchwork can be created to have an overall view.</p>
+<pre class="r"><code>dir.create(&quot;./data/20190802/num_rep&quot;, showWarnings = FALSE)
+
+setwd(dir = &quot;./data/20190802/num_rep&quot; )
+
+files &lt;- dir(&quot;./data/20190802/final_jpg/&quot;, full.names = TRUE)
+
+file.copy(files, &quot;./data/20190802/num_rep&quot;)
+
+file.rename(files, 
+            paste0(1:150,&quot;.jpg&quot;))</code></pre>
+<p>Re-size them for good measure (one is huge).</p>
+<pre class="r"><code>resize_rep &lt;- function(x){
+  img &lt;- image_scale(image_read(x), &quot;145x190!&quot;)
+  image_write(img, x)        
+}
+
+reps_pics &lt;- list.files(&quot;./data/20190802/num_rep/&quot;, full.names = TRUE)
+
+map(reps_pics, resize_rep)</code></pre>
+<pre class="r"><code>dir.create(&quot;./data/20190802/cols_rep&quot;, showWarnings = FALSE)
+
+getwd()
+files &lt;- dir(&quot;data/20190802/num_rep&quot;, full.names = TRUE)
+set.seed(42)
+files &lt;- sample(files, 150)
+gmp::factorize(length(files))
+
+no_rows &lt;- 10
+no_cols &lt;- 15
+
+
+fun &lt;- function(i, files, no_rows){
+  image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
+  image_append(stack = TRUE) %&gt;%
+    image_write(paste0(&quot;./data/20190802/cols_rep/&quot;, i, &quot;.jpg&quot;))
+}
+
+ for(i in (0:(no_cols-1))) {
+ fun(i, files, no_rows)
+ }</code></pre>
+<pre class="r"><code>img &lt;- image_read(dir(&quot;./data/20190802/cols_rep/&quot;, full.names = TRUE)) %&gt;%
+  image_append(stack = FALSE) 
+
+setwd(&quot;./data/20190802/&quot;)
+image_write(img,&quot;2019-08-02-faces_of_55.jpg&quot;)</code></pre>
+<pre class="r"><code>dir.create(&quot;~/R/blogs/static/img/20190802/&quot;, )</code></pre>
+<pre><code>## Warning in dir.create(&quot;~/R/blogs/static/img/20190802/&quot;, ): &#39;C:
+## \Users\William\Documents\R\blogs\static\img\20190802&#39; already exists</code></pre>
+<pre class="r"><code>image_write(img,&quot;~/R/blogs/static/img/20190802/2019-08-02-faces_of_55.jpg&quot;)</code></pre>
+<center>
+<img src="/img/20190802/2019-08-02-faces_of_55.jpg" alt="reps_55" />
+</center>
+<p>They look like a very happy bunch of people. We can compare with the representatives of last legislature.</p>
+<center>
+<img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="reps_45" />
+</center>
+<p>I think they seem now a bit younger and also more women are in the latest picture. In terms of racial mix not much change to be seen. But, hey, most of them seem happy. Lot’s of smiling faces again. Or rather it looks like they finally voted to legalise it, but are laughing because they did not tell us.</p>
+<p>This can be illustrated also by the remarkable evolution of Mr Calvo.</p>
+<center>
+<p><img src="/img/20190417/Calvo%20Kristof_young.gif" alt="Young Mr Calvo" /> <img src="/img/20190417/Calvo%20Kristof_06128_old.gif" alt="Old Mr Calvo" /> <img src="/img/20190802/Calvo%20Kristof.jpg" alt="Oldest Mr Calvo" /></p>
+</center>
+<p>As seen in another post, we can do much more with the pictures, but for now let’s end with the construction of a morphing gif.</p>
+<pre class="r"><code>files_list &lt;- dir(&quot;./data/20190802/num_rep/&quot;, full.names = TRUE)[1:50]
+
+x &lt;- image_read(&quot;./data/20190802/num_rep/1.jpg&quot;)
+images &lt;- c(x)
+for(i in files_list){
+  print(i)
+  x &lt;- image_read(i)
+  images &lt;- c(images, x)
+}
+
+frames &lt;- image_morph(images, frames = 25)
+morph &lt;- image_animate(frames)
+image_write(morph, &quot;./data/20190802/50.gif&quot;)
+
+#image_animate(frames)</code></pre>
+<pre class="r"><code>files_list &lt;- dir(&quot;./data/20190802/num_rep/&quot;, full.names = TRUE)[52:100]
+
+x &lt;- image_read(&quot;./data/20190802/num_rep/144.jpg&quot;)
+images &lt;- c(x)
+for(i in files_list){
+  print(i)
+  x &lt;- image_read(i)
+  images &lt;- c(images, x)
+}
+
+frames &lt;- image_morph(images, frames = 25)
+morph &lt;- image_animate(frames)
+image_write(morph, &quot;./data/20190802/100.gif&quot;)</code></pre>
+<pre class="r"><code>files_list &lt;- dir(&quot;./data/20190802/num_rep/&quot;, full.names = TRUE)[102:150]
+
+x &lt;- image_read(&quot;./data/20190802/num_rep/54.jpg&quot;)
+images &lt;- c(x)
+for(i in files_list){
+  print(i)
+  x &lt;- image_read(i)
+  images &lt;- c(images, x)
+}
+
+frames &lt;- image_morph(images, frames = 25)
+morph &lt;- image_animate(frames)
+image_write(morph, &quot;./data/20190802/150.gif&quot;)</code></pre>
+<center>
+<p><img src="/img/20190802/50.gif" alt="morph1" /> <img src="/img/20190802/100.gif" alt="morph2" /> <img src="/img/20190802/150.gif" alt="morph3" /></p>
+</center>
+<p>At first sight, they are indeed not very ethnically diverse.</p>
+<p>Thank you for your attention.</p>

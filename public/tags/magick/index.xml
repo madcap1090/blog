@@ -7,10 +7,22 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Wed, 17 Apr 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 03 Aug 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/magick/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>members of the chamber of representatives of Belgium, 55th legistlature, in pictures</title>
+      <link>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures/</link>
+      <pubDate>Sat, 03 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures/</guid>
+      <description>We are one good month into Belgium’s 55th parliamentarian legislature and the chamber’s website has been updated, so it is time to get to know our representatives just a little bit better.
+A list can be found here.
+Attach the libraries and stiffen the sinews.
+library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;rvest&amp;quot;)library(&amp;quot;magick&amp;quot;)library(&amp;quot;glue&amp;quot;)A first table is scraped with their name, party and sometimes email (nicely protected from my scraping as seen in the results below).</description>
+    </item>
     
     <item>
       <title>members of the chamber of representatives of Belgium, 54th legistlature</title>

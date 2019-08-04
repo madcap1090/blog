@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Sun, 28 Jul 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 03 Aug 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,9 +15,27 @@
     <item>
       <title>Belgian politics</title>
       <link>/tags/belgian-politics/</link>
-      <pubDate>Sun, 28 Jul 2019 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 03 Aug 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/belgian-politics/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>magick</title>
+      <link>/tags/magick/</link>
+      <pubDate>Sat, 03 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/magick/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>scraping</title>
+      <link>/tags/scraping/</link>
+      <pubDate>Sat, 03 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/scraping/</guid>
       <description></description>
     </item>
     
@@ -45,15 +63,6 @@
       <pubDate>Sun, 28 Jul 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/igraph/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>scraping</title>
-      <link>/tags/scraping/</link>
-      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/scraping/</guid>
       <description></description>
     </item>
     
@@ -234,15 +243,6 @@
       <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/handeling-files/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>magick</title>
-      <link>/tags/magick/</link>
-      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/magick/</guid>
       <description></description>
     </item>
     
