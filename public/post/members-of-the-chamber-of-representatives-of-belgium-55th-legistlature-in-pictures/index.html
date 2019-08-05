@@ -8,9 +8,9 @@
 
 <meta property='og:title' content='members of the chamber of representatives of Belgium, 55th legistlature, in pictures - bad to the code'>
 <meta property='og:description' content='We are one good month into Belgium’s 55th parliamentarian legislature and the chamber’s website has been updated, so it is time to get to know our representatives just a little bit better.
-A list can be found here.
+A list of the current members of parliament can be found here on the chamber’s official website.
 Attach the libraries and stiffen the sinews.
-library(&quot;tidyverse&quot;)library(&quot;rvest&quot;)library(&quot;magick&quot;)library(&quot;glue&quot;)A first table is scraped with their name, party and sometimes email (nicely protected from my scraping as seen in the results below).'>
+library(&quot;tidyverse&quot;)library(&quot;rvest&quot;)library(&quot;magick&quot;)library(&quot;glue&quot;)A first table is scraped with their name, party and sometimes email (nicely protected from scraping as seen in the results below).'>
 <meta property='og:url' content='/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures/'>
 <meta property='og:site_name' content='bad to the code'>
 <meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='magick'><meta property='article:tag' content='scraping'><meta property='article:tag' content='Belgian politics'><meta property='article:published_time' content='2019-08-03T00:00:00Z'/><meta property='article:modified_time' content='2019-08-03T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
@@ -119,13 +119,13 @@ library(&quot;tidyverse&quot;)library(&quot;rvest&quot;)library(&quot;magick&q
 
 
 <p>We are one good month into Belgium’s 55th parliamentarian legislature and the chamber’s website has been updated, so it is time to get to know our representatives just a little bit better.</p>
-<p>A list can be found <a href="https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm">here</a>.</p>
+<p>A list of the current members of parliament can be found <a href="https://www.dekamer.be/kvvcr/showpage.cfm?section=/depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm">here</a> on the chamber’s official website.</p>
 <p>Attach the libraries and stiffen the sinews.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
 library(&quot;rvest&quot;)
 library(&quot;magick&quot;)
 library(&quot;glue&quot;)</code></pre>
-<p>A first table is scraped with their name, party and sometimes email (nicely protected from my scraping as seen in the results below).</p>
+<p>A first table is scraped with their name, party and sometimes email (nicely protected from scraping as seen in the results below).</p>
 <pre class="r"><code>url &lt;- paste0(&quot;http://www.dekamer.be/kvvcr/showpage.cfm?section=/&quot;,
 &quot;depute&amp;language=nl&amp;cfm=/site/wwwcfm/depute/cvlist54.cfm&quot;)
 
@@ -182,7 +182,7 @@ table_ids %&gt;%
 ## 4      De Maegd Michel 07111
 ## 5      De Roover Peter 00746
 ## 6     De Smet François 07122</code></pre>
-<p>So there is the same problem as last time, the names do not correspond exactly to the urls. So the work around is to use the list of urls to scrape their names there.</p>
+<p>A table of last names and ids, but there is the same problem as last time, the names do not correspond exactly to the urls. So the work around is to use the list of urls to scrape their names on their personal webpages instead of using the table. The table contains the last names then first name, the personal webpages the reverse. We’ll deal with this later.</p>
 <pre class="r"><code>table_ids &lt;- table_ids %&gt;% 
   select(-ln_fn)
 
@@ -274,10 +274,11 @@ download_jpgs_with_0 &lt;- function (name, id){
 
 getwd()
 dir.create(&quot;./data/20190802/down_1&quot;, showWarnings = FALSE)
-map2(.x = reps_55$ln_fn, .y = reps_55$id, safely(.f = download_jpgs_with_0, otherwise = NULL))</code></pre>
+map2(.x = reps_55$ln_fn, .y = reps_55$id, 
+     safely(.f = download_jpgs_with_0, otherwise = NULL))</code></pre>
 <pre class="r"><code>length(list.files(&quot;./data/20190802/down_1&quot;))</code></pre>
 <pre><code>## [1] 138</code></pre>
-<p>There are 12 missing in the folder. Seems some still use their older gifs, in an older folder of the website.</p>
+<p>There are 12 missing in the folder. Seems some still use their older gifs, in an older folder of the website. We can download them from there.</p>
 <pre class="r"><code>dir.create(&quot;./data/20190802/down_2&quot;, showWarnings = FALSE)
 
 download_gifs_with_0 &lt;- function (name, id){
@@ -298,12 +299,13 @@ gifs_needed</code></pre>
 ##  [5] &quot;Ducarme Denis&quot;           &quot;Geens Koen&quot;             
 ##  [7] &quot;Kir Emir&quot;                &quot;Marghem Marie-Christine&quot;
 ##  [9] &quot;Michel Charles&quot;          &quot;Reynders Didier&quot;</code></pre>
-<p>So only interested in these and we are still missing a few. The Magick package cannot read accents. But I don’t see any in the list.</p>
+<p>Only interested in these and we are still missing a few.</p>
 <p>We should change the format of these 10 pictures and move them.</p>
 <pre class="r"><code>dir.create(&quot;./data/20190802/level_1&quot;, showWarnings = FALSE)
 for(i in gifs_needed){
   pic &lt;- image_read(paste0(&quot;./data/20190802/down_2/&quot;,i, &quot;.gif&quot;))
-  image_write(pic, path = paste0(&quot;./data/20190802/level_1/&quot;,i,&quot;.jpg&quot;), format = &quot;jpg&quot;)
+  image_write(pic, path = paste0(&quot;./data/20190802/level_1/&quot;,i,&quot;.jpg&quot;), 
+              format = &quot;jpg&quot;)
 }</code></pre>
 <pre class="r"><code>files &lt;- dir(&quot;./data/20190802/down_1&quot;, full.names = TRUE)
 file.copy(files, &quot;./data/20190802/level_1/&quot;, overwrite = TRUE)
@@ -315,7 +317,7 @@ reps &lt;- reps_55$ln_fn
 two_missing &lt;- setdiff(reps, jpegs)
 two_missing</code></pre>
 <pre><code>## [1] &quot;Van Hoof Els&quot;  &quot;Wilmès Sophie&quot;</code></pre>
-<p>It’s because they have no heading 0 in the name of their gif…</p>
+<p>It’s because they have no heading 0 in the name of their gif…The Magick package cannot read accents. So Sophie’s last name needs to be briefly changed.</p>
 <pre class="r"><code>dir.create(&quot;./data/20190802/down_3&quot;, showWarnings = FALSE)
 two_missing &lt;- reps_55 %&gt;% 
   filter(ln_fn %in% two_missing)
@@ -333,9 +335,11 @@ file.rename(&quot;./data/20190802/down_3/Wilmès Sophie.gif&quot;,
             &quot;./data/20190802/down_3/Wilmes Sophie.gif&quot; )
 
 pic &lt;- image_read(&quot;./data/20190802/down_3/Van Hoof Els.gif&quot;)
-image_write(pic, path = paste0(&quot;./data/20190802/final_jpg/Van Hoof Els.jpg&quot;), format = &quot;jpg&quot;)
+image_write(pic, path = paste0(&quot;./data/20190802/final_jpg/Van Hoof Els.jpg&quot;), 
+            format = &quot;jpg&quot;)
 pic &lt;- image_read(&quot;./data/20190802/down_3/Wilmes Sophie.gif&quot;)
-image_write(pic, path = paste0(&quot;./data/20190802/final_jpg/Wilmès Sophie.jpg&quot;), format = &quot;jpg&quot;)</code></pre>
+image_write(pic, path = paste0(&quot;./data/20190802/final_jpg/Wilmès Sophie.jpg&quot;), 
+            format = &quot;jpg&quot;)</code></pre>
 <pre class="r"><code>files &lt;- dir(&quot;./data/20190802/level_1&quot;, full.names = TRUE)
 file.copy(files, &quot;./data/20190802/final_jpg/&quot;, overwrite = TRUE)</code></pre>
 <pre class="r"><code>length(list.files(&quot;./data/20190802/final_jpg&quot;))</code></pre>
@@ -371,7 +375,6 @@ gmp::factorize(length(files))
 no_rows &lt;- 10
 no_cols &lt;- 15
 
-
 fun &lt;- function(i, files, no_rows){
   image_read(files[(i*no_rows+1):((i+1)*no_rows)]) %&gt;%
   image_append(stack = TRUE) %&gt;%
@@ -386,10 +389,8 @@ fun &lt;- function(i, files, no_rows){
 
 setwd(&quot;./data/20190802/&quot;)
 image_write(img,&quot;2019-08-02-faces_of_55.jpg&quot;)</code></pre>
-<pre class="r"><code>dir.create(&quot;~/R/blogs/static/img/20190802/&quot;, )</code></pre>
-<pre><code>## Warning in dir.create(&quot;~/R/blogs/static/img/20190802/&quot;, ): &#39;C:
-## \Users\William\Documents\R\blogs\static\img\20190802&#39; already exists</code></pre>
-<pre class="r"><code>image_write(img,&quot;~/R/blogs/static/img/20190802/2019-08-02-faces_of_55.jpg&quot;)</code></pre>
+<pre class="r"><code>dir.create(&quot;~/R/blogs/static/img/20190802/&quot;, showWarnings = FALSE)
+image_write(img,&quot;~/R/blogs/static/img/20190802/2019-08-02-faces_of_55.jpg&quot;)</code></pre>
 <center>
 <img src="/img/20190802/2019-08-02-faces_of_55.jpg" alt="reps_55" />
 </center>
@@ -398,11 +399,11 @@ image_write(img,&quot;2019-08-02-faces_of_55.jpg&quot;)</code></pre>
 <img src="/img/20190417/2019-04-17-faces_of_54.jpg" alt="reps_45" />
 </center>
 <p>I think they seem now a bit younger and also more women are in the latest picture. In terms of racial mix not much change to be seen. But, hey, most of them seem happy. Lot’s of smiling faces again. Or rather it looks like they finally voted to legalise it, but are laughing because they did not tell us.</p>
-<p>This can be illustrated also by the remarkable evolution of Mr Calvo.</p>
+<p>This can also be illustrated by the remarkable evolution of Mr Calvo.</p>
 <center>
-<p><img src="/img/20190417/Calvo%20Kristof_young.gif" alt="Young Mr Calvo" /> <img src="/img/20190417/Calvo%20Kristof_06128_old.gif" alt="Old Mr Calvo" /> <img src="/img/20190802/Calvo%20Kristof.jpg" alt="Oldest Mr Calvo" /></p>
+<img src="/img/20190417/Calvo%20Kristof_young.gif" alt="Young Mr Calvo" /> <img src="/img/20190417/Calvo%20Kristof_06128_old.gif" alt="Old Mr Calvo" /> <img src="/img/20190802/Calvo%20Kristof.jpg" alt="Oldest Mr Calvo" />
 </center>
-<p>As seen in another post, we can do much more with the pictures, but for now let’s end with the construction of a morphing gif.</p>
+<p>As seen in another <a href="https://badtothecode.netlify.com/post/happy-faces-in-a-bucket/">post</a>, we can do much more with the pictures, but for now let’s end with the construction of a morphing gif.</p>
 <pre class="r"><code>files_list &lt;- dir(&quot;./data/20190802/num_rep/&quot;, full.names = TRUE)[1:50]
 
 x &lt;- image_read(&quot;./data/20190802/num_rep/1.jpg&quot;)
@@ -415,9 +416,7 @@ for(i in files_list){
 
 frames &lt;- image_morph(images, frames = 25)
 morph &lt;- image_animate(frames)
-image_write(morph, &quot;./data/20190802/50.gif&quot;)
-
-#image_animate(frames)</code></pre>
+image_write(morph, &quot;./data/20190802/50.gif&quot;)</code></pre>
 <pre class="r"><code>files_list &lt;- dir(&quot;./data/20190802/num_rep/&quot;, full.names = TRUE)[52:100]
 
 x &lt;- image_read(&quot;./data/20190802/num_rep/144.jpg&quot;)
@@ -445,7 +444,7 @@ frames &lt;- image_morph(images, frames = 25)
 morph &lt;- image_animate(frames)
 image_write(morph, &quot;./data/20190802/150.gif&quot;)</code></pre>
 <center>
-<p><img src="/img/20190802/50.gif" alt="morph1" /> <img src="/img/20190802/100.gif" alt="morph2" /> <img src="/img/20190802/150.gif" alt="morph3" /></p>
+<img src="/img/20190802/50.gif" alt="morph1" /> <img src="/img/20190802/100.gif" alt="morph2" /> <img src="/img/20190802/150.gif" alt="morph3" />
 </center>
 <p>At first sight, they are indeed not very ethnically diverse.</p>
 <p>Thank you for your attention.</p>

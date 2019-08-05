@@ -19,9 +19,9 @@
       
       <guid>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures/</guid>
       <description>We are one good month into Belgium’s 55th parliamentarian legislature and the chamber’s website has been updated, so it is time to get to know our representatives just a little bit better.
-A list can be found here.
+A list of the current members of parliament can be found here on the chamber’s official website.
 Attach the libraries and stiffen the sinews.
-library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;rvest&amp;quot;)library(&amp;quot;magick&amp;quot;)library(&amp;quot;glue&amp;quot;)A first table is scraped with their name, party and sometimes email (nicely protected from my scraping as seen in the results below).</description>
+library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;rvest&amp;quot;)library(&amp;quot;magick&amp;quot;)library(&amp;quot;glue&amp;quot;)A first table is scraped with their name, party and sometimes email (nicely protected from scraping as seen in the results below).</description>
     </item>
     
     <item>
