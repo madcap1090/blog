@@ -3,8 +3,10 @@
 .RData
 .Ruserdata
 /public/post/data/*
-/content/post/data/*
+/content/post/data
 blogdown.R
 /blogdown.R
 master_file.R
 */Thumbs.db
+*.wav
+\data
