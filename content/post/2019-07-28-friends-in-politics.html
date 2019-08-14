@@ -305,10 +305,10 @@ accounts_not_connected</code></pre>
 #g &lt;- graph_from_data_frame(edges_parties, vertices = dep_twitter_connected)
 g &lt;- graph_from_data_frame(edges_parties, vertices = vertices)
 g</code></pre>
-<pre><code>## IGRAPH 0dc55b5 DN-- 125 2839 -- 
+<pre><code>## IGRAPH b8d03bc DN-- 125 2839 -- 
 ## + attr: name (v/c), ln_fn (v/c), party (v/c), from_party (e/c),
 ## | to_party (e/c)
-## + edges from 0dc55b5 (vertex names):
+## + edges from b8d03bc (vertex names):
 ##  [1] JosyArens     -&gt;vanessmatz     DanBacquelaine-&gt;DeMaegdMichel 
 ##  [3] DanBacquelaine-&gt;SpoorenJan     DanBacquelaine-&gt;BurtonEmmanuel
 ##  [5] DanBacquelaine-&gt;prevotmaxime   DanBacquelaine-&gt;OzlemOzen1    
@@ -461,11 +461,8 @@ vis_nw &lt;- visNetwork(nodes = vis_nw_data$nodes, edges = vis_nw_data$edges, he
     visInteraction(dragNodes = TRUE)   # enable dragging of nodes</code></pre>
 <pre class="r"><code>visSave(vis_nw, file = &quot;friends_ll.html&quot;)
 
-file.copy(&quot;friends_ll.html&quot;, &quot;./files/20190728/friends_ll.html&quot;)</code></pre>
-<pre><code>## Warning in file.create(to[okay]): cannot create file &#39;./files/20190728/
-## friends_ll.html&#39;, reason &#39;No such file or directory&#39;</code></pre>
-<pre><code>## [1] FALSE</code></pre>
-<pre class="r"><code>unlink(&quot;friends_ll.html&quot;)</code></pre>
+file.copy(&quot;friends_ll.html&quot;, &quot;./files/20190728/friends_ll.html&quot;)
+unlink(&quot;friends_ll.html&quot;)</code></pre>
 <p><a href="/img/20190728/friends_ll.html"><img src="/img/20190728/visNetwork_physics.png" alt="interactive_graph" /></a></p>
 <p>Click <a href="https://badtothecode.netlify.com/img/20190728/friends_ll">here</a> for the more ‘organic’ interactive graph. I enjoy this one too. When you click on some parlemantairians with average or below average degree scores, you get an immediate visualisation of their personal filter bubble. Or rather, their professional filter bubble.</p>
 <p>Thank you for your attention.</p>
