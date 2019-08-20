@@ -1,0 +1,29 @@
+---
+title: r u bot or not bot?
+author: William Bourgeois
+date: '2019-08-20'
+slug: r-u-bot-or-not-bot
+categories: []
+tags:
+  - Twitter
+---
+
+Yesterday Twitter announced that they had identified 936 accounts originating from China that were instrumentalised for 'information operations' in Hong Kong. These were 'deliberately and specifically attempting to sow political discord in Hong Kong, including undermining the legitimacy and political positions of the protest movement on the ground'. 
+
+I find it an interesting turn of phrase because saying that an action undermines the legitimacy of an action just falls short of calling the action legitimate. But what I find most interesting is to know why Twitter decided to tackle 'information operations' targeting protest actions in Hong Kong. 
+
+The couple of screenshots and the four files that Twitter let's us see, do not illustrate in any way that these accounts were involved in 'coordinated inauthentic behaviour', from a 'state-backed' operation.  
+
+They do indicate that some of the accounts have a tendency to abuse substances. But that is about it. 
+
+I'm not saying it was a bad decision to suspend the accounts, what I'm saying is that Twitter's criteria are not transparent and that the information they provide do not prouve that a state actor was involved. 
+
+They state to have identified 'large clusters of accounts behaving in a coordinated manner to amplify messages related to the Hong Hong protests.' Well I hope that the Hong Kong protesters are behaving in exactly the same way. 
+
+Who decides when accounts are behaving in a legitimate matter or not? Using which hard criteria? Hard ones and not some wooly [ones](https://help.twitter.com/en/rules-and-policies/platform-manipulation) By these criteria would the account of the orange menace not need to be suspended? Does that account not 'attempting to sow political discord'? Who decides? How?
+
+Twitter states:'These deceptive strategies have been around for far longer than Twitter has existed.' Deceptive strategies, e.g. propaganda have been around indeed for longer than Twitter existed. And so has censure. 
+
+In this, the largest of its kind in the industry, 'information operation', much more transparency from Twitter is requered. 
+
+You can find the full statement [here](https://blog.twitter.com/en_us/topics/company/2019/information_operations_directed_at_Hong_Kong.html)
