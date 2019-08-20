@@ -12,7 +12,7 @@ Yesterday Twitter announced that they had identified 936 accounts originating fr
 
 I find it an interesting turn of phrase because saying that an action undermines the legitimacy of an action just falls short of calling the action legitimate. But what I find most interesting is to know why Twitter decided to tackle 'information operations' targeting protest actions in Hong Kong. 
 
-The couple of screenshots and the four files that Twitter let's us see, do not illustrate in any way that these accounts were involved in 'coordinated inauthentic behaviour', from a 'state-backed' operation.  
+The couple of screenshots and the four files that Twitter let's us see, do not illustrate in any way that these accounts were involved in 'coordinated inauthentic behavior', from a 'state-backed' operation.  
 
 They do indicate that some of the accounts have a tendency to abuse substances. But that is about it. 
 
@@ -20,10 +20,62 @@ I'm not saying it was a bad decision to suspend the accounts, what I'm saying is
 
 They state to have identified 'large clusters of accounts behaving in a coordinated manner to amplify messages related to the Hong Hong protests.' Well I hope that the Hong Kong protesters are behaving in exactly the same way. 
 
-Who decides when accounts are behaving in a legitimate matter or not? Using which hard criteria? Hard ones and not some wooly [ones](https://help.twitter.com/en/rules-and-policies/platform-manipulation) By these criteria would the account of the orange menace not need to be suspended? Does that account not 'attempting to sow political discord'? Who decides? How?
+Who decides when accounts are behaving in a legitimate matter or not? Using which hard criteria? Hard ones and not some woolly [ones](https://help.twitter.com/en/rules-and-policies/platform-manipulation) By these criteria would the account of the orange menace not need to be suspended? Does that account not 'attempting to sow political discord'? Who decides? How?
 
 Twitter states:'These deceptive strategies have been around for far longer than Twitter has existed.' Deceptive strategies, e.g. propaganda have been around indeed for longer than Twitter existed. And so has censure. 
 
-In this, the largest of its kind in the industry, 'information operation', much more transparency from Twitter is requered. 
+In this, the largest of its kind in the industry, 'information operation', much more transparency from Twitter is required. 
 
 You can find the full statement [here](https://blog.twitter.com/en_us/topics/company/2019/information_operations_directed_at_Hong_Kong.html)
+
+
+Here are the accounts:
+
+```{r}
+library(readr)
+china_2 <- read_csv("./data/20190820/china_082019_2_users_csv_hashed.csv")
+china_1 <- read_csv("./data/20190820/china_082019_1_users_csv_hashed.csv")
+china <- rbind(china_1, china_2)
+```
+
+And their columns:
+
+```{r}
+names(china)
+```
+
+No proof of 'information operation' here.
+
+The tweets:
+
+```{r}
+china_2_tweets <- read_csv("./data/20190820/china_082019_2_tweets_csv_hashed.csv")
+china_1_tweets <- read_csv("./data/20190820/china_082019_1_tweets_csv_hashed.csv")
+china_tweets <- rbind(china_1_tweets, china_2_tweets)
+```
+
+The columns of the tweets:
+```{r}
+
+names(china_tweets)
+```
+
+IMHO there is no proof here at all. Maybe lat & lon ?
+
+```{r}
+unique(china_tweets$latitude)
+```
+
+So some latitudes are present. 
+
+```{r}
+
+library("tidyverse")
+
+locations <- china_tweets %>% 
+  filter(latitude == "present")
+```
+
+Ah well, so the geolocation is 'present' but not shared. We'll have to trust in Twitter that they originated from China. 
+
+What is the point in sharing data if it does not prove anything when you scratch the surface? Is this transparancy washing?
