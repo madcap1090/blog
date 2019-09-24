@@ -60,7 +60,18 @@ The columns of the tweets:
 names(china_tweets)
 ```
 
-IMHO there is no proof here at all. Maybe lat & lon ?
+
+```{r}
+library("tidyverse")
+user_profile_description <- china_tweets %>% 
+  select(user_profile_description) %>% 
+  unique()
+
+```
+
+
+
+
 
 ```{r}
 unique(china_tweets$latitude)
@@ -79,3 +90,10 @@ locations <- china_tweets %>%
 Ah well, so the geolocation is 'present' but not shared. We'll have to trust in Twitter that they originated from China. 
 
 What is the point in sharing data if it does not prove anything when you scratch the surface? Is this transparancy washing?
+
+
+-> there is a package that aims to indetify bots
+-> two major bugs needed to be fdixed
+-> learning was cool
+-> results are shit anyway
+-> all the more need for Twitter transparancy
