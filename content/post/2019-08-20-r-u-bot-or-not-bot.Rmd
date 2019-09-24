@@ -10,11 +10,9 @@ tags:
 
 Yesterday Twitter announced that they had identified 936 accounts originating from China that were instrumentalised for 'information operations' in Hong Kong. These were 'deliberately and specifically attempting to sow political discord in Hong Kong, including undermining the legitimacy and political positions of the protest movement on the ground'. 
 
-I find it an interesting turn of phrase because saying that an action undermines the legitimacy of an action just falls short of calling the action legitimate. But what I find most interesting is to know why Twitter decided to tackle 'information operations' targeting protest actions in Hong Kong. 
+I find it interesting to know why Twitter decided to tackle 'information operations' targeting protest actions in Hong Kong. 
 
 The couple of screenshots and the four files that Twitter let's us see, do not illustrate in any way that these accounts were involved in 'coordinated inauthentic behavior', from a 'state-backed' operation.  
-
-They do indicate that some of the accounts have a tendency to abuse substances. But that is about it. 
 
 I'm not saying it was a bad decision to suspend the accounts, what I'm saying is that Twitter's criteria are not transparent and that the information they provide do not prouve that a state actor was involved. 
 
@@ -44,8 +42,6 @@ And their columns:
 names(china)
 ```
 
-No proof of 'information operation' here.
-
 The tweets:
 
 ```{r}
@@ -70,30 +66,26 @@ user_profile_description <- china_tweets %>%
 ```
 
 
-
-
-
-```{r}
-unique(china_tweets$latitude)
-```
-
-So some latitudes are present. 
-
-```{r}
-
-library("tidyverse")
-
-locations <- china_tweets %>% 
-  filter(latitude == "present")
-```
-
-Ah well, so the geolocation is 'present' but not shared. We'll have to trust in Twitter that they originated from China. 
-
 What is the point in sharing data if it does not prove anything when you scratch the surface? Is this transparancy washing?
 
+Chua Chin Hon goes much further in the analasys of the propaganda campaign and I recommend reading his excellent series of [posts](https://towardsdatascience.com/failed-surge-analyzing-beijings-disinformation-campaign-surge-on-twitter-b376aed812ed) on the issue.
+
+He also points to data that I missed or was published later. AO 32 zipped files like this one: https://storage.cloud.google.com/twitter-election-integrity/hashed/2019_08/china_082019_1/china_082019_1_tweet_media_hashed/china_082019_1_tweet_media_hashed_001.zip
+
+But these seem just to be a dump of the media sent with the tweets (?). The first one contains a lot of videos of US sports clips. Without meta-data it makes even less sence. I don't understand why this data was posted. Data without context is just noise.  
+
+<video width="480" height="320" controls="controls">
+  <source src="./data/20190831/sample.mp4" type="video/mp4">
+</video>
 
 -> there is a package that aims to indetify bots
 -> two major bugs needed to be fdixed
 -> learning was cool
 -> results are shit anyway
 -> all the more need for Twitter transparancy
+
+But maybe I am the one that is missing something. So I'll end the rant here.
+
+
+
+In this instance the accounts are said to be trolls. 
