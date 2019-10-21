@@ -9,13 +9,241 @@ tags:
   - Network analysis
 ---
 
-If you have a Twitter account chances are one day you had a new follower that you did not know and that felt a bit off. Maybe the account has few followers, a lot or no tweets, recent created profile, Not followed by anyone you're following, or likely a combination of the above.  
+If you have a Twitter account chances are one day you had a new follower that you did not know and that felt a bit off. Maybe the account has few followers, a lot or no tweets, has been recently created, is not followed by anyone you're following, or likely a combination of the above.  
 
-Or you just cannot understand why that account should want to follow you because you have no connections to it whatsoever. 
+It is likely that these accounts are managed by bots using the Twitter API. Since it is estimated that up to 15% of profiles on Twitter are controled by bots and that some of them are said to have political impact through their propagation of propaganda, there has been a large number of studies and analysis into bots and more specifically bots retweeting trols. 
 
-It is likely that these accounts are managed by bots using the Twitter API. Since it is estimated that up to 15% of profiles on Twitter are controled by bots and that there has been a lot of speculation on their political influence through their propagation of propaganda, there has been a large number of studies and analysis into that fenomenon. A whole range of tools can be applied, supervised learning, network & cluster analysis, time series, NLP...  
+A whole range of tools can be applied to study bots: supervised learning, network & cluster analysis, time series, NLP...  
 
 But in this post I will try to detect and analyse bots following a randomly chosen Twitter friend. 
 
-In Twitter parlance a follower is someone who is following your tweets and a friend is an account you follow. 
+Please not that in Twitter parlance a follower is someone who is following your tweets and a friend is an account you follow. 
 
+Let's get some data on who follows @kderderian1 using the rtweet package!
+
+```{r}
+library("tidyverse")
+library("rtweet")
+followers_id <- get_followers("kderderian1", n = 5000)  # all the followers
+followers_data <- lookup_users(followers_id$user_id)    # data on the accounts
+followers_data %>% select(screen_name, text)            # a sample
+```
+
+There is a package ("tweetbotornot") that is designed to analyse Twitter accounts and that is meant to return a probablity score for being a bot. (I had some problems running it but managed to debug a copy I made on a github repo and installed it from there.)
+
+Let's run it on the followers. Since we have to analyse a few hunderds of them, we need to take into account the Twitter API rate limits. So we can use a loop.
+
+```{r eval=FALSE}
+library("glue")
+library("tweetbotornot")
+# bot_estimates <- tweetbotornot(followers_id$user_id) this will bump into rate limits pretty soon
+
+data <- data.frame()
+not_auth <- data.frame()
+limits <- rate_limits()
+
+for (i in followers_data$screen_name){
+  print(i)
+  
+  row_n <- match(i, followers_data$screen_name)
+  print(row_n)
+  
+  row <- try(botornot(i))
+  
+  if(inherits(row,"try-error")) {
+    
+    not_auth <- rbind(not_auth, as.data.frame(i))
+    next}
+  
+  if ((row_n %% 10) == 0) {
+     limits <- rate_limits()
+     print(glue("{limits$query[49]} = {limits$remaining[49]}"))
+     print(glue("{limits$query[11]} = {limits$remaining[11]}"))
+   }
+   
+  if (limits$remaining[11] < 20) {
+     Sys.sleep(as.numeric((limits$reset_at[11] - limits$timestamp[11])*60)+10)
+     limits <- rate_limits()
+   }
+   
+  if (limits$remaining[49] < 20) {
+     Sys.sleep(as.numeric((limits$reset_at[49] - limits$timestamp[49])*60)+10)
+     limits <- rate_limits()
+   }
+  
+  data <- rbind(data, row)
+}
+
+ 
+```
+Save it for posterity
+
+```{r eval=FALSE, include=FALSE}
+saveRDS(data, "data/20190927/data_followers_kd.rds")
+saveRDS(not_auth, "data/20190927/no_data_followers_kd.rds")
+saveRDS(followers_data, "data/20190927/followers_kd.rds")
+```
+
+We have a bot probabilty calculation for 1.322 followers and were refused access to 117 follower's accounts. Some of these might of course also be bots. Like for instance 'summer_intern94', account created july 2017, no tweets, following 871, 24 followers ('friends'). 
+
+```{r}
+nrow(data[data$prob_bot > 0.5,])
+```
+
+The issue is that a majority of the followers have a probability score of more than 50%. And there are a lot of false positives in the top scores. So even though it might be difficult to easily identify Twitter bots, I'm not really satisfied with the results of this package. 
+
+There also do not seem to be a lot of alternatives. One of them though is a joint project of the Network Science Institute (IUNI) and the Center for Complex Networks and Systems Research (CNetS) at Indiana University. It uses supervised learning to compute a bot score based on about 1200 feautures also extracted from the Twitter API. More [here](https://botometer.iuni.iu.edu/#!/faq#how-does-it-works).
+
+There are a number of ways to obtain results through their [website](https://botometer.iuni.iu.edu/#!/), you can for instance check all your Twitter followers, but I wanted to use their API, using a [RapidAPI](https://rapidapi.com/) account and an R client [library](https://github.com/marsha5813/Botcheck)
+
+```{r}
+#install.packages("devtools")
+#library(devtools)
+#install_github("marsha5813/botcheck")
+library(botcheck)
+# Load dependencies
+library(httr)
+library(xml2) 
+library(RJSONIO)
+```
+
+You must first [get your own Botometer API key](https://market.mashape.com/OSoMe/botometer). Save your key by replacing the "xxxx" placeholders.
+
+```{r, eval=FALSE}
+Mashape_key = "b2d95cdcf0msh07813e90dd6ce96p17c849jsn16897b0bb719"
+```
+
+You'll also need to create and register a [Twitter app](https://apps.twitter.com/). Save your keys by replacing the "xxxx" placeholders.
+
+```{r, eval=FALSE}
+consumer_key = "xxxxx"
+consumer_secret = "xxxxx"
+access_token = "xxxxx"
+access_secret = "xxxxx"
+```
+
+Finally, store the Twitter authorization info in a local file.
+
+```{r, eval=FALSE}
+myapp = oauth_app("twitter", key="WHBMOU2LeukXzyjjIMDuzYrUm", secret="V5Zl3LfC0E82cdWAIRIBYrhTFvdzZsMIDFnKQGq902op5Ej6y0")
+sig = sign_oauth1.0(myapp, token="34981206-VeGMHJcLsYAVak5vjl1YnUb2ZIR4GmSyIMKyJPvqN", token_secret="1STpu0pRE1eNXyy8mgmG7BwHVD0t140X8BAT0ecvU6vhI")
+```
+
+## Use
+
+Call the botcheck() function to get the probability that a Twitter handle is a bot. Importantly, do not put the "@" before the Twitter user's name. For example:
+
+```{r, eval=FALSE}
+botcheck("barackobama")
+```
+
+```{r include=FALSE}
+followers_data <- readRDS("~/R/blogs/content/post/data/20190927/followers_kd.rds")
+```
+
+```{r results='hide'}
+library("glue")
+data <- data.frame()
+data <- readRDS("~/R/blogs/content/post/data/20190927/data_3.rds")
+not_auth <- data.frame()
+n <- nrow(data)
+m <- nrow(followers_data)
+limits <- rate_limits()
+
+for (i in followers_data$screen_name[n:m]){
+  print(i)
+  row_n <- match(i, followers_data$screen_name)
+  print(row_n)
+  
+  row <- try(botcheck(i))
+  
+  if(length(row) ==0) next()
+  
+  
+  row <- as.data.frame(cbind(row, i))
+  
+  if(inherits(row,"try-error")) {
+    
+    not_auth <- rbind(not_auth, as.data.frame(i))
+    next}
+  
+  
+  if ((row_n %% 10) == 0) {
+     limits <- rate_limits()
+     print(glue("{limits$query[49]} = {limits$remaining[49]}"))
+     print(glue("{limits$query[11]} = {limits$remaining[11]}"))
+   }
+   
+  if (limits$remaining[11] < 20) {
+     Sys.sleep(as.numeric((limits$reset_at[11] - limits$timestamp[11])*60)+10)
+     limits <- rate_limits()
+   }
+   
+  if (limits$remaining[49] < 20) {
+     Sys.sleep(as.numeric((limits$reset_at[49] - limits$timestamp[49])*60)+10)
+     limits <- rate_limits()
+   }
+  
+  data <- rbind(data, row)
+  
+  
+  if ((row_n %% 30) == 0){
+    saveRDS(data, "data/20190927/data_4.rds")
+  }
+
+}
+
+
+```
+
+```{r}
+data_1 <- readRDS("~/R/blogs/content/post/data/20190927/data_1.rds")
+data_2 <- readRDS("~/R/blogs/content/post/data/20190927/data_2.rds")
+data_3 <- readRDS("~/R/blogs/content/post/data/20190927/data_3.rds")
+data_4 <- readRDS("~/R/blogs/content/post/data/20190927/data_4.rds")
+
+data <- rbind(data_1,
+               data_2,
+               data_3,
+               data_4) %>% 
+  unique() %>% 
+  mutate(score = as.numeric(as.character(row))) %>% 
+  arrange(score) %>% 
+  mutate(range = as.numeric(rownames(.))) %>% 
+  filter(!is.na(row)) %>% 
+  arrange(range)
+  
+
+rm(data_1, 
+   data_2, 
+   data_3, 
+   data_4) 
+
+```
+
+
+Again we do not have data for all the accounts, but the results look more promissing. In the plot the  
+"tweetbotornot" results are in blue and the "botometer" in red.
+
+```{r message=FALSE}
+y <- data_followers_kd %>% 
+  arrange(prob_bot) %>% 
+  unique() %>% 
+  mutate(range = as.numeric(rownames(.)))
+
+data_2 <- data %>% 
+  left_join(y) %>% 
+  mutate(row = as.numeric(as.character(row)))
+
+ggplot(data = data_2, aes(x = range, y= row, group = 1)) +
+  geom_smooth(method = 'gam', formula  = y ~ s(x, bs = "cs"), color = "darkred") + 
+  geom_line(aes(y = prob_bot), color="steelblue")  + 
+  scale_x_continuous(expand = c(0, 0)) + 
+  theme_minimal()
+
+```
+
+
+```{r}
+
+```
