@@ -7,20 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Tue, 20 Aug 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 27 Sep 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>r u troll or not troll?</title>
-      <link>/post/r-u-troll-or-not-troll/</link>
-      <pubDate>Tue, 20 Aug 2019 00:00:00 +0000</pubDate>
+      <title>r u bot or not bot?</title>
+      <link>/post/r-u-bot-or-not-bot/</link>
+      <pubDate>Fri, 27 Sep 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/r-u-troll-or-not-troll/</guid>
-      <description>Yesterday Twitter announced that they had identified 936 accounts originating from China that were instrumentalised for ‘information operations’ in Hong Kong. These were ‘deliberately and specifically attempting to sow political discord in Hong Kong, including undermining the legitimacy and political positions of the protest movement on the ground’.
-I find it interesting to know why Twitter decided to tackle ‘information operations’ targeting protest actions in Hong Kong.
-The couple of screenshots and the four files that Twitter let’s us see, do not illustrate in any way that these accounts were involved in ‘coordinated inauthentic behavior’, from a ‘state-backed’ operation.</description>
+      <guid>/post/r-u-bot-or-not-bot/</guid>
+      <description>If you have a Twitter account chances are one day you had a new follower that you did not know and that felt a bit odd. Maybe the account had few followers, a lot or no tweets, had been recently created, is not followed by anyone you’re following, or likely a combination of the above.
+It is also likely that these accounts are managed by bots using the Twitter API.</description>
     </item>
     
     <item>

@@ -3,32 +3,38 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/tags/network-analysis/</loc>
+    <lastmod>2019-09-27T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/post/</loc>
-    <lastmod>2019-08-20T00:00:00+00:00</lastmod>
+    <lastmod>2019-09-27T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/</loc>
-    <lastmod>2019-08-20T00:00:00+00:00</lastmod>
+    <lastmod>2019-09-27T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/twitter/</loc>
-    <lastmod>2019-08-20T00:00:00+00:00</lastmod>
+    <lastmod>2019-09-27T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/</loc>
-    <lastmod>2019-08-20T00:00:00+00:00</lastmod>
+    <lastmod>2019-09-27T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/post/r-u-troll-or-not-troll/</loc>
-    <lastmod>2019-08-20T00:00:00+00:00</lastmod>
+    <loc>/post/r-u-bot-or-not-bot/</loc>
+    <lastmod>2019-09-27T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -51,12 +57,6 @@
   <url>
     <loc>/tags/scraping/</loc>
     <lastmod>2019-08-03T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/tags/network-analysis/</loc>
-    <lastmod>2019-07-28T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
