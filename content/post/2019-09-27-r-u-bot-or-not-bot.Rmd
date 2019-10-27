@@ -32,6 +32,10 @@ library("visNetwork")
 ```{r}
 followers_id <- get_followers("kderderian1", n = 5000)  # all the followers
 followers_data <- lookup_users(followers_id$user_id)    # data on the accounts
+followers_data %>% select(screen_name, text) %>%        # a sample
+  mutate(text = substr(text, 1, 60)) %>% 
+  filter(!is.na(text)) %>% 
+  slice(10:20)
 ```
 
 There is a package ("tweetbotornot") that is designed to analyse Twitter accounts and that returns a probability score for being a bot. (I had some problems running it but managed to debug a copy I made on a github repo and installed it from there.)
