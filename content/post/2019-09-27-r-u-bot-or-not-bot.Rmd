@@ -17,7 +17,7 @@ A whole range of tools can be applied to study bots: supervised learning, networ
 
 But in this post I will try to detect and analyse bots following a randomly chosen Twitter friend. 
 
-Please note that in Twitter parlance a follower is someone who is following your tweets and a friend is an account you follow. 
+Please note that in Twitter parlance a follower is someone who is following your account and a friend is an account you follow. 
 
 Let's get some data on who follows @kderderian1 (kd) using the rtweet package!
 
@@ -32,7 +32,6 @@ library("visNetwork")
 ```{r}
 followers_id <- get_followers("kderderian1", n = 5000)  # all the followers
 followers_data <- lookup_users(followers_id$user_id)    # data on the accounts
-followers_data %>% select(screen_name, text)            # a sample
 ```
 
 There is a package ("tweetbotornot") that is designed to analyse Twitter accounts and that returns a probability score for being a bot. (I had some problems running it but managed to debug a copy I made on a github repo and installed it from there.)
@@ -120,7 +119,7 @@ library("tidyverse")
 library("visNetwork")
 ```
 
-You must first [get your own Botometer API key](https://market.mashape.com/OSoMe/botometer). Save your key by replacing the "xxxx" placeholders.
+You must first [get your own Botometer API key](https://market.mashape.com/OSoMe/botometer). 
 
 You'll also need to create and register a [Twitter app](https://apps.twitter.com/). Save your keys by replacing the "xxxx" placeholders.
 
@@ -151,7 +150,7 @@ myapp = oauth_app("twitter", key= consumer_key, secret= consumer_secret)
 sig = sign_oauth1.0(myapp, token= access_token, token_secret= access_secret)
 ```
 
-Call the botcheck() function to get the probability that a Twitter handle is a bot. Do not put the "@" before the Twitter user's name. For example:
+Call the botcheck() function to get the probability that a Twitter handle is a bot. Do not put the "@" before the Twitter handles. For example:
 
 ```{r}
 botcheck("barackobama")
@@ -239,7 +238,7 @@ rm(data_1,
 
 
 Again we do not have data for all the accounts, but the results look more promising. In the plot the  
-"tweetbotornot" results are in blue and the "botometer" in red.
+"tweetbotornot" results are in blue and the "botometer" in red. The red line indeed looks more realistic. 
 
 ```{r message=FALSE}
 y <- data_followers_kd %>% 
@@ -496,7 +495,7 @@ The number of edges, nodes and bot accounts can be further tweeked. Here is a ne
 
 ```{r}
 
-visNetwork(nodes, edges, height = "1000px", width = "100%") %>%
+visNetwork(nodes, edges, height = "800px", width = "100%") %>%
   visOptions(selectedBy = "group", 
              highlightNearest = TRUE, 
              nodesIdSelection = FALSE) %>%
@@ -504,5 +503,5 @@ visNetwork(nodes, edges, height = "1000px", width = "100%") %>%
 ```
 
 
-The visualisation function also takes into account the groups that we created and tends to push them slightly appart to partially avoid the network fur ball effect. Zooming in a possibilty as is clicking and draging indiviual accounts. 
+The visualisation function also takes into account the groups that we created and tends to push them slightly appart to partially avoid the network fur ball effect. Zooming in is a possibilty as is clicking and draging indiviual accounts. 
 
