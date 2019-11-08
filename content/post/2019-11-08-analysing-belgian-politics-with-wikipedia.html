@@ -1,0 +1,860 @@
+---
+title: Analysing Belgian Politics with Wikipedia
+author: William Bourgeois
+date: '2019-11-08'
+slug: analysing-belgian-politics-with-wikipedia
+categories: []
+tags:
+  - Belgian politics
+  - Wikipedia
+  - scraping
+  - Network analysis
+  - igraph
+---
+
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="/rmarkdown-libs/d3/d3.min.js"></script>
+<script src="/rmarkdown-libs/forceNetwork-binding/forceNetwork.js"></script>
+
+
+<p>Another source of data is Wikipedia. I came across this <a href="https://www.mzes.uni-mannheim.de/socialsciencedatalab/article/studying-politics-wikipedia/">article</a>, and decided to see what I could obtain using it on Belgian politics. Many thanks to the authors of the MZES (Mannheim Zentrum für Europäische Sozialforschung)!</p>
+<p>Gentlepersons, load your libraries:</p>
+<pre class="r"><code>## Packages
+pkgs &lt;- c(
+  &quot;devtools&quot;,
+  &quot;ggnetwork&quot;,
+  &quot;igraph&quot;,
+  &quot;intergraph&quot;,
+  &quot;tidyverse&quot;,
+  &quot;rvest&quot;,
+  &quot;devtools&quot;,
+  &quot;magrittr&quot;,
+  &quot;plotly&quot;,
+  &quot;RColorBrewer&quot;,
+  &quot;colorspace&quot;,
+  &quot;lubridate&quot;,
+  &quot;networkD3&quot;,
+  &quot;pageviews&quot;,
+  &quot;readr&quot;,
+  &quot;wikipediatrend&quot;,
+  &quot;WikipediR&quot;,
+  &quot;WikidataR&quot;,
+  &quot;glue&quot;
+)
+
+## Install uninstalled packages
+lapply(pkgs[!(pkgs %in% installed.packages())], install.packages)
+
+## Load all packages to library
+lapply(pkgs, library, character.only = TRUE)
+
+## legislatoR
+#devtools::install_github(&quot;saschagobel/legislatoR&quot;)
+library(legislatoR)
+#install.packages(&quot;viridis&quot;)  # Install
+library(&quot;viridis&quot;)           # Load
+library(&quot;scales&quot;)
+library(&quot;R.utils&quot;)
+library(&quot;data.table&quot;)</code></pre>
+<p>The function ‘article_pageviews’ of the ‘legistlatoR’ package returns the number of pageviews of an article. So here is what we get when we search for the article ‘Charles Michel’ (best to download from three languages).</p>
+<pre class="r"><code># get pageviews
+michel_views_en &lt;-article_pageviews(
+    project = &quot;en.wikipedia&quot;,
+    article = &quot;Charles Michel&quot;,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )
+
+michel_views_fr &lt;-article_pageviews(
+    project = &quot;fr.wikipedia&quot;,
+    article = &quot;Charles Michel&quot;,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )
+
+michel_views_nl &lt;-article_pageviews(
+    project = &quot;nl.wikipedia&quot;,
+    article = &quot;Charles Michel&quot;,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )
+
+michel_views &lt;- rbind(michel_views_en,
+                      michel_views_fr,
+                      michel_views_nl)</code></pre>
+<p>And the returned data looks like this:</p>
+<pre class="r"><code>michel_views %&gt;% 
+  select(-project, -access) %&gt;% 
+  head()</code></pre>
+<pre><code>##   language        article agent granularity       date views
+## 1       en Charles_Michel  user       daily 2015-07-01   160
+## 2       en Charles_Michel  user       daily 2015-07-02   144
+## 3       en Charles_Michel  user       daily 2015-07-03   137
+## 4       en Charles_Michel  user       daily 2015-07-04   119
+## 5       en Charles_Michel  user       daily 2015-07-05   130
+## 6       en Charles_Michel  user       daily 2015-07-06   180</code></pre>
+<p>And plotted:</p>
+<pre class="r"><code># Plot pageviews
+plot(ymd(michel_views_en$date), michel_views_en$views, 
+     col = &quot;red&quot;, type = &quot;l&quot;, xlab=&quot;Time&quot;, ylab=&quot;Pageviews&quot;)
+lines(ymd(michel_views_fr$date), michel_views_fr$views, 
+      col = &quot;blue&quot;)
+lines(ymd(michel_views_nl$date), michel_views_nl$views, 
+      col = &quot;lightblue&quot;)
+legend(&quot;topleft&quot;, legend=c(&quot;michel_en&quot;,&quot;michel_fr&quot;, &quot;michel_nl&quot;), 
+       cex=.8,col=c(&quot;red&quot;,&quot;blue&quot;, &quot;lightblue&quot;), lty=1) </code></pre>
+<p><img src="/post/2019-11-08-analysing-belgian-politics-with-wikipedia_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>So what are Mr Michel’s special dates (his English article) ?</p>
+<pre class="r"><code>michel_views_en %&gt;% 
+  arrange(desc(views)) %&gt;%
+  select(-access, -granularity, -agent) %&gt;% 
+  head(5)</code></pre>
+<pre><code>##     project language        article       date views
+## 1 wikipedia       en Charles_Michel 2019-07-02 13772
+## 2 wikipedia       en Charles_Michel 2016-03-22 12738
+## 3 wikipedia       en Charles_Michel 2019-07-03 10649
+## 4 wikipedia       en Charles_Michel 2018-12-19  6116
+## 5 wikipedia       en Charles_Michel 2016-03-23  5027</code></pre>
+<p>2019-07-02 elected to the presidency of the European Council
+2019-07-03 elected to the presidency of the European Council
+2016-03-22 terrorist attacks in Brussels
+2016-03-23 terrorist attacks in Brussels
+2018-12-19 his government resigns</p>
+<p>What about <a href="https://en.wikipedia.org/wiki/Goedele_Liekens">Goedele Liekens</a>(rep for the Flemish Liberals)?</p>
+<pre class="r"><code>name &lt;- &quot;Goedele_Liekens&quot;
+
+views_en &lt;-article_pageviews(
+    project = &quot;en.wikipedia&quot;,
+    article = name,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )
+
+views_fr &lt;-article_pageviews(
+    project = &quot;fr.wikipedia&quot;,
+    article = name,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )
+
+views_nl &lt;-article_pageviews(
+    project = &quot;nl.wikipedia&quot;,
+    article = name,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )
+
+# Plot pageviews
+plot(ymd(views_nl$date), views_nl$views, col = &quot;blue&quot;, type = &quot;l&quot;, xlab=&quot;Time&quot;, ylab=&quot;Pageviews&quot;)
+lines(ymd(views_en$date), views_en$views, col = &quot;red&quot;)
+lines(ymd(views_fr$date), views_fr$views, col = &quot;lightblue&quot;)
+legend(&quot;topleft&quot;, legend=c(glue(&quot;{name}_nl&quot;),glue(&quot;{name}_en&quot;), glue(&quot;{name}_fr&quot;)), 
+       cex=.8,col=c(&quot;blue&quot;, &quot;red&quot;, &quot;lightblue&quot;), lty=1)</code></pre>
+<p><img src="/post/2019-11-08-analysing-belgian-politics-with-wikipedia_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Most hits on her articles?</p>
+<pre class="r"><code>views_en %&gt;% rbind(views_fr, views_nl) %&gt;%
+  mutate(date = ymd(date)) %&gt;% 
+  group_by(article, date) %&gt;% 
+  summarise(sum = sum(views)) %&gt;% 
+  arrange(desc(sum)) %&gt;% 
+  head(5)</code></pre>
+<pre><code>## # A tibble: 5 x 3
+## # Groups:   article [1]
+##   article         date         sum
+##   &lt;chr&gt;           &lt;date&gt;     &lt;dbl&gt;
+## 1 Goedele_Liekens 2017-02-21  3244
+## 2 Goedele_Liekens 2019-10-18  3005
+## 3 Goedele_Liekens 2015-08-06  2618
+## 4 Goedele_Liekens 2017-05-25  2398
+## 5 Goedele_Liekens 2016-04-11  2341</code></pre>
+<p>On 04/11/2016 the second episode of the second seasons on ‘Sex Box’ was aired, a British TV show made for Channel four and part of their “Campaign for Real Sex”. It was co-presented by Mrs Liekens. On 18/10/2019 she appeared on Dutch TV. I suppose that explains the latest peak.</p>
+<p>The package ‘legistlatoR’ contains information of the legislator of specific legislature.</p>
+<pre class="r"><code>dat &lt;- semi_join(
+  x = get_core(legislature = &quot;deu&quot;),
+  y = filter(get_political(legislature = &quot;deu&quot;), session == 19),
+  by = &quot;pageid&quot;
+)</code></pre>
+<p>The package does not contain data for Belgium. Here is a sample of columns:</p>
+<pre class="r"><code>head(dat) %&gt;% 
+  select(-pageid, -wikidataid, -deathplace, -death, -wikititle)</code></pre>
+<pre><code>##   country                 name    sex ethnicity                  religion
+## 1     DEU    Wolfgang Schäuble   male     white protestantism evangelical
+## 2     DEU   Hermann Otto Solms   male     white    protestantism lutheran
+## 3     DEU Hans-Joachim Fuchtel   male     white    protestantism lutheran
+## 4     DEU          Gregor Gysi   male     white                   atheism
+## 5     DEU   Katharina Landgraf female     white    protestantism lutheran
+## 6     DEU         Peter Bleser   male     white               catholicism
+##        birth        birthplace
+## 1 1942-09-18  47.99472,7.84972
+## 2 1940-11-24              &lt;NA&gt;
+## 3 1952-02-13  48.36278,8.63167
+## 4 1948-01-16 52.51667,13.38333
+## 5 1954-02-24   51.2836,10.9153
+## 6 1952-07-23  50.23194,7.23306</code></pre>
+<p>The idea is to extract all links from the wiki pages of the reps, so since Belgian ones are not in the package, we need to obtain them in another way. We did some scraping in the past to find their parties, so we could tweak the code to get them.</p>
+<pre class="r"><code>url &lt;-&quot;https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2019-2024)&quot;
+
+links_be &lt;- as.character(url) %&gt;%
+      read_html() %&gt;%
+      html_nodes(glue(&quot;#mw-content-text &gt; div &gt; table:nth-child(16) a&quot;)) %&gt;%
+      html_attr(&quot;href&quot;)
+ 
+length(links_be)</code></pre>
+<pre><code>## [1] 171</code></pre>
+<p>A tad too much links but;</p>
+<pre class="r"><code>links_be[1:15]</code></pre>
+<pre><code>##  [1] &quot;/wiki/Bj%C3%B6rn_Anseeuw&quot; &quot;/wiki/Josy_Arens&quot;        
+##  [3] &quot;/wiki/Daniel_Bacquelaine&quot; &quot;/wiki/Hugues_Bayet&quot;      
+##  [5] &quot;/wiki/Steven_Mathe%C3%AF&quot; &quot;/wiki/Wouter_Beke&quot;       
+##  [7] &quot;/wiki/Vlaamse_Regering&quot;   &quot;/wiki/Jan_Bertels&quot;       
+##  [9] &quot;/wiki/Hendrik_Bogaert&quot;    &quot;/wiki/Nabil_Boukili&quot;     
+## [11] &quot;/wiki/Emmanuel_Burton&quot;    &quot;/wiki/Katleen_Bury&quot;      
+## [13] &quot;/wiki/Peter_Buysrogge&quot;    &quot;/wiki/Kim_Buyst&quot;         
+## [15] &quot;/wiki/Kristof_Calvo&quot;</code></pre>
+<p>Seems to be what we were looking for ;-). We have some intruders to get rid of.</p>
+<pre class="r"><code>links_be &lt;- links_be[!links_be %in% c(&quot;/wiki/Vlaamse_Regering&quot;,
+                                 &quot;/wiki/Gent&quot;,
+                                 &quot;/wiki/Franse_Gemeenschapsregering&quot;,
+                                 &quot;/wiki/Waalse_Regering&quot;,
+                                 &quot;/wiki/Luik_(stad)&quot;,
+                                 &quot;#cite_note-2&quot;,
+                                 &quot;/wiki/Seraing&quot;)] </code></pre>
+<p>Now we have the names of the articles we can go back and make some more API calls with the legistlatoR package. Before moving on to study links between Wikipedia articles.</p>
+<pre class="r"><code>if (!file.exists(&quot;./data/20191101/views.rds&quot;)) {
+views &lt;- data.frame()
+
+for (i in links_be){
+  article &lt;- str_remove(i,&quot;/wiki/&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%B6&quot;, &quot;ö&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%A9&quot;, &quot;é&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%A8&quot;, &quot;è&quot;)
+  article &lt;- str_replace_all(article,&quot;%27&quot;, &quot;&#39;&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%AF&quot;, &quot;ï&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%A7&quot;, &quot;ç&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%AB&quot;, &quot;ë&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%AE&quot;, &quot;î&quot;)
+  article &lt;- str_replace_all(article,&quot;%C5%93&quot;, &quot;oe&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%89&quot;, &quot;É&quot;)
+  article &lt;- str_replace_all(article,&quot;%C3%96&quot;, &quot;Ö&quot;)
+
+    views_en &lt;- tryCatch({article_pageviews(
+    project = &quot;en.wikipedia&quot;,
+    article = article,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )}, error = function(e) {data.frame()})
+
+    views_fr &lt;- tryCatch({article_pageviews(
+    project = &quot;fr.wikipedia&quot;,
+    article = article,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )}, error = function(e) {data.frame()})
+    
+    views_nl &lt;- tryCatch({article_pageviews(
+    project = &quot;nl.wikipedia&quot;,
+    article = article,
+    user_type = &quot;user&quot;,
+    start = &quot;2015070100&quot;,
+    end = &quot;2019110100&quot;
+  )}, error = function(e) {data.frame()})
+  
+    views &lt;- rbind(views,
+                   views_en,
+                   views_fr,
+                   views_nl)
+    }
+  saveRDS(views, &quot;./data/20191101/views.rds&quot;)
+} else{
+  views &lt;- readRDS(&quot;./data/20191101/views.rds&quot;)
+}</code></pre>
+<p>So what did we harvest?</p>
+<pre class="r"><code>views %&gt;% 
+  mutate(date = ymd(date)) %&gt;% 
+  select(-access) %&gt;% 
+  head()</code></pre>
+<pre><code>##     project language       article agent granularity       date views
+## 1 wikipedia       fr Björn_Anseeuw  user       daily 2015-07-08     0
+## 2 wikipedia       fr Björn_Anseeuw  user       daily 2015-07-10     0
+## 3 wikipedia       fr Björn_Anseeuw  user       daily 2015-07-11     1
+## 4 wikipedia       fr Björn_Anseeuw  user       daily 2015-07-12     0
+## 5 wikipedia       fr Björn_Anseeuw  user       daily 2015-07-13     0
+## 6 wikipedia       fr Björn_Anseeuw  user       daily 2015-07-14     2</code></pre>
+<p>Per federal rep the daily Wikipedia article views per language.</p>
+<p>Who got the most hits in 2019?</p>
+<pre class="r"><code>views %&gt;% select(article, date, views) %&gt;% 
+  filter(year(date)== 2019) %&gt;% 
+  group_by(article) %&gt;% 
+  summarise(sum = sum(views)) %&gt;% 
+  arrange(desc(sum))</code></pre>
+<pre><code>## # A tibble: 161 x 2
+##    article                 sum
+##    &lt;chr&gt;                 &lt;dbl&gt;
+##  1 Charles_Michel       300856
+##  2 Maggie_De_Block      184954
+##  3 Elio_Di_Rupo         148396
+##  4 Tom_Van_Grieken      133757
+##  5 Sophie_Wilmès         90700
+##  6 Dries_Van_Langenhove  86786
+##  7 Didier_Reynders       71443
+##  8 Theo_Francken         70725
+##  9 Jan_Jambon            65852
+## 10 Goedele_Liekens       50202
+## # ... with 151 more rows</code></pre>
+<pre class="r"><code>articles &lt;- views %&gt;% select(article, date, views) %&gt;% 
+  filter(year(date)== 2019) %&gt;% 
+  group_by(article) %&gt;% 
+  summarise(sum = sum(views)) %&gt;% 
+  arrange(desc(sum)) %&gt;% 
+  slice(1:10) </code></pre>
+<p>So Mr. Michel wins. Who have the most % of hits on their English article?</p>
+<pre class="r"><code>views %&gt;% select(article, date, views, language) %&gt;% 
+  pivot_wider(values_from = views, names_from = language, values_fill = list(views= 0)) %&gt;% 
+  filter(year(date)== 2019) %&gt;%
+  select(-date) %&gt;% 
+  group_by(article) %&gt;% 
+  summarise_all(funs(sum)) %&gt;% 
+  mutate(sum = (fr + nl + en)) %&gt;% 
+  mutate(prtc_en = (en/sum)) %&gt;% 
+  mutate(prtc = scales::percent(en/sum)) %&gt;% 
+  arrange(desc(prtc_en)) %&gt;% 
+  select(-prtc_en)</code></pre>
+<pre><code>## # A tibble: 161 x 6
+##    article              fr    nl     en    sum prtc 
+##    &lt;chr&gt;             &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;
+##  1 Roberto_D&#39;Amico       0   142    337    479 70.4%
+##  2 Maggie_De_Block   25614 40197 119143 184954 64.4%
+##  3 Charles_Michel    91434 47490 161932 300856 53.8%
+##  4 Elio_Di_Rupo      50809 21360  76227 148396 51.4%
+##  5 Darya_Safai        1703  6349   7051  15103 46.7%
+##  6 Didier_Reynders   28838 19262  23343  71443 32.7%
+##  7 Alexander_De_Croo  6379 14729   7769  28877 26.9%
+##  8 Sophie_Wilmès     49047 17879  23774  90700 26.2%
+##  9 Peter_Mertens      5065 14895   6645  26605 25.0%
+## 10 Vanessa_Matz        916   272    384   1572 24.4%
+## # ... with 151 more rows</code></pre>
+<p>Roberto D’Amico was a famous Italian bobsledder before joining the Belgian communist party…</p>
+<p>Just joking.</p>
+<p>Plotting the top 10:</p>
+<pre class="r"><code>views %&gt;% select(article, date, views, language) %&gt;%
+  filter(year(date) &gt; 2018) %&gt;% 
+  group_by(article, date) %&gt;% 
+  summarise(sum = sum(views)) %&gt;% 
+  filter(article %in% articles$article[1:10]) %&gt;% 
+  arrange(date) %&gt;% 
+  ggplot(aes(x = date, y = sum)) + 
+  geom_line(aes(color = article)) + 
+  scale_color_discrete() +
+  scale_y_continuous(label=comma_format()) +
+  theme_minimal()</code></pre>
+<p><img src="/post/2019-11-08-analysing-belgian-politics-with-wikipedia_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>So the special dates from this graph seem to be election day, the election of Charles Michel and Mrs. Wilmès as first woman Belgian PM.</p>
+<p>Let’s look at the top 10 on the election date:</p>
+<pre class="r"><code>views %&gt;% select(article, date, views, language) %&gt;%
+  mutate(date = ymd(date)) %&gt;% 
+  filter(year(date) &gt; 2018) %&gt;% 
+  group_by(article, date) %&gt;% 
+  summarise(sum = sum(views)) %&gt;% 
+  filter(date == ymd(&quot;2019-05-26&quot;)) %&gt;% 
+  arrange(desc(sum))</code></pre>
+<pre><code>## # A tibble: 109 x 3
+## # Groups:   article [109]
+##    article              date         sum
+##    &lt;chr&gt;                &lt;date&gt;     &lt;dbl&gt;
+##  1 Tom_Van_Grieken      2019-05-26 29467
+##  2 Dries_Van_Langenhove 2019-05-26  7774
+##  3 Zakia_Khattabi       2019-05-26  4697
+##  4 Charles_Michel       2019-05-26  3614
+##  5 Raoul_Hedebouw       2019-05-26  2941
+##  6 Maggie_De_Block      2019-05-26  2868
+##  7 Peter_Mertens        2019-05-26  2849
+##  8 Elio_Di_Rupo         2019-05-26  2732
+##  9 Theo_Francken        2019-05-26  2366
+## 10 John_Crombez         2019-05-26  2112
+## # ... with 99 more rows</code></pre>
+<p>That is a lot of page views for Mr. <a href="https://en.wikipedia.org/wiki/Tom_Van_Grieken">Van Grieken</a>.</p>
+<p>Top pageviews per day in 2019 are:</p>
+<pre class="r"><code>views %&gt;% select(article, date, views, language) %&gt;%
+  mutate(date = ymd(date)) %&gt;% 
+  filter(year(date) &gt; 2018) %&gt;% 
+  group_by(article, date) %&gt;% 
+  summarise(sum = sum(views)) %&gt;% 
+  arrange(desc(sum))</code></pre>
+<pre><code>## # A tibble: 38,584 x 3
+## # Groups:   article [161]
+##    article              date         sum
+##    &lt;chr&gt;                &lt;date&gt;     &lt;dbl&gt;
+##  1 Tom_Van_Grieken      2019-05-26 29467
+##  2 Sophie_Wilmès        2019-10-27 24084
+##  3 Tom_Van_Grieken      2019-05-27 23873
+##  4 Charles_Michel       2019-07-02 23262
+##  5 Charles_Michel       2019-07-03 20875
+##  6 Sophie_Wilmès        2019-10-28 19794
+##  7 Sophie_Wilmès        2019-10-29 10687
+##  8 Tom_Van_Grieken      2019-05-29  9491
+##  9 Sophie_Wilmès        2019-10-26  8047
+## 10 Dries_Van_Langenhove 2019-05-26  7774
+## # ... with 38,574 more rows</code></pre>
+<p>So from the table we can get the feeling that a lot of Mr. Van Grieken pageviews were on or after election date. Is that true?</p>
+<pre class="r"><code>views %&gt;% select(article, date, views, language) %&gt;%
+  filter(article == &quot;Tom_Van_Grieken&quot;) %&gt;% 
+  filter(year(date) &gt; 2018) %&gt;% 
+  group_by(article, date) %&gt;% 
+  summarise(sum = sum(views)) %&gt;% 
+  filter(article %in% articles$article[1:10]) %&gt;% 
+  arrange(date) %&gt;% 
+  ggplot(aes(x = date, y = sum)) + 
+  geom_line(aes(color = article)) + 
+  scale_color_discrete() +
+  scale_y_continuous(label=comma_format()) +
+  theme_minimal()</code></pre>
+<p><img src="/post/2019-11-08-analysing-belgian-politics-with-wikipedia_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p>Seems to be. When excluding the outliers, Mr. Van Grieken’s Wikipedia pages get less attention than for instance the ones from Mrs. De Block, and is comparable to Mr. Van Langenhove, which puts his fourth place in some perspective.</p>
+<pre class="r"><code>views %&gt;% select(article, date, views, language) %&gt;%
+  filter(year(date) &gt; 2018) %&gt;% 
+  group_by(article, date) %&gt;% 
+  summarise(sum = sum(views)) %&gt;% 
+  filter(article %in% articles$article[2:8]) %&gt;%
+  filter(article == &quot;Maggie_De_Block&quot; | 
+           article == &quot;Tom_Van_Grieken&quot; |
+           article == &quot;Dries_Van_Langenhove&quot; ) %&gt;% 
+  filter(sum &lt; 3000) %&gt;% 
+  arrange(date) %&gt;% 
+  ggplot(aes(x = date, y = sum)) + 
+  geom_line(aes(color = article)) + 
+  scale_color_discrete() +
+  scale_y_continuous(label=comma_format()) +
+  theme_minimal()</code></pre>
+<p><img src="/post/2019-11-08-analysing-belgian-politics-with-wikipedia_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>After the web page views, we can also analyse the links between Wikipedia pages.</p>
+<pre class="r"><code>if (!file.exists(&quot;./data/20191101/mfp_nl_links_list.RData&quot;)) {
+  links_list_nl &lt;- list()
+  for (i in 1:length(links_be)) {
+    if (links_be[i] == &quot;#cite_note-2&quot;) next
+    #print(i)
+    links &lt;-
+      page_links(
+        language = &quot;nl&quot;,
+        &quot;wikipedia&quot;,
+        page = str_remove(links_be[i],&quot;/wiki/&quot;),
+        clean_response = TRUE,
+        limit = 500,
+        namespaces = 0
+      )
+    links_list_nl[[i]] &lt;- lapply(links[[1]]$links, &quot;[&quot;, 2) %&gt;% unlist
+  }
+  getwd()
+  save(links_list_nl, file = &quot;./data/20191101/mfp_nl_links_list.RData&quot;)
+} else{
+  load(&quot;./data/20191101/mfp_nl_links_list.RData&quot;)
+}</code></pre>
+<p>These are for the pages written in dutch, what about the articles written in french?</p>
+<pre class="r"><code>if (!file.exists(&quot;./data/20191101/mfp_fr_links_list.RData&quot;)) {
+  links_list_fr &lt;- list()
+  for (i in 1:length(links_be)) {
+    if (links_be[i] == &quot;#cite_note-2&quot;) next
+    #print(i)
+    links &lt;-
+      page_links(
+        language = &quot;fr&quot;,
+        &quot;wikipedia&quot;,
+        page = str_remove(links_be[i],&quot;/wiki/&quot;),
+        clean_response = TRUE,
+        limit = 500,
+        namespaces = 0
+      )
+    links_list_fr[[i]] &lt;- lapply(links[[1]]$links, &quot;[&quot;, 2) %&gt;% unlist
+  }
+  getwd()
+  save(links_list_fr, file = &quot;./data/20191101/mfp_fr_links_list.RData&quot;)
+} else{
+  load(&quot;./data/20191101/mfp_fr_links_list.RData&quot;)
+}</code></pre>
+<p>Now we can build the connections and prepare the graph (for all the pages).</p>
+<pre class="r"><code>connections_nl &lt;- data.frame(from = NULL, to = NULL)
+wikititle &lt;- str_remove(links_be, &quot;/wiki/&quot;)
+
+# loop
+for (i in seq_along(wikititle)) {
+  links_in_pslinks &lt;-
+    seq_along(wikititle)[str_replace_all(wikititle, &quot;_&quot;, &quot; &quot;) %in%
+                               links_list_nl[[i]]]
+  links_in_pslinks &lt;- links_in_pslinks[links_in_pslinks != i]
+  connections_nl &lt;-
+    rbind(connections_nl,
+          data.frame(
+            from = rep(i - 1, length(links_in_pslinks)), # -1 for zero-indexing
+            to = links_in_pslinks - 1 # here too
+            )
+          )
+}
+
+# loop preparation
+connections_fr &lt;- data.frame(from = NULL, to = NULL)
+
+# loop
+for (i in seq_along(wikititle)) {
+  links_in_pslinks &lt;-
+    seq_along(wikititle)[str_replace_all(wikititle, &quot;_&quot;, &quot; &quot;) %in%
+                               links_list_fr[[i]]]
+  links_in_pslinks &lt;- links_in_pslinks[links_in_pslinks != i]
+  connections_fr &lt;-
+    rbind(connections_fr,
+          data.frame(
+            from = rep(i - 1, length(links_in_pslinks)), # -1 for zero-indexing
+            to = links_in_pslinks - 1 # here too
+            )
+          )
+}
+
+connections &lt;- connections_nl %&gt;% 
+  rbind(connections_fr) %&gt;% 
+  unique()
+
+head(connections)</code></pre>
+<pre><code>##   from  to
+## 1    2  34
+## 2    2  60
+## 3    2 100
+## 4    2 115
+## 5    5   7
+## 6    5  33</code></pre>
+<p>In order to visualise which Wikipedia pages of our parliamentarians refer to which other pages (and which ones have no links to others).</p>
+<pre class="r"><code>connections$value &lt;- 1
+nodesDF &lt;- data.frame(name = wikititle, group = 1)
+
+filter &lt;-  connections %&gt;% 
+  group_by(from) %&gt;%
+  summarise(sum = sum(value)) %&gt;% 
+  filter(sum == 1)
+
+network_out &lt;-
+  forceNetwork(
+    Links = connections,
+    Nodes = nodesDF,
+    Source = &quot;from&quot;,
+    Target = &quot;to&quot;,
+    Value = &quot;value&quot;,
+    NodeID = &quot;name&quot;,
+    Group = &quot;group&quot;,
+    arrows = TRUE,
+    zoom = TRUE,
+    opacityNoHover = 3,
+    height = 360,
+    width = 636,
+    legend = FALSE
+  )
+
+network_out</code></pre>
+<div id="htmlwidget-1" style="width:636px;height:360px;" class="forceNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"links":{"source":[2,2,2,2,5,5,5,5,5,5,6,6,7,11,11,11,13,13,17,17,22,22,29,29,29,29,32,33,33,33,33,33,33,33,34,34,34,34,37,37,40,41,41,42,42,42,47,47,47,54,56,57,57,57,58,58,58,58,58,59,59,62,65,66,66,66,66,66,69,69,69,69,69,69,69,70,70,70,72,72,76,76,78,79,80,80,81,81,81,81,81,81,81,83,84,85,85,85,85,86,86,87,88,88,89,90,90,90,90,90,94,94,95,95,97,97,97,98,100,100,100,103,103,103,103,104,105,105,105,107,107,109,109,115,115,115,115,118,131,131,131,132,132,132,132,132,134,134,135,135,135,135,136,136,137,137,137,137,137,138,138,139,140,140,140,140,141,141,144,145,145,146,146,146,151,151,151,151,151,151,151,153,153,157,159,159,159,159,3,5,5,7,15,22,29,29,33,33,34,34,47,47,47,47,47,57,57,60,60,65,65,66,66,66,66,66,66,69,83,87,87,94,94,95,95,100,100,103,105,115,141,151],"target":[34,60,100,115,7,33,57,69,103,151,22,86,90,37,47,81,72,105,76,98,86,145,34,66,69,88,33,5,32,69,81,103,115,151,2,29,88,141,47,81,13,76,98,37,47,81,37,60,81,81,57,87,100,115,5,33,69,103,151,107,134,19,95,29,37,47,81,100,5,29,33,81,100,103,151,37,47,81,13,105,98,136,81,115,47,81,33,37,47,54,69,100,151,105,57,57,66,81,87,22,47,57,29,34,105,5,33,69,103,151,66,115,65,151,76,98,136,76,2,57,115,5,33,69,151,105,13,83,89,134,153,107,134,33,57,94,100,66,37,47,81,5,33,69,103,151,107,139,13,81,105,157,76,98,5,33,69,103,151,66,134,134,37,47,54,81,34,43,83,22,86,29,34,88,5,33,69,81,95,103,115,107,134,13,37,47,81,105,57,81,100,57,60,57,57,100,57,100,57,100,5,65,66,94,100,5,34,100,115,57,105,15,34,40,57,94,134,57,144,100,134,47,81,69,100,34,81,100,65,136,57,57],"value":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"colour":["#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666"]},"nodes":{"name":["Bj%C3%B6rn_Anseeuw","Josy_Arens","Daniel_Bacquelaine","Hugues_Bayet","Steven_Mathe%C3%AF","Wouter_Beke","Jan_Bertels","Hendrik_Bogaert","Nabil_Boukili","Emmanuel_Burton","Katleen_Bury","Peter_Buysrogge","Kim_Buyst","Kristof_Calvo","Julie_Chanson","David_Clarinval","Samuel_Cogolati","Gaby_Colebunders","Sophie_Th%C3%A9mont","Laura_Crapanzano","Barbara_Creemers","Steven_Creyelman","John_Crombez","Roberto_D%27Amico","Christoph_D%27Haese","Greet_Daems","Herv%C3%A9_Rigot","Fr%C3%A9d%C3%A9ric_Daerden","Georges_Dallemagne","Maggie_De_Block","Robby_De_Caluw%C3%A9","Mathias_De_Clercq","Jan_Briers_(1953)","Pieter_De_Crem","Alexander_De_Croo","S%C3%A9verine_de_Laveleye","Michel_De_Maegd","Peter_De_Roover","Fran%C3%A7ois_De_Smet","Pieter_De_Spiegeleer","Wouter_De_Vriendt","Steven_De_Vuyst","Sophie_De_Wit","Jean-Marie_Dedecker","Ludivine_Dedonder","Jean-Marc_Deliz%C3%A9e","Joy_Donn%C3%A9","Zuhal_Demir","Franky_Demon","Kathleen_Depoorter","Ortwin_Depoortere","Melissa_Depraetere","Khalil_Aouasti","Caroline_D%C3%A9sir","Patrick_Dewael","Nathalie_Dewulf","Philippe_Tison","Elio_Di_Rupo","Leen_Dierick","Marijke_Dillen","Denis_Ducarme","Nawal_Farih","Malik_Ben_Achour","Julie_Fernandez-Fernandez","Andr%C3%A9_Flahaut","Catherine_Fonck","Theo_Francken","Michael_Freilich","Katja_Gabri%C3%ABls","Koen_Geens","Frieda_Gijbels","Erik_Gilissen","Georges_Gilkinet","Marc_Goblet","Philippe_Goffin","M%C3%A9lissa_Hanus","Raoul_Hedebouw","Katrien_Houtmeyers","Yngvild_Ingels","Kattrin_Jadin","Wim_Van_der_Donckt","Jan_Jambon","Karin_Jirofl%C3%A9e","Zakia_Khattabi","Yasmine_Kherbache","Emir_Kir","Meryame_Kitir","Ahmed_Laaouej","Egbert_Lachaert","Christophe_Lacroix","Nahima_Lanjri","Marie-Colline_Leroy","Christian_Leysen","Goedele_Liekens","Sander_Loones","Marie-Christine_Marghem","Vanessa_Matz","Sofie_Merckx","Peter_Mertens","Koen_Metsu","Charles_Michel","Nadia_Moscufo","Simon_Moutquin","Nathalie_Muylle","Laurence_Hennuy","Jean-Marc_Nollet","%C3%96zlem_%C3%96zen","Barbara_Pas","Beno%C3%AEt_Piedb%C5%93uf","Annick_Ponthier","Maxime_Pr%C3%A9vot","Patrick_Pr%C3%A9vot","Wouter_Raskin","Kurt_Ravyts","Florence_Reuter","Didier_Reynders","Tomas_Roggeman","Sophie_Rohonyi","Darya_Safai","Ellen_Samyn","Sarah_Schlitz","Jessika_Soors","Daniel_Senesael","Dominiek_Spinnewyn-Sneppe","Jan_Spooren","Caroline_Taquin","C%C3%A9cile_Thibaut","%C3%89ric_Thi%C3%A9baut","%C3%89liane_Tillieux","Frank_Troosters","Anneleen_Van_Bossuyt","Yoleen_Van_Camp","Jef_Van_den_Bergh","Tinne_Van_der_Straeten","Tom_Van_Grieken","Stefaan_Van_Hecke","Marco_Van_Hees","Els_Van_Hoof","Dries_Van_Langenhove","Reccino_Van_Lommel","Valerie_Van_Peel","Vincent_Van_Quickenborne","Kristien_Van_Vaerenbergh","Dieter_Van_Besien","Gilles_Vanden_Burre","Joris_Vandenbroucke","Tim_Vandenput","Anja_Vanrobaeys","Kris_Verduyckt","Marianne_Verhaert","Kathleen_Verhelst","Servais_Verherstraeten","Wouter_Vermeersch","Hans_Verreyt","Albert_Vicaire","Maria_Vindevoghel","Thierry_Warmoes","Evita_Willaert","Sophie_Wilm%C3%A8s","Bert_Wollants","Laurence_Zanchetta"],"group":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"options":{"NodeID":"name","Group":"group","colourScale":"d3.scaleOrdinal(d3.schemeCategory20);","fontSize":7,"fontFamily":"serif","clickTextSize":17.5,"linkDistance":50,"linkWidth":"function(d) { return Math.sqrt(d.value); }","charge":-30,"opacity":0.6,"zoom":true,"legend":false,"arrows":true,"nodesize":false,"radiusCalculation":" Math.sqrt(d.nodesize)+6","bounded":false,"opacityNoHover":3,"clickAction":null}},"evals":[],"jsHooks":[]}</script>
+<p>The graph suffers a bit from the fur ball effect and might be in need of some further tlc, but the results seem coherent enough. Here are the most connected pages:</p>
+<pre class="r"><code>nodesDF$id &lt;- as.numeric(rownames(nodesDF)) - 1
+connections_df &lt;-
+  merge(connections,
+        nodesDF,
+        by.x = &quot;to&quot;,
+        by.y = &quot;id&quot;,
+        all = TRUE)
+to_count_df &lt;- count(connections_df, name)
+arrange(to_count_df, desc(n))</code></pre>
+<pre><code>## # A tibble: 161 x 2
+##    name                       n
+##    &lt;fct&gt;                  &lt;int&gt;
+##  1 Jan_Jambon                20
+##  2 Elio_Di_Rupo              18
+##  3 Charles_Michel            15
+##  4 Zuhal_Demir               12
+##  5 Koen_Geens                11
+##  6 Pieter_De_Crem            11
+##  7 Servais_Verherstraeten    10
+##  8 Wouter_Beke               10
+##  9 Peter_De_Roover            9
+## 10 Alexander_De_Croo          8
+## # ... with 151 more rows</code></pre>
+<p>so we looked at the page-views on Wikipedia, we also analysed which pages link to others. Now we can see how many links were actually used between pages by downloading and analysing the click data published by Wikipedia. There is only data for the English pages though. They can be accessed <a href="https://dumps.wikimedia.org/other/clickstream/">here</a>. Let’s look at the data from August.</p>
+<pre class="r"><code>if (!file.exists(&quot;./data/20191101/clickstream-enwiki-2019-08.tsv&quot;)) {
+download.file(paste0(&quot;https://dumps.wikimedia.org/other/clickstream/2019-05&quot;,
+                     &quot;/clickstream-enwiki-2019-08.tsv.gz&quot;),
+              &quot;./data/20191101/clickstream-enwike-2019-08.tsv.gz&quot;)
+R.utils::gunzip(&quot;./data/20191101/clickstream-enwiki-2019-08.tsv.gz&quot;)}
+
+data&lt;-as.data.frame(fread( &quot;./data/20191101/clickstream-enwiki-2019-08.tsv&quot;, encoding = &quot;UTF-8&quot;))</code></pre>
+<pre><code>## Warning in fread(&quot;./data/20191101/clickstream-enwiki-2019-08.tsv&quot;, encoding
+## = &quot;UTF-8&quot;): Found and resolved improper quoting out-of-sample. First healed
+## line 11294: &lt;&lt;SuperBrawl_VI &quot;I_quit&quot;_match link 16&gt;&gt;. If the fields are
+## not quoted (e.g. field separator does not appear within any field), try
+## quote=&quot;&quot; to avoid this warning.</code></pre>
+<pre class="r"><code>head(data)</code></pre>
+<pre><code>##                 V1                      V2       V3 V4
+## 1      other-empty       Mirage_(magazine) external 16
+## 2     other-search       Mirage_(magazine) external 50
+## 3  Henrik_Purienne       Mirage_(magazine)     link 35
+## 4 African_wild_dog Tswalu_Kalahari_Reserve     link 60
+## 5   Common_warthog Tswalu_Kalahari_Reserve     link 24
+## 6     Greater_kudu Tswalu_Kalahari_Reserve     link 14</code></pre>
+<p>That data could be interesting to work with. Seems like the article on Jeffrey Epstein was top in August this year, as were some others:</p>
+<pre class="r"><code>data %&gt;% 
+  arrange(desc(V4)) %&gt;% 
+  select(-V3, -V1) %&gt;% 
+  mutate(row = row_number()) %&gt;%
+  filter(!str_detect(V2, &quot;Main&quot;, negate = FALSE)) %&gt;% 
+  filter(!str_detect(V2, &quot;Hyphen&quot;, negate = FALSE)) %&gt;%
+    filter(!str_detect(V2, &quot;Wikipedia&quot;, negate = FALSE)) %&gt;% 
+  filter(!str_detect(V2, &quot;Line_shaft&quot;, negate = FALSE)) %&gt;% 
+  head()</code></pre>
+<pre><code>##                                         V2      V4 row
+## 1                          Jeffrey_Epstein 5669370   5
+## 2 Article_370_of_the_Constitution_of_India 4247888   6
+## 3                          William_Murdoch 3877734   9
+## 4                            Sushma_Swaraj 2307744  11
+## 5            Once_Upon_a_Time_in_Hollywood 2097713  13
+## 6                The_Boys_(2019_TV_series) 1784043  14</code></pre>
+<p>The file has almost 32 millions rows and contains the clicks to and from articles on Wikipedia. Top clicks in August to the article of ‘Vlaams Belang’ for instance are:</p>
+<pre class="r"><code>data %&gt;% filter(V2 == &quot;Vlaams_Belang&quot;) %&gt;%
+  arrange(desc(V4)) %&gt;% 
+  filter(V3 == &quot;link&quot;) %&gt;% 
+  select(-V3, -V4) %&gt;% 
+  head() </code></pre>
+<pre><code>##                                     V1            V2
+## 1        2019_Belgian_federal_election Vlaams_Belang
+## 2 Chamber_of_Representatives_(Belgium) Vlaams_Belang
+## 3               Identity_and_Democracy Vlaams_Belang
+## 4                 New_Flemish_Alliance Vlaams_Belang
+## 5           Belgian_Federal_Parliament Vlaams_Belang
+## 6                   Flemish_Parliament Vlaams_Belang</code></pre>
+<p>And top clicks from the article of ‘Vlaams Belang’ to other pages are:</p>
+<pre class="r"><code>data %&gt;% filter(V1 == &quot;Vlaams_Belang&quot;) %&gt;%
+  arrange(desc(V4)) %&gt;% 
+  select(-V3) %&gt;% 
+  head()</code></pre>
+<pre><code>##              V1                                   V2  V4
+## 1 Vlaams_Belang                      Tom_Van_Grieken 512
+## 2 Vlaams_Belang                          Vlaams_Blok 316
+## 3 Vlaams_Belang Chamber_of_Representatives_(Belgium) 300
+## 4 Vlaams_Belang        2019_Belgian_federal_election 243
+## 5 Vlaams_Belang         Identity_and_Democracy_Party 179
+## 6 Vlaams_Belang                   Flemish_Parliament 123</code></pre>
+<pre class="r"><code>data %&gt;% filter(V1 == &quot;2019_Belgian_federal_election&quot;) %&gt;%
+  arrange(desc(V4)) %&gt;% 
+  select(-V3, -V1) %&gt;% 
+  mutate(row = row_number()) %&gt;% 
+  head()</code></pre>
+<pre><code>##                                V2   V4 row
+## 1                   Vlaams_Belang 1508   1
+## 2            New_Flemish_Alliance 1105   2
+## 3       Workers&#39;_Party_of_Belgium 1065   3
+## 4   2014_Belgian_federal_election  557   4
+## 5      Parti_Socialiste_(Belgium)  471   5
+## 6 Christen-Democratisch_en_Vlaams  452   6</code></pre>
+<p>Parties articles are at rows: 1, 2, 3, 5, 6, 8, 10, 12, 14, 15, 16, 18, 22, 28, 29, 38, 44.</p>
+<pre class="r"><code>parties &lt;- data %&gt;% filter(V1 == &quot;2019_Belgian_federal_election&quot;) %&gt;%
+  arrange(desc(V4)) %&gt;% 
+  select(-V3, -V1) %&gt;% 
+  mutate(row = row_number()) %&gt;% 
+  slice(1:3,5,6,8,10, 12, 14, 15, 16, 18, 22, 28, 29) 
+#not 38 volt and  44 Pirate
+parties</code></pre>
+<pre><code>##                                      V2   V4 row
+## 1                         Vlaams_Belang 1508   1
+## 2                  New_Flemish_Alliance 1105   2
+## 3             Workers&#39;_Party_of_Belgium 1065   3
+## 4            Parti_Socialiste_(Belgium)  471   5
+## 5       Christen-Democratisch_en_Vlaams  452   6
+## 6                 Mouvement_Réformateur  413   8
+## 7  Open_Vlaamse_Liberalen_en_Democraten  401  10
+## 8                                  DéFI  380  12
+## 9                                 Ecolo  352  14
+## 10         Socialistische_Partij_Anders  303  15
+## 11           Centre_démocrate_humaniste  290  16
+## 12              Groen_(political_party)  255  18
+## 13             People&#39;s_Party_(Belgium)  151  22
+## 14             Nation_(political_party)   99  28
+## 15                       Agir_(Belgium)   90  29</code></pre>
+<p>Here we select all the links to and from the parties in that month. Remove the ones that were used less than 20 times and remove more generic articles that do not add information to the graph (because they link most pages).</p>
+<pre class="r"><code>weak_links &lt;- 20
+# filter out &#39;generic&#39; pages
+pages &lt;- c(&quot;Political_parties_in_Belgium&quot;,
+           #&quot;2019_Belgian_federal_election&quot;, # keep to keep a united network
+           &quot;Flemish_Parliament&quot;,
+           &quot;2019_Belgian_regional_elections&quot;,
+           &quot;2004_Belgian_regional_election&quot;,
+           &quot;2014_Belgian_regional_elections&quot;,
+           &quot;2014_Belgian_regional_election&quot;,
+           &quot;2010_Belgian_federal_election&quot;,
+           &quot;2014_Belgian_federal_elections&quot;,
+           &quot;2018_Belgian_local_elections&quot;,
+           &quot;2014_Belgian_federal_election&quot;,
+           &quot;Parliament_of_Wallonia&quot;,
+           &quot;Politics_of_Belgium&quot;,
+           &quot;Opinion_polling_for_the_2019_Belgian_federal_election&quot;,
+           &quot;Belgian_Federal_Parliament&quot;,
+           &quot;2007_Belgian_federal_election&quot;,
+           &quot;2003_Belgian_federal_election&quot;,
+           &quot;Chamber_of_Representatives_(Belgium)&quot;,
+           &quot;Senate_(Belgium)&quot;,
+           &quot;2019_European_Parliament_election_in_Belgium&quot;,
+           &quot;2014_European_Parliament_election_in_Belgium&quot;,
+           &quot;2019_European_Parliament_election&quot;,
+           &quot;Parliament_of_the_German-speaking_Community&quot;,
+           &quot;Parliament_of_the_Brussels-Capital_Region&quot;,
+           &quot;List_of_ruling_political_parties_by_country&quot;,
+           &quot;Brussels&quot;,
+           &quot;City_of_Brussels&quot;,
+           &quot;Wallonia&quot;,
+           &quot;Flemish_Region&quot;)
+
+data_from &lt;- data %&gt;% 
+  filter(V1 %in% parties$V2) 
+
+data_to &lt;- data %&gt;% 
+  filter(V2 %in% parties$V2)
+
+data_parties &lt;- data_from %&gt;% 
+  rbind(data_to) %&gt;% 
+  filter(V3 == &quot;link&quot;) %&gt;% 
+  select(-V3) %&gt;% 
+  filter(V4 &gt; weak_links) %&gt;% 
+  filter(!V1 %in% pages) %&gt;% 
+  filter(!V2 %in% pages)
+
+# nodes 
+nodes &lt;- as.data.frame(c(data_parties$V1, data_parties$V2)) %&gt;% 
+  unique()
+names(nodes) &lt;- &quot;node&quot;
+nodes &lt;-  nodes %&gt;% 
+  mutate(row = row_number()-1) %&gt;% 
+  mutate(group = 1)
+
+# edges
+edges &lt;- data_parties %&gt;% 
+  left_join(nodes, by = c(&quot;V1&quot; = &quot;node&quot;)) %&gt;% 
+  rename(&quot;from&quot; = &quot;row&quot;) %&gt;% 
+  left_join(nodes, by = c(&quot;V2&quot; = &quot;node&quot;)) %&gt;%
+  rename(&quot;to&quot; = &quot;row&quot;) %&gt;% 
+  select(-V1, -V2) %&gt;% 
+  mutate(value = 1) %&gt;% 
+  select(-group.y) %&gt;% 
+  rename(&quot;group&quot; = &quot;group.x&quot;) %&gt;% 
+  select(&quot;from&quot;, &quot;to&quot;, &quot;group&quot;,&quot;value&quot;, &quot;V4&quot;) %&gt;% 
+  mutate(v5 = log(V4/25))
+
+# Create a graph. Use simplyfy to ensure that there are no duplicated edges or self loops
+gD &lt;- igraph::simplify(igraph::graph.data.frame(edges, directed=FALSE))
+
+nodes$degree &lt;- degree(gD, v = V(gD))*10
+
+# thanks to http://www.vesnam.com/Rblog/viznets6/
+network_wiki &lt;-
+  forceNetwork(
+    Links = edges,
+    Nodes = nodes,
+    Source = &quot;from&quot;,
+    Target = &quot;to&quot;,
+    Value = &quot;value&quot;,
+    NodeID = &quot;node&quot;,
+    Nodesize = &quot;degree&quot;,
+    Group = &quot;group&quot;,
+    linkDistance = networkD3::JS(&quot;function(d) { return 100*d.value; }&quot;), 
+    linkWidth = networkD3::JS(&quot;function(d) { return 2*d.value; }&quot;),
+    arrows = TRUE,
+    radiusCalculation = JS(&quot;Math.sqrt(d.nodesize)+1&quot;),
+    zoom = TRUE,
+    opacityNoHover = 3,
+    height = 560,
+    width = &quot;100%&quot;,
+    legend = FALSE
+  )
+
+network_wiki</code></pre>
+<div id="htmlwidget-2" style="width:100%;height:560px;" class="forceNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2">{"x":{"links":{"source":[0,1,2,2,3,2,4,5,6,7,8,1,2,3,1,2,8,1,9,2,10,0,6,0,2,11,8,0,3,6,5,8,6,12,1,2,2,0,12,8,3,4,6,1,10,4,13,3,1,2,3,0,2,4,9,4,5,8,3,8,6,8,13,2,2,8,1,3,0,3,3,9,8,2,5,2,9,1,2,3,1,2,3,1,2,0,2,8,2,12,1,1,2,3,11,1,14,15,16,17,18,19,20,21,22,23,24,1,25,26,27,28,29,30,31,32,33,34,35,36,29,37,38,29,39,40,21,41,42,14,16,43,44,45,27,26,6,0,46,47,48,49,2,50,51,52,53,54,55,56,57,58,59,60,14,29,61,62,63,18,15,64,29,65,66,0,67,68,69,70,71,29,72,73,52,74,75,48,76,77,12,78,79,27,4,29,80,81,82,83,84,85,86,87,88,89,90,6,91,29,92,93,29,94,95,10,96,97,27,69,98,74,48,37,79,3,49,71,29,99,100,101,102,103,104,105,67,76,82,80,48,89,49,52,5,106,71,29,107,79,88,108,76,90,109,96,110,13,111,93,29,84,3,112,113,9,114,115,81,91,71,29,116,85,117,86,29,29],"target":[104,2,118,119,52,32,113,92,92,120,57,43,17,29,29,29,29,38,38,121,122,123,1,1,1,124,125,126,126,89,89,127,128,65,49,33,129,3,3,55,70,9,5,25,13,117,130,0,46,30,103,103,103,86,86,131,6,132,133,53,134,135,10,136,137,56,14,138,69,69,4,4,58,18,139,140,141,16,16,142,40,143,48,48,34,99,144,145,146,64,147,148,148,74,149,47,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,11,11,11,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,8,8,8,8,8,8,8,8,8,8,8,8,12,12,12,12,12,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,9,9,9,9,9,9,9,9,9,9,5,5,5,5,5,5,5,5,13,13,13,13,13,13,13,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,10,10,10,10,10,10,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,150,7],"value":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"colour":["#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666"]},"nodes":{"name":["Open_Vlaamse_Liberalen_en_Democraten","New_Flemish_Alliance","Vlaams_Belang","Mouvement_Réformateur","Parti_Socialiste_(Belgium)","Centre_démocrate_humaniste","Christen-Democratisch_en_Vlaams","DéFI","Workers'_Party_of_Belgium","Socialistische_Partij_Anders","Groen_(political_party)","Nation_(political_party)","People's_Party_(Belgium)","Ecolo","Partition_of_Belgium","Steve_Bannon","Flemish_Movement","Identity_and_Democracy_Party","Right-wing_populism","Geert_Wilders","Nick_Griffin","List_of_active_separatist_movements_in_Europe","LGBT_conservatism","Gerolf_Annemans","National_conservatism","Euroscepticism","List_of_active_nationalist_parties_in_Europe","Antwerp","Lega_Nord","2019_Belgian_federal_election","Tom_Van_Grieken","Greater_Netherlands","Identity_and_Democracy","Filip_Dewinter","Vlaams_Blok","Alliance_for_Peace_and_Freedom","Noua_Dreaptă","Belgium","Bart_De_Wever","Siegfried_Bracke","Geert_Bourgeois","Liesbeth_Homans","Elections_in_Belgium","People's_Union_(Belgium)","Assita_Kanko","Darya_Safai","European_Free_Alliance","European_Conservatives_and_Reformists","Michel_I_Government","Flanders","Jan_Jambon","NVA","Charles_Michel","Peter_Mertens","Communist_Party_of_Belgium_(1989)","International_Communist_Seminar","Marc_Botenga","European_United_Left–Nordic_Green_Left","Ludo_Martens","Pioneer_movement","PTB","PVDA","List_of_anti-capitalist_and_communist_parties_with_national_parliamentary_representation","List_of_communist_parties","The_Movement_(populist_group)","Mischaël_Modrikamen","Pro-Europeanism","Liberal_International","Marc_Wilmots","Renew_Europe","Liberal_Reformist_Party","List_of_prime_ministers_of_Belgium","Willy_Borsus","Didier_Reynders","Alliance_of_Liberals_and_Democrats_for_Europe_Party","European_Council","Federal_Government_of_Belgium","Olivier_Chastel","Von_der_Leyen_Commission","Michel_II_Government","Leuven","Progressive_Alliance_of_Socialists_and_Democrats","Ghent","Johan_Vande_Lanotte","Progressive_Alliance","Party_of_European_Socialists","Belgian_Socialist_Party","Pierre_Kompany","European_People's_Party_group","Christian_Social_Party_(Belgium,_defunct)","European_People's_Party","French_Community_of_Belgium","Christlich_Soziale_Partei_(Belgium)","Greens–European_Free_Alliance","Eupen","Philippe_Lamberts","European_Green_Party","Richard_Jonckheere","Roland_Duchâtelet","Gwendolyn_Rutten","Mathias_De_Clercq","Maggie_De_Block","Mechelen","Guy_Verhofstadt","Party_for_Freedom_and_Progress","Ypres","Martin_Selmayr","Herman_Van_Rompuy","Yves_Leterme","Bruges","Bachir_Boumaaza","Sociaal-Liberale_Partij","Socialist_International","Elio_Di_Rupo","German-speaking_Community_of_Belgium","Rudi_Vervoort","Liège","Social_democracy","Pim_Fortuyn","Draining_law","Olivier_Maingain","Cordon_sanitaire","Meyrem_Almaci","Conservative_liberalism","Solidarism","Roberto_D'Amico","Partei_für_Freiheit_und_Fortschritt","Raoul_Hedebouw","Christian_democracy","Vlaams_Belang_Jongeren","Zakia_Khattabi","Movement_of_Young_Socialists","International_Meeting_of_Communist_and_Workers_Parties","Liberalism_in_Belgium","Wouter_Beke","Comac_(youth_movement)","Dutch-speaking_electoral_college","Ayaan_Hirsi_Ali","Mouvement_des_Citoyens_pour_le_Changement","Christian_humanism","2004_Belgian_regional_elections","John_Crombez","Dirk_Verhofstadt","United_Russia","German_Freedom_Party","Communist_Party_of_Belgium","Swiss_People's_Party","Civic_nationalism","Separatism","Yellow_vests_movement","Agir_(Belgium)"],"group":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"nodesize":[240,280,340,250,160,90,200,20,180,120,70,50,60,80,30,20,20,10,20,10,10,20,10,10,10,20,20,40,10,150,10,10,10,10,10,10,10,20,20,10,10,10,10,10,10,10,10,10,40,30,10,10,30,10,10,10,10,10,10,10,10,10,10,10,10,10,10,20,10,20,10,40,10,10,20,10,30,10,10,30,20,20,20,10,20,20,20,10,20,20,20,20,20,20,10,10,20,10,10,10,10,10,10,30,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,20,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,20,10,10]},"options":{"NodeID":"node","Group":"group","colourScale":"d3.scaleOrdinal(d3.schemeCategory20);","fontSize":7,"fontFamily":"serif","clickTextSize":17.5,"linkDistance":"function(d) { return 100*d.value; }","linkWidth":"function(d) { return 2*d.value; }","charge":-30,"opacity":0.6,"zoom":true,"legend":false,"arrows":true,"nodesize":true,"radiusCalculation":"Math.sqrt(d.nodesize)+1","bounded":false,"opacityNoHover":3,"clickAction":null}},"evals":["options.linkDistance"],"jsHooks":[]}</script>
+<pre class="r"><code>if (!file.exists(&quot;./data/20191101/clickstream-enwiki-2019-05.tsv&quot;)) {
+download.file(paste0(&quot;https://dumps.wikimedia.org/other/clickstream/2019-05/&quot;,
+                     &quot;clickstream-enwiki-2019-05.tsv.gz&quot;)
+              ,&quot;./data/20191101/clickstream-enwike-2019-05.tsv.gz&quot;)
+R.utils::gunzip(&quot;./data/20191101/clickstream-enwiki-2019-05.tsv.gz&quot;)}
+
+data_2019_05 &lt;-as.data.frame(fread( &quot;./data/20191101/clickstream-enwiki-2019-05.tsv&quot;, 
+                                    encoding = &quot;UTF-8&quot;, quote = &quot;&quot;))</code></pre>
+<p>Since this is election month the graph is similar but denser.</p>
+<pre class="r"><code>weak_links &lt;- 35
+
+data_from &lt;- data_2019_05 %&gt;% 
+  filter(V1 %in% parties$V2) 
+
+data_to &lt;- data_2019_05 %&gt;% 
+  filter(V2 %in% parties$V2)
+
+data_parties &lt;- data_from %&gt;% 
+  rbind(data_to) %&gt;% 
+  filter(V3 == &quot;link&quot;) %&gt;% 
+  select(-V3) %&gt;% 
+  filter(V4 &gt; weak_links) %&gt;% 
+  filter(!V1 %in% pages) %&gt;% 
+  filter(!V2 %in% pages)
+  
+# nodes 
+
+nodes &lt;- as.data.frame(c(data_parties$V1, data_parties$V2)) %&gt;% 
+  unique()
+names(nodes) &lt;- &quot;node&quot;
+nodes &lt;-  nodes %&gt;% 
+  mutate(row = row_number()-1) %&gt;% 
+  mutate(group = 1)
+
+# edges
+edges &lt;- data_parties %&gt;% 
+  left_join(nodes, by = c(&quot;V1&quot; = &quot;node&quot;)) %&gt;% 
+  rename(&quot;from&quot; = &quot;row&quot;) %&gt;% 
+  left_join(nodes, by = c(&quot;V2&quot; = &quot;node&quot;)) %&gt;%
+  rename(&quot;to&quot; = &quot;row&quot;) %&gt;% 
+  select(-V1, -V2) %&gt;% 
+  mutate(value = 1) %&gt;% 
+  select(-group.y) %&gt;% 
+  rename(&quot;group&quot; = &quot;group.x&quot;) %&gt;% 
+  select(&quot;from&quot;, &quot;to&quot;, &quot;group&quot;,&quot;value&quot;, &quot;V4&quot;) %&gt;%
+  mutate(v5 = log(V4/25))</code></pre>
+<pre><code>## Warning: Column `V1`/`node` joining character vector and factor, coercing
+## into character vector</code></pre>
+<pre><code>## Warning: Column `V2`/`node` joining character vector and factor, coercing
+## into character vector</code></pre>
+<pre class="r"><code># Create a graph. Use simplyfy to ensure that there are no duplicated edges or self loops
+gD &lt;- igraph::simplify(igraph::graph.data.frame(edges, directed=FALSE))
+
+nodes$degree &lt;- degree(gD, v = V(gD))*10
+
+network_wiki &lt;-
+  forceNetwork(
+    Links = edges,
+    Nodes = nodes,
+    Source = &quot;from&quot;,
+    Target = &quot;to&quot;,
+    Value = &quot;value&quot;,
+    #Value = &quot;v5&quot;,
+    NodeID = &quot;node&quot;,
+    Nodesize = &quot;degree&quot;,
+    Group = &quot;group&quot;,
+    linkDistance = networkD3::JS(&quot;function(d) { return 100*d.value; }&quot;), 
+    linkWidth = networkD3::JS(&quot;function(d) { return 2*d.value; }&quot;),
+    arrows = TRUE,
+    radiusCalculation = JS(&quot;Math.sqrt(d.nodesize)+1&quot;),
+    zoom = TRUE,
+    opacityNoHover = 3,
+    height = 560,
+    width = &quot;100%&quot;,
+    legend = FALSE
+  )
+
+network_wiki</code></pre>
+<div id="htmlwidget-3" style="width:100%;height:560px;" class="forceNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3">{"x":{"links":{"source":[0,1,2,1,3,2,4,5,6,3,3,6,6,2,6,6,0,0,6,2,6,3,7,6,5,7,6,8,9,10,6,9,6,6,1,11,4,5,6,11,0,6,3,7,4,5,11,5,11,3,5,3,2,6,8,6,3,2,6,2,5,6,3,5,4,6,6,6,6,3,6,3,11,10,8,6,0,11,6,0,5,0,6,6,3,6,6,4,5,2,5,1,6,2,3,2,0,11,6,6,0,11,6,3,12,11,7,0,10,3,6,11,9,3,0,11,6,6,11,3,6,5,0,6,6,12,3,10,3,11,9,12,6,6,4,6,10,8,10,8,6,12,9,2,12,6,0,3,4,6,6,5,9,2,0,11,3,12,11,0,6,11,0,11,0,6,12,3,6,3,6,6,2,13,14,15,16,17,18,19,0,20,1,21,22,23,24,25,26,27,28,29,30,19,31,32,33,34,35,36,37,19,11,38,19,39,40,15,11,27,22,18,41,42,19,43,3,44,45,46,5,47,26,48,23,49,50,19,51,8,52,53,54,55,51,6,56,57,0,58,59,60,20,5,61,19,62,49,63,64,65,66,67,68,43,69,70,71,5,19,72,73,74,75,76,77,78,79,11,9,80,81,82,83,19,84,85,22,86,87,88,64,89,70,90,91,92,93,94,95,67,96,97,50,55,98,43,19,3,99,100,101,102,52,45,19,103,104,10,105,51,106,0,22,20,27,107,49,19,108,3,109,110,75,4,111,112,113,76,114,23,78,115,116,87,19,117,100,118,79,80,19,119,120,121,122,83,12,43,85],"target":[11,11,33,118,49,123,76,76,124,125,126,126,127,30,87,128,129,26,130,131,91,68,132,133,134,135,136,106,137,138,139,140,90,43,116,7,77,77,141,141,141,142,71,37,143,143,144,114,0,0,0,58,145,146,10,92,147,148,19,19,108,99,99,75,75,149,95,93,62,62,102,20,20,52,52,150,151,151,3,3,3,46,152,50,50,88,153,78,78,35,4,115,154,154,154,34,155,155,156,89,17,17,157,158,159,16,160,44,45,55,55,12,12,161,162,162,163,164,25,64,165,166,166,54,167,84,6,8,168,14,85,85,169,170,171,172,173,173,51,51,174,83,119,28,175,176,5,5,5,177,178,179,180,181,18,18,63,9,15,15,48,48,48,182,182,183,184,185,101,67,186,187,188,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,2,2,2,2,2,2,2,2,2,2,7,7,7,7,189,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,10,10,10,10,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,12,12,12,12,12,12,12,12,12,12,12,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8,8,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1,1,1,1,1,1,1,9,9,9,9,9,9,9,9,9,9,9],"value":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"colour":["#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666","#666"]},"nodes":{"name":["Open_Vlaamse_Liberalen_en_Democraten","People's_Party_(Belgium)","Workers'_Party_of_Belgium","New_Flemish_Alliance","Centre_démocrate_humaniste","Christen-Democratisch_en_Vlaams","Vlaams_Belang","DéFI","Groen_(political_party)","Socialistische_Partij_Anders","Ecolo","Mouvement_Réformateur","Parti_Socialiste_(Belgium)","Marc_Wilmots","Didier_Reynders","Alliance_of_Liberals_and_Democrats_for_Europe_group","Liberal_Reformist_Party","Partei_für_Freiheit_und_Fortschritt","Alliance_of_Liberals_and_Democrats_for_Europe_Party","2019_Belgian_federal_election","Michel_I_Government","Willy_Borsus","List_of_Prime_Ministers_of_Belgium","Federal_Government_of_Belgium","Olivier_Chastel","Charles_Michel","Liberal_International","Michel_II_Government","Peter_Mertens","Communist_Party_of_Belgium_(1989)","Ludo_Martens","List_of_communist_parties","PTB","International_Communist_Seminar","International_Meeting_of_Communist_and_Workers_Parties","Raoul_Hedebouw","PVDA","Olivier_Maingain","Defi","1999_Belgian_federal_election","Roland_Duchâtelet","Mathias_De_Clercq","Maggie_De_Block","Antwerp","Gwendolyn_Rutten","Verhofstadt_I_Government","Party_for_Freedom_and_Progress","Ghent","Guy_Verhofstadt","Flanders","Dutch-speaking_electoral_college","Greens–European_Free_Alliance","European_Green_Party","Philippe_Lamberts","Belgium","Flemish_Movement","Elections_in_Belgium","Zuhal_Demir","European_Free_Alliance","Jan_Jambon","Darya_Safai","Mark_Demesmaeker","People's_Union_(Belgium)","Bart_De_Wever","Partition_of_Belgium","Theo_Francken","List_of_active_separatist_movements_in_Europe","Political_parties_in_Flanders","European_Conservatives_and_Reformists","NVA","List_of_active_nationalist_parties_in_Europe","Geert_Bourgeois","CDH","Ganshoren","Pierre_Kompany","European_People's_Party_group","European_People's_Party","Christlich_Soziale_Partei_(Belgium)","Christian_Social_Party_(Belgium,_defunct)","Progressive_Alliance_of_Socialists_and_Democrats","Progressive_Alliance","Parti_Socialiste","Socialist_International","Party_of_European_Socialists","Elio_Di_Rupo","Belgian_Socialist_Party","Greater_Netherlands","Right-wing_populism","Non-Inscrits","Europe_of_Nations_and_Freedom","Tom_Van_Grieken","Vlaams_Blok","Filip_Dewinter","Cordon_sanitaire","Geert_Wilders","Gerolf_Annemans","Thierry_Baudet","National_conservatism","Nick_Griffin","Euroscepticism","Steve_Bannon","European_Alliance_of_People_and_Nations","Movement_for_a_Europe_of_Nations_and_Freedom","Bachir_Boumaaza","Sociaal-Liberale_Partij","Groen","Meyrem_Almaci","Wilfried_Martens","Herman_Van_Rompuy","Kris_Peeters","Martin_Selmayr","Yves_Leterme","List_of_Christian_democratic_parties","Marianne_Thyssen","Wouter_Beke","Alliance_for_Direct_Democracy_in_Europe","The_Movement_(populist_group)","Table_of_political_parties_in_Europe_by_pancontinental_organisation","Mischaël_Modrikamen","John_Crombez","Leuven","Kathleen_Van_Brempt","Johan_Vande_Lanotte","Communism","Swiss_People's_Party","Civic_nationalism","Separatism","Social_conservatism","Neoliberalism","Vivant","Western_culture","Far-left_politics","Francization_of_Brussels","Vlaams_Belang_Jongeren","Confederation_of_Christian_Trade_Unions","Amaranth_(color)","Identity,_Tradition,_Sovereignty","Young_Socialists_(Flanders)","Zakia_Khattabi","Multiculturalism","Di_Rupo_Government","Dirk_Verhofstadt","Provinces_of_Belgium","Christian_democracy","Mouvement_des_Citoyens_pour_le_Changement","Marxism–Leninism","Sweden_Democrats","Right-wing_politics","Comac_(youth_movement)","United_Russia","Ninove","Centre-right_politics","2009_Belgian_regional_elections","Roeland_Raes","European_Parliament","Liberalism_in_Belgium","Zero_tolerance","National_Rally_(France)","Liberal_conservatism","Social_democracy","Walloon_Rally","Global_Compact_for_Migration","Conservative_liberalism","Mixed_economy","Ayaan_Hirsi_Ali","Ayoob_Kara","Flemish_Community","Far-right_politics","Regionalism_(politics)","Pim_Fortuyn","Draining_law","Christian_humanism","2004_Belgian_regional_elections","Green_politics","Bruno_Valkeniers","Movement_of_Young_Socialists","Union_between_Sweden_and_Norway","Slovak_National_Party","German_Freedom_Party","Centrist_Democrat_International","Belgian_Labour_Party","Catholic_University_of_Leuven_(1835–1968)","Social_liberalism","Hijab","André_Cools","Conservatism","Frank_Vanhecke","Likud","Communist_Party_of_Belgium","Agir_(Belgium)"],"group":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"nodesize":[300,80,170,360,110,250,600,70,100,140,80,260,140,10,10,20,10,20,20,140,30,10,40,30,10,10,20,30,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,40,10,30,10,10,30,30,30,30,20,10,20,20,10,10,10,10,10,10,20,10,20,10,10,20,10,10,20,10,10,10,10,20,20,20,20,20,20,10,10,20,10,20,10,20,10,10,10,10,10,10,10,10,10,10,10,20,20,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,20,10,10,10,10,10,10,10,10,10,10,10,10,10,10,30,10,20,10,10,10,10,10,10,10,20,10,10,30,20,10,10,10,10,10,10,20,10,10,10,20,10,10,10,10,10,10,20,10,10,10,10,10,10,10,10,20,10,10,10,10,10,10,10]},"options":{"NodeID":"node","Group":"group","colourScale":"d3.scaleOrdinal(d3.schemeCategory20);","fontSize":7,"fontFamily":"serif","clickTextSize":17.5,"linkDistance":"function(d) { return 100*d.value; }","linkWidth":"function(d) { return 2*d.value; }","charge":-30,"opacity":0.6,"zoom":true,"legend":false,"arrows":true,"nodesize":true,"radiusCalculation":"Math.sqrt(d.nodesize)+1","bounded":false,"opacityNoHover":3,"clickAction":null}},"evals":["options.linkDistance"],"jsHooks":[]}</script>
+<p>And on this bombshell, see you for the next post!</p>

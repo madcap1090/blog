@@ -7,10 +7,21 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Sun, 28 Jul 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 08 Nov 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/igraph/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Analysing Belgian Politics with Wikipedia</title>
+      <link>/post/analysing-belgian-politics-with-wikipedia/</link>
+      <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/analysing-belgian-politics-with-wikipedia/</guid>
+      <description>Another source of data is Wikipedia. I came across this article, and decided to see what I could obtain using it on Belgian politics. Many thanks to the authors of the MZES (Mannheim Zentrum für Europäische Sozialforschung)!
+Gentlepersons, load your libraries:
+## Packagespkgs &amp;lt;- c(&amp;quot;devtools&amp;quot;,&amp;quot;ggnetwork&amp;quot;,&amp;quot;igraph&amp;quot;,&amp;quot;intergraph&amp;quot;,&amp;quot;tidyverse&amp;quot;,&amp;quot;rvest&amp;quot;,&amp;quot;devtools&amp;quot;,&amp;quot;magrittr&amp;quot;,&amp;quot;plotly&amp;quot;,&amp;quot;RColorBrewer&amp;quot;,&amp;quot;colorspace&amp;quot;,&amp;quot;lubridate&amp;quot;,&amp;quot;networkD3&amp;quot;,&amp;quot;pageviews&amp;quot;,&amp;quot;readr&amp;quot;,&amp;quot;wikipediatrend&amp;quot;,&amp;quot;WikipediR&amp;quot;,&amp;quot;WikidataR&amp;quot;,&amp;quot;glue&amp;quot;)## Install uninstalled packageslapply(pkgs[!</description>
+    </item>
     
     <item>
       <title>friends in politics</title>

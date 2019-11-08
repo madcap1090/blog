@@ -1,0 +1,821 @@
+---
+title: Analysing Belgian Politics with Wikipedia
+author: William Bourgeois
+date: '2019-11-08'
+slug: analysing-belgian-politics-with-wikipedia
+categories: []
+tags:
+  - Belgian politics
+  - Wikipedia
+  - scraping
+  - Network analysis
+  - igraph
+---
+
+
+Another source of data is Wikipedia. I came across this [article](https://www.mzes.uni-mannheim.de/socialsciencedatalab/article/studying-politics-wikipedia/), and decided to see what I could obtain using it on Belgian politics. Many thanks to the authors of the MZES (Mannheim Zentrum für Europäische Sozialforschung)!
+
+Gentlepersons, load your libraries:
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+## Packages
+pkgs <- c(
+  "devtools",
+  "ggnetwork",
+  "igraph",
+  "intergraph",
+  "tidyverse",
+  "rvest",
+  "devtools",
+  "magrittr",
+  "plotly",
+  "RColorBrewer",
+  "colorspace",
+  "lubridate",
+  "networkD3",
+  "pageviews",
+  "readr",
+  "wikipediatrend",
+  "WikipediR",
+  "WikidataR",
+  "glue"
+)
+
+## Install uninstalled packages
+lapply(pkgs[!(pkgs %in% installed.packages())], install.packages)
+
+## Load all packages to library
+lapply(pkgs, library, character.only = TRUE)
+
+## legislatoR
+#devtools::install_github("saschagobel/legislatoR")
+library(legislatoR)
+#install.packages("viridis")  # Install
+library("viridis")           # Load
+library("scales")
+library("R.utils")
+library("data.table")
+```
+
+The function 'article_pageviews' of the 'legistlatoR' package returns the number of pageviews of an article. So here is what we get when we search for the article 'Charles Michel' (best to download from three languages).
+
+```{r}
+# get pageviews
+michel_views_en <-article_pageviews(
+    project = "en.wikipedia",
+    article = "Charles Michel",
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )
+
+michel_views_fr <-article_pageviews(
+    project = "fr.wikipedia",
+    article = "Charles Michel",
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )
+
+michel_views_nl <-article_pageviews(
+    project = "nl.wikipedia",
+    article = "Charles Michel",
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )
+
+michel_views <- rbind(michel_views_en,
+                      michel_views_fr,
+                      michel_views_nl)
+
+```
+
+And the returned data looks like this:
+
+```{r}
+michel_views %>% 
+  select(-project, -access) %>% 
+  head()
+```
+
+And plotted:
+
+```{r}
+# Plot pageviews
+plot(ymd(michel_views_en$date), michel_views_en$views, 
+     col = "red", type = "l", xlab="Time", ylab="Pageviews")
+lines(ymd(michel_views_fr$date), michel_views_fr$views, 
+      col = "blue")
+lines(ymd(michel_views_nl$date), michel_views_nl$views, 
+      col = "lightblue")
+legend("topleft", legend=c("michel_en","michel_fr", "michel_nl"), 
+       cex=.8,col=c("red","blue", "lightblue"), lty=1) 
+```
+
+So what are Mr Michel's special dates (his English article) ?
+
+```{r}
+michel_views_en %>% 
+  arrange(desc(views)) %>%
+  select(-access, -granularity, -agent) %>% 
+  head(5)
+```
+
+2019-07-02 elected to the presidency of the European Council
+2019-07-03 elected to the presidency of the European Council
+2016-03-22 terrorist attacks in Brussels
+2016-03-23 terrorist attacks in Brussels
+2018-12-19 his government resigns
+
+What about [Goedele Liekens](https://en.wikipedia.org/wiki/Goedele_Liekens)(rep for the Flemish Liberals)?
+
+```{r}
+name <- "Goedele_Liekens"
+
+views_en <-article_pageviews(
+    project = "en.wikipedia",
+    article = name,
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )
+
+views_fr <-article_pageviews(
+    project = "fr.wikipedia",
+    article = name,
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )
+
+views_nl <-article_pageviews(
+    project = "nl.wikipedia",
+    article = name,
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )
+
+# Plot pageviews
+plot(ymd(views_nl$date), views_nl$views, col = "blue", type = "l", xlab="Time", ylab="Pageviews")
+lines(ymd(views_en$date), views_en$views, col = "red")
+lines(ymd(views_fr$date), views_fr$views, col = "lightblue")
+legend("topleft", legend=c(glue("{name}_nl"),glue("{name}_en"), glue("{name}_fr")), 
+       cex=.8,col=c("blue", "red", "lightblue"), lty=1)
+
+```
+
+Most hits on her articles?
+
+```{r}
+views_en %>% rbind(views_fr, views_nl) %>%
+  mutate(date = ymd(date)) %>% 
+  group_by(article, date) %>% 
+  summarise(sum = sum(views)) %>% 
+  arrange(desc(sum)) %>% 
+  head(5)
+```
+
+On 04/11/2016 the second episode of the second seasons on 'Sex Box' was aired, a British TV show made for Channel four and part of their "Campaign for Real Sex". It was co-presented by Mrs Liekens. On 18/10/2019 she appeared on Dutch TV. I suppose that explains the latest peak.  
+
+The package 'legistlatoR' contains information of the legislator of specific legislature.
+
+```{r}
+dat <- semi_join(
+  x = get_core(legislature = "deu"),
+  y = filter(get_political(legislature = "deu"), session == 19),
+  by = "pageid"
+)
+```
+
+The package does not contain data for Belgium. Here is a sample of columns:
+
+```{r}
+head(dat) %>% 
+  select(-pageid, -wikidataid, -deathplace, -death, -wikititle)
+```
+
+The idea is to extract all links from the wiki pages of the reps, so since Belgian ones are not in the package, we need to obtain them in another way. We did some scraping in the past to find their parties, so we could tweak the code to get them.
+
+```{r}
+
+url <-"https://nl.wikipedia.org/wiki/Kamer_van_volksvertegenwoordigers_(samenstelling_2019-2024)"
+
+links_be <- as.character(url) %>%
+      read_html() %>%
+      html_nodes(glue("#mw-content-text > div > table:nth-child(16) a")) %>%
+      html_attr("href")
+ 
+length(links_be)
+```
+
+A tad too much links but;
+
+```{r}
+links_be[1:15]
+```
+
+Seems to be what we were looking for ;-). We have some intruders to get rid of.
+
+```{r}
+
+links_be <- links_be[!links_be %in% c("/wiki/Vlaamse_Regering",
+                                 "/wiki/Gent",
+                                 "/wiki/Franse_Gemeenschapsregering",
+                                 "/wiki/Waalse_Regering",
+                                 "/wiki/Luik_(stad)",
+                                 "#cite_note-2",
+                                 "/wiki/Seraing")] 
+```
+
+Now we have the names of the articles we can go back and make some more API calls with the legistlatoR package. Before moving on to study links between Wikipedia articles. 
+
+```{r}
+if (!file.exists("./data/20191101/views.rds")) {
+views <- data.frame()
+
+for (i in links_be){
+  article <- str_remove(i,"/wiki/")
+  article <- str_replace_all(article,"%C3%B6", "ö")
+  article <- str_replace_all(article,"%C3%A9", "é")
+  article <- str_replace_all(article,"%C3%A8", "è")
+  article <- str_replace_all(article,"%27", "'")
+  article <- str_replace_all(article,"%C3%AF", "ï")
+  article <- str_replace_all(article,"%C3%A7", "ç")
+  article <- str_replace_all(article,"%C3%AB", "ë")
+  article <- str_replace_all(article,"%C3%AE", "î")
+  article <- str_replace_all(article,"%C5%93", "oe")
+  article <- str_replace_all(article,"%C3%89", "É")
+  article <- str_replace_all(article,"%C3%96", "Ö")
+
+    views_en <- tryCatch({article_pageviews(
+    project = "en.wikipedia",
+    article = article,
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )}, error = function(e) {data.frame()})
+
+    views_fr <- tryCatch({article_pageviews(
+    project = "fr.wikipedia",
+    article = article,
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )}, error = function(e) {data.frame()})
+    
+    views_nl <- tryCatch({article_pageviews(
+    project = "nl.wikipedia",
+    article = article,
+    user_type = "user",
+    start = "2015070100",
+    end = "2019110100"
+  )}, error = function(e) {data.frame()})
+  
+    views <- rbind(views,
+                   views_en,
+                   views_fr,
+                   views_nl)
+    }
+  saveRDS(views, "./data/20191101/views.rds")
+} else{
+  views <- readRDS("./data/20191101/views.rds")
+}
+```
+
+So what did we harvest?
+
+```{r}
+views %>% 
+  mutate(date = ymd(date)) %>% 
+  select(-access) %>% 
+  head()
+```
+
+Per federal rep the daily Wikipedia article views per language. 
+
+Who got the most hits in 2019?
+
+```{r}
+views %>% select(article, date, views) %>% 
+  filter(year(date)== 2019) %>% 
+  group_by(article) %>% 
+  summarise(sum = sum(views)) %>% 
+  arrange(desc(sum))
+
+articles <- views %>% select(article, date, views) %>% 
+  filter(year(date)== 2019) %>% 
+  group_by(article) %>% 
+  summarise(sum = sum(views)) %>% 
+  arrange(desc(sum)) %>% 
+  slice(1:10) 
+
+```
+
+So Mr. Michel wins. Who have the most % of hits on their English article? 
+
+```{r warning=FALSE}
+views %>% select(article, date, views, language) %>% 
+  pivot_wider(values_from = views, names_from = language, values_fill = list(views= 0)) %>% 
+  filter(year(date)== 2019) %>%
+  select(-date) %>% 
+  group_by(article) %>% 
+  summarise_all(funs(sum)) %>% 
+  mutate(sum = (fr + nl + en)) %>% 
+  mutate(prtc_en = (en/sum)) %>% 
+  mutate(prtc = scales::percent(en/sum)) %>% 
+  arrange(desc(prtc_en)) %>% 
+  select(-prtc_en)
+  
+```
+
+Roberto D'Amico was a famous Italian bobsledder before joining the Belgian communist party... 
+
+Just joking.
+
+Plotting the top 10:
+
+```{r}
+views %>% select(article, date, views, language) %>%
+  filter(year(date) > 2018) %>% 
+  group_by(article, date) %>% 
+  summarise(sum = sum(views)) %>% 
+  filter(article %in% articles$article[1:10]) %>% 
+  arrange(date) %>% 
+  ggplot(aes(x = date, y = sum)) + 
+  geom_line(aes(color = article)) + 
+  scale_color_discrete() +
+  scale_y_continuous(label=comma_format()) +
+  theme_minimal()
+  
+```
+
+So the special dates from this graph seem to be election day, the election of Charles Michel and Mrs. Wilmès as first woman Belgian PM.
+
+Let's look at the top 10 on the election date:
+
+```{r}
+views %>% select(article, date, views, language) %>%
+  mutate(date = ymd(date)) %>% 
+  filter(year(date) > 2018) %>% 
+  group_by(article, date) %>% 
+  summarise(sum = sum(views)) %>% 
+  filter(date == ymd("2019-05-26")) %>% 
+  arrange(desc(sum))
+```
+
+That is a lot of page views for Mr. [Van Grieken](https://en.wikipedia.org/wiki/Tom_Van_Grieken). 
+
+Top pageviews per day in 2019 are:
+
+```{r}
+views %>% select(article, date, views, language) %>%
+  mutate(date = ymd(date)) %>% 
+  filter(year(date) > 2018) %>% 
+  group_by(article, date) %>% 
+  summarise(sum = sum(views)) %>% 
+  arrange(desc(sum))
+```
+
+So from the table we can get the feeling that a lot of Mr. Van Grieken pageviews were on or after election date. Is that true?
+
+```{r}
+views %>% select(article, date, views, language) %>%
+  filter(article == "Tom_Van_Grieken") %>% 
+  filter(year(date) > 2018) %>% 
+  group_by(article, date) %>% 
+  summarise(sum = sum(views)) %>% 
+  filter(article %in% articles$article[1:10]) %>% 
+  arrange(date) %>% 
+  ggplot(aes(x = date, y = sum)) + 
+  geom_line(aes(color = article)) + 
+  scale_color_discrete() +
+  scale_y_continuous(label=comma_format()) +
+  theme_minimal()
+  
+```
+
+Seems to be. When excluding the outliers, Mr. Van Grieken's Wikipedia pages get less attention than for instance the ones from Mrs. De Block, and is comparable to Mr. Van Langenhove, which puts his fourth place in some perspective. 
+
+```{r}
+views %>% select(article, date, views, language) %>%
+  filter(year(date) > 2018) %>% 
+  group_by(article, date) %>% 
+  summarise(sum = sum(views)) %>% 
+  filter(article %in% articles$article[2:8]) %>%
+  filter(article == "Maggie_De_Block" | 
+           article == "Tom_Van_Grieken" |
+           article == "Dries_Van_Langenhove" ) %>% 
+  filter(sum < 3000) %>% 
+  arrange(date) %>% 
+  ggplot(aes(x = date, y = sum)) + 
+  geom_line(aes(color = article)) + 
+  scale_color_discrete() +
+  scale_y_continuous(label=comma_format()) +
+  theme_minimal()
+```
+
+
+After the web page views, we can also analyse the links between Wikipedia pages. 
+
+```{r}
+if (!file.exists("./data/20191101/mfp_nl_links_list.RData")) {
+  links_list_nl <- list()
+  for (i in 1:length(links_be)) {
+    if (links_be[i] == "#cite_note-2") next
+    #print(i)
+    links <-
+      page_links(
+        language = "nl",
+        "wikipedia",
+        page = str_remove(links_be[i],"/wiki/"),
+        clean_response = TRUE,
+        limit = 500,
+        namespaces = 0
+      )
+    links_list_nl[[i]] <- lapply(links[[1]]$links, "[", 2) %>% unlist
+  }
+  getwd()
+  save(links_list_nl, file = "./data/20191101/mfp_nl_links_list.RData")
+} else{
+  load("./data/20191101/mfp_nl_links_list.RData")
+}
+
+```
+
+These are for the pages written in dutch, what about the articles written in french?
+
+```{r}
+if (!file.exists("./data/20191101/mfp_fr_links_list.RData")) {
+  links_list_fr <- list()
+  for (i in 1:length(links_be)) {
+    if (links_be[i] == "#cite_note-2") next
+    #print(i)
+    links <-
+      page_links(
+        language = "fr",
+        "wikipedia",
+        page = str_remove(links_be[i],"/wiki/"),
+        clean_response = TRUE,
+        limit = 500,
+        namespaces = 0
+      )
+    links_list_fr[[i]] <- lapply(links[[1]]$links, "[", 2) %>% unlist
+  }
+  getwd()
+  save(links_list_fr, file = "./data/20191101/mfp_fr_links_list.RData")
+} else{
+  load("./data/20191101/mfp_fr_links_list.RData")
+}
+
+```
+
+Now we can build the connections and prepare the graph (for all the pages).
+
+```{r}
+connections_nl <- data.frame(from = NULL, to = NULL)
+wikititle <- str_remove(links_be, "/wiki/")
+
+# loop
+for (i in seq_along(wikititle)) {
+  links_in_pslinks <-
+    seq_along(wikititle)[str_replace_all(wikititle, "_", " ") %in%
+                               links_list_nl[[i]]]
+  links_in_pslinks <- links_in_pslinks[links_in_pslinks != i]
+  connections_nl <-
+    rbind(connections_nl,
+          data.frame(
+            from = rep(i - 1, length(links_in_pslinks)), # -1 for zero-indexing
+            to = links_in_pslinks - 1 # here too
+            )
+          )
+}
+
+# loop preparation
+connections_fr <- data.frame(from = NULL, to = NULL)
+
+# loop
+for (i in seq_along(wikititle)) {
+  links_in_pslinks <-
+    seq_along(wikititle)[str_replace_all(wikititle, "_", " ") %in%
+                               links_list_fr[[i]]]
+  links_in_pslinks <- links_in_pslinks[links_in_pslinks != i]
+  connections_fr <-
+    rbind(connections_fr,
+          data.frame(
+            from = rep(i - 1, length(links_in_pslinks)), # -1 for zero-indexing
+            to = links_in_pslinks - 1 # here too
+            )
+          )
+}
+
+connections <- connections_nl %>% 
+  rbind(connections_fr) %>% 
+  unique()
+
+head(connections)
+
+```
+
+In order to visualise which Wikipedia pages of our parliamentarians refer to which other pages (and which ones have no links to others).
+
+```{r message=FALSE, warning=FALSE}
+connections$value <- 1
+nodesDF <- data.frame(name = wikititle, group = 1)
+
+filter <-  connections %>% 
+  group_by(from) %>%
+  summarise(sum = sum(value)) %>% 
+  filter(sum == 1)
+
+network_out <-
+  forceNetwork(
+    Links = connections,
+    Nodes = nodesDF,
+    Source = "from",
+    Target = "to",
+    Value = "value",
+    NodeID = "name",
+    Group = "group",
+    arrows = TRUE,
+    zoom = TRUE,
+    opacityNoHover = 3,
+    height = 360,
+    width = 636,
+    legend = FALSE
+  )
+
+network_out
+```
+
+The graph suffers a bit from the fur ball effect and might be in need of some further tlc, but the results seem coherent enough. Here are the most connected pages:  
+
+```{r}
+nodesDF$id <- as.numeric(rownames(nodesDF)) - 1
+connections_df <-
+  merge(connections,
+        nodesDF,
+        by.x = "to",
+        by.y = "id",
+        all = TRUE)
+to_count_df <- count(connections_df, name)
+arrange(to_count_df, desc(n))
+```
+
+so we looked at the page-views on Wikipedia, we also analysed which pages link to others. Now we can see how many links were actually used between pages by downloading and analysing the click data published by Wikipedia. There is only data for the English pages though. They can be accessed [here](https://dumps.wikimedia.org/other/clickstream/). Let's look at the data from August.
+
+```{r}
+if (!file.exists("./data/20191101/clickstream-enwiki-2019-08.tsv")) {
+download.file(paste0("https://dumps.wikimedia.org/other/clickstream/2019-05",
+                     "/clickstream-enwiki-2019-08.tsv.gz"),
+              "./data/20191101/clickstream-enwike-2019-08.tsv.gz")
+R.utils::gunzip("./data/20191101/clickstream-enwiki-2019-08.tsv.gz")}
+
+data<-as.data.frame(fread( "./data/20191101/clickstream-enwiki-2019-08.tsv", encoding = "UTF-8"))
+head(data)
+```
+
+
+That data could be interesting to work with. Seems like the article on Jeffrey Epstein was top in August this year, as were some others:
+
+```{r}
+data %>% 
+  arrange(desc(V4)) %>% 
+  select(-V3, -V1) %>% 
+  mutate(row = row_number()) %>%
+  filter(!str_detect(V2, "Main", negate = FALSE)) %>% 
+  filter(!str_detect(V2, "Hyphen", negate = FALSE)) %>%
+    filter(!str_detect(V2, "Wikipedia", negate = FALSE)) %>% 
+  filter(!str_detect(V2, "Line_shaft", negate = FALSE)) %>% 
+  head()
+```
+
+The file has almost 32 millions rows and contains the clicks to and from articles on Wikipedia. Top clicks in August to the article of 'Vlaams Belang' for instance are:
+
+```{r}
+data %>% filter(V2 == "Vlaams_Belang") %>%
+  arrange(desc(V4)) %>% 
+  filter(V3 == "link") %>% 
+  select(-V3, -V4) %>% 
+  head() 
+  
+  
+```
+
+And top clicks from the article of 'Vlaams Belang' to other pages are: 
+
+```{r}
+data %>% filter(V1 == "Vlaams_Belang") %>%
+  arrange(desc(V4)) %>% 
+  select(-V3) %>% 
+  head()
+```
+
+
+```{r}
+data %>% filter(V1 == "2019_Belgian_federal_election") %>%
+  arrange(desc(V4)) %>% 
+  select(-V3, -V1) %>% 
+  mutate(row = row_number()) %>% 
+  head()
+  
+```
+
+Parties articles are at rows: 1, 2, 3, 5, 6, 8, 10, 12, 14, 15, 16, 18, 22, 28, 29, 38, 44. 
+
+```{r}
+parties <- data %>% filter(V1 == "2019_Belgian_federal_election") %>%
+  arrange(desc(V4)) %>% 
+  select(-V3, -V1) %>% 
+  mutate(row = row_number()) %>% 
+  slice(1:3,5,6,8,10, 12, 14, 15, 16, 18, 22, 28, 29) 
+#not 38 volt and  44 Pirate
+parties
+```
+
+Here we select all the links to and from the parties in that month. Remove the ones that were used less than 20 times and remove more generic articles that do not add information to the graph (because they link most pages).
+ 
+```{r message=FALSE, warning=FALSE}
+weak_links <- 20
+# filter out 'generic' pages
+pages <- c("Political_parties_in_Belgium",
+           #"2019_Belgian_federal_election", # keep to keep a united network
+           "Flemish_Parliament",
+           "2019_Belgian_regional_elections",
+           "2004_Belgian_regional_election",
+           "2014_Belgian_regional_elections",
+           "2014_Belgian_regional_election",
+           "2010_Belgian_federal_election",
+           "2014_Belgian_federal_elections",
+           "2018_Belgian_local_elections",
+           "2014_Belgian_federal_election",
+           "Parliament_of_Wallonia",
+           "Politics_of_Belgium",
+           "Opinion_polling_for_the_2019_Belgian_federal_election",
+           "Belgian_Federal_Parliament",
+           "2007_Belgian_federal_election",
+           "2003_Belgian_federal_election",
+           "Chamber_of_Representatives_(Belgium)",
+           "Senate_(Belgium)",
+           "2019_European_Parliament_election_in_Belgium",
+           "2014_European_Parliament_election_in_Belgium",
+           "2019_European_Parliament_election",
+           "Parliament_of_the_German-speaking_Community",
+           "Parliament_of_the_Brussels-Capital_Region",
+           "List_of_ruling_political_parties_by_country",
+           "Brussels",
+           "City_of_Brussels",
+           "Wallonia",
+           "Flemish_Region")
+
+data_from <- data %>% 
+  filter(V1 %in% parties$V2) 
+
+data_to <- data %>% 
+  filter(V2 %in% parties$V2)
+
+data_parties <- data_from %>% 
+  rbind(data_to) %>% 
+  filter(V3 == "link") %>% 
+  select(-V3) %>% 
+  filter(V4 > weak_links) %>% 
+  filter(!V1 %in% pages) %>% 
+  filter(!V2 %in% pages)
+
+# nodes 
+nodes <- as.data.frame(c(data_parties$V1, data_parties$V2)) %>% 
+  unique()
+names(nodes) <- "node"
+nodes <-  nodes %>% 
+  mutate(row = row_number()-1) %>% 
+  mutate(group = 1)
+
+# edges
+edges <- data_parties %>% 
+  left_join(nodes, by = c("V1" = "node")) %>% 
+  rename("from" = "row") %>% 
+  left_join(nodes, by = c("V2" = "node")) %>%
+  rename("to" = "row") %>% 
+  select(-V1, -V2) %>% 
+  mutate(value = 1) %>% 
+  select(-group.y) %>% 
+  rename("group" = "group.x") %>% 
+  select("from", "to", "group","value", "V4") %>% 
+  mutate(v5 = log(V4/25))
+
+# Create a graph. Use simplyfy to ensure that there are no duplicated edges or self loops
+gD <- igraph::simplify(igraph::graph.data.frame(edges, directed=FALSE))
+
+nodes$degree <- degree(gD, v = V(gD))*10
+
+# thanks to http://www.vesnam.com/Rblog/viznets6/
+network_wiki <-
+  forceNetwork(
+    Links = edges,
+    Nodes = nodes,
+    Source = "from",
+    Target = "to",
+    Value = "value",
+    NodeID = "node",
+    Nodesize = "degree",
+    Group = "group",
+    linkDistance = networkD3::JS("function(d) { return 100*d.value; }"), 
+    linkWidth = networkD3::JS("function(d) { return 2*d.value; }"),
+    arrows = TRUE,
+    radiusCalculation = JS("Math.sqrt(d.nodesize)+1"),
+    zoom = TRUE,
+    opacityNoHover = 3,
+    height = 560,
+    width = "100%",
+    legend = FALSE
+  )
+
+network_wiki
+```
+
+
+```{r}
+if (!file.exists("./data/20191101/clickstream-enwiki-2019-05.tsv")) {
+download.file(paste0("https://dumps.wikimedia.org/other/clickstream/2019-05/",
+                     "clickstream-enwiki-2019-05.tsv.gz")
+              ,"./data/20191101/clickstream-enwike-2019-05.tsv.gz")
+R.utils::gunzip("./data/20191101/clickstream-enwiki-2019-05.tsv.gz")}
+
+data_2019_05 <-as.data.frame(fread( "./data/20191101/clickstream-enwiki-2019-05.tsv", 
+                                    encoding = "UTF-8", quote = ""))
+```
+
+Since this is election month the graph is similar but denser. 
+
+```{r}
+weak_links <- 35
+
+data_from <- data_2019_05 %>% 
+  filter(V1 %in% parties$V2) 
+
+data_to <- data_2019_05 %>% 
+  filter(V2 %in% parties$V2)
+
+data_parties <- data_from %>% 
+  rbind(data_to) %>% 
+  filter(V3 == "link") %>% 
+  select(-V3) %>% 
+  filter(V4 > weak_links) %>% 
+  filter(!V1 %in% pages) %>% 
+  filter(!V2 %in% pages)
+  
+# nodes 
+
+nodes <- as.data.frame(c(data_parties$V1, data_parties$V2)) %>% 
+  unique()
+names(nodes) <- "node"
+nodes <-  nodes %>% 
+  mutate(row = row_number()-1) %>% 
+  mutate(group = 1)
+
+# edges
+edges <- data_parties %>% 
+  left_join(nodes, by = c("V1" = "node")) %>% 
+  rename("from" = "row") %>% 
+  left_join(nodes, by = c("V2" = "node")) %>%
+  rename("to" = "row") %>% 
+  select(-V1, -V2) %>% 
+  mutate(value = 1) %>% 
+  select(-group.y) %>% 
+  rename("group" = "group.x") %>% 
+  select("from", "to", "group","value", "V4") %>%
+  mutate(v5 = log(V4/25))
+
+# Create a graph. Use simplyfy to ensure that there are no duplicated edges or self loops
+gD <- igraph::simplify(igraph::graph.data.frame(edges, directed=FALSE))
+
+nodes$degree <- degree(gD, v = V(gD))*10
+
+network_wiki <-
+  forceNetwork(
+    Links = edges,
+    Nodes = nodes,
+    Source = "from",
+    Target = "to",
+    Value = "value",
+    #Value = "v5",
+    NodeID = "node",
+    Nodesize = "degree",
+    Group = "group",
+    linkDistance = networkD3::JS("function(d) { return 100*d.value; }"), 
+    linkWidth = networkD3::JS("function(d) { return 2*d.value; }"),
+    arrows = TRUE,
+    radiusCalculation = JS("Math.sqrt(d.nodesize)+1"),
+    zoom = TRUE,
+    opacityNoHover = 3,
+    height = 560,
+    width = "100%",
+    legend = FALSE
+  )
+
+network_wiki
+
+```
+
+And on this bombshell, see you for the next post!

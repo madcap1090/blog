@@ -507,5 +507,5 @@ visNetwork(nodes, edges, height = "800px", width = "100%") %>%
 ```
 
 
-The visualisation function also takes into account the groups that we created and tends to push them slightly appart to partially avoid the network fur ball effect. Zooming in is a possibilty as is clicking and draging indiviual accounts. 
+The visualisation function also takes into account the groups that we created and tends to push them slightly apart to partially avoid the network fur ball effect. Zooming in is a possibilty as is clicking and draging indiviual accounts. 
 
