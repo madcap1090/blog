@@ -1,0 +1,295 @@
+---
+title: The Belgian beer landscape
+author: William Bourgeois
+date: '2019-11-12'
+slug: the-belgian-beer-landscape
+categories: []
+tags:
+  - Beers
+  - scraping
+  - Geocoding
+---
+
+
+More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let's see if we can reproduce the analysis and push it a bit further in the next couple of posts. Both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site's members.
+
+
+Here are some of the libraries we will use:
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+library("rvest")
+library("tidyverse")
+library("glue")     # to construct them urls
+library("stringi")  # some text cleaning
+library("broom")    # transformation to df
+library("ggmap")    # for geocoding
+```
+
+We can start by scraping the data on all the Belgian breweries and their location. A first new hurdle is that now the [website](https://www.beeradvocate.com/) needs you to register. This complicates the scraping a bit, because we need to use a session instead of just downloading data. 
+
+```{r include=FALSE, results='hide'}
+secrets <- readRDS("./data/20191112/secrets.rds")
+login <- as.character(secrets$login[1])
+password <- as.character(secrets$pass[1])
+```
+
+So if you want to reproduce the code, you will have to use your credentials to open a session. It took me a while to understand that the jump_to() rvest function using a session is the equivalent of the html() function.
+
+```{r}
+url <- "https://www.beeradvocate.com/community/"
+my_session <- html_session(url) #Create a persistant session
+unfilled_forms <- html_form(my_session) # find all forms in the web page
+login_form <- unfilled_forms[[1]] # select the form you need to fill
+filled_form <- set_values(login_form,login=login,password=password) # fill the form
+
+page <- submit_form(my_session, filled_form) %>%
+  jump_to("https://www.beeradvocate.com/place/list/?start=0&c_id=BE&brewery=Y&sort=name") %>%
+  read_html() 
+
+number_of_pages <- page %>% 
+  html_node("span b") %>% 
+  html_text() %>% 
+  print()
+
+```
+
+The message 'submitting with NULL' is ok. The submission was not named and so we get the 'NULL'. On this first page we also get to know that there are more than 400 Belgian breweries on the website. 
+
+```{r}
+number_of_breweries <- as.numeric(sub("(?i).*out of .*?(\\d+).*","\\1",number_of_pages))
+number_of_pages <- (number_of_breweries %/% 20)+1 # 20 breweries per page
+number_of_pages
+```
+
+
+So we have 21 pages to scrape. Let's go!
+
+```{r, eval=FALSE}
+## prepare loop
+brews <- tibble(breweries = as.character(),adress = as.character(),score = as.numeric(),
+                ratings = as.numeric(),beer_avg = as.numeric(),beers = as.numeric())
+
+url <- "https://www.beeradvocate.com/community/"
+my_session <- html_session(url) #Create a persistant session
+unfilled_forms <- html_form(my_session) # find all forms in the web page
+login_form <- unfilled_forms[[1]] # select the form you need to fill
+filled_form <- set_values(login_form,login=login,password=password) # fill the form
+session <- submit_form(my_session, filled_form)
+
+## loop
+for(i in 1:number_of_pages){
+pages <- (i-1)*20 # start number for the url that needs to be constructed
+url <- glue("https://www.beeradvocate.com/place/list/",
+            "?start={pages}&c_id=BE&brewery=Y&sort=name") 
+print(url)
+
+page <- session %>%
+  jump_to(url) %>%
+  read_html()
+
+breweries <- page %>%
+  html_nodes("#ba-content a b") %>%
+  html_text()%>%
+  print()
+
+adress <- page %>%
+  html_nodes(".hr_bottom_dark:nth-child(1)") %>%
+  html_text() %>% 
+  str_replace ("(Belgium).*","\\1") %>%
+  str_replace ("Belgium"," Belgium") %>%
+  print()
+
+score <- page %>%
+  html_nodes(".hr_bottom_light:nth-child(2) b") %>%
+  html_text() %>% 
+  as.numeric() %>%
+  print ()
+
+ratings <- page %>%
+  html_nodes(".hr_bottom_light:nth-child(3) b") %>%
+  html_text() %>% 
+  as.numeric() %>%
+  print()
+
+beer_avg<- page %>%
+  html_nodes(".hr_bottom_light:nth-child(4) b") %>%
+  html_text() %>% 
+  as.numeric() %>%
+  print()
+
+beers<- page %>%
+  html_nodes(".hr_bottom_light:nth-child(5) b") %>%
+  html_text() %>% 
+  as.numeric() %>%
+  print()
+
+brews <- add_row(brews,breweries,adress,score,ratings,beer_avg,beers)
+
+Sys.sleep(5) # let's take it slow 
+
+}
+```
+
+Nice. We have data on the 412 breweries. 
+
+```{r include=FALSE}
+brews <-  readRDS("./data/20191112/breweries.rds")
+```
+
+Say we are interested in the number of different beers that are being brewed by postal code in Belgium. We would need to extract the postal code from the address: 
+
+```{r}
+final_pc <- brews %>% 
+  mutate(pc = stri_extract_last_regex(adress,"\\d{4}"))
+```
+
+And calculate the number of beers per postal code:
+
+```{r}
+final_pc %>% group_by(pc) %>% 
+  summarise(sum = sum(beers)) %>% 
+  arrange(desc(sum)) %>% 
+  head()
+```
+
+If we want to plot that info on a map, we will need to import some more data and more  specifically from the r package developed by Jan Wijfels containing Belgian administrative boundaries. 
+
+```{r message=FALSE, warning=FALSE}
+library("sp")
+library("BelgiumMaps.StatBel") # load library, install first if needed
+data("BE_ADMIN_MUNTY") # load geographic dataset on municipality level
+```
+
+I also got some inspiration from [this](https://github.com/aaumaitre/maps_Spain/blob/master/README.md) excellent blog post. 
+
+```{r warning=FALSE}
+beer_data <- final_pc %>% group_by(pc) %>% 
+  summarise(sum = sum(beers))
+
+sf_local <- tidy(BE_ADMIN_MUNTY)
+
+local_df_2 <- data.frame(BE_ADMIN_MUNTY@data[["CD_MUNTY_REFNIS"]]) %>% 
+  cbind(unique(sf_local$id))
+
+names(local_df_2) <- c("nis","id")
+
+# there needs to be a mapping between nis codes and postal codes
+# csv can be downloaded here 
+# https://kuleuven.app.box.com/v/be-geomapping-v2/
+# see # https://mhermans.net/files/r/be_geomapping/20170226_example_mapping_postcode.html
+
+mapping <- read_csv(file = './data/20191112/20170224_mapping_municipalities.csv', 
+  col_types = 'ccccccccccccc') 
+
+beer_data$municipality_nis_code = mapping$municipality_nis_code[
+  match(beer_data$pc, mapping$postcode)]
+
+sf_local <- sf_local %>% 
+  left_join(local_df_2) %>% 
+  left_join(beer_data, by = c("nis" = "municipality_nis_code"))
+
+sf_local%>%
+  ggplot(aes(x=long, y = lat, group = group))+
+  geom_polygon(aes(fill=sum), color = "black", size = 0.1)+
+    labs(title="Beers per municipality",
+       subtitle="number of different beers per postal code, Belgium 2019",
+       caption = "madcap1090 - data: weratebeer.com")+
+  scale_fill_continuous(low="lightblue", high="darkblue", 
+                         guide="colorbar",na.value="white")+
+  coord_fixed(ratio = 1.57)+
+  theme_minimal()
+
+```
+
+So this was using the postal code. What would the results look like using geo-coding?
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+secrets <- readRDS("~/R/geo/secret/secrets.rds")
+key <- secrets$key[1]
+register_google(key = key)
+geo <- geocode(location = brews$adress, output="latlon")
+brews$lon <- geo$lon
+brews$lat <- geo$lat
+```
+
+```{r include=FALSE}
+#saveRDS(brews, "./data/20191112/breweries_geo.rds")
+brews <-  readRDS("./data/20191112/breweries_geo.rds")
+```
+
+
+There might be inaccurate results, but there was only one error returned:
+
+```{r}
+brews %>% filter(is.na(lat)) 
+```
+
+Probably because of the encoding error.
+
+```{r message=FALSE, warning=FALSE}
+leffe <- brews %>% filter(is.na(lat)) %>% 
+  mutate(adress = "Place de l'Abbaye 1 Dinant, 5500 Belgium")
+geo <- geocode(location = leffe$adress, output="latlon")
+leffe$lon <- geo$lon
+leffe$lat <- geo$lat
+brews <- brews %>%
+  filter(!is.na(lat)) %>% 
+  rbind(leffe) %>% 
+  arrange(breweries)
+
+```
+
+Here is at least one mistake:
+
+```{r}
+brews %>% filter(lon < 0) 
+```
+
+Fine beers by the way. The Tartaruga website says the beers are currently brewed at De Ranke brewery (excellent beers btw) in Dottignies.
+
+```{r message=FALSE, warning=FALSE}
+tartaruga <- brews %>% filter(lon < 0) %>% 
+  mutate(adress = "Rue Du Petit Tourcoing 1a,  7711 Dottignies")
+geo <- geocode(location = leffe$adress, output="latlon")
+tartaruga$lon <- geo$lon
+tartaruga$lat <- geo$lat
+brews <- brews %>%
+  filter(lon > 0) %>% 
+  rbind(tartaruga) %>% 
+  arrange(breweries)
+
+```
+
+
+
+```{r}
+brews %>% 
+  ggplot(aes(x = lon, y = lat))+
+  geom_point(size = brews$beers/12)
+```
+
+
+Might be better on a map:
+
+```{r message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
+bbox <- make_bbox(brews$lon, brews$lat, f= 0.03)
+belgium <- get_map(bbox, maptype = "toner", 
+                   color = "bw", source = "google")
+
+
+ggmap(belgium)+ 
+  geom_point(data = brews, aes(x = lon, y = lat),
+             alpha = 0.4, color = "#FC4E07", size = brews$beers/3)  
+
+```
+That's it for this post. Next we will be trying to analyse beer reviews like this one: 
+
+"Poured a cloudy golden with a lively persistent foam that yielded a whipped cream-like three-finger head. The aroma was earthy with a sweet, straw-like component. The taste was earthy and sweet with an assertive but not overpowering hops presence. The beer has a very nice round and smooth body. Overall, a winner!"
+
+Stay thirsty!
+
+
+* To cite ggmap in publications, please use:
+D. Kahle and H. Wickham. ggmap: Spatial Visualization with ggplot2. The R Journal, 5(1), 144-161. URL http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf
+
+

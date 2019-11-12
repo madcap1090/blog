@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>The Belgian beer landscape | bad to the code</title>
+
+<meta property='og:title' content='The Belgian beer landscape - bad to the code'>
+<meta property='og:description' content='More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts. Both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.'>
+<meta property='og:url' content='/post/the-belgian-beer-landscape/'>
+<meta property='og:site_name' content='bad to the code'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='Beers'><meta property='article:tag' content='scraping'><meta property='article:tag' content='Geocoding'><meta property='article:published_time' content='2019-11-12T00:00:00Z'/><meta property='article:modified_time' content='2019-11-12T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
+
+
+<link href="/index.xml" rel="alternate" type="application/rss+xml" title="bad to the code" />
+
+<link rel="stylesheet" href="/css/style.css"/><link rel='stylesheet' href='/css/custom.css'><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="theme-color" content="#ffffff">
+</head>
+<body>
+<section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="/">
+          <h1 class="title is-4">bad to the code</h1>
+        </a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile"><a class="level-item" aria-label="facebook" href='https://facebook.com/OClassicoOficial/videos/391802167961744/'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="email" href='mailto:madcap1090@gmail.com'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="linkedin" href='https://linkedin.com/in/williambourgeois'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path stroke-width="1.8" d="m5.839218,4.101561c0,1.211972 -0.974141,2.194011 -2.176459,2.194011s-2.176459,-0.982039 -2.176459,-2.194011c0,-1.211094 0.974141,-2.194011 2.176459,-2.194011s2.176459,0.982917 2.176459,2.194011zm0.017552,3.94922l-4.388022,0l0,14.04167l4.388022,0l0,-14.04167zm7.005038,0l-4.359939,0l0,14.04167l4.360816,0l0,-7.370999c0,-4.098413 5.291077,-4.433657 5.291077,0l0,7.370999l4.377491,0l0,-8.89101c0,-6.915523 -7.829986,-6.66365 -9.669445,-3.259423l0,-1.891237z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="twitter" href='https://twitter.com/WilliamBourgeoi'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="github" href='https://github.com/madcap1090'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+    
+  </svg></i>
+            </span>
+          </a></nav>
+      </div>
+    </nav>
+
+    <nav class="nav">
+      
+
+      
+    </nav>
+
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="subtitle tags is-6 is-pulled-right">
+      
+      
+<a class="subtitle is-6" href="/tags/beers">#Beers</a>
+
+
+
+  
+  | <a class="subtitle is-6" href="/tags/scraping">#scraping</a>
+  
+  | <a class="subtitle is-6" href="/tags/geocoding">#Geocoding</a>
+  
+
+      
+    </div>
+    <h2 class="subtitle is-6">November 12, 2019</h2>
+    <h1 class="title">The Belgian beer landscape</h1>
+    
+    <div class="content">
+      
+
+
+<p>More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts. Both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.</p>
+<p>Here are some of the libraries we will use:</p>
+<pre class="r"><code>library(&quot;rvest&quot;)
+library(&quot;tidyverse&quot;)
+library(&quot;glue&quot;)     # to construct them urls
+library(&quot;stringi&quot;)  # some text cleaning
+library(&quot;broom&quot;)    # transformation to df
+library(&quot;ggmap&quot;)    # for geocoding</code></pre>
+<p>We can start by scraping the data on all the Belgian breweries and their location. A first new hurdle is that now the <a href="https://www.beeradvocate.com/">website</a> needs you to register. This complicates the scraping a bit, because we need to use a session instead of just downloading data.</p>
+<p>So if you want to reproduce the code, you will have to use your credentials to open a session. It took me a while to understand that the jump_to() rvest function using a session is the equivalent of the html() function.</p>
+<pre class="r"><code>url &lt;- &quot;https://www.beeradvocate.com/community/&quot;
+my_session &lt;- html_session(url) #Create a persistant session
+unfilled_forms &lt;- html_form(my_session) # find all forms in the web page
+login_form &lt;- unfilled_forms[[1]] # select the form you need to fill
+filled_form &lt;- set_values(login_form,login=login,password=password) # fill the form
+
+page &lt;- submit_form(my_session, filled_form) %&gt;%
+  jump_to(&quot;https://www.beeradvocate.com/place/list/?start=0&amp;c_id=BE&amp;brewery=Y&amp;sort=name&quot;) %&gt;%
+  read_html() </code></pre>
+<pre><code>## Submitting with &#39;NULL&#39;</code></pre>
+<pre class="r"><code>number_of_pages &lt;- page %&gt;% 
+  html_node(&quot;span b&quot;) %&gt;% 
+  html_text() %&gt;% 
+  print()</code></pre>
+<pre><code>## [1] &quot;Results: 1 to 20 (out of 412):&quot;</code></pre>
+<p>The message ‘submitting with NULL’ is ok. The submission was not named and so we get the ‘NULL’. On this first page we also get to know that there are more than 400 Belgian breweries on the website.</p>
+<pre class="r"><code>number_of_breweries &lt;- as.numeric(sub(&quot;(?i).*out of .*?(\\d+).*&quot;,&quot;\\1&quot;,number_of_pages))
+number_of_pages &lt;- (number_of_breweries %/% 20)+1 # 20 breweries per page
+number_of_pages</code></pre>
+<pre><code>## [1] 21</code></pre>
+<p>So we have 21 pages to scrape. Let’s go!</p>
+<pre class="r"><code>## prepare loop
+brews &lt;- tibble(breweries = as.character(),adress = as.character(),score = as.numeric(),
+                ratings = as.numeric(),beer_avg = as.numeric(),beers = as.numeric())
+
+url &lt;- &quot;https://www.beeradvocate.com/community/&quot;
+my_session &lt;- html_session(url) #Create a persistant session
+unfilled_forms &lt;- html_form(my_session) # find all forms in the web page
+login_form &lt;- unfilled_forms[[1]] # select the form you need to fill
+filled_form &lt;- set_values(login_form,login=login,password=password) # fill the form
+session &lt;- submit_form(my_session, filled_form)
+
+## loop
+for(i in 1:number_of_pages){
+pages &lt;- (i-1)*20 # start number for the url that needs to be constructed
+url &lt;- glue(&quot;https://www.beeradvocate.com/place/list/&quot;,
+            &quot;?start={pages}&amp;c_id=BE&amp;brewery=Y&amp;sort=name&quot;) 
+print(url)
+
+page &lt;- session %&gt;%
+  jump_to(url) %&gt;%
+  read_html()
+
+breweries &lt;- page %&gt;%
+  html_nodes(&quot;#ba-content a b&quot;) %&gt;%
+  html_text()%&gt;%
+  print()
+
+adress &lt;- page %&gt;%
+  html_nodes(&quot;.hr_bottom_dark:nth-child(1)&quot;) %&gt;%
+  html_text() %&gt;% 
+  str_replace (&quot;(Belgium).*&quot;,&quot;\\1&quot;) %&gt;%
+  str_replace (&quot;Belgium&quot;,&quot; Belgium&quot;) %&gt;%
+  print()
+
+score &lt;- page %&gt;%
+  html_nodes(&quot;.hr_bottom_light:nth-child(2) b&quot;) %&gt;%
+  html_text() %&gt;% 
+  as.numeric() %&gt;%
+  print ()
+
+ratings &lt;- page %&gt;%
+  html_nodes(&quot;.hr_bottom_light:nth-child(3) b&quot;) %&gt;%
+  html_text() %&gt;% 
+  as.numeric() %&gt;%
+  print()
+
+beer_avg&lt;- page %&gt;%
+  html_nodes(&quot;.hr_bottom_light:nth-child(4) b&quot;) %&gt;%
+  html_text() %&gt;% 
+  as.numeric() %&gt;%
+  print()
+
+beers&lt;- page %&gt;%
+  html_nodes(&quot;.hr_bottom_light:nth-child(5) b&quot;) %&gt;%
+  html_text() %&gt;% 
+  as.numeric() %&gt;%
+  print()
+
+brews &lt;- add_row(brews,breweries,adress,score,ratings,beer_avg,beers)
+
+Sys.sleep(5) # let&#39;s take it slow 
+
+}</code></pre>
+<p>Nice. We have data on the 412 breweries.</p>
+<p>Say we are interested in the number of different beers that are being brewed by postal code in Belgium. We would need to extract the postal code from the address:</p>
+<pre class="r"><code>final_pc &lt;- brews %&gt;% 
+  mutate(pc = stri_extract_last_regex(adress,&quot;\\d{4}&quot;))</code></pre>
+<p>And calculate the number of beers per postal code:</p>
+<pre class="r"><code>final_pc %&gt;% group_by(pc) %&gt;% 
+  summarise(sum = sum(beers)) %&gt;% 
+  arrange(desc(sum)) %&gt;% 
+  head()</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   pc      sum
+##   &lt;chr&gt; &lt;dbl&gt;
+## 1 9940    123
+## 2 9080    107
+## 3 9000    104
+## 4 1650     98
+## 5 9090     95
+## 6 8552     86</code></pre>
+<p>If we want to plot that info on a map, we will need to import some more data and more specifically from the r package developed by Jan Wijfels containing Belgian administrative boundaries.</p>
+<pre class="r"><code>library(&quot;sp&quot;)
+library(&quot;BelgiumMaps.StatBel&quot;) # load library, install first if needed
+data(&quot;BE_ADMIN_MUNTY&quot;) # load geographic dataset on municipality level</code></pre>
+<p>I also got some inspiration from <a href="https://github.com/aaumaitre/maps_Spain/blob/master/README.md">this</a> excellent blog post.</p>
+<pre class="r"><code>beer_data &lt;- final_pc %&gt;% group_by(pc) %&gt;% 
+  summarise(sum = sum(beers))
+
+sf_local &lt;- tidy(BE_ADMIN_MUNTY)</code></pre>
+<pre><code>## Regions defined for each Polygons</code></pre>
+<pre class="r"><code>local_df_2 &lt;- data.frame(BE_ADMIN_MUNTY@data[[&quot;CD_MUNTY_REFNIS&quot;]]) %&gt;% 
+  cbind(unique(sf_local$id))
+
+names(local_df_2) &lt;- c(&quot;nis&quot;,&quot;id&quot;)
+
+# there needs to be a mapping between nis codes and postal codes
+# csv can be downloaded here 
+# https://kuleuven.app.box.com/v/be-geomapping-v2/
+# see # https://mhermans.net/files/r/be_geomapping/20170226_example_mapping_postcode.html
+
+mapping &lt;- read_csv(file = &#39;./data/20191112/20170224_mapping_municipalities.csv&#39;, 
+  col_types = &#39;ccccccccccccc&#39;) 
+
+beer_data$municipality_nis_code = mapping$municipality_nis_code[
+  match(beer_data$pc, mapping$postcode)]
+
+sf_local &lt;- sf_local %&gt;% 
+  left_join(local_df_2) %&gt;% 
+  left_join(beer_data, by = c(&quot;nis&quot; = &quot;municipality_nis_code&quot;))</code></pre>
+<pre><code>## Joining, by = &quot;id&quot;</code></pre>
+<pre class="r"><code>sf_local%&gt;%
+  ggplot(aes(x=long, y = lat, group = group))+
+  geom_polygon(aes(fill=sum), color = &quot;black&quot;, size = 0.1)+
+    labs(title=&quot;Beers per municipality&quot;,
+       subtitle=&quot;number of different beers per postal code, Belgium 2019&quot;,
+       caption = &quot;madcap1090 - data: weratebeer.com&quot;)+
+  scale_fill_continuous(low=&quot;lightblue&quot;, high=&quot;darkblue&quot;, 
+                         guide=&quot;colorbar&quot;,na.value=&quot;white&quot;)+
+  coord_fixed(ratio = 1.57)+
+  theme_minimal()</code></pre>
+<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>So this was using the postal code. What would the results look like using geo-coding?</p>
+<pre class="r"><code>secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;)
+key &lt;- secrets$key[1]
+register_google(key = key)
+geo &lt;- geocode(location = brews$adress, output=&quot;latlon&quot;)
+brews$lon &lt;- geo$lon
+brews$lat &lt;- geo$lat</code></pre>
+<p>There might be inaccurate results, but there was only one error returned:</p>
+<pre class="r"><code>brews %&gt;% filter(is.na(lat)) </code></pre>
+<pre><code>## # A tibble: 1 x 8
+##   breweries     adress             score ratings beer_avg beers   lon   lat
+##   &lt;chr&gt;         &lt;chr&gt;              &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 Abbaye de Le~ &quot;Place de l\u0092~    NA      NA     3.67    23    NA    NA</code></pre>
+<p>Probably because of the encoding error.</p>
+<pre class="r"><code>leffe &lt;- brews %&gt;% filter(is.na(lat)) %&gt;% 
+  mutate(adress = &quot;Place de l&#39;Abbaye 1 Dinant, 5500 Belgium&quot;)
+geo &lt;- geocode(location = leffe$adress, output=&quot;latlon&quot;)
+leffe$lon &lt;- geo$lon
+leffe$lat &lt;- geo$lat
+brews &lt;- brews %&gt;%
+  filter(!is.na(lat)) %&gt;% 
+  rbind(leffe) %&gt;% 
+  arrange(breweries)</code></pre>
+<p>Here is at least one mistake:</p>
+<pre class="r"><code>brews %&gt;% filter(lon &lt; 0) </code></pre>
+<pre><code>## # A tibble: 1 x 8
+##   breweries      adress            score ratings beer_avg beers   lon   lat
+##   &lt;chr&gt;          &lt;chr&gt;             &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 Tartaruga Fin~ Patrizio Stefane~    NA      NA     3.76     6 -87.3  30.5</code></pre>
+<p>Fine beers by the way. The Tartaruga website says the beers are currently brewed at De Ranke brewery (excellent beers btw) in Dottignies.</p>
+<pre class="r"><code>tartaruga &lt;- brews %&gt;% filter(lon &lt; 0) %&gt;% 
+  mutate(adress = &quot;Rue Du Petit Tourcoing 1a,  7711 Dottignies&quot;)
+geo &lt;- geocode(location = leffe$adress, output=&quot;latlon&quot;)
+tartaruga$lon &lt;- geo$lon
+tartaruga$lat &lt;- geo$lat
+brews &lt;- brews %&gt;%
+  filter(lon &gt; 0) %&gt;% 
+  rbind(tartaruga) %&gt;% 
+  arrange(breweries)</code></pre>
+<pre class="r"><code>brews %&gt;% 
+  ggplot(aes(x = lon, y = lat))+
+  geom_point(size = brews$beers/12)</code></pre>
+<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>Might be better on a map:</p>
+<pre class="r"><code>bbox &lt;- make_bbox(brews$lon, brews$lat, f= 0.03)
+belgium &lt;- get_map(bbox, maptype = &quot;toner&quot;, 
+                   color = &quot;bw&quot;, source = &quot;google&quot;)
+
+
+ggmap(belgium)+ 
+  geom_point(data = brews, aes(x = lon, y = lat),
+             alpha = 0.4, color = &quot;#FC4E07&quot;, size = brews$beers/3)  </code></pre>
+<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-18-1.png" width="960" />
+That’s it for this post. Next we will be trying to analyse beer reviews like this one:</p>
+<p>“Poured a cloudy golden with a lively persistent foam that yielded a whipped cream-like three-finger head. The aroma was earthy with a sweet, straw-like component. The taste was earthy and sweet with an assertive but not overpowering hops presence. The beer has a very nice round and smooth body. Overall, a winner!”</p>
+<p>Stay thirsty!</p>
+<ul>
+<li>To cite ggmap in publications, please use:
+D. Kahle and H. Wickham. ggmap: Spatial Visualization with ggplot2. The R Journal, 5(1), 144-161. URL <a href="http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf" class="uri">http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf</a></li>
+</ul>
+
+      
+      <div class="related">
+
+<h3>Similar articles:</h3>
+<ul>
+	
+	<li><a href="/post/metallica-rules-the-world/">Metallica rules the world</a></li>
+	
+	<li><a href="/post/analysing-belgian-politics-with-wikipedia/">Analysing Belgian Politics with Wikipedia</a></li>
+	
+	<li><a href="/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures/">members of the chamber of representatives of Belgium, 55th legistlature, in pictures</a></li>
+	
+	<li><a href="/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature/">members of the chamber of representatives of Belgium, 55th legistlature</a></li>
+	
+	<li><a href="/post/belgian-may-election-results-are-published-on-wikipedia/">Belgian May election results are published on Wikipedia</a></li>
+	
+</ul>
+</div>
+      
+    </div>
+    
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container">
+    <aside><div id="disqus_thread"></div></aside>
+  
+    <div id="show_comments"><a id="load_comments" class="button is-link">Load comments</a></div>
+  
+    <script type="text/javascript">
+      var disqus_shortname = 'bad-to-the-code';
+      function disqus() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+  
+      
+      var hash = window.location.hash.substr(1);
+      if ((hash.length > 8) && (hash.substring(0, 8) === "comment-")) {
+        disqus();
+        document.getElementById("show_comments").style.display = "none";
+      } else {
+        document.getElementById('load_comments').onclick = function() {
+          disqus();
+          document.getElementById("show_comments").style.display = "none";
+        };
+      }
+  
+
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/madcap1090">William Bourgeois</a> 2019</p>
+    
+      <p>Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/ribice/kiss">Kiss</a>.</p>
+    
+  </div>
+</section>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-137981534-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="\/\/matomo.example.com\/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript>
+  <img src="//matomo.example.com/piwik.php?idsite=1&amp;rec=1" style="border:0" alt="" />
+</noscript>
+
+
+</body>
+</html>
+
