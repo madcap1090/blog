@@ -11,7 +11,7 @@ tags:
 ---
 
 
-More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let's see if we can reproduce the analysis and push it a bit further in the next couple of posts. Both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site's members.
+More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let's see if we can reproduce the analysis and push it a bit further in the next couple of posts: both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site's members.
 
 
 Here are some of the libraries we will use:
@@ -154,15 +154,13 @@ final_pc %>% group_by(pc) %>%
 
 If we want to plot that info on a map, we will need to import some more data and more  specifically from the r package developed by Jan Wijfels containing Belgian administrative boundaries. 
 
-```{r message=FALSE, warning=FALSE}
+I also got some inspiration from [this](https://github.com/aaumaitre/maps_Spain/blob/master/README.md) excellent blog post. 
+
+```{r message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
 library("sp")
 library("BelgiumMaps.StatBel") # load library, install first if needed
 data("BE_ADMIN_MUNTY") # load geographic dataset on municipality level
-```
 
-I also got some inspiration from [this](https://github.com/aaumaitre/maps_Spain/blob/master/README.md) excellent blog post. 
-
-```{r warning=FALSE}
 beer_data <- final_pc %>% group_by(pc) %>% 
   summarise(sum = sum(beers))
 
@@ -239,7 +237,7 @@ brews <- brews %>%
 
 ```
 
-Here is at least one mistake:
+Here is at least one error:
 
 ```{r}
 brews %>% filter(lon < 0) 
@@ -275,8 +273,6 @@ Might be better on a map:
 bbox <- make_bbox(brews$lon, brews$lat, f= 0.03)
 belgium <- get_map(bbox, maptype = "toner", 
                    color = "bw", source = "google")
-
-
 ggmap(belgium)+ 
   geom_point(data = brews, aes(x = lon, y = lat),
              alpha = 0.4, color = "#FC4E07", size = brews$beers/3)  
