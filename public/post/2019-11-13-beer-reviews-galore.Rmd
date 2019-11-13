@@ -134,7 +134,7 @@ for(i in list_brewery_profiles) {
 beers <- readRDS("./data/20191113/breweries_beers_profiles.rds")
 ```
 
-And now for the monster loops that are going to give us the beef. The first part of the loop will take the detailed information of the beer and then we will use a loop inside the loop to gather all the reviews. It runs for half a day, so I made sure to regularly save the result and easily start the loop again after a crash. 
+And now for the bigger loops that are going to give us the beef. The first part of the loop will take the detailed information of the beer and then we will use a loop inside the loop to gather all the reviews. It runs for half a day, so I made sure to regularly save the result and easily start the loop again after a crash. 
 
 
 ```{r, eval=FALSE}
