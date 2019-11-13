@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>nlp on bad to the code</title>
+    <link>/tags/nlp/</link>
+    <description>Recent content in nlp on bad to the code</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
+    <lastBuildDate>Wed, 13 Nov 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/nlp/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Beer reviews galore!</title>
+      <link>/post/beer-reviews-galore/</link>
+      <pubDate>Wed, 13 Nov 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/beer-reviews-galore/</guid>
+      <description>I’ll be using some NLP tools soon, but let us first obtain texts to work with. The idea here is to construct a data frame with one row per Belgian beer and one list with all the reviews of that beer in one cell of that row. And that in order to have the data nice and tidy.
+In order to do that we will create a couple of loops.</description>
+    </item>
+    
+  </channel>
+</rss>

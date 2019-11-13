@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Tue, 12 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 13 Nov 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Beer reviews galore!</title>
+      <link>/post/beer-reviews-galore/</link>
+      <pubDate>Wed, 13 Nov 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/beer-reviews-galore/</guid>
+      <description>I’ll be using some NLP tools soon, but let us first obtain texts to work with. The idea here is to construct a data frame with one row per Belgian beer and one list with all the reviews of that beer in one cell of that row. And that in order to have the data nice and tidy.
+In order to do that we will create a couple of loops.</description>
+    </item>
     
     <item>
       <title>The Belgian beer landscape</title>
@@ -18,7 +28,7 @@
       <pubDate>Tue, 12 Nov 2019 00:00:00 +0000</pubDate>
       
       <guid>/post/the-belgian-beer-landscape/</guid>
-      <description>More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts. Both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.</description>
+      <description>More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts: both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.</description>
     </item>
     
     <item>

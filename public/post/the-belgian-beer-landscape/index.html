@@ -7,7 +7,7 @@
 <title>The Belgian beer landscape | bad to the code</title>
 
 <meta property='og:title' content='The Belgian beer landscape - bad to the code'>
-<meta property='og:description' content='More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts. Both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.'>
+<meta property='og:description' content='More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts: both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.'>
 <meta property='og:url' content='/post/the-belgian-beer-landscape/'>
 <meta property='og:site_name' content='bad to the code'>
 <meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='Beers'><meta property='article:tag' content='scraping'><meta property='article:tag' content='Geocoding'><meta property='article:published_time' content='2019-11-12T00:00:00Z'/><meta property='article:modified_time' content='2019-11-12T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
@@ -115,7 +115,7 @@
       
 
 
-<p>More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts. Both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.</p>
+<p>More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts: both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.</p>
 <p>Here are some of the libraries we will use:</p>
 <pre class="r"><code>library(&quot;rvest&quot;)
 library(&quot;tidyverse&quot;)
@@ -228,16 +228,17 @@ Sys.sleep(5) # let&#39;s take it slow
 ## 5 9090     95
 ## 6 8552     86</code></pre>
 <p>If we want to plot that info on a map, we will need to import some more data and more specifically from the r package developed by Jan Wijfels containing Belgian administrative boundaries.</p>
+<p>I also got some inspiration from <a href="https://github.com/aaumaitre/maps_Spain/blob/master/README.md">this</a> excellent blog post.</p>
 <pre class="r"><code>library(&quot;sp&quot;)
 library(&quot;BelgiumMaps.StatBel&quot;) # load library, install first if needed
-data(&quot;BE_ADMIN_MUNTY&quot;) # load geographic dataset on municipality level</code></pre>
-<p>I also got some inspiration from <a href="https://github.com/aaumaitre/maps_Spain/blob/master/README.md">this</a> excellent blog post.</p>
-<pre class="r"><code>beer_data &lt;- final_pc %&gt;% group_by(pc) %&gt;% 
+data(&quot;BE_ADMIN_MUNTY&quot;) # load geographic dataset on municipality level
+
+beer_data &lt;- final_pc %&gt;% group_by(pc) %&gt;% 
   summarise(sum = sum(beers))
 
-sf_local &lt;- tidy(BE_ADMIN_MUNTY)</code></pre>
-<pre><code>## Regions defined for each Polygons</code></pre>
-<pre class="r"><code>local_df_2 &lt;- data.frame(BE_ADMIN_MUNTY@data[[&quot;CD_MUNTY_REFNIS&quot;]]) %&gt;% 
+sf_local &lt;- tidy(BE_ADMIN_MUNTY)
+
+local_df_2 &lt;- data.frame(BE_ADMIN_MUNTY@data[[&quot;CD_MUNTY_REFNIS&quot;]]) %&gt;% 
   cbind(unique(sf_local$id))
 
 names(local_df_2) &lt;- c(&quot;nis&quot;,&quot;id&quot;)
@@ -255,9 +256,9 @@ beer_data$municipality_nis_code = mapping$municipality_nis_code[
 
 sf_local &lt;- sf_local %&gt;% 
   left_join(local_df_2) %&gt;% 
-  left_join(beer_data, by = c(&quot;nis&quot; = &quot;municipality_nis_code&quot;))</code></pre>
-<pre><code>## Joining, by = &quot;id&quot;</code></pre>
-<pre class="r"><code>sf_local%&gt;%
+  left_join(beer_data, by = c(&quot;nis&quot; = &quot;municipality_nis_code&quot;))
+
+sf_local%&gt;%
   ggplot(aes(x=long, y = lat, group = group))+
   geom_polygon(aes(fill=sum), color = &quot;black&quot;, size = 0.1)+
     labs(title=&quot;Beers per municipality&quot;,
@@ -267,7 +268,7 @@ sf_local &lt;- sf_local %&gt;%
                          guide=&quot;colorbar&quot;,na.value=&quot;white&quot;)+
   coord_fixed(ratio = 1.57)+
   theme_minimal()</code></pre>
-<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-9-1.png" width="960" /></p>
 <p>So this was using the postal code. What would the results look like using geo-coding?</p>
 <pre class="r"><code>secrets &lt;- readRDS(&quot;~/R/geo/secret/secrets.rds&quot;)
 key &lt;- secrets$key[1]
@@ -291,7 +292,7 @@ brews &lt;- brews %&gt;%
   filter(!is.na(lat)) %&gt;% 
   rbind(leffe) %&gt;% 
   arrange(breweries)</code></pre>
-<p>Here is at least one mistake:</p>
+<p>Here is at least one error:</p>
 <pre class="r"><code>brews %&gt;% filter(lon &lt; 0) </code></pre>
 <pre><code>## # A tibble: 1 x 8
 ##   breweries      adress            score ratings beer_avg beers   lon   lat
@@ -310,17 +311,15 @@ brews &lt;- brews %&gt;%
 <pre class="r"><code>brews %&gt;% 
   ggplot(aes(x = lon, y = lat))+
   geom_point(size = brews$beers/12)</code></pre>
-<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <p>Might be better on a map:</p>
 <pre class="r"><code>bbox &lt;- make_bbox(brews$lon, brews$lat, f= 0.03)
 belgium &lt;- get_map(bbox, maptype = &quot;toner&quot;, 
                    color = &quot;bw&quot;, source = &quot;google&quot;)
-
-
 ggmap(belgium)+ 
   geom_point(data = brews, aes(x = lon, y = lat),
              alpha = 0.4, color = &quot;#FC4E07&quot;, size = brews$beers/3)  </code></pre>
-<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-18-1.png" width="960" />
+<p><img src="/post/2019-11-12-the-belgian-beer-landscape_files/figure-html/unnamed-chunk-17-1.png" width="960" />
 That’s it for this post. Next we will be trying to analyse beer reviews like this one:</p>
 <p>“Poured a cloudy golden with a lively persistent foam that yielded a whipped cream-like three-finger head. The aroma was earthy with a sweet, straw-like component. The taste was earthy and sweet with an assertive but not overpowering hops presence. The beer has a very nice round and smooth body. Overall, a winner!”</p>
 <p>Stay thirsty!</p>

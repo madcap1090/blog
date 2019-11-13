@@ -1,0 +1,420 @@
+---
+title: Beer reviews galore!
+author: William Bourgeois
+date: '2019-11-13'
+slug: beer-reviews-galore
+categories: []
+tags:
+  - scraping
+  - nlp
+---
+
+
+I'll be using some NLP tools soon, but let us first obtain texts to work with. The idea here is to construct a data frame with one row per Belgian beer and one list with all the reviews of that beer in one cell of that row. And that in order to have the data nice and tidy. 
+
+In order to do that we will create a couple of loops.                                                                                                    
+
+Let's attach some libraries. 
+
+
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+library(tidyverse)
+library(rvest)
+library(stringr)
+library(glue)
+library(lubridate)
+library(DT)
+```
+
+
+First a loop to obtain all the Belgian breweries profile id numbers:
+
+```{r, eval=FALSE}
+# preparing loop
+secrets <- readRDS("~/R/dev_blog/content/post/data/20191109/secrets.rds")
+login <- as.character(secrets$login[1])
+password <- as.character(secrets$pass[1])
+
+url <- "https://www.beeradvocate.com/community/"
+my_session <- html_session(url) #Create a persistant session
+unfilled_forms <- html_form(my_session) # find all forms in the web page
+login_form <- unfilled_forms[[1]] # select the form you need to fill
+filled_form <- set_values(login_form,login=login,password=password) # fill the form
+session <- submit_form(my_session, filled_form)
+
+page <- session %>%
+  jump_to("https://www.beeradvocate.com/place/list/?start=0&c_id=BE&brewery=Y&sort=name") %>%
+  read_html() 
+
+number_of_pages <- page %>% 
+  html_node("span b") %>% 
+  html_text() %>% 
+  sub("(?i).*out of .*?(\\d+).*","\\1",.) %>% 
+  as.numeric() %>% 
+  '%/%' (20) %>% 
+  '+' (1) %>% 
+  print()
+
+list_brewery_profiles <- list()
+
+# loop
+
+for(i in 1:number_of_pages){
+  pages <- (i-1)*20
+  print(pages)
+  url <- glue("https://www.beeradvocate.com/place/","
+              list/?start={pages}&c_id=BE&brewery=Y&sort=name") 
+  profiles <- session %>%
+    jump_to(url) %>%
+    read_html() %>% 
+    html_nodes("tr td a")%>% 
+    html_attr('href') %>% 
+    str_subset(.,"profile") %>% 
+    str_remove_all(.,"beer/profile") %>% 
+    str_remove_all(.,"/")
+  list_brewery_profiles <- c(list_brewery_profiles,profiles)
+  Sys.sleep(5)
+}
+
+```
+
+How many profile id numbers do we have?
+
+```{r}
+#saveRDS(list_brewery_profiles, "./data/20191113/list_brewery_profiles.rds")
+list_brewery_profiles <- readRDS("./data/20191113/list_brewery_profiles.rds")
+length(list_brewery_profiles)
+```
+
+Cool. So now we can loop through all of them and obtain the beer ids since the urls we have to scrape have this pattern: https://www.beeradvocate.com/beer/profile/22233/252635/ where the first number is the brewery id and the second one the beer id. We will get the detailed info on the beers later on.
+
+
+```{r, eval=FALSE}
+# prepare loop
+beers <- data.frame()
+count <- 0
+
+# loop
+for(i in list_brewery_profiles) {
+  count <- count +1
+  print(count)
+  url <- glue("https://www.beeradvocate.com/beer/profile/{i}/")
+  print(url)
+  beer <- session %>% 
+    jump_to(url) %>% 
+    read_html() %>%
+    html_nodes("tr td a") %>% 
+    html_attr('href') %>% 
+    str_subset(.,"profile") %>%
+    str_subset(.,"view=beers", negate = TRUE) %>%
+    str_remove_all(.,"beer/profile") %>%
+    str_remove(.,i) %>% 
+    str_remove_all(.,"/") %>%
+    as.data.frame() 
+  if (nrow(beer)==0){next}  
+
+  beer <- beer %>% 
+    unique() %>%
+    na.omit() %>% 
+    rename("beer_id" =".") %>%
+    cbind(i) %>% 
+    rename("brewery_id" = "i")
+
+  beers <- rbind(beers, beer)
+
+  print(nrow(beer))
+  print(nrow(beers))
+  Sys.sleep(5)
+}
+```
+
+```{r include=FALSE}
+# saveRDS(beers, "./data/20191110/breweries_beers_profiles.rds")
+beers <- readRDS("./data/20191113/breweries_beers_profiles.rds")
+```
+
+And now for the monster loops that are going to give us the beef. The first part of the loop will take the detailed information of the beer and then we will use a loop inside the loop to gather all the reviews. It runs for half a day, so I made sure to regularly save the result and easily start the loop again after a crash. 
+
+
+```{r, eval=FALSE}
+# prepare the loop
+
+url <- "https://www.beeradvocate.com/community/"
+my_session <- html_session(url) #Create a persistant session
+unfilled_forms <- html_form(my_session) # find all forms in the web page
+login_form <- unfilled_forms[[1]] # select the form you need to fill
+filled_form <- set_values(login_form,login=login,password=password) # fill the form
+session <- submit_form(my_session, filled_form)
+
+
+#beers_details <- data.frame()
+if (file.exists("~/R/dev_blog/content/post/data/20191110/output.rds")){
+    output <- readRDS("~/R/dev_blog/content/post/data/20191110/output.rds")
+    start <- max(as.numeric(output$i))-1
+    beers_details <- output %>% 
+    filter(as.numeric(i) < start+1)  
+} else {
+  start <- 1
+  beers_details <- data.frame()
+}
+
+output <- readRDS("~/R/dev_blog/content/post/data/20191110/output.rds")
+start <- max(as.numeric(output$i))-1
+beers_details <- output %>% 
+  filter(as.numeric(i) < start+1)
+
+for (i in (start:nrow(beers))){
+  
+  ## get beer info
+  print(glue("this is beer {i}"))
+  url <- glue("https://www.beeradvocate.com/beer",
+              "/profile/{beers$brewery_id[i]}/",
+              "{beers$beer_id[i]}/")
+  page <- session %>% 
+    jump_to(url) %>% 
+    read_html()
+  
+  brewery <- page %>%
+    html_nodes("h1 span") %>%
+    html_text()%>%
+    unique() %>% 
+    print()
+
+  beer_name <- page %>%
+    html_nodes("div h1") %>%
+    html_text()%>%
+    unique() %>% 
+    str_remove(.,brewery) %>% 
+    print()
+
+  beer_type <- page %>%
+    html_nodes("#ba-content a b") %>%
+    html_text() %>% 
+    print()
+
+  general <- page %>%
+    html_nodes("dd a") %>%
+    html_text() %>% 
+    print()
+
+  ranked_overall <- general[6] %>% 
+    print()
+  
+  ranked_type <- general[5] %>% 
+    print()
+  
+  av_rating <- page %>%
+    html_nodes(".ba-ravg") %>%
+    html_text()%>%
+    print()
+
+  ratings <- page %>%
+    html_nodes(".ba-ratings") %>%
+    html_text()%>%
+    unique() %>% 
+    print()
+
+  pDev <- page %>%
+    html_nodes("dd:nth-child(8)") %>%
+    html_text()%>%
+    unique() %>% 
+    sub(".*pDev: ","",.) %>% 
+    print()
+  
+  n_reviews <- page %>% 
+    html_node(".ba-reviews") %>%
+    html_text()%>%
+    unique() %>% 
+    print()
+  
+  notes <- page %>% 
+    html_node("#ba-content > div:nth-child(8) > div:nth-child(3)") %>%
+    html_text()%>%
+    unique() %>% 
+    print()
+
+  beer_r_and_r <- list()
+
+  number_of_pages <- (as.numeric(gsub(",","",n_reviews)) %/% 25) + 1
+  
+    for(j in (1:number_of_pages)) {
+      print(glue("this is page {j} of {number_of_pages}"))
+      start <- (j-1)*25
+      print(start)
+      url <- glue("https://www.beeradvocate.com/beer/profile/",
+                  "{beers$brewery_id[i]}/{beers$beer_id[i]}/",
+                  "?sort=topr&start={start}")
+      print(url)
+      page <- session %>% 
+        jump_to(url) %>% 
+        read_html()
+      reviews <- page %>%
+        html_nodes("#rating_fullview_content_2") %>%
+        html_text()%>%
+        unique()
+      beer_r_and_r <-c(beer_r_and_r,reviews)
+      
+      Sys.sleep(4)
+
+    }
+
+      time <- Sys.time()
+      add_beer <- as.tibble(cbind(brewery, beer_name, beer_type, 
+                                  ranked_overall, ranked_type,
+                                  av_rating, ratings, pDev, n_reviews,
+                                  notes, i,timestamp = time,
+                                  comments = list(beer_r_and_r)))
+      
+      beers_details <- rbind(beers_details,add_beer)
+
+      name_file <- gsub("[[:punct:]]","",glue("output {Sys.time()}"))
+      
+      # since there might be some crashes it is better to regularly save results and
+      # make back ups just in case.
+      if (i %% 100 == 0) {saveRDS(beers_details,glue("./data/20191110/{name_file}.rds"))}
+      if (i %% 20 == 0) {saveRDS(beers_details,"./data/20191110/output.rds")}
+  
+    Sys.sleep(3)
+}
+
+# some duplicates to clean
+beers_detail <- beers_details %>%
+  mutate(i = as.character(i)) %>% 
+  distinct(i, .keep_all = TRUE)
+
+```
+
+```{r include=FALSE}
+#saveRDS(beers_detail, "./data/20191110/output_final_cleaned.rds")
+beers_detail <- readRDS("~/R/blogs/content/post/data/20191113/output_final_cleaned.rds")
+```
+
+Ha! Seems succesful. There are 106K reviews. Now that we have the data the real fun can begin.
+
+Lets look at a part of the data frame:
+
+```{r}
+datatable(beers_detail %>% 
+            select(-comments, -notes, -timestamp, -i, -pDev,
+                   -ranked_type) %>% 
+            slice(1000:1500), options = list(pageLength = 5),
+          class = 'cell-border stripe')
+
+```
+
+
+
+Hmm, it also seems I have produced too many lists in the data frame. Let's unnest all except for the comments. 
+
+```{r}
+beer_details <- unnest(beers_detail,cols = c(brewery, beer_name, beer_type, ranked_overall,
+                                              ranked_type, av_rating, ratings, pDev, 
+                                              n_reviews, notes, timestamp))
+                       
+```
+
+How are the different brews categorised in types of beers?
+
+```{r}
+df <- beer_details %>% 
+         group_by(beer_type) %>%
+         summarise(count = n()) %>%
+         filter(count>25) %>%
+         arrange(desc(count))
+
+ggplot(data=df, aes(x= reorder(beer_type,count), y=count)) +
+  geom_bar(stat="identity", width = 0.5, color="orange", fill ="lightblue")+
+  coord_flip()+
+  labs(title = "Beers by type produced in Belgium")+
+  theme_minimal() +
+  theme(axis.title.y=element_blank(),
+        axis.title.x=element_blank())
+```
+
+```{r}
+beers_detail %>% 
+  filter(!is.na(av_rating)) %>% 
+  mutate(av_rating = as.numeric(av_rating)) %>% 
+  summarise(mean(av_rating))
+```
+
+The average Belgian beer rating is 3.4. How are beer rated by type with the type containing a certain number of beers?
+
+```{r}
+
+df <- beer_details %>% 
+  mutate(av_rating = as.numeric(av_rating)) %>% 
+  group_by(beer_type) %>%
+  summarise(m_rating = mean(av_rating), count = n()) %>%
+  filter(count> 25) %>% 
+  filter(m_rating > 3 ) %>%
+  arrange(desc(m_rating))
+
+ggplot(data=df, aes(x= reorder(beer_type,m_rating), y=m_rating)) +
+  geom_bar(stat="identity", width = 0.5, color="orange", fill ="lightblue")+
+  geom_hline(yintercept = 3.422, linetype="dashed")+
+  geom_text(aes(0,3.42,label = "average rating", vjust = -20, hjust = 1.05), size = 3.5)+
+  coord_flip()+
+  labs(title = "Beers rated by type in Belgium")+
+  theme_minimal() +
+  theme(axis.title.y=element_blank(),
+        axis.title.x=element_blank())
+
+```
+
+Highest rated beers? With a minimum of reviews (25).
+
+```{r}
+df <- beer_details %>% 
+  mutate(beer_name = substr(beer_name,1,20)) %>% 
+  filter(n_reviews>25) %>% 
+  mutate(av_rating = as.numeric(av_rating)) %>% 
+  group_by(beer_name) %>%
+  summarise(m_rating = mean(av_rating)) %>% 
+  filter(m_rating > 4.4 ) %>%
+  arrange(desc(m_rating))
+
+ggplot(data=df, aes(x= reorder(beer_name,m_rating), y=m_rating)) +
+  geom_bar(stat="identity", width = 0.5, color="orange", fill ="lightblue")+
+  geom_hline(yintercept = 3.422, linetype="dashed")+
+  geom_text(aes(0,3.42,label = "average rating", vjust = -20, hjust = 1.05), size = 3.5)+
+  coord_flip()+
+  labs(title = "Highest rated Belgian beers")+
+  theme_minimal() +
+  theme(axis.title.y=element_blank(),
+        axis.title.x=element_blank())
+
+```
+
+There are clearly still some nice beers to explore...
+
+And finally, what are the top rated breweries (with a minimum of rated beers...)
+
+```{r}
+df <- beer_details %>% 
+  mutate(brewery = str_remove(brewery, "Brouwerij")) %>%
+  mutate(brewery = str_remove(brewery, "Brasserie")) %>% 
+  mutate(brewery = substr(brewery,1,30)) %>% 
+  filter(n_reviews>25) %>% 
+  mutate(av_rating = as.numeric(av_rating)) %>% 
+  group_by(brewery) %>%
+  summarise(m_rating = mean(av_rating)) %>% 
+  filter(m_rating > 4.00 ) %>%
+  arrange(desc(m_rating))
+
+ggplot(data=df, aes(x= reorder(brewery,m_rating), y=m_rating)) +
+  geom_bar(stat="identity", width = 0.5, color="orange", fill ="lightblue")+
+  coord_flip()+
+  labs(title = "Top rated Belgian breweries")+
+  theme_minimal() +
+  theme(axis.title.y=element_blank(),
+        axis.title.x=element_blank())
+
+```
+
+For a moment I was worried my current favorite brewery (De Ranke) would not be in the top. But they are :-).
+
+So no NLP on the reviews in this post yet, but now we have more than enough material and we'll get started in a future post. 
+
+All the best.
