@@ -1,0 +1,286 @@
+---
+title: tf_idf and beer reviews
+author: William Bourgeois
+date: '2019-11-17'
+slug: tf-idf-and-beer-reviews
+categories: []
+tags:
+  - Beers
+  - nlp
+---
+
+We have our data scraped from a beer website [see](https://badtothecode.netlify.com/post/beer-reviews-galore/). Where to start?
+
+Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (diffrences between categories of texts, whatever you might decide these categories to be)
+
+For every word in every 'category' it calculates the term frequency against the inverse document frequency. More [here](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
+
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("tidytext") # install.packages("tidytext")
+library("cld2")
+library("cld3") #install.packages("cld3")
+library("DT")
+library("ggrepel")
+library("plotly")
+library("viridis")
+```
+
+
+After attaching the libraries and loading the data, we can create a function that will clean the reviews and delete some words that directly link to the beer category and that therefore !ç.0-do not add any information. 
+
+
+```{r}
+
+input <- readRDS("./data/20191113/output_final_cleaned.rds")
+
+treat_comment <- function(text){
+  text <- paste(unlist(text), collapse = "") 
+  text <- gsub("characters", "characters ", text)
+  text <- gsub('[[:digit:]]+',' ',text)
+  text <- gsub('[[:punct:]]+',' ',text)
+  text <- gsub('[^[:alpha:]]+',' ',text)
+  text <- gsub('[^[:alpha:]]+',' ',text)
+  text <- tolower(text)
+  text <- gsub("belgian",' ', text)
+  text <- gsub("lambic",' ', text)
+  text <- gsub("quad",' ', text)
+  text <- gsub("strong dark",' ', text)
+  text <- gsub("strong pale",' ', text)
+  text <- gsub("tripel",' ', text)
+  text <- gsub("bsda",' ', text)
+  text <- gsub("bsdas",' ', text)
+  text <- gsub('rdev look smell taste feel overall'," ",text)
+  return(text)
+}
+
+```
+
+Let's see a review #15 as a sample off a treated review.
+
+```{r}
+substr(treat_comment(input$comments[15])[1],1,1000)
+```
+
+The reviews are all still in one list per beer, so it is time to get them out of the list. In this blog we also will only use the beer category.
+
+```{r}
+input <- input %>% 
+  select(beer_type, comments) %>% 
+  unnest(cols = c(beer_type, comments))
+```
+
+So we increased the number of rows of our data frame from 3.978 (the number of beers) to 154.896 (the number of reviews).
+
+Next we aplly our function using purrr's map_ch function. I also filter out small comments. This takes about a miute and a half.
+
+```{r}
+system.time(
+input_text <- input %>%
+  mutate(texts = map_chr(comments, treat_comment)) %>% 
+  select(-comments) %>% 
+  filter(str_length(texts) > 40)
+)
+```
+
+So that should be one review per row.
+
+```{r}
+head(input_text) %>%
+  select(texts)
+```
+
+Next up is language dection. cld3 is based on Google's Compact Language Detector v3, a neural network model for language identification. It follows cld2 that used a Naïve Bayesian classifier. Let's organise a little competion between the two. 
+
+```{r}
+system.time(
+input_text_language_3 <- input_text %>%
+  mutate(language_3 = cld3::detect_language(text = texts)) 
+)
+```
+
+```{r}
+system.time(
+input_text_language_2 <- input_text %>%
+  mutate(language_2 = cld2::detect_language(text = texts)) 
+)
+
+```
+
+So indeed cl2 is about 50 times faster. What about the language detection?
+
+```{r}
+input_text_language <- input_text_language_2 %>% 
+  cbind(input_text_language_3$language_3) %>% 
+  rename("language_3" = "input_text_language_3$language_3") %>% 
+  mutate(diff = (language_2 == language_3))
+
+diff <- input_text_language %>% 
+  filter(diff == FALSE)
+
+nrow(diff)
+```
+
+So that is not a big difference at all. 
+
+```{r}
+diff %>%
+  select(texts) %>% 
+  slice(16) %>% 
+  substr(1,560)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+cld2::detect_language_mixed(diff$texts[16])
+```
+
+```{r}
+cld3::detect_language_mixed(diff$texts[16])
+```
+
+Both packages have a function to detect multiple languages, but cld2 seems better at it. At least on these 16 texts. 
+
+Since we want the least possible foreign words we need to filter them out.
+
+What other languages do we have?
+
+```{r message=FALSE, warning=FALSE}
+input_text_language %>% 
+  group_by(language_2, language_3) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count))
+```
+
+And what type of beers are the most reviewed?
+
+```{r}
+input_text_language <- input_text_language %>% 
+  filter(language_3 == language_2) %>% 
+  filter(language_2 == "en") %>% 
+  rename("language" = "language_2") %>% 
+  select(beer_type, texts)
+
+top <- 20
+
+top_type <- input_text_language %>% 
+  group_by(beer_type) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  slice(1:top)
+
+top_type
+
+```
+
+We'll only look at the top commented beers with the tf-idf, because otherwise the stopwords become more 'special' in the categories with the most words. In other words we need to have enough words (and stop words) in each catergory. 
+
+And we do not need to remove stop words because they will have low tf-idf scores. (We could even use the calculation to find stop-like words in a set for other types of analyses.)
+
+Now we take all words from the text, count them and calculate the tf, idf and tf_idf scores.
+
+```{r}
+beer_type_word <- input_text_language %>%
+  filter(beer_type %in% top_type$beer_type) %>% 
+  unnest_tokens(word, texts) %>%
+  count(beer_type, word, sort = TRUE) %>%
+  ungroup() %>% 
+  rename(count=n) %>%
+  bind_tf_idf(word, beer_type, count)
+
+beer_type_word %>% filter(beer_type =="Belgian Saison") %>% 
+  arrange(desc(tf_idf))
+```
+
+So the word 'fantome' is, given its relative presence (2231 times) in the category and 
+
+```{r}
+beer_type_word %>% filter(word == "fantome") %>%
+  select(count) %>% 
+  sum() - 2231
+
+```
+
+its relative absence in the other categories (70 times), the most special word in the category compared 
+
+```{r}
+beer_type_word %>% filter(beer_type == "Belgian Saison") %>%
+  select(count) %>% 
+  sum()
+
+```
+
+to all the words in the category (1.355.455 words).
+
+For the Belgian strong dark ales the words are:
+
+```{r}
+beer_type_word %>% filter(beer_type == "Belgian Strong Dark Ale") %>% 
+  arrange(desc(tf_idf))
+```
+
+Let us try to visualise this information. Here 15 with top tf_idf, and the number of times they appeared in the category. 
+
+```{r}
+df <- beer_type_word %>% filter(beer_type =="Belgian Strong Dark Ale") %>% 
+  arrange(desc(tf_idf)) %>% 
+  slice(1:15)
+
+ggplot(data = df, aes(x = count, y = tf_idf, label = word))+
+  geom_point(size=.1, shape=0) + 
+  # geom_text(label=df$word) +
+  #scale_x_continuous(trans = 'log2') +
+  #scale_y_continuous(trans = 'log2') +
+  geom_text_repel() +
+  theme_minimal()
+```
+
+
+Here more words and using plotly, so one can zoom in the areas the words appear too closely.
+
+```{r}
+df <- beer_type_word %>% filter(beer_type =="Belgian Strong Dark Ale") %>%
+  filter(word !="bspa") %>% 
+  arrange(desc(tf_idf)) %>% 
+  slice(1:25)
+
+p <- ggplot(data = df, aes(x = count, y = tf_idf, label = word))+
+  geom_point(size=.1, shape=0, color ="white") + 
+  geom_text(label=df$word) +
+  theme_minimal()
+
+ggplotly(p, tooltip = c("tf_idf", "count"))
+
+```
+
+These are ok, but I guess I will need to learn Shiny soon.
+
+```{r message=FALSE, warning=FALSE}
+top <- 6
+
+top_type <- input_text_language %>% 
+  group_by(beer_type) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  slice(1:top)
+
+
+beer_type_word %>%
+  filter(beer_type %in% top_type$beer_type) %>% 
+  mutate(word = make.names(word, unique = TRUE)) %>% 
+  arrange(beer_type, desc(-tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(beer_type) %>% 
+  top_n(15) %>%
+  ungroup() %>%
+  ggplot(aes(x = reorder(word, tf_idf), y = tf_idf, fill = beer_type)) +
+  scale_fill_viridis(discrete = TRUE, option = "D")+
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(~beer_type, ncol = 2, scales = "free") +
+  coord_flip() + 
+  theme_minimal()
+```
+
+
