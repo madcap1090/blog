@@ -18,7 +18,7 @@
       <pubDate>Sun, 17 Nov 2019 00:00:00 +0000</pubDate>
       
       <guid>/post/tf-idf-and-beer-reviews/</guid>
-      <description>We have our data now, we scraped it from the web like we showed here. How can we best start looking at the data?
+      <description>We have our data now, we scraped it from the web like we showed here. How can we best start analysing it?
 Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (differences between categories of texts, whatever you might decide these categories to be)</description>
     </item>
     

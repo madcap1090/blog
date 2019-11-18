@@ -10,7 +10,7 @@ tags:
   - language detection
 ---
 
-We have our data now, we scraped it from the web like we showed [here](https://badtothecode.netlify.com/post/beer-reviews-galore/). How can we best start looking at the data?
+We have our data now, we scraped it from the web like we showed [here](https://badtothecode.netlify.com/post/beer-reviews-galore/). How can we best start analysing it?
 
 Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (differences between categories of texts, whatever you might decide these categories to be)
 
@@ -28,7 +28,7 @@ library("plotly")
 library("viridis")
 ```
 
-After attaching the libraries and loading the data, we can create a function that will clean the reviews and delete some words that directly link to the beer category and that therefore they do not add any information. 
+After attaching the libraries and loading the data, we can create a function that will clean the reviews and delete some words that directly link to the beer category and that therefore do not add any further information. 
 
 ```{r}
 input <- readRDS("./data/20191113/output_final_cleaned.rds")
@@ -38,7 +38,6 @@ treat_comment <- function(text){
   text <- gsub("characters", "characters ", text)
   text <- gsub('[[:digit:]]+',' ',text)
   text <- gsub('[[:punct:]]+',' ',text)
-  text <- gsub('[^[:alpha:]]+',' ',text)
   text <- gsub('[^[:alpha:]]+',' ',text)
   text <- tolower(text)
   text <- gsub("belgian",' ', text)
@@ -234,7 +233,7 @@ Let us try to visualise this information. Here 15 with top tf_idf, and the numbe
 ```{r}
 df <- beer_type_word %>% filter(beer_type =="Belgian Strong Dark Ale") %>% 
   arrange(desc(tf_idf)) %>% 
-  slice(1:15)
+  slice(1:20)
 
 ggplot(data = df, aes(x = count, y = tf_idf, label = word))+
   geom_point(size=.1, shape=0) + 
@@ -296,7 +295,7 @@ beer_type_word %>%
 
 Some of these words you might find surprising. The reviews can be searched to uncover the connections. 
 
-You might want to search for dancing alligators for instance.
+You can search for alligators for instance.
 
 All the best & bitte ein bit ;-)
 
