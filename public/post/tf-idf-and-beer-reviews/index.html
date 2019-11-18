@@ -156,9 +156,9 @@ treat_comment &lt;- function(text){
   text &lt;- gsub(&quot;strong dark&quot;,&#39; &#39;, text)
   text &lt;- gsub(&quot;strong pale&quot;,&#39; &#39;, text)
   text &lt;- gsub(&quot;tripel&quot;,&#39; &#39;, text)
-  text &lt;- gsub(&quot;bspa&quot;,&#39; &#39;, text)
   text &lt;- gsub(&quot;bsda&quot;,&#39; &#39;, text)
-  text &lt;- gsub(&quot;bspas&quot;,&#39; &#39;, text)
+  text &lt;- gsub(&quot;[^\\s]*dubb[^\\]*&quot;, &#39; &#39;, text)
+  text &lt;- gsub(&quot;[^\\s]*bspa[^\\]*&quot;, &#39; &#39;, text)
   text &lt;- gsub(&#39;rdev look smell taste feel overall&#39;,&quot; &quot;,text)
   return(text)
 }</code></pre>
@@ -182,7 +182,7 @@ input_text &lt;- input %&gt;%
   filter(str_length(texts) &gt; 40)
 )</code></pre>
 <pre><code>##    user  system elapsed 
-##   90.67    0.05   90.72</code></pre>
+##  101.12    0.13  101.29</code></pre>
 <p>So that should be one review per row.</p>
 <pre class="r"><code>head(input_text) %&gt;%
   select(texts)</code></pre>
@@ -201,13 +201,13 @@ input_text_language_3 &lt;- input_text %&gt;%
   mutate(language_3 = cld3::detect_language(text = texts)) 
 )</code></pre>
 <pre><code>##    user  system elapsed 
-##  255.97    0.06  256.44</code></pre>
+##  251.08    0.07  251.22</code></pre>
 <pre class="r"><code>system.time(
 input_text_language_2 &lt;- input_text %&gt;%
   mutate(language_2 = cld2::detect_language(text = texts)) 
 )</code></pre>
 <pre><code>##    user  system elapsed 
-##    5.33    0.00    5.34</code></pre>
+##    5.23    0.00    5.23</code></pre>
 <p>So indeed cl2 is about 50 times faster. What about the language detection itself? How often do they disagree?</p>
 <pre class="r"><code>input_text_language &lt;- input_text_language_2 %&gt;% 
   cbind(input_text_language_3$language_3) %&gt;% 
@@ -218,7 +218,7 @@ diff &lt;- input_text_language %&gt;%
   filter(diff == FALSE)
 
 nrow(diff)</code></pre>
-<pre><code>## [1] 16</code></pre>
+<pre><code>## [1] 24</code></pre>
 <p>So that is not a big difference at all. Here is an example of where they do not give the same result:</p>
 <pre class="r"><code>diff %&gt;% 
   select(language_2, texts) %&gt;% 
@@ -226,23 +226,23 @@ nrow(diff)</code></pre>
   mutate(texts = substr(texts,1,1200)) %&gt;% 
    datatable(rownames = FALSE,  options = list(dom  = &#39;t&#39;))</code></pre>
 <div id="htmlwidget-2" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-2">{"x":{"filter":"none","data":[["nl"],["   this beer has the same story in connection to inbev as horse ale this brewery from the village of merchtem used to be a big local brewer to quote alfred van roy the former master brewer and owner of palm breweries mijn grote voorbeeld was jozef vanginderachter uit merchtem zegt alfred de maker van ginder ale de eerste die in belgië met zijn bier over de gemeentegrenzen wist te gaan ik had een grote bewondering voor hem zijn motto was ge kunt bier maken dat ge verkoopt aan de mensen maar ge kunt ook bier maken waar de mensen achter komen vragen dat is ook mijn betrachting geworden en het is mij ook gelukt als een van de weinigen one of the persons i admired most in life was jozef vanginderachter from merchtem the maker of ginder ale the first brewer in belgium that succeeded in selling his beer beyond village borders i had a admiration for him his motto was you can make a beer that you can sell to the people but you can also make a beer that people will ask for and i succeeded in doing this as one of the few now a days this beer is going through a great recession it is hardly offered in any interbrew café anymore the buildings from the old brewery still stand in the village of me"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>language_2<\/th>\n      <th>texts<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-2">{"x":{"filter":"none","data":[["fr"],["   a very sweet smell and taste with a mild sourness kind of tastes a bit like fruit juice not something i am always searching for in a beer but i am also not a beer snob who thinks fruit has absolutely no place in beer i love hopped to hell beers but the occasional fruit beer is nice and i love the idea of the fermentation process with wild yeast in  s merci d avoir faire cette bière lindemans c est une bonne bière vive la bière belgique characters heatherishoppin jul report like"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>language_2<\/th>\n      <th>texts<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 <p>Both packages have a function to detect multiple languages, but cld2 seems better at it. At least on these 16 texts.</p>
 <pre class="r"><code>cld2::detect_language_mixed(diff$texts[16])</code></pre>
 <pre><code>## $classificaton
 ##   language code latin proportion
-## 1  ENGLISH   en  TRUE       0.77
-## 2    DUTCH   nl  TRUE       0.22
+## 1  ENGLISH   en  TRUE       0.70
+## 2   FRENCH   fr  TRUE       0.29
 ## 3  UNKNOWN   un  TRUE       0.00
 ## 
 ## $bytes
-## [1] 2138
+## [1] 486
 ## 
 ## $reliabale
 ## [1] TRUE</code></pre>
 <pre class="r"><code>cld3::detect_language_mixed(diff$texts[16])</code></pre>
 <pre><code>##   language probability reliable proportion
-## 1       en   0.9980431     TRUE          1
+## 1       en   0.9986772     TRUE          1
 ## 2      und   0.0000000    FALSE          0
 ## 3      und   0.0000000    FALSE          0</code></pre>
 <p>Since we want the least possible foreign words we need to only keep the text classified as English texts.</p>
@@ -251,21 +251,21 @@ nrow(diff)</code></pre>
   group_by(language_2, language_3) %&gt;% 
   summarise(count = n()) %&gt;% 
   arrange(desc(count))</code></pre>
-<pre><code>## # A tibble: 28 x 3
+<pre><code>## # A tibble: 32 x 3
 ## # Groups:   language_2 [11]
 ##    language_2 language_3  count
 ##    &lt;chr&gt;      &lt;fct&gt;       &lt;int&gt;
-##  1 en         en         152302
-##  2 es         es            113
-##  3 fr         fr             83
-##  4 en         &lt;NA&gt;           67
+##  1 en         en         151823
+##  2 es         es            112
+##  3 en         &lt;NA&gt;           88
+##  4 fr         fr             84
 ##  5 &lt;NA&gt;       es             31
-##  6 pt         pt             22
-##  7 es         &lt;NA&gt;            7
+##  6 pt         pt             20
+##  7 es         &lt;NA&gt;            8
 ##  8 it         it              7
 ##  9 fi         fi              4
-## 10 es         en              3
-## # ... with 18 more rows</code></pre>
+## 10 &lt;NA&gt;       &lt;NA&gt;            4
+## # ... with 22 more rows</code></pre>
 <p>And what type of beers are the most reviewed?</p>
 <pre class="r"><code>input_text_language &lt;- input_text_language %&gt;% 
   filter(language_3 == language_2) %&gt;% 
@@ -285,21 +285,21 @@ top_type %&gt;% head(15)</code></pre>
 <pre><code>## # A tibble: 15 x 2
 ##    beer_type                count
 ##    &lt;chr&gt;                    &lt;int&gt;
-##  1 Belgian Strong Dark Ale  19689
-##  2 Belgian Strong Pale Ale  15561
-##  3 Belgian Tripel           15185
-##  4 Belgian Quadrupel (Quad) 13525
-##  5 Belgian Fruit Lambic     13468
-##  6 Belgian Dubbel           11379
-##  7 Belgian Saison            9588
-##  8 Belgian Gueuze            7615
-##  9 Belgian Pale Ale          7150
-## 10 Flanders Red Ale          5697
-## 11 Belgian Witbier           5385
-## 12 &quot;Belgian Blonde Ale &quot;     4758
-## 13 Belgian IPA               4239
-## 14 Flanders Oud Bruin        3647
-## 15 European Pale Lager       2082</code></pre>
+##  1 Belgian Strong Dark Ale  19662
+##  2 Belgian Strong Pale Ale  15540
+##  3 Belgian Tripel           15164
+##  4 Belgian Quadrupel (Quad) 13515
+##  5 Belgian Fruit Lambic     13466
+##  6 Belgian Dubbel           11013
+##  7 Belgian Saison            9586
+##  8 Belgian Gueuze            7614
+##  9 Belgian Pale Ale          7149
+## 10 Flanders Red Ale          5694
+## 11 Belgian Witbier           5383
+## 12 &quot;Belgian Blonde Ale &quot;     4752
+## 13 Belgian IPA               4238
+## 14 Flanders Oud Bruin        3645
+## 15 European Pale Lager       2080</code></pre>
 <p>We’ll only look at the top commented beers with the tf-idf, because otherwise the stop words become more ‘special’ in the categories with the most words. In other words we need to have enough words (and stop words) in each category.</p>
 <p>And we do not need to remove stop words because they will have low tf-idf scores. (We could even use the calculation to find stop-like words in a series of texts for other types of analyses.)</p>
 <p>Now we take all words from the text, count them and calculate the tf, idf and tf_idf scores.</p>
@@ -315,50 +315,50 @@ beer_type_word %&gt;%
   filter(beer_type ==&quot;Belgian Saison&quot;) %&gt;% 
   select(-beer_type) %&gt;% 
   arrange(desc(tf_idf))</code></pre>
-<pre><code>## # A tibble: 24,605 x 5
+<pre><code>## # A tibble: 24,557 x 5
 ##    word      count        tf   idf   tf_idf
 ##    &lt;chr&gt;     &lt;int&gt;     &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
-##  1 fantome    2231 0.00165   0.357 0.000587
-##  2 saisons    1283 0.000947  0.431 0.000408
-##  3 dupont     1059 0.000781  0.431 0.000337
-##  4 fantôme     421 0.000311  1.05  0.000326
-##  5 fantomes    127 0.0000937 1.61  0.000151
-##  6 dany        130 0.0000959 1.39  0.000133
-##  7 blaugies     74 0.0000546 2.30  0.000126
-##  8 printemps    62 0.0000457 2.30  0.000105
-##  9 foret        88 0.0000649 1.61  0.000104
-## 10 hiver        87 0.0000642 1.61  0.000103
-## # ... with 24,595 more rows</code></pre>
+##  1 fantome    2215 0.00164   0.357 0.000585
+##  2 saisons    1277 0.000946  0.431 0.000408
+##  3 dupont     1053 0.000780  0.431 0.000336
+##  4 fantôme     418 0.000310  1.05  0.000325
+##  5 fantomes    127 0.0000941 1.61  0.000151
+##  6 dany        130 0.0000963 1.39  0.000134
+##  7 blaugies     74 0.0000548 2.30  0.000126
+##  8 foret        88 0.0000652 1.61  0.000105
+##  9 printemps    61 0.0000452 2.30  0.000104
+## 10 hiver        85 0.0000630 1.61  0.000101
+## # ... with 24,547 more rows</code></pre>
 <p>So the word ‘fantome’ is, given its relative presence (2231 times) in the category and</p>
 <pre class="r"><code>beer_type_word %&gt;% filter(word == &quot;fantome&quot;) %&gt;%
   select(count) %&gt;% 
   sum() - 2231</code></pre>
-<pre><code>## [1] 70</code></pre>
+<pre><code>## [1] 54</code></pre>
 <p>its relative absence in the other categories (70 times), the most special word in the category compared</p>
 <pre class="r"><code>beer_type_word %&gt;% filter(beer_type == &quot;Belgian Saison&quot;) %&gt;%
   select(count) %&gt;% 
   sum()</code></pre>
-<pre><code>## [1] 1355411</code></pre>
+<pre><code>## [1] 1349674</code></pre>
 <p>to all the words in the category (1.355.455 words).</p>
 <p>For the Belgian strong dark ales the words are:</p>
 <pre class="r"><code>beer_type_word %&gt;% 
   filter(beer_type == &quot;Belgian Strong Dark Ale&quot;) %&gt;%
   select(-beer_type) %&gt;% 
   arrange(desc(tf_idf))</code></pre>
-<pre><code>## # A tibble: 33,918 x 5
+<pre><code>## # A tibble: 33,700 x 5
 ##    word      count        tf    idf    tf_idf
 ##    &lt;chr&gt;     &lt;int&gt;     &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;
-##  1 mahogany   1229 0.000476  0.163  0.0000773
-##  2 chocolate  3754 0.00145   0.0513 0.0000746
-##  3 noel        334 0.000129  0.431  0.0000557
-##  4 raisin     2534 0.000981  0.0513 0.0000503
-##  5 nocturnum   158 0.0000612 0.799  0.0000489
-##  6 anker       133 0.0000515 0.916  0.0000472
-##  7 prunes     1149 0.000445  0.105  0.0000469
-##  8 figs       2267 0.000878  0.0513 0.0000450
-##  9 cherries   2194 0.000850  0.0513 0.0000436
-## 10 plum       2179 0.000844  0.0513 0.0000433
-## # ... with 33,908 more rows</code></pre>
+##  1 mahogany   1224 0.000481  0.163  0.0000781
+##  2 chocolate  3721 0.00146   0.0513 0.0000750
+##  3 noel        326 0.000128  0.431  0.0000552
+##  4 raisin     2510 0.000986  0.0513 0.0000506
+##  5 nocturnum   153 0.0000601 0.799  0.0000480
+##  6 anker       132 0.0000519 0.916  0.0000475
+##  7 prunes     1141 0.000448  0.105  0.0000472
+##  8 figs       2241 0.000880  0.0513 0.0000452
+##  9 cherries   2178 0.000856  0.0513 0.0000439
+## 10 plum       2166 0.000851  0.0513 0.0000436
+## # ... with 33,690 more rows</code></pre>
 <p>Let us try to visualise this information. Here 15 with top tf_idf, and the number of times they appeared in the category.</p>
 <pre class="r"><code>df &lt;- beer_type_word %&gt;% filter(beer_type ==&quot;Belgian Strong Dark Ale&quot;) %&gt;% 
   arrange(desc(tf_idf)) %&gt;% 
@@ -381,7 +381,7 @@ p &lt;- ggplot(data = df, aes(x = count, y = tf_idf, label = word))+
 
 ggplotly(p, tooltip = c(&quot;tf_idf&quot;, &quot;count&quot;))</code></pre>
 <div id="htmlwidget-3" style="width:672px;height:480px;" class="plotly html-widget"></div>
-<script type="application/json" data-for="htmlwidget-3">{"x":{"data":[{"x":[1229,3754,334,2534,158,133,1149,2267,2194,2179,1054,113,72,193,1903,865,81,51,88,1458,1369,666,242,192,35,72,127,93,68,78,116,25,47,185,1028],"y":[7.73432170692926e-005,7.45626368388531e-005,5.57148974136597e-005,5.03307729754006e-005,4.88542769306816e-005,4.7190147123e-005,4.68774859981732e-005,4.50275699823335e-005,4.35776305872253e-005,4.32796978348058e-005,4.30016277128587e-005,4.00938843977369e-005,3.86504317591104e-005,3.8176523697109e-005,3.7797735190287e-005,3.5290709650496e-005,3.29281352216076e-005,3.17841645307726e-005,3.12235559911579e-005,2.89590635351752e-005,2.71913292041529e-005,2.71718065054686e-005,2.69584278297944e-005,2.65179670687006e-005,2.57116081066138e-005,2.55465458109474e-005,2.51213394276313e-005,2.49617371777588e-005,2.41272932658947e-005,2.41179341809694e-005,2.29454753827184e-005,2.22906172118256e-005,2.19119451233781e-005,2.06087154897189e-005,2.04183246324829e-005],"text":["count: 1229<br />tf_idf: 7.734322e-05","count: 3754<br />tf_idf: 7.456264e-05","count:  334<br />tf_idf: 5.571490e-05","count: 2534<br />tf_idf: 5.033077e-05","count:  158<br />tf_idf: 4.885428e-05","count:  133<br />tf_idf: 4.719015e-05","count: 1149<br />tf_idf: 4.687749e-05","count: 2267<br />tf_idf: 4.502757e-05","count: 2194<br />tf_idf: 4.357763e-05","count: 2179<br />tf_idf: 4.327970e-05","count: 1054<br />tf_idf: 4.300163e-05","count:  113<br />tf_idf: 4.009388e-05","count:   72<br />tf_idf: 3.865043e-05","count:  193<br />tf_idf: 3.817652e-05","count: 1903<br />tf_idf: 3.779774e-05","count:  865<br />tf_idf: 3.529071e-05","count:   81<br />tf_idf: 3.292814e-05","count:   51<br />tf_idf: 3.178416e-05","count:   88<br />tf_idf: 3.122356e-05","count: 1458<br />tf_idf: 2.895906e-05","count: 1369<br />tf_idf: 2.719133e-05","count:  666<br />tf_idf: 2.717181e-05","count:  242<br />tf_idf: 2.695843e-05","count:  192<br />tf_idf: 2.651797e-05","count:   35<br />tf_idf: 2.571161e-05","count:   72<br />tf_idf: 2.554655e-05","count:  127<br />tf_idf: 2.512134e-05","count:   93<br />tf_idf: 2.496174e-05","count:   68<br />tf_idf: 2.412729e-05","count:   78<br />tf_idf: 2.411793e-05","count:  116<br />tf_idf: 2.294548e-05","count:   25<br />tf_idf: 2.229062e-05","count:   47<br />tf_idf: 2.191195e-05","count:  185<br />tf_idf: 2.060872e-05","count: 1028<br />tf_idf: 2.041832e-05"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(255,255,255,1)","opacity":1,"size":0.377952755905512,"symbol":"square-open","line":{"width":1.88976377952756,"color":"rgba(255,255,255,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1229,3754,334,2534,158,133,1149,2267,2194,2179,1054,113,72,193,1903,865,81,51,88,1458,1369,666,242,192,35,72,127,93,68,78,116,25,47,185,1028],"y":[7.73432170692926e-005,7.45626368388531e-005,5.57148974136597e-005,5.03307729754006e-005,4.88542769306816e-005,4.7190147123e-005,4.68774859981732e-005,4.50275699823335e-005,4.35776305872253e-005,4.32796978348058e-005,4.30016277128587e-005,4.00938843977369e-005,3.86504317591104e-005,3.8176523697109e-005,3.7797735190287e-005,3.5290709650496e-005,3.29281352216076e-005,3.17841645307726e-005,3.12235559911579e-005,2.89590635351752e-005,2.71913292041529e-005,2.71718065054686e-005,2.69584278297944e-005,2.65179670687006e-005,2.57116081066138e-005,2.55465458109474e-005,2.51213394276313e-005,2.49617371777588e-005,2.41272932658947e-005,2.41179341809694e-005,2.29454753827184e-005,2.22906172118256e-005,2.19119451233781e-005,2.06087154897189e-005,2.04183246324829e-005],"text":["mahogany","chocolate","noel","raisin","nocturnum","anker","prunes","figs","cherries","plum","coffee","noël","elephants","rocs","ruby","rochefort","dragon","bok","keizer","fig","murky","prune","fruitcake","brune","ambrio","mcchouffe","grande","trappistes","achel","trappists","scaldis","jaargang","chimays","liquorice","licorice"],"hovertext":["count: 1229<br />tf_idf: 7.734322e-05","count: 3754<br />tf_idf: 7.456264e-05","count:  334<br />tf_idf: 5.571490e-05","count: 2534<br />tf_idf: 5.033077e-05","count:  158<br />tf_idf: 4.885428e-05","count:  133<br />tf_idf: 4.719015e-05","count: 1149<br />tf_idf: 4.687749e-05","count: 2267<br />tf_idf: 4.502757e-05","count: 2194<br />tf_idf: 4.357763e-05","count: 2179<br />tf_idf: 4.327970e-05","count: 1054<br />tf_idf: 4.300163e-05","count:  113<br />tf_idf: 4.009388e-05","count:   72<br />tf_idf: 3.865043e-05","count:  193<br />tf_idf: 3.817652e-05","count: 1903<br />tf_idf: 3.779774e-05","count:  865<br />tf_idf: 3.529071e-05","count:   81<br />tf_idf: 3.292814e-05","count:   51<br />tf_idf: 3.178416e-05","count:   88<br />tf_idf: 3.122356e-05","count: 1458<br />tf_idf: 2.895906e-05","count: 1369<br />tf_idf: 2.719133e-05","count:  666<br />tf_idf: 2.717181e-05","count:  242<br />tf_idf: 2.695843e-05","count:  192<br />tf_idf: 2.651797e-05","count:   35<br />tf_idf: 2.571161e-05","count:   72<br />tf_idf: 2.554655e-05","count:  127<br />tf_idf: 2.512134e-05","count:   93<br />tf_idf: 2.496174e-05","count:   68<br />tf_idf: 2.412729e-05","count:   78<br />tf_idf: 2.411793e-05","count:  116<br />tf_idf: 2.294548e-05","count:   25<br />tf_idf: 2.229062e-05","count:   47<br />tf_idf: 2.191195e-05","count:  185<br />tf_idf: 2.060872e-05","count: 1028<br />tf_idf: 2.041832e-05"],"textfont":{"size":14.6645669291339,"color":"rgba(0,0,0,1)"},"type":"scatter","mode":"text","hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.2283105022831,"r":7.30593607305936,"b":40.1826484018265,"l":54.7945205479452},"font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-161.45,3940.45],"tickmode":"array","ticktext":["0","1000","2000","3000"],"tickvals":[0,1000,2000,3000],"categoryorder":"array","categoryarray":["0","1000","2000","3000"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":{"text":"count","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[1.75720800106425e-005,8.01894616911331e-005],"tickmode":"array","ticktext":["2e-05","4e-05","6e-05","8e-05"],"tickvals":[2e-005,4e-005,6e-005,8e-005],"categoryorder":"array","categoryarray":["2e-05","4e-05","6e-05","8e-05"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":{"text":"tf_idf","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"24c42b0b7594":{"x":{},"y":{},"label":{},"type":"scatter"},"24c477bd634e":{"x":{},"y":{},"label":{}}},"cur_data":"24c42b0b7594","visdat":{"24c42b0b7594":["function (y) ","x"],"24c477bd634e":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-3">{"x":{"data":[{"x":[1224,3721,326,2510,153,132,1141,2241,2178,2166,1046,108,1899,188,68,837,78,88,35,49,1445,689,1368,661,239,72,184,93,68,78,117,115,25,47,184],"y":[7.81446594818919e-005,7.49780593531976e-005,5.51683511496573e-005,5.05764388542128e-005,4.79937261827261e-005,4.75139522871792e-005,4.72255978079538e-005,4.51560954072872e-005,4.38866469420221e-005,4.36448472343526e-005,4.32935804619805e-005,3.88750518713284e-005,3.82648037387052e-005,3.77263209851155e-005,3.7032096687018e-005,3.4643142300839e-005,3.21680145125885e-005,3.16759681914528e-005,3.16590344404534e-005,3.0980201616165e-005,2.91167147985409e-005,2.85174731723753e-005,2.7565166674328e-005,2.735856279672e-005,2.70100029682774e-005,2.59167012475523e-005,2.57812729554045e-005,2.53234190580344e-005,2.44768845115772e-005,2.44673898186447e-005,2.34786146556304e-005,2.30772708153632e-005,2.26135960288953e-005,2.22294371895866e-005,2.07943119086319e-005],"text":["count: 1224<br />tf_idf: 7.814466e-05","count: 3721<br />tf_idf: 7.497806e-05","count:  326<br />tf_idf: 5.516835e-05","count: 2510<br />tf_idf: 5.057644e-05","count:  153<br />tf_idf: 4.799373e-05","count:  132<br />tf_idf: 4.751395e-05","count: 1141<br />tf_idf: 4.722560e-05","count: 2241<br />tf_idf: 4.515610e-05","count: 2178<br />tf_idf: 4.388665e-05","count: 2166<br />tf_idf: 4.364485e-05","count: 1046<br />tf_idf: 4.329358e-05","count:  108<br />tf_idf: 3.887505e-05","count: 1899<br />tf_idf: 3.826480e-05","count:  188<br />tf_idf: 3.772632e-05","count:   68<br />tf_idf: 3.703210e-05","count:  837<br />tf_idf: 3.464314e-05","count:   78<br />tf_idf: 3.216801e-05","count:   88<br />tf_idf: 3.167597e-05","count:   35<br />tf_idf: 3.165903e-05","count:   49<br />tf_idf: 3.098020e-05","count: 1445<br />tf_idf: 2.911671e-05","count:  689<br />tf_idf: 2.851747e-05","count: 1368<br />tf_idf: 2.756517e-05","count:  661<br />tf_idf: 2.735856e-05","count:  239<br />tf_idf: 2.701000e-05","count:   72<br />tf_idf: 2.591670e-05","count:  184<br />tf_idf: 2.578127e-05","count:   93<br />tf_idf: 2.532342e-05","count:   68<br />tf_idf: 2.447688e-05","count:   78<br />tf_idf: 2.446739e-05","count:  117<br />tf_idf: 2.347861e-05","count:  115<br />tf_idf: 2.307727e-05","count:   25<br />tf_idf: 2.261360e-05","count:   47<br />tf_idf: 2.222944e-05","count:  184<br />tf_idf: 2.079431e-05"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(255,255,255,1)","opacity":1,"size":0.377952755905512,"symbol":"square-open","line":{"width":1.88976377952756,"color":"rgba(255,255,255,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1224,3721,326,2510,153,132,1141,2241,2178,2166,1046,108,1899,188,68,837,78,88,35,49,1445,689,1368,661,239,72,184,93,68,78,117,115,25,47,184],"y":[7.81446594818919e-005,7.49780593531976e-005,5.51683511496573e-005,5.05764388542128e-005,4.79937261827261e-005,4.75139522871792e-005,4.72255978079538e-005,4.51560954072872e-005,4.38866469420221e-005,4.36448472343526e-005,4.32935804619805e-005,3.88750518713284e-005,3.82648037387052e-005,3.77263209851155e-005,3.7032096687018e-005,3.4643142300839e-005,3.21680145125885e-005,3.16759681914528e-005,3.16590344404534e-005,3.0980201616165e-005,2.91167147985409e-005,2.85174731723753e-005,2.7565166674328e-005,2.735856279672e-005,2.70100029682774e-005,2.59167012475523e-005,2.57812729554045e-005,2.53234190580344e-005,2.44768845115772e-005,2.44673898186447e-005,2.34786146556304e-005,2.30772708153632e-005,2.26135960288953e-005,2.22294371895866e-005,2.07943119086319e-005],"text":["mahogany","chocolate","noel","raisin","nocturnum","anker","prunes","figs","cherries","plum","coffee","noël","ruby","rocs","elephants","rochefort","dragon","keizer","ambrio","bok","fig","trappist","murky","prune","fruitcake","mcchouffe","brune","trappistes","achel","trappists","grande","scaldis","jaargang","chimays","liquorice"],"hovertext":["count: 1224<br />tf_idf: 7.814466e-05","count: 3721<br />tf_idf: 7.497806e-05","count:  326<br />tf_idf: 5.516835e-05","count: 2510<br />tf_idf: 5.057644e-05","count:  153<br />tf_idf: 4.799373e-05","count:  132<br />tf_idf: 4.751395e-05","count: 1141<br />tf_idf: 4.722560e-05","count: 2241<br />tf_idf: 4.515610e-05","count: 2178<br />tf_idf: 4.388665e-05","count: 2166<br />tf_idf: 4.364485e-05","count: 1046<br />tf_idf: 4.329358e-05","count:  108<br />tf_idf: 3.887505e-05","count: 1899<br />tf_idf: 3.826480e-05","count:  188<br />tf_idf: 3.772632e-05","count:   68<br />tf_idf: 3.703210e-05","count:  837<br />tf_idf: 3.464314e-05","count:   78<br />tf_idf: 3.216801e-05","count:   88<br />tf_idf: 3.167597e-05","count:   35<br />tf_idf: 3.165903e-05","count:   49<br />tf_idf: 3.098020e-05","count: 1445<br />tf_idf: 2.911671e-05","count:  689<br />tf_idf: 2.851747e-05","count: 1368<br />tf_idf: 2.756517e-05","count:  661<br />tf_idf: 2.735856e-05","count:  239<br />tf_idf: 2.701000e-05","count:   72<br />tf_idf: 2.591670e-05","count:  184<br />tf_idf: 2.578127e-05","count:   93<br />tf_idf: 2.532342e-05","count:   68<br />tf_idf: 2.447688e-05","count:   78<br />tf_idf: 2.446739e-05","count:  117<br />tf_idf: 2.347861e-05","count:  115<br />tf_idf: 2.307727e-05","count:   25<br />tf_idf: 2.261360e-05","count:   47<br />tf_idf: 2.222944e-05","count:  184<br />tf_idf: 2.079431e-05"],"textfont":{"size":14.6645669291339,"color":"rgba(0,0,0,1)"},"type":"scatter","mode":"text","hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.2283105022831,"r":7.30593607305936,"b":40.1826484018265,"l":54.7945205479452},"font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-159.8,3905.8],"tickmode":"array","ticktext":["0","1000","2000","3000"],"tickvals":[0,1000,2000,3000],"categoryorder":"array","categoryarray":["0","1000","2000","3000"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":{"text":"count","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[1.7926794529969e-005,8.10121768605549e-005],"tickmode":"array","ticktext":["2e-05","4e-05","6e-05","8e-05"],"tickvals":[2e-005,4e-005,6e-005,8e-005],"categoryorder":"array","categoryarray":["2e-05","4e-05","6e-05","8e-05"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":{"text":"tf_idf","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"5b54228233aa":{"x":{},"y":{},"label":{},"type":"scatter"},"5b546bf32c7":{"x":{},"y":{},"label":{}}},"cur_data":"5b54228233aa","visdat":{"5b54228233aa":["function (y) ","x"],"5b546bf32c7":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
 <p>These are ok, but I guess I will need to learn Shiny soon.</p>
 <p>Now for an overview of the top most reviewed beer types:</p>
 <pre class="r"><code>top &lt;- 6
@@ -410,8 +410,9 @@ beer_type_word %&gt;%
   theme(axis.text=element_text(size=14),
         axis.title=element_text(size=28,face=&quot;bold&quot;)) + 
   theme(strip.text.x = element_text(size = 18, colour = &quot;black&quot;))</code></pre>
-<p><img src="/post/2019-11-17-tf-idf-and-beer-reviews_files/figure-html/unnamed-chunk-21-1.png" width="1152" style="display: block; margin: auto;" /></p>
-<p>Some of these words you might find surprising. The reviews can be searched to uncover the connections.</p>
+<p><img src="/post/2019-11-17-tf-idf-and-beer-reviews_files/figure-html/unnamed-chunk-21-1.png" width="1152" style="display: block; margin: auto;" />
+The category ‘Belgian Dubble’ is interesting. It has a lot of reviews, but most of the salient words are very similar to other categories. This could be analysed further.</p>
+<p>Some of these words might be surprising. The reviews can be searched to uncover the connections.</p>
 <p>You can search for alligators for instance.</p>
 <p>All the best &amp; bitte ein bit ;-)</p>
 <pre class="r"><code>search_words &lt;- c(&quot; alligators &quot;)

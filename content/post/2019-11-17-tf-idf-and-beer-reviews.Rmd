@@ -46,9 +46,9 @@ treat_comment <- function(text){
   text <- gsub("strong dark",' ', text)
   text <- gsub("strong pale",' ', text)
   text <- gsub("tripel",' ', text)
-  text <- gsub("bspa",' ', text)
   text <- gsub("bsda",' ', text)
-  text <- gsub("bspas",' ', text)
+  text <- gsub("[^\\s]*dubb[^\\]*", ' ', text)
+  text <- gsub("[^\\s]*bspa[^\\]*", ' ', text)
   text <- gsub('rdev look smell taste feel overall'," ",text)
   return(text)
 }
@@ -292,8 +292,9 @@ beer_type_word %>%
   
 
 ```
+The category 'Belgian Dubble' is interesting. It has a lot of reviews, but most of the salient words are very similar to other categories. This could be analysed further. 
 
-Some of these words you might find surprising. The reviews can be searched to uncover the connections. 
+Some of these words might be surprising. The reviews can be searched to uncover the connections. 
 
 You can search for alligators for instance.
 
