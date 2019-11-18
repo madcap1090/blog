@@ -10,7 +10,7 @@ tags:
   - language detection
 ---
 
-We have our data scraped from a beer website now, we scraped them from the web like we showed [here](https://badtothecode.netlify.com/post/beer-reviews-galore/). Where we best start looking at the data?
+We have our data now, we scraped it from the web like we showed [here](https://badtothecode.netlify.com/post/beer-reviews-galore/). How can we best start looking at the data?
 
 Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (differences between categories of texts, whatever you might decide these categories to be)
 
@@ -28,12 +28,9 @@ library("plotly")
 library("viridis")
 ```
 
-
 After attaching the libraries and loading the data, we can create a function that will clean the reviews and delete some words that directly link to the beer category and that therefore they do not add any information. 
 
-
 ```{r}
-
 input <- readRDS("./data/20191113/output_final_cleaned.rds")
 
 treat_comment <- function(text){
@@ -50,24 +47,24 @@ treat_comment <- function(text){
   text <- gsub("strong dark",' ', text)
   text <- gsub("strong pale",' ', text)
   text <- gsub("tripel",' ', text)
-  text <- gsub("bsda",' ', text)
-  text <- gsub("bsdas",' ', text)
+  text <- gsub("bspa",' ', text)
+  text <- gsub("bspas",' ', text)
   text <- gsub('rdev look smell taste feel overall'," ",text)
   return(text)
 }
 
 ```
 
-Let's see a review #15 as a sample off a treated review.
+Let's see a review #18 as a sample off a treated review.
 
 ```{r}
 input %>% select(i, comments) %>% 
-  slice(15) %>% 
+  slice(18) %>% 
   mutate(comments = substr(treat_comment(comments),1,1500)) %>% 
   datatable(rownames = FALSE,  options = list(dom  = 't'))
 ```
 
-The reviews are all still in one list per beer, so it is time to get them out of the list. In this blog post we also will only use the beer category.
+The reviews are all still in one list per beer, so it is time to get them out of the list. In this blog post we also will only use the beer category and the text.
 
 ```{r}
 input <- input %>% 
@@ -112,7 +109,7 @@ input_text_language_2 <- input_text %>%
 
 ```
 
-So indeed cl2 is about 50 times faster. What about the language detection? How often do they disagree?
+So indeed cl2 is about 50 times faster. What about the language detection itself? How often do they disagree?
 
 ```{r}
 input_text_language <- input_text_language_2 %>% 
@@ -183,7 +180,7 @@ top_type %>% head(15)
 
 We'll only look at the top commented beers with the tf-idf, because otherwise the stop words become more 'special' in the categories with the most words. In other words we need to have enough words (and stop words) in each category. 
 
-And we do not need to remove stop words because they will have low tf-idf scores. (We could even use the calculation to find stop-like words in a set for other types of analyses.)
+And we do not need to remove stop words because they will have low tf-idf scores. (We could even use the calculation to find stop-like words in a series of texts for other types of analyses.)
 
 Now we take all words from the text, count them and calculate the tf, idf and tf_idf scores.
 
@@ -245,7 +242,7 @@ ggplot(data = df, aes(x = count, y = tf_idf, label = word))+
 ```
 
 
-Here more words and using plotly, so one can zoom in the areas the words appear too closely.
+Hereunder more words and using plotly, so one can zoom in the areas the words appear too closely.
 
 ```{r}
 df <- beer_type_word %>% filter(beer_type =="Belgian Strong Dark Ale") %>%
