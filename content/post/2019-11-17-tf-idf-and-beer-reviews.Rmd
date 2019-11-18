@@ -49,6 +49,8 @@ treat_comment <- function(text){
   text <- gsub("bsda",' ', text)
   text <- gsub("[^\\s]*dubb[^\\]*", ' ', text)
   text <- gsub("[^\\s]*bspa[^\\]*", ' ', text)
+  text <- gsub("[^\\s]*triple[^\\]*", ' ', text)
+  text <- gsub("[^\\s]*trippel[^\\]*", ' ', text)
   text <- gsub('rdev look smell taste feel overall'," ",text)
   return(text)
 }
