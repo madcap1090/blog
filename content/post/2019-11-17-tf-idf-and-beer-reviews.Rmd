@@ -48,6 +48,7 @@ treat_comment <- function(text){
   text <- gsub("strong pale",' ', text)
   text <- gsub("tripel",' ', text)
   text <- gsub("bspa",' ', text)
+  text <- gsub("bsda",' ', text)
   text <- gsub("bspas",' ', text)
   text <- gsub('rdev look smell taste feel overall'," ",text)
   return(text)
@@ -260,7 +261,7 @@ ggplotly(p, tooltip = c("tf_idf", "count"))
 
 These are ok, but I guess I will need to learn Shiny soon.
 
-Now for an overview of the top most rated beer types:
+Now for an overview of the top most reviewed beer types:
 
 ```{r message=FALSE, warning=FALSE, fig.width=12, fig.height=16, fig.align="center"}
 top <- 6
@@ -273,7 +274,7 @@ top_type <- input_text_language %>%
 
 beer_type_word %>%
   filter(beer_type %in% top_type$beer_type) %>% 
-  mutate(word = make.names(word, unique = TRUE)) %>% 
+  mutate(word = make.names(word, unique = TRUE)) %>% #this renames duplicate words
   arrange(beer_type, desc(-tf_idf)) %>%
   mutate(word = factor(word, levels = rev(unique(word)))) %>% 
   group_by(beer_type) %>% 
@@ -281,6 +282,7 @@ beer_type_word %>%
   ungroup() %>%
   ggplot(aes(x = reorder(word, tf_idf), y = tf_idf, fill = beer_type)) +
   scale_fill_viridis(discrete = TRUE, option = "D")+
+  scale_y_continuous(labels = scales::scientific)+
   geom_col(show.legend = FALSE) +
   labs(x = NULL, y = "tf-idf") +
   facet_wrap(~beer_type, ncol = 2, scales = "free") +
@@ -294,7 +296,7 @@ beer_type_word %>%
 
 Some of these words you might find surprising. The reviews can be searched to uncover the connections. 
 
-You might want to search for dancing alligators & pink elephants are for instance.
+You might want to search for dancing alligators for instance.
 
 All the best & bitte ein bit ;-)
 
@@ -309,3 +311,11 @@ reviews <- input_text %>%
 
 datatable(reviews, options = list(dom  = 't'))
 ```
+
+```{r}
+  
+  
+  
+   
+```
+

@@ -54,6 +54,7 @@ treat_comment &lt;- function(text){
   text &lt;- gsub(&quot;strong pale&quot;,&#39; &#39;, text)
   text &lt;- gsub(&quot;tripel&quot;,&#39; &#39;, text)
   text &lt;- gsub(&quot;bspa&quot;,&#39; &#39;, text)
+  text &lt;- gsub(&quot;bsda&quot;,&#39; &#39;, text)
   text &lt;- gsub(&quot;bspas&quot;,&#39; &#39;, text)
   text &lt;- gsub(&#39;rdev look smell taste feel overall&#39;,&quot; &quot;,text)
   return(text)
@@ -78,7 +79,7 @@ input_text &lt;- input %&gt;%
   filter(str_length(texts) &gt; 40)
 )</code></pre>
 <pre><code>##    user  system elapsed 
-##  105.08    0.11  105.25</code></pre>
+##  101.84    0.08  101.98</code></pre>
 <p>So that should be one review per row.</p>
 <pre class="r"><code>head(input_text) %&gt;%
   select(texts)</code></pre>
@@ -97,13 +98,13 @@ input_text_language_3 &lt;- input_text %&gt;%
   mutate(language_3 = cld3::detect_language(text = texts)) 
 )</code></pre>
 <pre><code>##    user  system elapsed 
-##  259.23    0.03  259.48</code></pre>
+##  247.78    0.03  247.91</code></pre>
 <pre class="r"><code>system.time(
 input_text_language_2 &lt;- input_text %&gt;%
   mutate(language_2 = cld2::detect_language(text = texts)) 
 )</code></pre>
 <pre><code>##    user  system elapsed 
-##    5.06    0.00    5.06</code></pre>
+##    5.13    0.00    5.13</code></pre>
 <p>So indeed cl2 is about 50 times faster. What about the language detection itself? How often do they disagree?</p>
 <pre class="r"><code>input_text_language &lt;- input_text_language_2 %&gt;% 
   cbind(input_text_language_3$language_3) %&gt;% 
@@ -211,7 +212,7 @@ beer_type_word %&gt;%
   filter(beer_type ==&quot;Belgian Saison&quot;) %&gt;% 
   select(-beer_type) %&gt;% 
   arrange(desc(tf_idf))</code></pre>
-<pre><code>## # A tibble: 24,607 x 5
+<pre><code>## # A tibble: 24,605 x 5
 ##    word      count        tf   idf   tf_idf
 ##    &lt;chr&gt;     &lt;int&gt;     &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
 ##  1 fantome    2231 0.00165   0.357 0.000587
@@ -224,7 +225,7 @@ beer_type_word %&gt;%
 ##  8 printemps    62 0.0000457 2.30  0.000105
 ##  9 foret        88 0.0000649 1.61  0.000104
 ## 10 hiver        87 0.0000642 1.61  0.000103
-## # ... with 24,597 more rows</code></pre>
+## # ... with 24,595 more rows</code></pre>
 <p>So the word ‘fantome’ is, given its relative presence (2231 times) in the category and</p>
 <pre class="r"><code>beer_type_word %&gt;% filter(word == &quot;fantome&quot;) %&gt;%
   select(count) %&gt;% 
@@ -234,27 +235,27 @@ beer_type_word %&gt;%
 <pre class="r"><code>beer_type_word %&gt;% filter(beer_type == &quot;Belgian Saison&quot;) %&gt;%
   select(count) %&gt;% 
   sum()</code></pre>
-<pre><code>## [1] 1355430</code></pre>
+<pre><code>## [1] 1355411</code></pre>
 <p>to all the words in the category (1.355.455 words).</p>
 <p>For the Belgian strong dark ales the words are:</p>
 <pre class="r"><code>beer_type_word %&gt;% 
   filter(beer_type == &quot;Belgian Strong Dark Ale&quot;) %&gt;%
   select(-beer_type) %&gt;% 
   arrange(desc(tf_idf))</code></pre>
-<pre><code>## # A tibble: 33,921 x 5
+<pre><code>## # A tibble: 33,918 x 5
 ##    word      count        tf    idf    tf_idf
 ##    &lt;chr&gt;     &lt;int&gt;     &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;
-##  1 bsda        763 0.000295  0.357  0.000105 
-##  2 mahogany   1229 0.000476  0.163  0.0000773
-##  3 chocolate  3754 0.00145   0.0513 0.0000745
-##  4 noel        334 0.000129  0.431  0.0000557
-##  5 raisin     2534 0.000981  0.0513 0.0000503
-##  6 nocturnum   158 0.0000612 0.799  0.0000488
-##  7 bsdas       136 0.0000526 0.916  0.0000482
-##  8 anker       133 0.0000515 0.916  0.0000472
-##  9 prunes     1149 0.000445  0.105  0.0000469
-## 10 figs       2267 0.000878  0.0513 0.0000450
-## # ... with 33,911 more rows</code></pre>
+##  1 mahogany   1229 0.000476  0.163  0.0000773
+##  2 chocolate  3754 0.00145   0.0513 0.0000746
+##  3 noel        334 0.000129  0.431  0.0000557
+##  4 raisin     2534 0.000981  0.0513 0.0000503
+##  5 nocturnum   158 0.0000612 0.799  0.0000489
+##  6 anker       133 0.0000515 0.916  0.0000472
+##  7 prunes     1149 0.000445  0.105  0.0000469
+##  8 figs       2267 0.000878  0.0513 0.0000450
+##  9 cherries   2194 0.000850  0.0513 0.0000436
+## 10 plum       2179 0.000844  0.0513 0.0000433
+## # ... with 33,908 more rows</code></pre>
 <p>Let us try to visualise this information. Here 15 with top tf_idf, and the number of times they appeared in the category.</p>
 <pre class="r"><code>df &lt;- beer_type_word %&gt;% filter(beer_type ==&quot;Belgian Strong Dark Ale&quot;) %&gt;% 
   arrange(desc(tf_idf)) %&gt;% 
@@ -277,9 +278,9 @@ p &lt;- ggplot(data = df, aes(x = count, y = tf_idf, label = word))+
 
 ggplotly(p, tooltip = c(&quot;tf_idf&quot;, &quot;count&quot;))</code></pre>
 <div id="htmlwidget-3" style="width:672px;height:480px;" class="plotly html-widget"></div>
-<script type="application/json" data-for="htmlwidget-3">{"x":{"data":[{"x":[763,1229,3754,334,2534,158,136,133,1149,2267,2194,2179,1054,113,72,193,1903,865,81,51,88,1458,1369,666,242,192,35,72,127,93,68,78,116,25,47],"y":[0.000105350170010585,7.73203724002014e-005,7.45406134626645e-005,5.56984410462743e-005,5.03159069031411e-005,4.88398469672993e-005,4.82403336974334e-005,4.71762086894018e-005,4.68636399144954e-005,4.50142703036389e-005,4.35647591734379e-005,4.32669144206569e-005,4.29889264315736e-005,4.0082041969191e-005,3.8639015679495e-005,3.81652475945113e-005,3.7786570969486e-005,3.52802859234452e-005,3.29184093221502e-005,3.17747765230253e-005,3.12143335689275e-005,2.89505099703156e-005,2.71832977704815e-005,2.7163780838167e-005,2.6950465187609e-005,2.65101345242887e-005,2.57040137343953e-005,2.55390001927589e-005,2.51139194015696e-005,2.49543642930072e-005,2.41201668487167e-005,2.41108105281604e-005,2.29386980360793e-005,2.2284033288977e-005,2.19054730479401e-005],"text":["count:  763<br />tf_idf: 1.053502e-04","count: 1229<br />tf_idf: 7.732037e-05","count: 3754<br />tf_idf: 7.454061e-05","count:  334<br />tf_idf: 5.569844e-05","count: 2534<br />tf_idf: 5.031591e-05","count:  158<br />tf_idf: 4.883985e-05","count:  136<br />tf_idf: 4.824033e-05","count:  133<br />tf_idf: 4.717621e-05","count: 1149<br />tf_idf: 4.686364e-05","count: 2267<br />tf_idf: 4.501427e-05","count: 2194<br />tf_idf: 4.356476e-05","count: 2179<br />tf_idf: 4.326691e-05","count: 1054<br />tf_idf: 4.298893e-05","count:  113<br />tf_idf: 4.008204e-05","count:   72<br />tf_idf: 3.863902e-05","count:  193<br />tf_idf: 3.816525e-05","count: 1903<br />tf_idf: 3.778657e-05","count:  865<br />tf_idf: 3.528029e-05","count:   81<br />tf_idf: 3.291841e-05","count:   51<br />tf_idf: 3.177478e-05","count:   88<br />tf_idf: 3.121433e-05","count: 1458<br />tf_idf: 2.895051e-05","count: 1369<br />tf_idf: 2.718330e-05","count:  666<br />tf_idf: 2.716378e-05","count:  242<br />tf_idf: 2.695047e-05","count:  192<br />tf_idf: 2.651013e-05","count:   35<br />tf_idf: 2.570401e-05","count:   72<br />tf_idf: 2.553900e-05","count:  127<br />tf_idf: 2.511392e-05","count:   93<br />tf_idf: 2.495436e-05","count:   68<br />tf_idf: 2.412017e-05","count:   78<br />tf_idf: 2.411081e-05","count:  116<br />tf_idf: 2.293870e-05","count:   25<br />tf_idf: 2.228403e-05","count:   47<br />tf_idf: 2.190547e-05"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(255,255,255,1)","opacity":1,"size":0.377952755905512,"symbol":"square-open","line":{"width":1.88976377952756,"color":"rgba(255,255,255,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[763,1229,3754,334,2534,158,136,133,1149,2267,2194,2179,1054,113,72,193,1903,865,81,51,88,1458,1369,666,242,192,35,72,127,93,68,78,116,25,47],"y":[0.000105350170010585,7.73203724002014e-005,7.45406134626645e-005,5.56984410462743e-005,5.03159069031411e-005,4.88398469672993e-005,4.82403336974334e-005,4.71762086894018e-005,4.68636399144954e-005,4.50142703036389e-005,4.35647591734379e-005,4.32669144206569e-005,4.29889264315736e-005,4.0082041969191e-005,3.8639015679495e-005,3.81652475945113e-005,3.7786570969486e-005,3.52802859234452e-005,3.29184093221502e-005,3.17747765230253e-005,3.12143335689275e-005,2.89505099703156e-005,2.71832977704815e-005,2.7163780838167e-005,2.6950465187609e-005,2.65101345242887e-005,2.57040137343953e-005,2.55390001927589e-005,2.51139194015696e-005,2.49543642930072e-005,2.41201668487167e-005,2.41108105281604e-005,2.29386980360793e-005,2.2284033288977e-005,2.19054730479401e-005],"text":["bsda","mahogany","chocolate","noel","raisin","nocturnum","bsdas","anker","prunes","figs","cherries","plum","coffee","noël","elephants","rocs","ruby","rochefort","dragon","bok","keizer","fig","murky","prune","fruitcake","brune","ambrio","mcchouffe","grande","trappistes","achel","trappists","scaldis","jaargang","chimays"],"hovertext":["count:  763<br />tf_idf: 1.053502e-04","count: 1229<br />tf_idf: 7.732037e-05","count: 3754<br />tf_idf: 7.454061e-05","count:  334<br />tf_idf: 5.569844e-05","count: 2534<br />tf_idf: 5.031591e-05","count:  158<br />tf_idf: 4.883985e-05","count:  136<br />tf_idf: 4.824033e-05","count:  133<br />tf_idf: 4.717621e-05","count: 1149<br />tf_idf: 4.686364e-05","count: 2267<br />tf_idf: 4.501427e-05","count: 2194<br />tf_idf: 4.356476e-05","count: 2179<br />tf_idf: 4.326691e-05","count: 1054<br />tf_idf: 4.298893e-05","count:  113<br />tf_idf: 4.008204e-05","count:   72<br />tf_idf: 3.863902e-05","count:  193<br />tf_idf: 3.816525e-05","count: 1903<br />tf_idf: 3.778657e-05","count:  865<br />tf_idf: 3.528029e-05","count:   81<br />tf_idf: 3.291841e-05","count:   51<br />tf_idf: 3.177478e-05","count:   88<br />tf_idf: 3.121433e-05","count: 1458<br />tf_idf: 2.895051e-05","count: 1369<br />tf_idf: 2.718330e-05","count:  666<br />tf_idf: 2.716378e-05","count:  242<br />tf_idf: 2.695047e-05","count:  192<br />tf_idf: 2.651013e-05","count:   35<br />tf_idf: 2.570401e-05","count:   72<br />tf_idf: 2.553900e-05","count:  127<br />tf_idf: 2.511392e-05","count:   93<br />tf_idf: 2.495436e-05","count:   68<br />tf_idf: 2.412017e-05","count:   78<br />tf_idf: 2.411081e-05","count:  116<br />tf_idf: 2.293870e-05","count:   25<br />tf_idf: 2.228403e-05","count:   47<br />tf_idf: 2.190547e-05"],"textfont":{"size":14.6645669291339,"color":"rgba(0,0,0,1)"},"type":"scatter","mode":"text","hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.2283105022831,"r":7.30593607305936,"b":40.1826484018265,"l":54.7945205479452},"font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-161.45,3940.45],"tickmode":"array","ticktext":["0","1000","2000","3000"],"tickvals":[0,1000,2000,3000],"categoryorder":"array","categoryarray":["0","1000","2000","3000"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":{"text":"count","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[1.77332381998079e-005,0.000109522404858717],"tickmode":"array","ticktext":["2e-05","4e-05","6e-05","8e-05","1e-04"],"tickvals":[2e-005,4e-005,6e-005,8e-005,0.0001],"categoryorder":"array","categoryarray":["2e-05","4e-05","6e-05","8e-05","1e-04"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":{"text":"tf_idf","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"182840cf6925":{"x":{},"y":{},"label":{},"type":"scatter"},"182854a25255":{"x":{},"y":{},"label":{}}},"cur_data":"182840cf6925","visdat":{"182840cf6925":["function (y) ","x"],"182854a25255":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-3">{"x":{"data":[{"x":[1229,3754,334,2534,158,133,1149,2267,2194,2179,1054,113,72,193,1903,865,81,51,88,1458,1369,666,242,192,35,72,127,93,68,78,116,25,47,185,1028],"y":[7.73432170692926e-005,7.45626368388531e-005,5.57148974136597e-005,5.03307729754006e-005,4.88542769306816e-005,4.7190147123e-005,4.68774859981732e-005,4.50275699823335e-005,4.35776305872253e-005,4.32796978348058e-005,4.30016277128587e-005,4.00938843977369e-005,3.86504317591104e-005,3.8176523697109e-005,3.7797735190287e-005,3.5290709650496e-005,3.29281352216076e-005,3.17841645307726e-005,3.12235559911579e-005,2.89590635351752e-005,2.71913292041529e-005,2.71718065054686e-005,2.69584278297944e-005,2.65179670687006e-005,2.57116081066138e-005,2.55465458109474e-005,2.51213394276313e-005,2.49617371777588e-005,2.41272932658947e-005,2.41179341809694e-005,2.29454753827184e-005,2.22906172118256e-005,2.19119451233781e-005,2.06087154897189e-005,2.04183246324829e-005],"text":["count: 1229<br />tf_idf: 7.734322e-05","count: 3754<br />tf_idf: 7.456264e-05","count:  334<br />tf_idf: 5.571490e-05","count: 2534<br />tf_idf: 5.033077e-05","count:  158<br />tf_idf: 4.885428e-05","count:  133<br />tf_idf: 4.719015e-05","count: 1149<br />tf_idf: 4.687749e-05","count: 2267<br />tf_idf: 4.502757e-05","count: 2194<br />tf_idf: 4.357763e-05","count: 2179<br />tf_idf: 4.327970e-05","count: 1054<br />tf_idf: 4.300163e-05","count:  113<br />tf_idf: 4.009388e-05","count:   72<br />tf_idf: 3.865043e-05","count:  193<br />tf_idf: 3.817652e-05","count: 1903<br />tf_idf: 3.779774e-05","count:  865<br />tf_idf: 3.529071e-05","count:   81<br />tf_idf: 3.292814e-05","count:   51<br />tf_idf: 3.178416e-05","count:   88<br />tf_idf: 3.122356e-05","count: 1458<br />tf_idf: 2.895906e-05","count: 1369<br />tf_idf: 2.719133e-05","count:  666<br />tf_idf: 2.717181e-05","count:  242<br />tf_idf: 2.695843e-05","count:  192<br />tf_idf: 2.651797e-05","count:   35<br />tf_idf: 2.571161e-05","count:   72<br />tf_idf: 2.554655e-05","count:  127<br />tf_idf: 2.512134e-05","count:   93<br />tf_idf: 2.496174e-05","count:   68<br />tf_idf: 2.412729e-05","count:   78<br />tf_idf: 2.411793e-05","count:  116<br />tf_idf: 2.294548e-05","count:   25<br />tf_idf: 2.229062e-05","count:   47<br />tf_idf: 2.191195e-05","count:  185<br />tf_idf: 2.060872e-05","count: 1028<br />tf_idf: 2.041832e-05"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(255,255,255,1)","opacity":1,"size":0.377952755905512,"symbol":"square-open","line":{"width":1.88976377952756,"color":"rgba(255,255,255,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1229,3754,334,2534,158,133,1149,2267,2194,2179,1054,113,72,193,1903,865,81,51,88,1458,1369,666,242,192,35,72,127,93,68,78,116,25,47,185,1028],"y":[7.73432170692926e-005,7.45626368388531e-005,5.57148974136597e-005,5.03307729754006e-005,4.88542769306816e-005,4.7190147123e-005,4.68774859981732e-005,4.50275699823335e-005,4.35776305872253e-005,4.32796978348058e-005,4.30016277128587e-005,4.00938843977369e-005,3.86504317591104e-005,3.8176523697109e-005,3.7797735190287e-005,3.5290709650496e-005,3.29281352216076e-005,3.17841645307726e-005,3.12235559911579e-005,2.89590635351752e-005,2.71913292041529e-005,2.71718065054686e-005,2.69584278297944e-005,2.65179670687006e-005,2.57116081066138e-005,2.55465458109474e-005,2.51213394276313e-005,2.49617371777588e-005,2.41272932658947e-005,2.41179341809694e-005,2.29454753827184e-005,2.22906172118256e-005,2.19119451233781e-005,2.06087154897189e-005,2.04183246324829e-005],"text":["mahogany","chocolate","noel","raisin","nocturnum","anker","prunes","figs","cherries","plum","coffee","noël","elephants","rocs","ruby","rochefort","dragon","bok","keizer","fig","murky","prune","fruitcake","brune","ambrio","mcchouffe","grande","trappistes","achel","trappists","scaldis","jaargang","chimays","liquorice","licorice"],"hovertext":["count: 1229<br />tf_idf: 7.734322e-05","count: 3754<br />tf_idf: 7.456264e-05","count:  334<br />tf_idf: 5.571490e-05","count: 2534<br />tf_idf: 5.033077e-05","count:  158<br />tf_idf: 4.885428e-05","count:  133<br />tf_idf: 4.719015e-05","count: 1149<br />tf_idf: 4.687749e-05","count: 2267<br />tf_idf: 4.502757e-05","count: 2194<br />tf_idf: 4.357763e-05","count: 2179<br />tf_idf: 4.327970e-05","count: 1054<br />tf_idf: 4.300163e-05","count:  113<br />tf_idf: 4.009388e-05","count:   72<br />tf_idf: 3.865043e-05","count:  193<br />tf_idf: 3.817652e-05","count: 1903<br />tf_idf: 3.779774e-05","count:  865<br />tf_idf: 3.529071e-05","count:   81<br />tf_idf: 3.292814e-05","count:   51<br />tf_idf: 3.178416e-05","count:   88<br />tf_idf: 3.122356e-05","count: 1458<br />tf_idf: 2.895906e-05","count: 1369<br />tf_idf: 2.719133e-05","count:  666<br />tf_idf: 2.717181e-05","count:  242<br />tf_idf: 2.695843e-05","count:  192<br />tf_idf: 2.651797e-05","count:   35<br />tf_idf: 2.571161e-05","count:   72<br />tf_idf: 2.554655e-05","count:  127<br />tf_idf: 2.512134e-05","count:   93<br />tf_idf: 2.496174e-05","count:   68<br />tf_idf: 2.412729e-05","count:   78<br />tf_idf: 2.411793e-05","count:  116<br />tf_idf: 2.294548e-05","count:   25<br />tf_idf: 2.229062e-05","count:   47<br />tf_idf: 2.191195e-05","count:  185<br />tf_idf: 2.060872e-05","count: 1028<br />tf_idf: 2.041832e-05"],"textfont":{"size":14.6645669291339,"color":"rgba(0,0,0,1)"},"type":"scatter","mode":"text","hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.2283105022831,"r":7.30593607305936,"b":40.1826484018265,"l":54.7945205479452},"font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-161.45,3940.45],"tickmode":"array","ticktext":["0","1000","2000","3000"],"tickvals":[0,1000,2000,3000],"categoryorder":"array","categoryarray":["0","1000","2000","3000"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":{"text":"count","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[1.75720800106425e-005,8.01894616911331e-005],"tickmode":"array","ticktext":["2e-05","4e-05","6e-05","8e-05"],"tickvals":[2e-005,4e-005,6e-005,8e-005],"categoryorder":"array","categoryarray":["2e-05","4e-05","6e-05","8e-05"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":{"text":"tf_idf","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"28ac5a16b29":{"x":{},"y":{},"label":{},"type":"scatter"},"28ac49c569b1":{"x":{},"y":{},"label":{}}},"cur_data":"28ac5a16b29","visdat":{"28ac5a16b29":["function (y) ","x"],"28ac49c569b1":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
 <p>These are ok, but I guess I will need to learn Shiny soon.</p>
-<p>Now for an overview of the top most rated beer types:</p>
+<p>Now for an overview of the top most reviewed beer types:</p>
 <pre class="r"><code>top &lt;- 6
 
 top_type &lt;- input_text_language %&gt;% 
@@ -290,7 +291,7 @@ top_type &lt;- input_text_language %&gt;%
 
 beer_type_word %&gt;%
   filter(beer_type %in% top_type$beer_type) %&gt;% 
-  mutate(word = make.names(word, unique = TRUE)) %&gt;% 
+  mutate(word = make.names(word, unique = TRUE)) %&gt;% #this renames duplicate words
   arrange(beer_type, desc(-tf_idf)) %&gt;%
   mutate(word = factor(word, levels = rev(unique(word)))) %&gt;% 
   group_by(beer_type) %&gt;% 
@@ -298,6 +299,7 @@ beer_type_word %&gt;%
   ungroup() %&gt;%
   ggplot(aes(x = reorder(word, tf_idf), y = tf_idf, fill = beer_type)) +
   scale_fill_viridis(discrete = TRUE, option = &quot;D&quot;)+
+  scale_y_continuous(labels = scales::scientific)+
   geom_col(show.legend = FALSE) +
   labs(x = NULL, y = &quot;tf-idf&quot;) +
   facet_wrap(~beer_type, ncol = 2, scales = &quot;free&quot;) +
@@ -307,7 +309,7 @@ beer_type_word %&gt;%
   theme(strip.text.x = element_text(size = 18, colour = &quot;black&quot;))</code></pre>
 <p><img src="/post/2019-11-17-tf-idf-and-beer-reviews_files/figure-html/unnamed-chunk-21-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <p>Some of these words you might find surprising. The reviews can be searched to uncover the connections.</p>
-<p>You might want to search for dancing alligators &amp; pink elephants are for instance.</p>
+<p>You might want to search for dancing alligators for instance.</p>
 <p>All the best &amp; bitte ein bit ;-)</p>
 <pre class="r"><code>search_words &lt;- c(&quot; alligators &quot;)
 
