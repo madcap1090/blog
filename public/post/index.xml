@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Wed, 13 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 17 Nov 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>tf_idf and beer reviews</title>
+      <link>/post/tf-idf-and-beer-reviews/</link>
+      <pubDate>Sun, 17 Nov 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/tf-idf-and-beer-reviews/</guid>
+      <description>We have our data scraped from a beer website now, we scraped them from the web like we showed here. Where we best start looking at the data?
+Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (differences between categories of texts, whatever you might decide these categories to be)</description>
+    </item>
     
     <item>
       <title>Beer reviews galore!</title>

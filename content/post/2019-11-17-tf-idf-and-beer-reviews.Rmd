@@ -7,11 +7,12 @@ categories: []
 tags:
   - Beers
   - nlp
+  - language detection
 ---
 
-We have our data scraped from a beer website [see](https://badtothecode.netlify.com/post/beer-reviews-galore/). Where to start?
+We have our data scraped from a beer website now, we scraped them from the web like we showed [here](https://badtothecode.netlify.com/post/beer-reviews-galore/). Where we best start looking at the data?
 
-Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (diffrences between categories of texts, whatever you might decide these categories to be)
+Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (differences between categories of texts, whatever you might decide these categories to be)
 
 For every word in every 'category' it calculates the term frequency against the inverse document frequency. More [here](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 
@@ -28,7 +29,7 @@ library("viridis")
 ```
 
 
-After attaching the libraries and loading the data, we can create a function that will clean the reviews and delete some words that directly link to the beer category and that therefore !ç.0-do not add any information. 
+After attaching the libraries and loading the data, we can create a function that will clean the reviews and delete some words that directly link to the beer category and that therefore they do not add any information. 
 
 
 ```{r}
@@ -60,10 +61,13 @@ treat_comment <- function(text){
 Let's see a review #15 as a sample off a treated review.
 
 ```{r}
-substr(treat_comment(input$comments[15])[1],1,1000)
+input %>% select(i, comments) %>% 
+  slice(15) %>% 
+  mutate(comments = substr(treat_comment(comments),1,1500)) %>% 
+  datatable(rownames = FALSE,  options = list(dom  = 't'))
 ```
 
-The reviews are all still in one list per beer, so it is time to get them out of the list. In this blog we also will only use the beer category.
+The reviews are all still in one list per beer, so it is time to get them out of the list. In this blog post we also will only use the beer category.
 
 ```{r}
 input <- input %>% 
@@ -73,7 +77,7 @@ input <- input %>%
 
 So we increased the number of rows of our data frame from 3.978 (the number of beers) to 154.896 (the number of reviews).
 
-Next we aplly our function using purrr's map_ch function. I also filter out small comments. This takes about a miute and a half.
+Next we apply our function using purrr's map_ch function. I also filter out small comments. This takes about a minute and a half.
 
 ```{r}
 system.time(
@@ -91,7 +95,7 @@ head(input_text) %>%
   select(texts)
 ```
 
-Next up is language dection. cld3 is based on Google's Compact Language Detector v3, a neural network model for language identification. It follows cld2 that used a Naïve Bayesian classifier. Let's organise a little competion between the two. 
+Next up is language detection. cld3 is based on Google's Compact Language Detector v3, a neural network model for language identification. It follows cld2 that used a Naïve Bayesian classifier. Let's organise a little competition between the two. 
 
 ```{r}
 system.time(
@@ -108,7 +112,7 @@ input_text_language_2 <- input_text %>%
 
 ```
 
-So indeed cl2 is about 50 times faster. What about the language detection?
+So indeed cl2 is about 50 times faster. What about the language detection? How often do they disagree?
 
 ```{r}
 input_text_language <- input_text_language_2 %>% 
@@ -122,14 +126,18 @@ diff <- input_text_language %>%
 nrow(diff)
 ```
 
-So that is not a big difference at all. 
+So that is not a big difference at all. Here is an example of where they do not give the same result:
 
 ```{r}
-diff %>%
-  select(texts) %>% 
-  slice(16) %>% 
-  substr(1,560)
+diff %>% 
+  select(language_2, texts) %>% 
+  slice(16) %>%
+  mutate(texts = substr(texts,1,1200)) %>% 
+   datatable(rownames = FALSE,  options = list(dom  = 't'))
 ```
+
+
+Both packages have a function to detect multiple languages, but cld2 seems better at it. At least on these 16 texts. 
 
 
 ```{r message=FALSE, warning=FALSE}
@@ -140,9 +148,8 @@ cld2::detect_language_mixed(diff$texts[16])
 cld3::detect_language_mixed(diff$texts[16])
 ```
 
-Both packages have a function to detect multiple languages, but cld2 seems better at it. At least on these 16 texts. 
 
-Since we want the least possible foreign words we need to filter them out.
+Since we want the least possible foreign words we need to only keep the text classified as English texts.
 
 What other languages do we have?
 
@@ -170,11 +177,11 @@ top_type <- input_text_language %>%
   arrange(desc(count)) %>% 
   slice(1:top)
 
-top_type
+top_type %>% head(15)
 
 ```
 
-We'll only look at the top commented beers with the tf-idf, because otherwise the stopwords become more 'special' in the categories with the most words. In other words we need to have enough words (and stop words) in each catergory. 
+We'll only look at the top commented beers with the tf-idf, because otherwise the stop words become more 'special' in the categories with the most words. In other words we need to have enough words (and stop words) in each category. 
 
 And we do not need to remove stop words because they will have low tf-idf scores. (We could even use the calculation to find stop-like words in a set for other types of analyses.)
 
@@ -189,7 +196,9 @@ beer_type_word <- input_text_language %>%
   rename(count=n) %>%
   bind_tf_idf(word, beer_type, count)
 
-beer_type_word %>% filter(beer_type =="Belgian Saison") %>% 
+beer_type_word %>%
+  filter(beer_type =="Belgian Saison") %>% 
+  select(-beer_type) %>% 
   arrange(desc(tf_idf))
 ```
 
@@ -216,7 +225,9 @@ to all the words in the category (1.355.455 words).
 For the Belgian strong dark ales the words are:
 
 ```{r}
-beer_type_word %>% filter(beer_type == "Belgian Strong Dark Ale") %>% 
+beer_type_word %>% 
+  filter(beer_type == "Belgian Strong Dark Ale") %>%
+  select(-beer_type) %>% 
   arrange(desc(tf_idf))
 ```
 
@@ -229,9 +240,6 @@ df <- beer_type_word %>% filter(beer_type =="Belgian Strong Dark Ale") %>%
 
 ggplot(data = df, aes(x = count, y = tf_idf, label = word))+
   geom_point(size=.1, shape=0) + 
-  # geom_text(label=df$word) +
-  #scale_x_continuous(trans = 'log2') +
-  #scale_y_continuous(trans = 'log2') +
   geom_text_repel() +
   theme_minimal()
 ```
@@ -241,9 +249,8 @@ Here more words and using plotly, so one can zoom in the areas the words appear 
 
 ```{r}
 df <- beer_type_word %>% filter(beer_type =="Belgian Strong Dark Ale") %>%
-  filter(word !="bspa") %>% 
   arrange(desc(tf_idf)) %>% 
-  slice(1:25)
+  slice(1:35)
 
 p <- ggplot(data = df, aes(x = count, y = tf_idf, label = word))+
   geom_point(size=.1, shape=0, color ="white") + 
@@ -256,7 +263,9 @@ ggplotly(p, tooltip = c("tf_idf", "count"))
 
 These are ok, but I guess I will need to learn Shiny soon.
 
-```{r message=FALSE, warning=FALSE}
+Now for an overview of the top most rated beer types:
+
+```{r message=FALSE, warning=FALSE, fig.width=12, fig.height=16, fig.align="center"}
 top <- 6
 
 top_type <- input_text_language %>% 
@@ -264,7 +273,6 @@ top_type <- input_text_language %>%
   summarise(count = n()) %>% 
   arrange(desc(count)) %>% 
   slice(1:top)
-
 
 beer_type_word %>%
   filter(beer_type %in% top_type$beer_type) %>% 
@@ -279,8 +287,28 @@ beer_type_word %>%
   geom_col(show.legend = FALSE) +
   labs(x = NULL, y = "tf-idf") +
   facet_wrap(~beer_type, ncol = 2, scales = "free") +
-  coord_flip() + 
-  theme_minimal()
+  coord_flip() + theme_minimal() +
+  theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=28,face="bold")) + 
+  theme(strip.text.x = element_text(size = 18, colour = "black"))
+  
+
 ```
 
+Some of these words you might find surprising. The reviews can be searched to uncover the connections. 
 
+You might want to search for dancing alligators & pink elephants are for instance.
+
+All the best & bitte ein bit ;-)
+
+```{r}
+search_words <- c(" alligators ")
+
+names(input_text) <- c("beer_type", "texts")
+reviews <- input_text %>% 
+  filter(str_detect(texts, search_words)) %>% 
+  select(-beer_type) %>% 
+  slice(1:1)
+
+datatable(reviews, options = list(dom  = 't'))
+```
