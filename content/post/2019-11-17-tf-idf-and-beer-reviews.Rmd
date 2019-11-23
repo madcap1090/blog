@@ -274,20 +274,21 @@ top_type <- input_text_language %>%
   slice(1:top)
 
 beer_type_word %>%
-  filter(beer_type %in% top_type$beer_type) %>% 
-  mutate(word = make.names(word, unique = TRUE)) %>% #this renames duplicate words
-  arrange(beer_type, desc(-tf_idf)) %>%
-  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  filter(beer_type %in% top_type$beer_type) %>%
+  mutate(beer_type = as.factor(beer_type),
+    term = reorder_within(word, tf_idf, beer_type)) %>% 
   group_by(beer_type) %>% 
   top_n(15) %>%
   ungroup() %>%
-  ggplot(aes(x = reorder(word, tf_idf), y = tf_idf, fill = beer_type)) +
+  ggplot(aes(x = term, y = tf_idf, fill = beer_type)) +
   scale_fill_viridis(discrete = TRUE, option = "D")+
   scale_y_continuous(labels = scales::scientific)+
   geom_col(show.legend = FALSE) +
   labs(x = NULL, y = "tf-idf") +
   facet_wrap(~beer_type, ncol = 2, scales = "free") +
-  coord_flip() + theme_minimal() +
+  coord_flip() + 
+  scale_x_reordered() +
+  theme_minimal() +
   theme(axis.text=element_text(size=14),
         axis.title=element_text(size=28,face="bold")) + 
   theme(strip.text.x = element_text(size = 18, colour = "black"))
