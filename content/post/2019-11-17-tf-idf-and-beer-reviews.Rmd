@@ -295,7 +295,7 @@ beer_type_word %>%
   
 
 ```
-The category 'Belgian Dubble' is interesting. It has a lot of reviews, but most of the salient words are very similar to other categories. This could be analysed further. 
+The category 'Belgian Dubbel' is interesting. It has a lot of reviews, but most of the salient words are very similar to other categories. This could be analysed further. 
 
 Some of these words might be surprising. The reviews can be searched to uncover the connections. 
 
