@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Sun, 17 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 12 Dec 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,9 +15,27 @@
     <item>
       <title>Beers</title>
       <link>/tags/beers/</link>
-      <pubDate>Sun, 17 Nov 2019 00:00:00 +0000</pubDate>
+      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/beers/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>nlp</title>
+      <link>/tags/nlp/</link>
+      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/nlp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>topic modeling</title>
+      <link>/tags/topic-modeling/</link>
+      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/topic-modeling/</guid>
       <description></description>
     </item>
     
@@ -27,15 +45,6 @@
       <pubDate>Sun, 17 Nov 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/language-detection/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>nlp</title>
-      <link>/tags/nlp/</link>
-      <pubDate>Sun, 17 Nov 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/nlp/</guid>
       <description></description>
     </item>
     

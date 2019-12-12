@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>topic modeling on bad to the code</title>
+    <link>/tags/topic-modeling/</link>
+    <description>Recent content in topic modeling on bad to the code</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
+    <lastBuildDate>Thu, 12 Dec 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/topic-modeling/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Topic modeling beer reviews</title>
+      <link>/post/topic-modeling-beer-reviews/</link>
+      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/topic-modeling-beer-reviews/</guid>
+      <description>Another tool to analyse our text data with is topic modeling. This might seem similar to the tf-idf calculations but the biggest difference in topic modeling is that here we will see if we can learn something by seeing which words tend to be used in the same reviews. While the tf-idf only looks at the occurrence of the word compared to the total occurrences of all the other words.</description>
+    </item>
+    
+  </channel>
+</rss>

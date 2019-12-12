@@ -1,0 +1,476 @@
+---
+title: Topic modeling beer reviews
+author: William Bourgeois
+date: '2019-12-12'
+slug: topic-modeling-beer-reviews
+categories: []
+tags:
+  - nlp
+  - Beers
+  - topic modeling
+---
+
+
+Another tool to analyse our text data with is topic modeling. This might seem similar to the tf-idf calculations but the biggest difference in topic modeling is that here we will see if we can learn something by seeing which words tend to be used in the same reviews. While the tf-idf only looks at the occurrence of the word compared to the total occurrences of all the other words.
+
+I got the guidance for the wrangling the data from an article by Igor Hut [here](https://rpubs.com/MajstorMaestro/256588) and also the article by Dmitriy Selivanov.  [here](https://cran.r-project.org/web/packages/text2vec/vignettes/text-vectorization.html).
+
+Further inspiration and guidance came from [Chicago U](https://cfss.uchicago.edu/notes/topic-modeling/).
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("qdap")
+library("text2vec")
+library("DT")
+library("tm")
+library("ggplot2")
+library("viridis")
+library("digest")
+library("cld2")
+```
+
+Our data is, like you remember, a data frame with 3.978 rows with one column containing the 154.896 reviews (spread over the different rows of the beers). 
+What we want to use is a document term matrix (dtm), with one row per beer and a column per (cleaned and filtered) word. The values inside the matrix can be the number of times the word appears or another calculation (like the tf_idf). 
+
+```{r}
+input <- readRDS("~/R/blogs/content/post/data/20191113/output_final_cleaned.rds") 
+ 
+treat_comment <- function(text){
+  text <- gsub('[[:digit:]]+','', text)
+  text <- gsub('[\n]',' ', text)
+  text <- gsub('[^[:alpha:]]+',' ', text)
+  text <- gsub('[[:punct:]]+',' ', text)
+  text <- tolower(text)
+  text <- gsub("characters", "characters ", text)
+  text <- gsub('look smell taste feel overall',"",text)
+  text <- gsub('rdev',"",text)
+  text <- gsub('characters',"",text)
+  text <- gsub('report like',"",text)
+  text <- gsub('member likes this',"",text)
+  text <- str_squish(text)
+  return(text)
+}
+
+input_cleaned <- input %>%
+  unnest(cols = c(comments)) %>% 
+  mutate(comments = map_chr(comments, treat_comment)) %>%
+  mutate(hash = map(comments,sha1)) %>% 
+  mutate(i = as.numeric(i)) 
+
+input_cleaned <- input_cleaned %>%
+    mutate_all(unlist)
+```
+
+So original input:
+
+```{r}
+input %>% select(i, comments) %>% 
+  slice(9) %>% 
+  mutate(comments = substr(comments,1,765)) %>% 
+  datatable(rownames = FALSE,  options = list(dom  = 't'))
+
+```
+
+***
+Cleaned input:
+```{r}
+input_cleaned %>% select(i, comments) %>% 
+  slice(1) %>% 
+  mutate(comments = substr(comments,1,1500)) %>% 
+  datatable(rownames = FALSE,  options = list(dom  = 't'))
+
+```
+
+***
+The last three words in the review are probably inserted automatically; the user name, the number of characters, and month of the review. So we can calculate the number of reviews per user and then filter out these last three words too. 
+
+```{r}
+users <- input_cleaned %>% 
+  mutate(n_words = str_count(comments, '\\w+')) %>% 
+  mutate(user= word(comments,n_words-1)) %>% #taking all but the last three words
+  select(user, n_words, comments)
+
+users %>% group_by(user) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count))
+```
+
+So these top ones have been quite prolific. Looking at the number of reviews published by all the users (were still only on the Belgian beers only by the way) we get a long-tail shape: 
+
+```{r}
+
+df_users <- users %>% 
+  group_by(user) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(count > 1 & count < 400)
+
+ggplot(df_users, aes(x=reorder(user, -count), y=count)) + 
+         geom_bar(stat="identity", fill  ="steelblue") +
+  #scale_y_continuous(trans="log10") +
+  theme_minimal() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank())
+
+```
+
+And the beer types that got the most reviews are the following ones:
+
+```{r}
+users_type <- input_cleaned %>% 
+  mutate(n_words = str_count(comments, '\\w+')) %>% 
+  mutate(user= word(comments,n_words-1)) %>% #taking all but the last three words
+  select(user, n_words, comments, beer_type)
+
+top_10 <- users_type %>% group_by(beer_type) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  head(10)
+
+top_10 %>% 
+  ggplot(aes(x=reorder(beer_type, count), y=count)) +
+  geom_bar(stat="identity", width=0.6, fill= "steelblue") +
+  coord_flip()+
+  theme_minimal()+
+  labs(x=NULL) 
+```
+
+We can clean the text further, only keeping English reviews,  and removing the usernames and the months from the reviews, and get rid of small or empty reviews :
+
+```{r message=FALSE, warning=FALSE}
+input_cleaned <- input_cleaned %>%
+  mutate(language = detect_language(text = comments)) %>% 
+  filter(language == "en") %>% 
+  select(-language)
+
+input_cleaned <- input_cleaned %>% 
+  mutate(n_words = str_count(comments, '\\w+')) %>% 
+  mutate(review= word(comments, 1, n_words-2)) %>% 
+  select(-comments) %>% 
+  filter(nchar(review) > 25)
+
+it_all <- itoken(unlist(input_cleaned$review),
+                        tokenizer = word_tokenizer,
+                        ids = input_cleaned$i)
+
+# removing some words along with stop words
+stop_words <- stopwords(kind = "en")
+
+remove_words <- c(stop_words,
+                  "s","m","d","ve","st", "review", "one",
+                  "t", "cl", "w", "ml", "re", "gt", "bit",
+                  "characters", "beer", "bottle", "glass", 
+                  "head", "beers", "can", "oz")
+
+vocabulary <- create_vocabulary(it_all,
+                                stopwords = remove_words,)
+
+vocabulary %>% arrange(desc(term_count)) %>%
+  slice(1:1250) %>% 
+  #datatable(rownames = FALSE,  options = list(dom  = 't'),class = "compact")
+  datatable(rownames = FALSE, class = "compact")
+```
+
+***
+
+Create the document term matrix here:
+
+```{r}
+dtm <- create_dtm(it_all, vocab_vectorizer(vocabulary))
+dim(dtm)
+```
+
+This matrix has a row per document and all the terms (76K) in th columns. 
+
+We know we have between 15 and 20 big beer type categories from the previous post. So we might reasonably assume the optimal number of topics might be in the same range. There are however more objective ways to calculate the optimal number of topics. Futher information can be found in [this](http://text2vec.org/topic_modeling.html) article of Dmitry Selivanov. 
+
+
+```{r}
+set.seed(42)
+lda_model = LDA$new(n_topics = 15, doc_topic_prior = 0.1, topic_word_prior = 0.01)
+doc_topic_distr = 
+  lda_model$fit_transform(x = dtm, n_iter = 1000, 
+                          convergence_tol = 0.001, n_check_convergence = 25,
+                          progressbar = FALSE)
+```
+
+```{r}
+saveRDS(lda_model, "./data/20191212/lda_model.rds")
+lda_model <- readRDS("./data/20191212/lda_model.rds")
+```
+
+
+
+
+```{r}
+
+temp <- lda_model$get_top_words(n = 15, topic_number = c(1:15), lambda = 0.4) %>% 
+  as.data.frame()
+
+lda_model$get_top_words(n = 15, topic_number = c(1:10), lambda = 0.4) %>% 
+  datatable(class = "compact")
+```
+
+***
+
+These are per topic our top relevant words.
+
+We can further explore the model using the LDAvis visualisation. See the [article](https://pdfs.semanticscholar.org/13e4/4c96680b503f799726819c56da361b20bf56.pdf?_ga=2.226180253.663369543.1576144903-72870196.1576144903) by the creators if you want more information.
+
+```{r}
+getwd()
+lda_model$plot(out.dir = "~/R/blogs/static/img/20191212/ldavis/", open.browser = FALSE)
+
+```
+
+http://127.0.0.1:4321/post/20191212/ldavis/#topic=3&lambda=0.4&term=
+
+
+The 'get_top_words' function gives the most relevant words in the topics (with lambda = 0.4), but does not return a relevance score. So digging into the function to see if we can obtain it:
+
+```{r}
+lambda <- 0.4
+n <- 15
+topic_word_distribution <- lda_model$topic_word_distribution
+topic_word_freq <- lambda * log(topic_word_distribution) + 
+    (1 - lambda) * log(t(t(topic_word_distribution)/
+                           (colSums(lda_model$components)
+                            /sum(lda_model$components))))
+
+df_freq <- as.data.frame(t(topic_word_freq)) %>% 
+  rownames_to_column("word") %>% 
+  pivot_longer(-word, names_to = "topic", values_to = "relevance")
+
+top_terms <- df_freq %>%
+  group_by(topic) %>%
+  top_n(5, relevance) %>%
+  ungroup() %>%
+  arrange(topic, -relevance)
+
+head(top_terms, 10)
+
+```
+
+We then can plot these scores:
+
+```{r fig.width=12, fig.height=16, fig.align="center"}
+
+top_terms %>%
+  mutate(order = as.integer(str_remove(topic, "V"))) %>%
+  arrange(order) %>% 
+  mutate(topic = factor(topic),
+         term = tidytext::reorder_within(word, relevance, topic)) %>%
+  ggplot(aes(term, relevance, fill = topic)) +
+   scale_fill_viridis(discrete = TRUE, option = "D") +
+  geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+  tidytext::scale_x_reordered() +
+  facet_wrap(~ order, scales = "free", ncol = 3) +
+  coord_flip() +
+  theme_minimal() +
+  theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=28,face="bold")) + 
+  theme(strip.text.x = element_text(size = 18, colour = "black"))
+```
+
+Now we can see in what topics the model classifies the different reviews in.
+
+```{r}
+doc_topic_distr <- 
+  lda_model$fit_transform(x = dtm, n_iter = 1000, 
+                          convergence_tol = 0.001, n_check_convergence = 25, 
+                          progressbar = FALSE)
+
+```
+
+For instance review 4003:
+
+```{r}
+review_n <- 4003
+
+df_rev <- as.data.frame(doc_topic_distr[review_n, ])
+names(df_rev) <- "proportion"
+df_rev <- rownames_to_column(df_rev, "topic") 
+
+df_rev <- df_rev %>% 
+  mutate(topic = as.numeric(topic))
+
+ggplot(data=df_rev, aes(x=topic, y=proportion, fill = topic)) +
+  scale_fill_viridis(discrete = FALSE)+
+  geom_bar(stat="identity", show.legend= FALSE) +
+  scale_x_continuous("topic", labels = as.character(df_rev$topic), breaks = df_rev$topic) +
+  theme_minimal()
+```
+
+So this review scores the highest in topics 6, 9 and 11. The review points to a darker, stronger brew. 
+
+```{r}
+input_cleaned %>% 
+  select(beer_type, beer_name, review) %>% 
+  slice(review_n) %>% 
+  datatable(rownames = FALSE,  options = list(dom  = 't'))
+```
+ 
+***
+
+What are the reviews by beer category or beer that have the highest ranking scores per topic? The matrix gives us the topic scores per review and the data frame has the rest of the data. We can bind them together for further analysis. 
+
+
+```{r}
+df_beer_type <- doc_topic_distr %>%
+  cbind(input_cleaned)
+
+names(df_beer_type)
+```
+
+Haha me happy now. We can now analyse our topics according to our dimensions (beer type, brewery, beer...).
+
+
+Topic eight for instance seems to be the topic of the reviews of beers people liked:
+
+```{r}
+df_beer_type %>% 
+  select('8', beer_name, brewery, review) %>% 
+  arrange(desc(`8`)) %>% 
+  select(-'8') %>% 
+  slice(1:25) %>% 
+  datatable(class = "compact")
+```
+
+
+So would there be a topic regrouping negative reviews? Seems to be topic 12, but it is not that pronounced as the positiveness in topic 8. 
+
+```{r}
+df_beer_type %>% 
+  select('12', beer_name, brewery, beer_type, review) %>% 
+  arrange(desc(`12`)) %>% 
+  select(-'12') %>% 
+  slice(1:25) %>% 
+  datatable(class = "compact")
+```
+
+It might be interesting to look at the top 10% of comments per topic score. And analyse the beers and beer types of these topic. For instance for topic 1:
+
+```{r}
+df_beer_type %>% 
+  select('1', beer_name, brewery, beer_type, review) %>% 
+  arrange(desc(`1`)) %>% 
+  filter(ntile(`1`, 100) > 90)%>% group_by(beer_type) %>% 
+  summarise(sum = sum(`1`)) %>% 
+  arrange(desc(sum))
+
+```
+
+So for topic one, the sum of the scores of the highest 10% are the highest for Belgian Tripel style of beer. 
+
+One possibility to analyse the top 10% over the topics, is to nest all the reviews per topic and then to map on the result. 
+
+
+```{r}
+df_nested <- df_beer_type %>% 
+  select(1:15, beer_type) %>% 
+  pivot_longer(1:15, names_to="topic") %>% 
+  nest(data = c(beer_type, value)) 
+
+df_nested
+
+```
+
+We just nested the 152K rows in 15.
+
+And now using purrr's map:
+
+
+```{r}
+df_top_topic <- df_nested %>% 
+  mutate(top = map(data, ~filter(.x, ntile(value, 100) > 90)))
+
+df_top <- df_top_topic %>% 
+  select(-data) %>% 
+  unnest(c=("top"))
+
+saveRDS(df_top, "./data/20191212/temp_mean.rds")
+
+df_top <- readRDS("./data/20191212/temp_mean.rds")
+
+df_top %>% group_by(topic, beer_type) %>% 
+  summarise(topic_score = sum(value)) %>% 
+  filter(topic == 12) %>% 
+  arrange(desc(topic_score))
+
+```
+
+We obtain per topic and per beer type the sum of the topic scores of the reviews with the highest scores per topic. And that's a bit of a mouthful, but we can plot them (also excluding the smaller topics).
+
+```{r}
+df <- df_top %>% group_by(topic, beer_type) %>% 
+  summarise(topic_score = sum(value)) %>% 
+  arrange(desc(topic_score)) %>% 
+  top_n(5) %>% 
+  ungroup() %>%
+  mutate(topic = as.numeric(topic)) %>% 
+  filter(!beer_type %in% c("Russian Imperial Stout",
+                           "American Imperial Stout",
+                           "Belgian Blonde Ale "))
+
+ggplot(data = df, aes(x = topic, y= beer_type)) +
+  geom_point(aes(color= factor(beer_type)),size = df$topic_score/150, alpha = 1/4) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+   coord_cartesian(xlim =c(0.8, 16), ylim =c(0, 16)) +
+  scale_x_continuous(breaks = seq(1, 15, by = 1)) +
+   geom_vline(xintercept = 1:15, alpha = 0.15) +
+  labs(y=NULL) 
+  
+```
+  
+  
+I like this way of presenting things even if interpretation needs to be a bit careful. The plot makes the topics a a bit more palatable as it were. 
+
+There is still is a s*** avenues to explore with topic modeling and I'm sure we will get back to them, but this post is already a bit too long so concluding with the mapping of the 20 most commented beers with the same analysis frame.
+
+
+```{r}
+top_beers <- df_beer_type %>% 
+  group_by(beer_name) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  head(20)
+```
+
+  
+
+```{r}
+df_top_beer <- df_beer_type %>% 
+  filter(beer_name %in% top_beers$beer_name) %>% 
+  select(1:15, beer_name) %>% 
+  pivot_longer(1:15, names_to="topic") %>% 
+  nest(data = c(beer_name, value)) 
+
+df_top <- df_top_beer %>% 
+  mutate(top = map(data, ~filter(.x, ntile(value, 100) > 90)))
+
+df <- df_top %>% 
+  select(-data) %>% 
+  unnest(c=("top")) %>% 
+  group_by(topic, beer_name) %>% 
+  summarise(topic_score = sum(value)) %>% 
+  arrange(desc(topic_score)) %>% 
+  top_n(5) %>% 
+  ungroup() %>%
+  mutate(topic = as.numeric(topic)) %>% 
+  mutate(beer_name = substr(beer_name, 1, 25))
+
+ggplot(data = df, aes(x = topic, y= beer_name)) +
+  geom_point(aes(color= factor(beer_name)),size = df$topic_score/25, alpha = 1/4) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  coord_cartesian(xlim =c(1, 15.5), ylim =c(0, 20)) +
+  scale_x_continuous(breaks = seq(1, 15, by = 1)) +
+  geom_vline(xintercept = 1:15, alpha = 0.15) +
+  labs(y=NULL) 
+```
+
+So here again we can see which beers are in the highly rated topic (8). 
+
+See you next time, cheers.
+  
