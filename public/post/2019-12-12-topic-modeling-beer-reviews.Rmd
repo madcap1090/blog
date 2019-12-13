@@ -95,24 +95,7 @@ users %>% group_by(user) %>%
   arrange(desc(count))
 ```
 
-So these top ones have been quite prolific. Looking at the number of reviews published by all the users (were still only on the Belgian beers only by the way) we get a long-tail shape: 
-
-```{r}
-
-df_users <- users %>% 
-  group_by(user) %>% 
-  summarise(count = n()) %>% 
-  arrange(desc(count)) %>% 
-  filter(count > 1 & count < 400)
-
-ggplot(df_users, aes(x=reorder(user, -count), y=count)) + 
-         geom_bar(stat="identity", fill  ="steelblue") +
-  #scale_y_continuous(trans="log10") +
-  theme_minimal() +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank())
-
-```
+So these top ones have been quite prolific. 
 
 And the beer types that got the most reviews are the following ones:
 
@@ -167,7 +150,6 @@ vocabulary <- create_vocabulary(it_all,
 
 vocabulary %>% arrange(desc(term_count)) %>%
   slice(1:1250) %>% 
-  #datatable(rownames = FALSE,  options = list(dom  = 't'),class = "compact")
   datatable(rownames = FALSE, class = "compact")
 ```
 
@@ -182,7 +164,7 @@ dim(dtm)
 
 This matrix has a row per document and all the terms (76K) in th columns. 
 
-We know we have between 15 and 20 big beer type categories from the previous post. So we might reasonably assume the optimal number of topics might be in the same range. There are however more objective ways to calculate the optimal number of topics. Futher information can be found in [this](http://text2vec.org/topic_modeling.html) article of Dmitry Selivanov. 
+We know we have between 15 and 20 big beer type categories from the previous post. So we might reasonably assume the optimal number of topics might be in the same range. There are however more objective ways to calculate the optimal number of topics. More information can be found in [this](http://text2vec.org/topic_modeling.html) article of Dmitry Selivanov. 
 
 
 ```{r}
@@ -195,18 +177,6 @@ doc_topic_distr =
 ```
 
 ```{r}
-saveRDS(lda_model, "./data/20191212/lda_model.rds")
-lda_model <- readRDS("./data/20191212/lda_model.rds")
-```
-
-
-
-
-```{r}
-
-temp <- lda_model$get_top_words(n = 15, topic_number = c(1:15), lambda = 0.4) %>% 
-  as.data.frame()
-
 lda_model$get_top_words(n = 15, topic_number = c(1:10), lambda = 0.4) %>% 
   datatable(class = "compact")
 ```
@@ -218,12 +188,18 @@ These are per topic our top relevant words.
 We can further explore the model using the LDAvis visualisation. See the [article](https://pdfs.semanticscholar.org/13e4/4c96680b503f799726819c56da361b20bf56.pdf?_ga=2.226180253.663369543.1576144903-72870196.1576144903) by the creators if you want more information.
 
 ```{r}
-getwd()
 lda_model$plot(out.dir = "~/R/blogs/static/img/20191212/ldavis/", open.browser = FALSE)
 
 ```
 
-http://127.0.0.1:4321/post/20191212/ldavis/#topic=3&lambda=0.4&term=
+The frame is a bit too big to be incorporated nicely in the markdown file. 
+
+A full interactive page can be found [here](https://badtothecode.netlify.com/img/20191212/ldavis/index.html#topic=9&lambda=0.4&term=)
+
+
+<iframe width='1200px' height='950px' src='https://badtothecode.netlify.com/img/20191212/ldavis/index.html#topic=9&lambda=0.4&term=' >
+  <p>Your browser does not support iframes</p>
+</iframe>
 
 
 The 'get_top_words' function gives the most relevant words in the topics (with lambda = 0.4), but does not return a relevance score. So digging into the function to see if we can obtain it:
@@ -269,12 +245,13 @@ top_terms %>%
   theme_minimal() +
   theme(axis.text=element_text(size=14),
         axis.title=element_text(size=28,face="bold")) + 
-  theme(strip.text.x = element_text(size = 18, colour = "black"))
+  theme(strip.text.x = element_text(size = 14, colour = "black"))
 ```
 
 Now we can see in what topics the model classifies the different reviews in.
 
 ```{r}
+set.seed(42)
 doc_topic_distr <- 
   lda_model$fit_transform(x = dtm, n_iter = 1000, 
                           convergence_tol = 0.001, n_check_convergence = 25, 
@@ -284,7 +261,7 @@ doc_topic_distr <-
 
 For instance review 4003:
 
-```{r}
+```{r  fig.width=12, fig.height=8, fig.align="center"}
 review_n <- 4003
 
 df_rev <- as.data.frame(doc_topic_distr[review_n, ])
@@ -298,7 +275,9 @@ ggplot(data=df_rev, aes(x=topic, y=proportion, fill = topic)) +
   scale_fill_viridis(discrete = FALSE)+
   geom_bar(stat="identity", show.legend= FALSE) +
   scale_x_continuous("topic", labels = as.character(df_rev$topic), breaks = df_rev$topic) +
-  theme_minimal()
+  theme_minimal() +
+  theme(text = element_text(size=25))
+
 ```
 
 So this review scores the highest in topics 6, 9 and 11. The review points to a darker, stronger brew. 
@@ -324,8 +303,7 @@ names(df_beer_type)
 
 Haha me happy now. We can now analyse our topics according to our dimensions (beer type, brewery, beer...).
 
-
-Topic eight for instance seems to be the topic of the reviews of beers people liked:
+Topic eight for instance seems now to be the topic of the reviews of beers people liked:
 
 ```{r}
 df_beer_type %>% 
@@ -344,7 +322,7 @@ df_beer_type %>%
   select('12', beer_name, brewery, beer_type, review) %>% 
   arrange(desc(`12`)) %>% 
   select(-'12') %>% 
-  slice(1:25) %>% 
+  slice(1:5) %>% 
   datatable(class = "compact")
 ```
 
@@ -360,7 +338,7 @@ df_beer_type %>%
 
 ```
 
-So for topic one, the sum of the scores of the highest 10% are the highest for Belgian Tripel style of beer. 
+So for topic one, the sum of the scores of the highest 10% are the highest for Belgian Triple style of beer. 
 
 One possibility to analyse the top 10% over the topics, is to nest all the reviews per topic and then to map on the result. 
 
@@ -388,10 +366,6 @@ df_top <- df_top_topic %>%
   select(-data) %>% 
   unnest(c=("top"))
 
-saveRDS(df_top, "./data/20191212/temp_mean.rds")
-
-df_top <- readRDS("./data/20191212/temp_mean.rds")
-
 df_top %>% group_by(topic, beer_type) %>% 
   summarise(topic_score = sum(value)) %>% 
   filter(topic == 12) %>% 
@@ -401,7 +375,7 @@ df_top %>% group_by(topic, beer_type) %>%
 
 We obtain per topic and per beer type the sum of the topic scores of the reviews with the highest scores per topic. And that's a bit of a mouthful, but we can plot them (also excluding the smaller topics).
 
-```{r}
+```{r  fig.width=12, fig.height=10, fig.align="center"}
 df <- df_top %>% group_by(topic, beer_type) %>% 
   summarise(topic_score = sum(value)) %>% 
   arrange(desc(topic_score)) %>% 
@@ -413,33 +387,30 @@ df <- df_top %>% group_by(topic, beer_type) %>%
                            "Belgian Blonde Ale "))
 
 ggplot(data = df, aes(x = topic, y= beer_type)) +
-  geom_point(aes(color= factor(beer_type)),size = df$topic_score/150, alpha = 1/4) +
+  geom_point(aes(color= factor(beer_type)),size = df$topic_score/70, alpha = 1/4) +
   theme_minimal() +
   theme(legend.position = "none") +
-   coord_cartesian(xlim =c(0.8, 16), ylim =c(0, 16)) +
+  coord_cartesian(xlim =c(0.8, 16), ylim =c(0, 18)) +
   scale_x_continuous(breaks = seq(1, 15, by = 1)) +
-   geom_vline(xintercept = 1:15, alpha = 0.15) +
-  labs(y=NULL) 
+  geom_vline(xintercept = 1:15, alpha = 0.15) +
+  labs(y=NULL) +
+  theme(text = element_text(size=25))
   
 ```
   
   
-I like this way of presenting things even if interpretation needs to be a bit careful. The plot makes the topics a a bit more palatable as it were. 
+I like this way of presenting things even if interpretation needs to be a bit careful. The plot makes the topics a bit more palatable as it were. 
 
-There is still is a s*** avenues to explore with topic modeling and I'm sure we will get back to them, but this post is already a bit too long so concluding with the mapping of the 20 most commented beers with the same analysis frame.
+There is still is a s*** laod of avenues to explore with topic modeling and I'm sure we will get back to them, but this post is already a bit too long so concluding with the mapping of the 20 most commented beers with the same analysis frame.
 
 
-```{r}
+```{r  fig.width=12, fig.height=10, fig.align="center"}
 top_beers <- df_beer_type %>% 
   group_by(beer_name) %>% 
   count() %>% 
   arrange(desc(n)) %>% 
   head(20)
-```
 
-  
-
-```{r}
 df_top_beer <- df_beer_type %>% 
   filter(beer_name %in% top_beers$beer_name) %>% 
   select(1:15, beer_name) %>% 
@@ -461,13 +432,14 @@ df <- df_top %>%
   mutate(beer_name = substr(beer_name, 1, 25))
 
 ggplot(data = df, aes(x = topic, y= beer_name)) +
-  geom_point(aes(color= factor(beer_name)),size = df$topic_score/25, alpha = 1/4) +
+  geom_point(aes(color= factor(beer_name)),size = df$topic_score/10, alpha = 1/4) +
   theme_minimal() +
   theme(legend.position = "none") +
-  coord_cartesian(xlim =c(1, 15.5), ylim =c(0, 20)) +
+  coord_cartesian(xlim =c(1, 15.5), ylim =c(0, 18)) +
   scale_x_continuous(breaks = seq(1, 15, by = 1)) +
   geom_vline(xintercept = 1:15, alpha = 0.15) +
-  labs(y=NULL) 
+  labs(y=NULL) +
+  theme(text = element_text(size=25))
 ```
 
 So here again we can see which beers are in the highly rated topic (8). 
