@@ -82,7 +82,7 @@ input_cleaned %>% select(i, comments) %>%
 ```
 
 ***
-The last three words in the review are probably inserted automatically; the user name, the number of characters, and month of the review. So we can calculate the number of reviews per user and then filter out these last three words too. 
+The last three words in the review are probably inserted automatically; the user name, the number of characters, and month of the review. We can calculate the number of reviews per user and then filter out these last three words too. 
 
 ```{r}
 users <- input_cleaned %>% 
@@ -95,7 +95,7 @@ users %>% group_by(user) %>%
   arrange(desc(count))
 ```
 
-So these top ones have been quite prolific. 
+The top ones have been quite prolific. 
 
 And the beer types that got the most reviews are the following ones:
 
@@ -118,7 +118,7 @@ top_10 %>%
   labs(x=NULL) 
 ```
 
-We can clean the text further, only keeping English reviews,  and removing the usernames and the months from the reviews, and get rid of small or empty reviews :
+We can clean the text further, only keeping English reviews and get rid of small or empty reviews :
 
 ```{r message=FALSE, warning=FALSE}
 input_cleaned <- input_cleaned %>%
@@ -373,7 +373,7 @@ df_top %>% group_by(topic, beer_type) %>%
 
 ```
 
-We obtain per topic and per beer type the sum of the topic scores of the reviews with the highest scores per topic. And that's a bit of a mouthful, but we can plot them (also excluding the smaller topics).
+We obtain per topic and per beer type the sum of the topic scores of the reviews with the highest scores per topic. 
 
 ```{r  fig.width=12, fig.height=10, fig.align="center"}
 df <- df_top %>% group_by(topic, beer_type) %>% 
@@ -401,7 +401,7 @@ ggplot(data = df, aes(x = topic, y= beer_type)) +
   
 I like this way of presenting things even if interpretation needs to be a bit careful. The plot makes the topics a bit more palatable as it were. 
 
-There is still is a s*** laod of avenues to explore with topic modeling and I'm sure we will get back to them, but this post is already a bit too long so concluding with the mapping of the 20 most commented beers with the same analysis frame.
+There are still is a s*** load of avenues to explore with topic modeling and I'm sure we will get back to them, but this post is already a bit too long so concluding here with the mapping of the 20 most commented beers with the same analysis frame.
 
 
 ```{r  fig.width=12, fig.height=10, fig.align="center"}

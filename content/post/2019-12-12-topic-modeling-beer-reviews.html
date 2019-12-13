@@ -77,7 +77,7 @@ input_cleaned &lt;- input_cleaned %&gt;%
 <div id="htmlwidget-2" style="width:100%;height:auto;" class="datatables html-widget"></div>
 <script type="application/json" data-for="htmlwidget-2">{"x":{"filter":"none","data":[[9],["ml caged and corked fake bottle i see months and years but nothing is notched removing the fake cork i got silence hint of lack of carbonation could be the pour shows a murky reddish brown tiny head of foam that s gone almost instantly no lacing smells of sour cherries some acetic acidity light aromas of brett cherries and brett are very assertive without being overly tart hint or of vanilla lightish body with the slightest bit of carbonation or i could be imagining it all in all this comes across to me very wine like good enough for me to finish the bottle bitterbill oct"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>i<\/th>\n      <th>comments<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 <hr />
-<p>The last three words in the review are probably inserted automatically; the user name, the number of characters, and month of the review. So we can calculate the number of reviews per user and then filter out these last three words too.</p>
+<p>The last three words in the review are probably inserted automatically; the user name, the number of characters, and month of the review. We can calculate the number of reviews per user and then filter out these last three words too.</p>
 <pre class="r"><code>users &lt;- input_cleaned %&gt;% 
   mutate(n_words = str_count(comments, &#39;\\w+&#39;)) %&gt;% 
   mutate(user= word(comments,n_words-1)) %&gt;% #taking all but the last three words
@@ -100,7 +100,7 @@ users %&gt;% group_by(user) %&gt;%
 ##  9 superspak       368
 ## 10 paterlodie      367
 ## # ... with 14,585 more rows</code></pre>
-<p>So these top ones have been quite prolific.</p>
+<p>The top ones have been quite prolific.</p>
 <p>And the beer types that got the most reviews are the following ones:</p>
 <pre class="r"><code>users_type &lt;- input_cleaned %&gt;% 
   mutate(n_words = str_count(comments, &#39;\\w+&#39;)) %&gt;% 
@@ -119,7 +119,7 @@ top_10 %&gt;%
   theme_minimal()+
   labs(x=NULL) </code></pre>
 <p><img src="/post/2019-12-12-topic-modeling-beer-reviews_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
-<p>We can clean the text further, only keeping English reviews, and removing the usernames and the months from the reviews, and get rid of small or empty reviews :</p>
+<p>We can clean the text further, only keeping English reviews and get rid of small or empty reviews :</p>
 <pre class="r"><code>input_cleaned &lt;- input_cleaned %&gt;%
   mutate(language = detect_language(text = comments)) %&gt;% 
   filter(language == &quot;en&quot;) %&gt;% 
@@ -165,20 +165,20 @@ doc_topic_distr =
   lda_model$fit_transform(x = dtm, n_iter = 1000, 
                           convergence_tol = 0.001, n_check_convergence = 25,
                           progressbar = FALSE)</code></pre>
-<pre><code>## INFO [2019-12-13 12:40:23] iter 25 loglikelihood = -72036337.832
-## INFO [2019-12-13 12:40:54] iter 50 loglikelihood = -70282091.670
-## INFO [2019-12-13 12:41:25] iter 75 loglikelihood = -69526872.235
-## INFO [2019-12-13 12:41:55] iter 100 loglikelihood = -69049401.403
-## INFO [2019-12-13 12:42:25] iter 125 loglikelihood = -68699549.660
-## INFO [2019-12-13 12:42:55] iter 150 loglikelihood = -68443008.232
-## INFO [2019-12-13 12:43:26] iter 175 loglikelihood = -68237526.129
-## INFO [2019-12-13 12:43:58] iter 200 loglikelihood = -68074569.228
-## INFO [2019-12-13 12:44:29] iter 225 loglikelihood = -67952373.320
-## INFO [2019-12-13 12:45:03] iter 250 loglikelihood = -67839507.522
-## INFO [2019-12-13 12:45:34] iter 275 loglikelihood = -67754473.559
-## INFO [2019-12-13 12:46:05] iter 300 loglikelihood = -67675455.131
-## INFO [2019-12-13 12:46:36] iter 325 loglikelihood = -67617317.999
-## INFO [2019-12-13 12:46:36] early stopping at 325 iteration</code></pre>
+<pre><code>## INFO [2019-12-13 15:56:18] iter 25 loglikelihood = -72036337.832
+## INFO [2019-12-13 15:56:53] iter 50 loglikelihood = -70282091.670
+## INFO [2019-12-13 15:57:31] iter 75 loglikelihood = -69526872.235
+## INFO [2019-12-13 15:58:10] iter 100 loglikelihood = -69049401.403
+## INFO [2019-12-13 15:58:49] iter 125 loglikelihood = -68699549.660
+## INFO [2019-12-13 15:59:28] iter 150 loglikelihood = -68443008.232
+## INFO [2019-12-13 16:00:05] iter 175 loglikelihood = -68237526.129
+## INFO [2019-12-13 16:00:41] iter 200 loglikelihood = -68074569.228
+## INFO [2019-12-13 16:01:16] iter 225 loglikelihood = -67952373.320
+## INFO [2019-12-13 16:01:55] iter 250 loglikelihood = -67839507.522
+## INFO [2019-12-13 16:02:32] iter 275 loglikelihood = -67754473.559
+## INFO [2019-12-13 16:03:10] iter 300 loglikelihood = -67675455.131
+## INFO [2019-12-13 16:03:47] iter 325 loglikelihood = -67617317.999
+## INFO [2019-12-13 16:03:47] early stopping at 325 iteration</code></pre>
 <pre class="r"><code>lda_model$get_top_words(n = 15, topic_number = c(1:10), lambda = 0.4) %&gt;% 
   datatable(class = &quot;compact&quot;)</code></pre>
 <div id="htmlwidget-4" style="width:100%;height:auto;" class="datatables html-widget"></div>
@@ -253,20 +253,20 @@ doc_topic_distr &lt;-
   lda_model$fit_transform(x = dtm, n_iter = 1000, 
                           convergence_tol = 0.001, n_check_convergence = 25, 
                           progressbar = FALSE)</code></pre>
-<pre><code>## INFO [2019-12-13 12:47:17] iter 25 loglikelihood = -72036337.832
-## INFO [2019-12-13 12:47:48] iter 50 loglikelihood = -70282091.670
-## INFO [2019-12-13 12:48:18] iter 75 loglikelihood = -69526872.235
-## INFO [2019-12-13 12:48:49] iter 100 loglikelihood = -69049401.403
-## INFO [2019-12-13 12:49:25] iter 125 loglikelihood = -68699549.660
-## INFO [2019-12-13 12:49:57] iter 150 loglikelihood = -68443008.232
-## INFO [2019-12-13 12:50:28] iter 175 loglikelihood = -68237526.129
-## INFO [2019-12-13 12:50:58] iter 200 loglikelihood = -68074569.228
-## INFO [2019-12-13 12:51:28] iter 225 loglikelihood = -67952373.320
-## INFO [2019-12-13 12:51:58] iter 250 loglikelihood = -67839507.522
-## INFO [2019-12-13 12:52:28] iter 275 loglikelihood = -67754473.559
-## INFO [2019-12-13 12:52:58] iter 300 loglikelihood = -67675455.131
-## INFO [2019-12-13 12:53:28] iter 325 loglikelihood = -67617317.999
-## INFO [2019-12-13 12:53:28] early stopping at 325 iteration</code></pre>
+<pre><code>## INFO [2019-12-13 16:04:35] iter 25 loglikelihood = -72036337.832
+## INFO [2019-12-13 16:05:10] iter 50 loglikelihood = -70282091.670
+## INFO [2019-12-13 16:05:46] iter 75 loglikelihood = -69526872.235
+## INFO [2019-12-13 16:06:21] iter 100 loglikelihood = -69049401.403
+## INFO [2019-12-13 16:06:56] iter 125 loglikelihood = -68699549.660
+## INFO [2019-12-13 16:07:31] iter 150 loglikelihood = -68443008.232
+## INFO [2019-12-13 16:08:07] iter 175 loglikelihood = -68237526.129
+## INFO [2019-12-13 16:08:43] iter 200 loglikelihood = -68074569.228
+## INFO [2019-12-13 16:09:18] iter 225 loglikelihood = -67952373.320
+## INFO [2019-12-13 16:09:54] iter 250 loglikelihood = -67839507.522
+## INFO [2019-12-13 16:10:31] iter 275 loglikelihood = -67754473.559
+## INFO [2019-12-13 16:11:08] iter 300 loglikelihood = -67675455.131
+## INFO [2019-12-13 16:11:44] iter 325 loglikelihood = -67617317.999
+## INFO [2019-12-13 16:11:44] early stopping at 325 iteration</code></pre>
 <p>For instance review 4003:</p>
 <pre class="r"><code>review_n &lt;- 4003
 
@@ -399,7 +399,7 @@ df_top %&gt;% group_by(topic, beer_type) %&gt;%
 ##  9 12    Belgian Fruit Lambic            328.
 ## 10 12    Belgian Saison                  260.
 ## # ... with 55 more rows</code></pre>
-<p>We obtain per topic and per beer type the sum of the topic scores of the reviews with the highest scores per topic. And that’s a bit of a mouthful, but we can plot them (also excluding the smaller topics).</p>
+<p>We obtain per topic and per beer type the sum of the topic scores of the reviews with the highest scores per topic.</p>
 <pre class="r"><code>df &lt;- df_top %&gt;% group_by(topic, beer_type) %&gt;% 
   summarise(topic_score = sum(value)) %&gt;% 
   arrange(desc(topic_score)) %&gt;% 
@@ -421,7 +421,7 @@ df_top %&gt;% group_by(topic, beer_type) %&gt;%
   theme(text = element_text(size=25))</code></pre>
 <p><img src="/post/2019-12-12-topic-modeling-beer-reviews_files/figure-html/unnamed-chunk-23-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <p>I like this way of presenting things even if interpretation needs to be a bit careful. The plot makes the topics a bit more palatable as it were.</p>
-<p>There is still is a s*** laod of avenues to explore with topic modeling and I’m sure we will get back to them, but this post is already a bit too long so concluding with the mapping of the 20 most commented beers with the same analysis frame.</p>
+<p>There are still is a s*** load of avenues to explore with topic modeling and I’m sure we will get back to them, but this post is already a bit too long so concluding here with the mapping of the 20 most commented beers with the same analysis frame.</p>
 <pre class="r"><code>top_beers &lt;- df_beer_type %&gt;% 
   group_by(beer_name) %&gt;% 
   count() %&gt;% 
