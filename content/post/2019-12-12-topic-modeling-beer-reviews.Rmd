@@ -192,12 +192,10 @@ lda_model$plot(out.dir = "~/R/blogs/static/img/20191212/ldavis/", open.browser =
 
 ```
 
-The frame is a bit too big to be incorporated nicely in the markdown file. 
-
-A full interactive page can be found [here](https://badtothecode.netlify.com/img/20191212/ldavis/index.html#topic=9&lambda=0.4&term=)
+The frame is a bit too big to be incorporated nicely in the markdown file, but it works.
 
 
-<iframe width='1250px' height='900px' src='https://badtothecode.netlify.com/img/20191212/ldavis/index.html#topic=9&lambda=0.4&term=' >
+<iframe width='1250px' height='850px' src='https://badtothecode.netlify.com/img/20191212/ldavis/index.html#topic=9&lambda=0.4&term=' >
   <p>Your browser does not support iframes</p>
 </iframe>
 
