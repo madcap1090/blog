@@ -197,7 +197,7 @@ The frame is a bit too big to be incorporated nicely in the markdown file.
 A full interactive page can be found [here](https://badtothecode.netlify.com/img/20191212/ldavis/index.html#topic=9&lambda=0.4&term=)
 
 
-<iframe width='1200px' height='950px' src='https://badtothecode.netlify.com/img/20191212/ldavis/index.html#topic=9&lambda=0.4&term=' >
+<iframe width='1200px' height='1000px' src='https://badtothecode.netlify.com/img/20191212/ldavis/index.html#topic=9&lambda=0.4&term=' >
   <p>Your browser does not support iframes</p>
 </iframe>
 
@@ -280,7 +280,7 @@ ggplot(data=df_rev, aes(x=topic, y=proportion, fill = topic)) +
 
 ```
 
-So this review scores the highest in topics 6, 9 and 11. The review points to a darker, stronger brew. 
+So this review scores the highest in topics 6, 13 and 4. The review points to a darker, stronger brew. 
 
 ```{r}
 input_cleaned %>% 
@@ -307,24 +307,13 @@ Topic eight for instance seems now to be the topic of the reviews of beers peopl
 
 ```{r}
 df_beer_type %>% 
-  select('8', beer_name, brewery, review) %>% 
-  arrange(desc(`8`)) %>% 
-  select(-'8') %>% 
+  select('14', beer_name, brewery, review) %>% 
+  arrange(desc(`14`)) %>% 
+  select(-'14') %>% 
   slice(1:25) %>% 
   datatable(class = "compact")
 ```
 
-
-So would there be a topic regrouping negative reviews? Seems to be topic 12, but it is not that pronounced as the positiveness in topic 8. 
-
-```{r}
-df_beer_type %>% 
-  select('12', beer_name, brewery, beer_type, review) %>% 
-  arrange(desc(`12`)) %>% 
-  select(-'12') %>% 
-  slice(1:5) %>% 
-  datatable(class = "compact")
-```
 
 It might be interesting to look at the top 10% of comments per topic score. And analyse the beers and beer types of these topic. For instance for topic 1:
 
@@ -442,7 +431,7 @@ ggplot(data = df, aes(x = topic, y= beer_name)) +
   theme(text = element_text(size=25))
 ```
 
-So here again we can see which beers are in the highly rated topic (8). 
+So here again we can see which beers are in the highly rated topic (14). 
 
 See you next time, cheers.
   
