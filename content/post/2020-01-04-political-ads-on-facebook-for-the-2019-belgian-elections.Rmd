@@ -1,0 +1,322 @@
+---
+title: Political ads on Facebook for the 2019 Belgian elections
+author: William Bourgeois
+date: '2020-01-04'
+slug: political-ads-on-facebook-for-the-2019-belgian-elections
+categories: []
+tags:
+  - Facebook
+  - Belgian politics
+  - nlp
+  - topic modeling
+---
+I was looking for a way to have the same level of analysis that is possible with the Twitter API on Facebook, but gave up after a short while. The API seems to me quite closed in terms of what information is made available by Facebook. 
+
+So I was quiet interested when I come across [this](http://rpubs.com/zoowalk/FB_EP2019) blog post of Mr Schmidt not on an API for Facebook generally, but for Facebook ads. 
+
+The increased transparancy comes as a reaction against critisim on Facebook for running 'manipulative' political adds (lies) on it's servers. 
+
+Let's have a go at it (and thank you again Mr. Schmidt ) and see what we can come up with related to the Belgian elections of May 2019 or more widly regarding Belgian politics. 
+
+I am far from being an expert in Facebook advertising, so this is a blog on learning more about what we can get out of the API even though some are quite critical about the information it yealds. See for instance [Facebook’s Ad Archive API is Inadequate](https://blog.mozilla.org/blog/2019/04/29/facebooks-ad-archive-api-is-inadequate/).
+
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("lubridate")
+library("scales")
+library("lemon") 
+library("DT")
+library("extrafont")
+library("httr")
+library("rvest")
+library("glue")
+# you might need the dev version of tidyr needed for unnest_wider function 
+# (and R ver 3.6)
+library("tidyr") # devtools::install_github("tidyverse/tidyr")
+library("stringi")
+library("tokenizers") 
+library("reactable") #install.packages("reactable")
+options(scipen = 999)
+```
+
+The way to go about is to go to Facebook for developers by creating an account and then create a new app. Add all the search fields you are interested in (I took all) and you then need a token that seems to be a temporary token (on this [portal](https://developers.facebook.com/tools/explorer/), meaning that it is only valid for a certain time and you need to re-generate it for your next run. 
+
+```{r eval=FALSE, include=TRUE}
+# https://www.facebook.com/ads/library/api/?source=archive-landing-page
+# link to fb api
+my_link <- "https://graph.facebook.com"
+my_token <- "put your token here"
+
+#define fields you are interested in
+search_fields=c("ad_creation_time", 
+                "ad_delivery_start_time", 
+                "ad_delivery_stop_time",
+                "ad_creative_body",
+                "ad_creative_link_caption",
+                "ad_creative_link_description", 
+                "ad_creative_link_title", 
+                "ad_snapshot_url", 
+                "page_id",
+                "page_name",
+                "currency",
+                "spend",
+                "demographic_distribution",
+                "funding_entity",
+                "impressions",
+                "region_distribution") %>% 
+  stringr::str_c(., collapse=", ")
+
+page_one_response <- GET(my_link,
+                         path = "/ads_archive",
+                         query = list(access_token = my_token,
+                                      limit=100,
+                                      ad_active_status="ALL",
+                                      search_terms="''",
+                                      fields=search_fields,
+                                      ad_reached_countries="BE"))
+page_one_content<- content(page_one_response)
+
+result <- tibble(data=page_one_content$data)
+
+df_imp <- result %>% 
+  tidyr::unnest_wider(data) 
+
+#get the link refering to the next page
+next_link <- page_one_content$paging$`next`
+
+#iterate over all pages until there is no further page
+while(length(next_link)>0) {
+  next_response <- GET(next_link)
+  next_content<- content(next_response)
+  y <- tibble(data=next_content$data)
+  df_next <- y %>%
+    unnest_wider(data) 
+  df_imp <- bind_rows(df_imp, df_next)  
+  next_link <- next_content$paging$`next`
+}
+
+```
+
+This returned 18K rows when I ran it 4 months ago. We are more than doubling the rows today, which is good news. It could have been that the archive only returned results on a rolling time window basis, but that does not seem to be the case, so more data to us. 
+
+```{r include=FALSE}
+df_imp <- readRDS("./data/20200104/df_imp_20200104.rds")
+```
+
+We receieved 16 variables. Some of them are lists. 
+
+```{r}
+names(df_imp)
+```
+
+
+```{r}
+head(df_imp) %>% 
+  select(page_name, ad_creative_body) %>% 
+  unique() %>% 
+  datatable(rownames = FALSE, class = 'compact', options = list(dom  = 't'))
+```
+
+It will be easier if we have a custom function that extracts the date from the different timestamps.
+
+```{r}
+make_date <- function(x){
+  ymd(str_sub(x,1,10))
+}
+
+df_imp <- df_imp %>%
+  mutate(ad_creation_day = make_date(ad_creation_time),
+         ad_delivery_start_day = make_date(ad_delivery_start_time),
+         ad_delivery_stop_day = make_date(ad_delivery_stop_time))
+
+```
+
+
+
+The archive starts at:
+```{r}
+min(df_imp$ad_delivery_start_day)
+```
+
+And ends today:
+
+```{r}
+max(df_imp$ad_delivery_start_day)
+```
+But I suspect the number of ads of the 'politics and issues' category we obtained are not evenly spread between these two dates.
+
+
+```{r}
+df_imp %>% 
+  group_by(ad_delivery_start_day) %>% 
+  summarise(n_ads=n()) %>%
+  arrange(desc(n_ads)) %>%
+  ggplot()+
+  geom_bar(aes(x= ad_delivery_start_day,
+               y=n_ads
+               ),
+           #color="transparent",
+           stat="identity"
+           )+
+  theme_minimal()
+
+```
+
+So yes, very few until 2019, at least in the results we obtained with the api calls. This does not mean that there were not many in the past, it's just the data we got given to work with. 
+
+The first dozens of ads were from the The European Democratic Party (EDP), the first ad from a Belgian political party started being delivered on 02/06/2017 and was from the N-VA:
+
+```{r}
+df_imp %>% 
+  filter(ad_delivery_start_day == ymd("2017-06-02")) %>% 
+  select(ad_delivery_start_day, ad_creative_body) %>%
+  slice(1)
+```
+
+Glad to hear the change worked.
+
+Analysing the global figures a bit further and getting the total ads per funding entity:
+
+```{r}
+df_imp %>% 
+  count(funding_entity,
+        sort = TRUE,
+        name = "total ads")
+```
+
+We learn that most of the ads have no funding entity and that there are more UNICEF ads than ads for the party "Vlaams Belang". 
+
+It is indeed a pity that Facebook decided to put the 'political' and 'issues' categories in one bag. Furthermore, these categories are not based on the type of message, ad, but on the type of funding entity or page. This means that different rules apply on 'issues' entities and business entities. 
+
+In other words we have access to what Greenpeace Belgium is advertising in Belgium through Facebook, but not what Exxon Mobile is. 
+
+[Because](https://www.facebook.com/ads/library/api/?source=archive-landing-page) "Default value: "POLITICAL_AND_ISSUE_ADS": 
+The type of ad. We label either all returned ads as political or issue ads, or label ads for news related to politics or issues of political importance. See Facebook Ads Help Center, About ads related to politics or issues of national importance. We currently only support POLITICAL_AND_ISSUE_ADS." Note that the options listed are: ALL, POLITICAL_AND_ISSUE_ADS, HOUSING_ADS, UNCATEGORIZED_ADS. 
+
+(I'm not really holding my breath for the housing adds.)
+
+Facebook's ads archive library is not only inherently flawed, it is also biased because it does not include any corporate advertising. We might have a glimpse at what Belgian political parties spent and whatever their messages were, but we do not know how much was spent in Belgium flogging the F35 by Northrop Grumann. And some commentators say that is exactly one of the reasons why Facebook is reluctant to be transparent. The more it is forced to be transparent on political ads and their impact on democracy, the more they will be under pressure to revail the agenda of their corporate clients. As nicely explained in [this Guardian postcast](https://open.spotify.com/episode/09YkfvCUGsegLYgzMYrtvi?si=LniDF1c3QGezA9cmUERyfQ)
+
+For now we have to do with what is given to us. Also with the fact that more than half of these ads have no known sponsers even though Facebook itself is [claiming](https://www.facebook.com/business/help/208949576550051) "For general or national-level elections taking place in the European Union (such as the general election in Spain, the federal election in Belgium and the presidential election in Lithuania), political parties and candidates campaigning in these elections will be required to complete ad authorisations and place "Paid for by" disclaimers on all of their ads until the end of the election period."
+
+Maybe the "Paid for by" appeared on all of their ads until the election period. Or they did not but here are the ads by unknown funding entity and by date in 2019:
+
+```{r}
+df_imp %>% 
+  filter(ad_creation_day > ymd("2018-12-31")) %>% 
+  filter(is.na(funding_entity)) %>% 
+  group_by(ad_delivery_start_day) %>% 
+  summarise(n_ads=n()) %>%
+  arrange(desc(n_ads)) %>%
+  ggplot()+
+  geom_bar(aes(x= ad_delivery_start_day,
+               y=n_ads
+               ),
+           #color="transparent",
+           stat="identity"
+           )+
+  theme_minimal()
+
+```
+
+So we can safely say some of these ads were run during the election period, and it might be interesting to have a closer look at the ads without known funding entity, by looking at the page name they are financing.
+
+```{r}
+df_imp %>% 
+  filter(is.na(funding_entity)) %>% 
+  group_by(page_name) %>% 
+  summarise(count = n()) %>%
+  select(page_name, count) %>% 
+  arrange(desc(count))
+```
+
+So here in the top ten, except for Mr. Mertens, there are no political actors. Only 'issues' like the UN agency UNICEF, a news outlet and others. 
+ 
+https://www.facebook.com/pg/kialo/about/?ref=page_internal
+
+This means that if we want to create any meaningfull analysis of political ads on Facebook for Belgium based on this data set there is not a small amount of data cleaning to be done. Tbh we are used to that, but not in a data set that would have have been specificaly designed to be a basis for analysis. 
+
+Let's try to only keep politicians and parties. But before we do we will have a look at the estimation of total expenses for Belgium in 2019, per page. We do not have exact numbers of amounts spent only a range per ad.
+
+
+```{r}
+sort(as.numeric(unique(unlist(df_imp$spend))))
+```
+
+These seem like amazing amounts, but I have not yet taken into account the currencies...
+
+```{r}
+df_imp %>% 
+  count(currency,
+        sort = TRUE,
+        name = "total ads")
+```
+
+Hmm 95 ads spent in roubles. That's always interesting these days. 
+
+```{r}
+rub <- df_imp %>% 
+  filter(currency == "RUB")
+rub
+```
+
+It contains a now infamous scam messages but also some anti-China and anti-US messages from the Russian International Affairs Council:
+
+```{r}
+substr(rub$ad_creative_body[79:80],1,450)
+```
+
+And also what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:
+
+```{r}
+rub %>% 
+  filter(str_detect(ad_creative_body, "Wever")) %>% 
+  select(page_name, ad_creative_body, ad_creative_link_description) %>% unique() %>% 
+  datatable(rownames = FALSE, class = 'compact', options = list(dom  = 't'))
+
+```
+
+Rather weird. But it might be more interesting to see what ads had the biggest budgets. We need to convert to a common currency to compare the amounts spent. Let us get today's exchange rates to the euro of the currencies in our data frame.
+
+```{r}
+library(quantmod)
+from <- unique(df_imp$currency)
+to <- c("EUR")
+rates <- getQuote(paste0(from, to, "=X")) %>% 
+  rownames_to_column() %>% 
+  mutate(currency = substr(rowname,1,3)) %>% 
+  select(currency, Last) 
+head(rates)
+  
+```
+
+In order to estimate the amount spent per ad we will take the value at the middle of the range. 
+
+```{r}
+df_spent <- unnest_wider(df_imp, spend)
+df_spent <- df_spent %>%
+  mutate(spent = as.numeric(lower_bound)+(as.numeric(upper_bound)-as.numeric(lower_bound)+1)/2)
+df_spent <- df_spent %>% 
+  left_join(rates) %>% 
+  mutate(euro = spent*Last)
+
+df_spent %>% group_by(page_name) %>% 
+  summarise(sum = sum(euro)) %>% 
+  arrange(desc(sum))
+
+```
+
+So the Vlaams Belang takes first and second place, bearing in mind that the European Parliament spreads its ads over a much wider range of regions (hunderds). So here is an estimation of what was spent in roubles on these De Wever ads:
+
+```{r}
+df_spent %>%
+  filter(currency == "RUB") %>% 
+  filter(str_detect(ad_creative_body, "Wever")) %>%
+  select(euro) %>% 
+  sum()
+```
+
+6K€ is not that much, but too much to be a mere prank. 
+
+What was the reach of these? 
