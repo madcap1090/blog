@@ -20,6 +20,7 @@ Let's have a go at it (and thank you again Mr. Schmidt ) and see what we can com
 
 I am far from being an expert in Facebook advertising, so this is a blog on learning more about what we can get out of the API even though some are quite critical about the information it yealds. See for instance [Facebook’s Ad Archive API is Inadequate](https://blog.mozilla.org/blog/2019/04/29/facebooks-ad-archive-api-is-inadequate/).
 
+And amid new leaks reported [today](https://www.theguardian.com/uk-news/2020/jan/04/cambridge-analytica-data-leak-global-election-manipulation) that show the vast extent of manipulation trough Facebook it seems important to have a closer look at what can be learned from the data Facebook provides. 
 
 ```{r message=FALSE, warning=FALSE}
 library("tidyverse")
@@ -279,7 +280,7 @@ rub %>%
 
 Rather weird. But it might be more interesting to see what ads had the biggest budgets. We need to convert to a common currency to compare the amounts spent. Let us get today's exchange rates to the euro of the currencies in our data frame.
 
-```{r}
+```{r eval=FALSE}
 library(quantmod)
 from <- unique(df_imp$currency)
 to <- c("EUR")
@@ -287,11 +288,18 @@ rates <- getQuote(paste0(from, to, "=X")) %>%
   rownames_to_column() %>% 
   mutate(currency = substr(rowname,1,3)) %>% 
   select(currency, Last) 
-head(rates)
-  
 ```
 
-In order to estimate the amount spent per ad we will take the value at the middle of the range. 
+```{r include=FALSE}
+rates <- readRDS("./data/20200104/rates.rds")
+```
+
+```{r}
+head(rates)
+```
+
+
+In order to estimate the amount spent per ad we will take the value at the middle of the spent range. 
 
 ```{r}
 df_spent <- unnest_wider(df_imp, spend)
@@ -307,7 +315,9 @@ df_spent %>% group_by(page_name) %>%
 
 ```
 
-So the Vlaams Belang takes first and second place, bearing in mind that the European Parliament spreads its ads over a much wider range of regions (hunderds). So here is an estimation of what was spent in roubles on these De Wever ads:
+So the Vlaams Belang takes first and second place, bearing in mind that the European Parliament spreads its ads over a much wider range of regions (hunderds, and there are three in Belgium). 
+
+And here is an estimation of what was spent in roubles on these De Wever ads:
 
 ```{r}
 df_spent %>%
@@ -319,4 +329,228 @@ df_spent %>%
 
 6K€ is not that much, but too much to be a mere prank. 
 
-What was the reach of these? 
+What was the reach of these ads/pages? Or rather we have a range of impressions per ad (the number of times the content was diplayed to a target audience. 
+
+```{r}
+df_reach <- df_spent %>%
+  rename(lower_spent = lower_bound) %>% 
+  rename(upper_spent = upper_bound) %>% 
+  unnest_wider(impressions) %>% 
+   mutate(impres = as.numeric(lower_bound)
+          +(as.numeric(upper_bound)
+            -as.numeric(lower_bound)+1)/2)
+```
+
+```{r}
+df_reach %>% filter(!is.na(impres)) %>% 
+  group_by(page_name) %>% 
+  summarise(sum = sum(impres)) %>% 
+  arrange(desc(sum)) 
+```
+
+This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that reach and clicks are also important metrics to evaluate marketing impact, but we just do not have these data. 
+
+Next to 'issue' pages there are also businesses in the list, like for instance Garnier. They cannot really be categorised as an issue organisation.
+
+```{r}
+df_reach %>% 
+  filter(page_name == "Garnier") %>% 
+  select(ad_creative_body) %>% 
+  filter(str_detect(ad_creative_body, "luchtvervuiling!|Pollution"))
+```
+
+Unless of course you see selling their water solution for whiping polution from your face as an environmental cause...
+
+One strategy to get only the polital actors is to filter on the pages or funding enteties that have a political party name in them. But some politicians do not mention in their page name for which party they are a candidate for. So all the candidates names are also needed. 
+
+Let's do some scraping from an official election site.
+
+```{r eval=FALSE, include=TRUE}
+url <- "https://elections2019.belgium.be/en/candidates?title=&field_election_id_value=&field_party_name_value=&order=field_party_name&sort=asc&page=0"
+
+candidates <- data.frame()
+selector <- "body > div > main > div > div > section > div > div.views-element-container.form-group > div > div.view-content > div > table"
+
+for(i in (0:138)){
+  print(i)
+  url <- glue("https://elections2019.belgium.be/en/candidates?field_election_id_value=&field_party_name_value=&title=&page={i}")
+  table <- url %>% 
+  read_html() %>% 
+  html_node(selector) %>% 
+  html_table()
+  
+  candidates <- rbind(candidates, table)
+
+}
+
+```
+
+```{r include=FALSE}
+candidates <- readRDS("./data/20200104/candidates.rds")
+```
+
+```{r}
+candidates %>%
+  select(Name) %>% 
+  unique() %>%
+  nrow()
+  
+```
+
+So almost 7 thousand candidates in 
+
+```{r}
+candidates %>%
+  select(Party) %>% 
+  unique() %>%
+  nrow()
+
+```
+
+60 parties. 
+
+We can start with the candidates, but then we need to construct a key to join the Facebook data with the candidates table. We will only use the sorted letters (without accents) of their first and last names.
+
+```{r}
+str_sort <- function(x)
+  sapply(lapply(strsplit(x, NULL), sort), paste, collapse="")
+
+candidates <- candidates %>%
+  mutate(clean_name = str_replace_all(Name,"[^[:alnum:][:blank:]?&/\\-]", "")) %>%
+  mutate(clean_name = tolower(str_replace_all(clean_name,"-", ""))) %>% 
+  mutate(clean_name = stri_trans_general(clean_name, id = "Latin-ASCII")) %>%
+  mutate(clean_name = str_replace_all(clean_name," ",""))%>% 
+  mutate(key = str_sort(clean_name)) %>% 
+  select(-clean_name)
+
+df_candidates <- df_reach %>%
+  mutate(clean_name = str_replace_all(page_name,"[^[:alnum:][:blank:]?&/\\-]", "")) %>%
+  mutate(clean_name = tolower(str_replace_all(clean_name,"-", ""))) %>% 
+  mutate(clean_name = stri_trans_general(clean_name, id = "Latin-ASCII")) %>%
+  mutate(clean_name = str_replace_all(clean_name," ",""))%>% 
+  mutate(key = str_sort(clean_name)) %>% 
+  select(-clean_name)
+
+df_candidates <- df_candidates %>% 
+  inner_join(candidates)
+
+df_candidates  %>% 
+  count(page_name,
+        sort = TRUE,
+        name = "total ads")
+
+```
+
+And do some candidates names appear as funding entities for pages?
+
+```{r}
+df_candidates_f <- df_reach %>%
+  filter(!page_name %in% df_candidates$page_name) %>% 
+  mutate(clean_name = str_replace_all(funding_entity,"[^[:alnum:][:blank:]?&/\\-]", "")) %>%
+  mutate(clean_name = tolower(str_replace_all(clean_name,"-", ""))) %>% 
+  mutate(clean_name = stri_trans_general(clean_name, id = "Latin-ASCII")) %>%
+  mutate(clean_name = str_replace_all(clean_name," ",""))%>% 
+  mutate(key = str_sort(clean_name)) %>% 
+  select(-clean_name)
+
+df_candidates_f <- df_candidates_f %>% 
+  inner_join(candidates)
+
+df_candidates_f %>% 
+  count(page_name, funding_entity,
+        sort = TRUE,
+        name = "total ads")
+
+```
+
+```{r}
+df_candidates <- df_candidates %>% 
+  rbind(df_candidates_f) %>% 
+  filter(page_name !="Tekos")
+```
+
+Now using party names to identify page names and funding entities.
+
+```{r}
+parties <- candidates %>% 
+  select(Party) %>% 
+  mutate(name = tolower(Party)) %>% 
+  select(-Party) %>% 
+  unique()
+
+parties <- c(parties,"one brussels") # adding
+
+extract_party <- function(x){
+  x <- unlist(tokenize_ngrams(x, lowercase = TRUE, n = 3L, n_min = 1,
+                stopwords = character(), ngram_delim = " ", simplify = FALSE))
+  first(parties$name[parties$name %in% x])
+  }
+
+df_parties <- df_reach %>%
+  filter(!page_name %in% df_candidates$page_name)
+  
+df_parties$name_party <- map(tolower(df_parties$page_name), extract_party)
+
+df_parties %>%
+  count(unlist(name_party),
+        sort = TRUE,
+        name = "total ads")
+
+# there was a problem treating the & and - in cd&v and n-va
+
+additional_parties <- df_reach %>%
+  filter(!page_name%in% df_candidates$page_name) %>% 
+  mutate(name_party = tolower(str_extract(page_name, "N-VA|CD&V"))) %>% 
+  filter(!is.na(name_party))
+
+df_parties <- rbind(df_parties, additional_parties)
+
+```
+
+And for the party names in the funding entity names.
+
+```{r}
+df_parties_f <- df_reach %>%
+  filter(!page_name %in% df_candidates$page_name)
+  
+df_parties_f$name_party <- map(tolower(df_parties_f$funding_entity), extract_party)
+
+df_parties <- df_parties %>% 
+  filter(!is.na(name_party)) %>% 
+  rbind(df_parties_f %>% 
+          filter((!is.na(name_party))))
+
+# there was a problem treating the & and - in cd&v and n-va
+
+additional_parties_f <- df_reach %>%
+  filter(!page_name%in% df_candidates$page_name) %>% 
+  mutate(name_party = tolower(str_extract(funding_entity, "N-VA|CD&V"))) %>% 
+  filter(!is.na(name_party))
+
+df_parties <- rbind(df_parties, additional_parties_f)
+
+```
+
+We still missed a few pages, but they do not represent a lot of ads. 
+
+```{r}
+more <- c("Jean-Claude Marcourt - Officiel", "Patrick Cottenie","Guillaume Soupart - Conseiller communal", 
+          "Cédric Mahieu - Conseiller communal à 1030", "Hannes De Reu", "Alexander Vandersmissen" ,
+          "Marie Arena","Luc Haegemans", "Michael Freilich - Kamerlid", "Christophe Leurident", 
+          "Lara Thommès - Conseillère communale à Ganshoren", "Kevin Engelen","Marie Meunier", 
+          "Thomas Van Hoof")
+
+
+df_add_ref <- data.frame("page_name" = more, "name_party" = c("ps","nv-a","mr","cdh","sp.a",
+                                                          "open vld","ps","cd&v",
+                                                          "nv-a","mr","ps","nv-a",
+                                                          "ps","n-va"))
+
+df_add <- df_reach %>% 
+  filter(page_name %in% more) %>% 
+  left_join(df_add_ref)
+
+df_parties <- df_parties %>% 
+  rbind(df_add)
+
+```
