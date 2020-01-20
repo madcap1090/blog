@@ -38,6 +38,7 @@ library("tidyr") # devtools::install_github("tidyverse/tidyr")
 library("stringi")
 library("tokenizers") 
 library("reactable") #install.packages("reactable")
+library("scales")
 options(scipen = 999)
 ```
 
@@ -267,6 +268,8 @@ It contains a now infamous scam messages but also some anti-China and anti-US me
 ```{r}
 substr(rub$ad_creative_body[79:80],1,450)
 ```
+
+Russia critising a possible withdrawal of us is troops from Afghanistan is such a to 
 
 And also what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:
 
@@ -551,6 +554,282 @@ df_add <- df_reach %>%
   left_join(df_add_ref)
 
 df_parties <- df_parties %>% 
-  rbind(df_add)
+  rbind(df_add) %>% 
+  unique()
 
 ```
+
+There is a data frame based on the candidates, and another one based on the parties. Time to put them together. And we will be focussing on 2019.
+
+
+```{r}
+
+df_candidates <- df_candidates %>% 
+  mutate(name_party = tolower(Party))
+
+df <- df_parties %>% 
+  rbind(df_candidates %>%
+          select(-one_of(setdiff(names(df_candidates), names(df_parties))))) %>% 
+  filter(page_name != "Mr. Gugu & Miss Go")
+
+df <- df %>% 
+  mutate(name_party = unlist(name_party)) %>% 
+  filter(ad_creation_day > ymd("2018-12-31")) %>% 
+  filter(ad_creation_day < ymd("2020-01-01"))
+
+df %>% 
+   count(name_party,
+        sort = TRUE,
+        name = "total_ads")
+
+```
+
+```{r}
+# cleaning
+rm(list=setdiff(ls(), "df"))
+```
+
+```{r}
+colors <- c("n-va"= "sienna3",
+            "vlaams belang" = "grey35",
+            "groen" = "lightgreen",
+            "open vld" = "deepskyblue",
+            "cdh" = "darkorange2",
+            "ps" = "hotpink2",
+            "sp.a" = "pink",
+            "pvda" ="firebrick2",
+            "ptb" = "firebrick2",
+            "cd&v" = "orange",
+            "ecolo" = "lightgreen",
+            "défi" = "#ca2c92",
+            "mr" = "royalblue")
+
+
+df %>% 
+  group_by(name_party) %>% 
+  summarise(n_ads=n()) %>%
+  arrange(desc(n_ads)) %>%
+  filter(n_ads > 200) %>% 
+  ggplot() +
+  geom_bar(aes(x=reorder(name_party, n_ads),
+               y=n_ads,
+               fill= name_party),
+           color="transparent",
+           stat="identity",
+           width = 0.7) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "", y = "#ads") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.95)) +
+  scale_fill_manual("name_party", values=colors)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+euro_format <- function(largest_with_cents = 100000) {
+  function(x) {
+    x <- plyr::round_any(x, 0.01)
+    if (max(x, na.rm = TRUE) < largest_with_cents &
+        !all(x == floor(x), na.rm = TRUE)) {
+      nsmall <- 2L
+    } else {
+      x <- plyr::round_any(x, 1)
+      nsmall <- 0L
+    }
+    str_c("€", format(x, nsmall = nsmall, trim = TRUE, big.mark = ".", scientific = FALSE, digits=1L))
+  }
+}
+
+
+df %>% 
+  group_by(name_party) %>% 
+  summarise(euro =sum(euro)) %>%
+  arrange(desc(euro)) %>%
+    filter(euro > 60000) %>% 
+  ggplot() +
+  geom_bar(aes(x=reorder(name_party, euro),
+               y=euro,
+               fill= name_party),
+           color="transparent",
+           stat="identity",
+           width = 0.7) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.70)) +
+  scale_fill_manual("name_party", values=colors)+
+  theme(plot.margin=unit(c(.75,.75,0,1,1),"cm"))+
+  ylim(0, 2100000)+
+  scale_y_continuous(labels=euro_format())
+#top, then right, bottom and left
+```
+
+i tried to find the most interesting insights and present it in this blog pots. from th beginning i felt that the data was interesting and really fun to play with. but what is more salient i think, is that there really is a transparency deficit. 
+
+
+The Vlaams Belang seems to be spending more than three times more than the second biggest spender, the N-VA. 
+
+```{r}
+(df %>% filter(name_party=="vlaams belang") %>% 
+                 filter(year(ymd(ad_creation_day))==2019) %>% 
+   select(euro) %>% 
+   sum)/
+sum(df$euro)
+```
+
+And their spending represents 42% of the total spending we identified in 2019.
+
+```{r}
+biggest <- df %>%
+  filter(ad_delivery_start_day > ymd("2018-12-31")) %>% 
+  group_by(name_party) %>% 
+  summarise(n_ads=n()) %>%
+  arrange(desc(n_ads)) %>% 
+  slice(1:10)
+
+
+df %>% 
+  filter(ad_delivery_start_day > ymd("2018-12-31")) %>% 
+  mutate(week = week(ad_creation_day)) %>% 
+  filter(name_party %in% biggest$name_party) %>%
+  #group_by(name_party, ad_delivery_start_day) %>%
+  group_by(name_party, week) %>% 
+  summarise(n_ads=n()) %>%
+  arrange(desc(n_ads)) %>%
+  ggplot()+
+  theme_minimal() +
+  labs(x = "party", y = "#ads") +
+  geom_bar(aes(x= week,
+               y=n_ads,
+               fill = name_party),
+           color="transparent",
+           stat="identity",
+           width = 0.7)+
+  scale_fill_manual("party", values=colors)
+```
+
+
+
+
+
+
+```{r message=FALSE, warning=FALSE}
+df %>% 
+  filter(ad_delivery_start_day > ymd("2018-12-31")) %>% 
+  mutate(week = week(ad_creation_day)) %>% 
+  filter(name_party %in% biggest$name_party) %>%
+  #group_by(name_party, ad_delivery_start_day) %>%
+  group_by(name_party, week) %>% 
+  summarise(euro=sum(euro)) %>%
+  arrange(desc(euro)) %>%
+  ggplot()+
+  theme_minimal() +
+  labs(x = "party", y = "") +
+  geom_bar(aes(x= week,
+               y=euro,
+               fill = name_party),
+           color="transparent",
+           stat="identity",
+           width = 0.7)+
+  scale_fill_manual("party", values=colors)+
+  scale_y_continuous(labels=euro_format())
+
+```
+
+It also seems that the Vlaams Belang was the party that bought the most ads after the elections. Let's have a closer look:
+
+```{r message=FALSE, warning=FALSE}
+df %>% 
+  filter(ad_creation_day > ymd("2019-05-31")) %>% 
+  mutate(week = week(ad_creation_day)) %>% 
+  filter(name_party %in% biggest$name_party) %>%
+  #group_by(name_party, ad_delivery_start_day) %>%
+  group_by(name_party, week) %>% 
+  summarise(euro=sum(euro)) %>%
+  arrange(desc(euro)) %>%
+  ggplot()+
+  theme_minimal() +
+  labs(x = "party", y = "") +
+  geom_bar(aes(x= week,
+               y=euro,
+               fill = name_party),
+           color="transparent",
+           stat="identity",
+           width = 0.7)+
+  scale_fill_manual("party", values=colors)+
+  scale_y_continuous(labels=euro_format())
+
+```
+
+Only in week 40 was there some advertising from the PVDA and PTB.
+
+```{r}
+df %>% 
+  filter(ad_creation_day > ymd("2019-05-31")) %>% 
+  mutate(week = week(ad_creation_day)) %>% 
+  filter(week == 40) %>% 
+  group_by(ad_creative_body, name_party) %>% 
+  summarise(sum = sum(euro)) %>% 
+  arrange(desc(sum))
+```
+
+There are also some demographical data at hand. But they need to b extracted from a column. Here under with a bit of a slow loop but I have to run errands anyway.
+
+
+```{r eval=FALSE, include=TRUE}
+
+new_df <- data_frame()
+for (i in (1:nrow(df))){
+  print(i)
+  x <- df[i,]
+  y <- unnest(x, demographic_distribution)
+  add_df <- data_frame()
+  for (j in (1:nrow(y))){
+    row <- data.frame(as.list(y$demographic_distribution[j]))
+    add_df <- rbind(add_df, row)
+  }
+  y <- cbind(y, add_df)
+  new_df <- rbind(new_df, y)
+}
+
+```
+
+
+```{r}
+#saveRDS(new_df, "~/R/dev_blog_post/content/post/data/20191222/df_demog.rds")
+getwd()
+df_demog <- readRDS("./data/20200104/df_demog.rds")
+```
+```
+
+
+
+
+
+
+```{r}
+library("details") # install.packages("details")
+details::details({
+  x <- 1
+  x * 2
+},summary = 'click to see eval')
+```
+details::details({
+  x <- 1
+  x * 2
+},summary = 'click to see eval')
+
+
+```{r, details}
+x <- 1
+x * 2
+```
+
+```
+Jason Kint (@jason_kint) tweeted at 5:28 am on Sun, Jan 05, 2020:
+critical to understand based on these documents that it's not simply the existence of demonstrably false ads which makes Facebook toxic to free and fair elections. It's the allowance of these ads to be hypertargeted (eg microtargeting disinfo towards neurotic voters).
+
+https://www.theguardian.com/technology/2020/jan/09/facebook-political-ads-micro-targeting-us-election?CMP=Share_AndroidApp_Gmail
+
+s
+
