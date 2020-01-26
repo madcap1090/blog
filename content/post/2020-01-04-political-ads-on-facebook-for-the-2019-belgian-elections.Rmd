@@ -656,10 +656,11 @@ df %>%
   theme_minimal() +
   theme(legend.position = "none") +
   labs(x = "", y = "") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 0.70)) +
+  #theme(axis.text.x = element_text(angle = 45, hjust = 0.70)) +
   scale_fill_manual("name_party", values=colors)+
   theme(plot.margin=unit(c(.75,.75,0,1,1),"cm"))+
   ylim(0, 2100000)+
+  coord_flip()+
   scale_y_continuous(labels=euro_format())
 #top, then right, bottom and left
 ```
@@ -678,6 +679,24 @@ sum(df$euro)
 ```
 
 And their spending represents 42% of the total spending we identified in 2019.
+
+What were the most spent on ads? 
+
+
+```{r}
+top_df <- df %>% 
+  group_by(ad_creative_body, page_name, name_party) %>% 
+  summarise(euro = sum(spent)) %>%
+  arrange(desc(euro)) %>%
+  ungroup() 
+
+reactable(top_df, columns = list(
+  page_name = colDef(width = 80),
+  name_party = colDef(width = 80),
+  euro = colDef(width = 95 ,format = colFormat(prefix = "€", separators = TRUE, digits = 0))),
+          filterable = TRUE, minRows = 10)
+```
+
 
 ```{r}
 biggest <- df %>%
@@ -773,12 +792,11 @@ df %>%
   arrange(desc(sum))
 ```
 
-There are also some demographical data at hand. But they need to b extracted from a column. Here under with a bit of a slow loop but I have to run errands anyway.
-
+There are also some demographical data at hand. But they need to be extracted from a column. Here under with a bit of a slow loop but I have to go and run errands anyway.
 
 ```{r eval=FALSE, include=TRUE}
 
-new_df <- data_frame()
+df_demog <- data_frame()
 for (i in (1:nrow(df))){
   print(i)
   x <- df[i,]
@@ -789,18 +807,63 @@ for (i in (1:nrow(df))){
     add_df <- rbind(add_df, row)
   }
   y <- cbind(y, add_df)
-  new_df <- rbind(new_df, y)
+  df_demog <- rbind(df_demog, y)
 }
 
-```
 
+```
 
 ```{r}
-#saveRDS(new_df, "~/R/dev_blog_post/content/post/data/20191222/df_demog.rds")
-getwd()
+#saveRDS(df_demog, "./data/20200104/df_demog.rds")
 df_demog <- readRDS("./data/20200104/df_demog.rds")
+
+df_demog <- df_demog %>% 
+  mutate(percentage = as.numeric(as.character(percentage))) %>% 
+  mutate(spent_demog = euro*percentage)
+
+line_df <- df_demog %>% 
+  select(name_party, age, gender, spent_demog) %>% 
+  group_by(name_party, age, gender) %>% 
+  summarise(spent = sum(spent_demog)) %>% 
+  ungroup()
+
+
+top_spenders <- line_df %>% group_by(name_party) %>% 
+  summarise(budget = sum(spent)) %>% 
+  arrange(desc(budget)) %>% 
+  head(9) 
+
 ```
+
+```{r message=FALSE}
+line_df %>% left_join(top_spenders) %>% 
+  mutate(prct = spent/budget) %>% 
+  filter(name_party %in% top_spenders$name_party) %>%
+  filter(age != "13-17") %>%
+  filter(gender != "unknown") %>% 
+  mutate(order  = as.numeric(substr(age,1,2))) %>% 
+  arrange(order) %>% 
+  ggplot(aes(x= reorder(age, order), y=prct, group=gender, color=gender)) +
+  geom_line()+
+  scale_color_manual(values=c("#CC6666", "#9999CC"))+
+  facet_wrap(~name_party, scales = "fixed")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90))+
+  xlab("age bins")+
+  ylab("percentage spent")+
+  scale_y_continuous(labels=percent_format(accuracy=1))
+
 ```
+
+
+
+
+
+
+
+
+
+
 
 
 
