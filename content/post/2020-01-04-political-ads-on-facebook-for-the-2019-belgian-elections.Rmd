@@ -10,15 +10,15 @@ tags:
   - nlp
   - topic modeling
 ---
-I was looking for a way to have the same level of analysis that is possible with the Twitter API on Facebook, but gave up after a short while. The API seems to me quite closed in terms of what information is made available by Facebook. 
+I was looking for a way to have the same level of analysis of Facebook that is possible with the Twitter API, but gave up after a short while. The API seems to me quite closed in terms of what information is made available by Facebook. 
 
 So I was quiet interested when I come across [this](http://rpubs.com/zoowalk/FB_EP2019) blog post of Mr Schmidt not on an API for Facebook generally, but for Facebook ads. 
 
-The increased transparancy comes as a reaction against critisim on Facebook for running 'manipulative' political adds (lies) on it's servers. 
+The increased transparency comes as a reaction against criticism on Facebook for running 'manipulative' political adds (lies) on it's servers. 
 
-Let's have a go at it (and thank you again Mr. Schmidt ) and see what we can come up with related to the Belgian elections of May 2019 or more widly regarding Belgian politics. 
+Let's have a go at it (and thank you Mr. Schmidt ) and see what we can come up with related to the Belgian elections of May 2019 or more widely regarding Belgian politics. 
 
-I am far from being an expert in Facebook advertising, so this is a blog on learning more about what we can get out of the API even though some are quite critical about the information it yealds. See for instance [Facebook’s Ad Archive API is Inadequate](https://blog.mozilla.org/blog/2019/04/29/facebooks-ad-archive-api-is-inadequate/).
+I am far from being an expert in Facebook advertising, so this is a blog on learning more about what we can get out of the API even though some are quite critical about the information it yeelds. See for instance [Facebook’s Ad Archive API is Inadequate](https://blog.mozilla.org/blog/2019/04/29/facebooks-ad-archive-api-is-inadequate/).
 
 And amid new leaks reported [today](https://www.theguardian.com/uk-news/2020/jan/04/cambridge-analytica-data-leak-global-election-manipulation) that show the vast extent of manipulation trough Facebook it seems important to have a closer look at what can be learned from the data Facebook provides. 
 
@@ -42,7 +42,7 @@ library("scales")
 options(scipen = 999)
 ```
 
-The way to go about is to go to Facebook for developers by creating an account and then create a new app. Add all the search fields you are interested in (I took all) and you then need a token that seems to be a temporary token (on this [portal](https://developers.facebook.com/tools/explorer/), meaning that it is only valid for a certain time and you need to re-generate it for your next run. 
+The way to go about is to go to Facebook for developers by creating an account and then create a new app. Add all the search fields you are interested in (I took all) and you then need a token that seems to be a temporary token (on this [portal](https://developers.facebook.com/tools/explorer/)), meaning that it is only valid for a certain time and you need to re-generate it for your next run. 
 
 ```{r eval=FALSE, include=TRUE}
 # https://www.facebook.com/ads/library/api/?source=archive-landing-page
@@ -106,14 +106,14 @@ This returned 18K rows when I ran it 4 months ago. We are more than doubling the
 df_imp <- readRDS("./data/20200104/df_imp_20200104.rds")
 ```
 
-We receieved 16 variables. Some of them are lists. 
+We received 16 variables. Some of them are lists. 
 
 ```{r}
 names(df_imp)
 ```
 
 
-It will be easier if we have a custom function that extracts the date from the different timestamps.
+It will be easier if we have a custom function that extracts the date from the different time stamps.
 
 ```{r}
 make_date <- function(x){
@@ -166,12 +166,13 @@ The first dozens of ads were from the The European Democratic Party (EDP), the f
 df_imp %>% 
   filter(ad_delivery_start_day == ymd("2017-06-02")) %>% 
   select(ad_delivery_start_day, ad_creative_body) %>%
-  slice(1)
+  slice(1) %>% 
+  datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
 
 Glad to hear the change worked.
 
-Analysing the global figures a bit further and getting the total ads per funding entity:
+Analyzing the global figures a bit further and getting the total ads per funding entity:
 
 ```{r}
 df_imp %>% 
@@ -186,14 +187,14 @@ It is indeed a pity that Facebook decided to put the 'political' and 'issues' ca
 
 In other words we have access to what Greenpeace Belgium is advertising in Belgium through Facebook, but not what Exxon Mobile is. 
 
-[Because](https://www.facebook.com/ads/library/api/?source=archive-landing-page) "Default value: "POLITICAL_AND_ISSUE_ADS": 
+[Because](https://www.facebook.com/ads/library/api/?source=archive-landing-page) as stated by Facebook: "Default value: "POLITICAL_AND_ISSUE_ADS": 
 The type of ad. We label either all returned ads as political or issue ads, or label ads for news related to politics or issues of political importance. See Facebook Ads Help Center, About ads related to politics or issues of national importance. We currently only support POLITICAL_AND_ISSUE_ADS." Note that the options listed are: ALL, POLITICAL_AND_ISSUE_ADS, HOUSING_ADS, UNCATEGORIZED_ADS. 
 
 (I'm not really holding my breath for the housing adds.)
 
-Facebook's ads archive library is not only inherently flawed, it is also biased because it does not include any corporate advertising. We might have a glimpse at what Belgian political parties spent and whatever their messages were, but we do not know how much was spent in Belgium flogging the F35 by Northrop Grumann. And some commentators say that is exactly one of the reasons why Facebook is reluctant to be transparent. The more it is forced to be transparent on political ads and their impact on democracy, the more they will be under pressure to revail the agenda of their corporate clients. As nicely explained in [this Guardian postcast](https://open.spotify.com/episode/09YkfvCUGsegLYgzMYrtvi?si=LniDF1c3QGezA9cmUERyfQ)
+Facebook's ads archive library is not only flawed, it is also biased because it does not include any corporate advertising. We might have a glimpse at what Belgian political parties spent and whatever their messages were, but we do not know how much was spent in Belgium flogging the F35 by Northrop Grumman for instance. And some commentators say that is exactly one of the reasons why Facebook is reluctant to be transparent. The more it is forced to be transparent on political ads and their impact on democracy, the more they will be under pressure to reveal the agenda of their corporate clients. As nicely explained in [this Guardian postcast](https://open.spotify.com/episode/09YkfvCUGsegLYgzMYrtvi?si=LniDF1c3QGezA9cmUERyfQ)
 
-For now we have to do with what is given to us. Also with the fact that more than half of these ads have no known sponsers even though Facebook itself is [claiming](https://www.facebook.com/business/help/208949576550051) "For general or national-level elections taking place in the European Union (such as the general election in Spain, the federal election in Belgium and the presidential election in Lithuania), political parties and candidates campaigning in these elections will be required to complete ad authorisations and place "Paid for by" disclaimers on all of their ads until the end of the election period."
+For now we have to do with what is given to us. Also with the fact that more than half of these ads have no known sponsors even though Facebook itself is [claiming](https://www.facebook.com/business/help/208949576550051) "For general or national-level elections taking place in the European Union (such as the general election in Spain, the federal election in Belgium and the presidential election in Lithuania), political parties and candidates campaigning in these elections will be required to complete ad authorisations and place  "Paid for by" disclaimers on all of their ads until the end of the election period."
 
 Maybe the "Paid for by" appeared on all of their ads until the election period. Or they did not but here are the ads by unknown funding entity and by date in 2019:
 
@@ -228,11 +229,9 @@ df_imp %>%
 
 So here in the top ten, except for Mr. Mertens, there are no political actors. Only 'issues' like the UN agency UNICEF, a news outlet and others. 
  
-https://www.facebook.com/pg/kialo/about/?ref=page_internal
+This means that if we want to create any meaningful analysis of political ads on Facebook for Belgium based on this data set there is not a small amount of data cleaning to be done. Tbh we are used to that, but not in a data set that would have have been specifically designed to be a basis for analysis. 
 
-This means that if we want to create any meaningfull analysis of political ads on Facebook for Belgium based on this data set there is not a small amount of data cleaning to be done. Tbh we are used to that, but not in a data set that would have have been specificaly designed to be a basis for analysis. 
-
-Let's try to only keep politicians and parties. But before we do we will have a look at the estimation of total expenses for Belgium in 2019, per page. We do not have exact numbers of amounts spent only a range per ad.
+Let's try to only keep politicians and parties. But before we do we will have a look at the estimation of total expenses for Belgium in 2019, per page. We do not have exact numbers of amounts spent only a range per ad. Here are the ranges:
 
 
 ```{r}
@@ -248,23 +247,26 @@ df_imp %>%
         name = "total ads")
 ```
 
-Hmm 95 ads spent in roubles. That's always interesting these days. 
+Hmm 95 ads spent in rubles. That's always interesting these days. 
 
 ```{r}
 rub <- df_imp %>% 
   filter(currency == "RUB")
 ```
 
-It contains a now infamous scam messages but also some anti-China and anti-US messages from the Russian International Affairs Council:
+The set contains an infamous scam messages but also some anti-China and anti-US messages from the Russian International Affairs Council:
 
 ```{r}
-substr(rub$ad_creative_body[79:80],1,450) %>% 
-  datatable(rownames = FALSE)
+rub %>% 
+  select(page_name, ad_creative_body) %>% 
+  slice(79:80) %>% 
+  mutate(ad_creative_body = substr(ad_creative_body, 1, 750)) %>% 
+  datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
 
-Russia critising a possible withdrawal of us is troops from Afghanistan is such a 2019 thing to do.
+Russia critising a possible withdrawal of US troops from Afghanistan is such a 2019 thing to do.
 
-And also what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:
+And the set of ads paid in rubles also contains what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:
 
 ```{r}
 rub <- rub %>% 
@@ -299,7 +301,6 @@ rates <- readRDS("./data/20200104/rates.rds")
 head(rates)
 ```
 
-
 In order to estimate the amount spent per ad we will take the value at the middle of the spent range. 
 
 ```{r}
@@ -316,9 +317,9 @@ df_spent %>% group_by(page_name) %>%
 
 ```
 
-So the Vlaams Belang takes first and second place, bearing in mind that the European Parliament spreads its ads over a much wider range of regions (hunderds, and there are three in Belgium). 
+So the Vlaams Belang takes first and second place, bearing in mind that the European Parliament spreads its ads over a much wider range of regions (hundreds, and there are three in Belgium). 
 
-And here is an estimation of what was spent in roubles on these De Wever ads:
+And here is an estimation of what was spent in rubles on these De Wever ads:
 
 ```{r}
 df_spent %>%
@@ -330,7 +331,7 @@ df_spent %>%
 
 6K€ is not that much, but too much to be a mere prank. 
 
-What was the reach of these ads/pages? Or rather we have a range of impressions per ad (the number of times the content was diplayed to a target audience. 
+What was the reach of these ads/pages? Or rather we have a range of impressions per ad (the number of times the content was displayed to a target audience). 
 
 ```{r}
 df_reach <- df_spent %>%
@@ -349,7 +350,7 @@ df_reach %>% filter(!is.na(impres)) %>%
   arrange(desc(sum)) 
 ```
 
-This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that reach and clicks are also important metrics to evaluate marketing impact, but we just do not have these data. 
+This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that reach and clicks are also important metrics to evaluate marketing impact, but we just do not have that data. 
 
 Next to 'issue' pages there are also businesses in the list, like for instance Garnier. They cannot really be categorised as an issue organisation.
 
@@ -357,12 +358,13 @@ Next to 'issue' pages there are also businesses in the list, like for instance G
 df_reach %>% 
   filter(page_name == "Garnier") %>% 
   select(ad_creative_body) %>% 
-  filter(str_detect(ad_creative_body, "luchtvervuiling!|Pollution"))
+  filter(str_detect(ad_creative_body, "luchtvervuiling!|Pollution")) %>% 
+  datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
 
-Unless of course you see selling their water solution for whiping polution from your face as an environmental cause...
+Unless of course you see selling their water solution for wiping pollution from your face as an environmental cause...
 
-One strategy to get only the polital actors is to filter on the pages or funding enteties that have a political party name in them. But some politicians do not mention in their page name for which party they are a candidate for. So all the candidates names are also needed. 
+One strategy to get only the political actors is to filter on the pages or funding entities that have a political party name in them. But some politicians do not mention in their page name for which party they are a candidate for. So all the candidates names are also needed. 
 
 Let's do some scraping from an official election site.
 
@@ -537,7 +539,7 @@ df_parties <- rbind(df_parties, additional_parties_f)
 
 We still missed a few pages, but they do not represent a lot of ads. 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 more <- c("Jean-Claude Marcourt - Officiel", "Patrick Cottenie",
           "Guillaume Soupart - Conseiller communal", 
           "Cédric Mahieu - Conseiller communal à 1030", 
@@ -564,7 +566,7 @@ df_parties <- df_parties %>%
 
 ```
 
-There is a data frame based on the candidates, and another one based on the parties. Time to put them together. And we will be focussing on 2019.
+There is a data frame based on the candidates, and another one based on the parties. Time to put them together. And we will be focusing on 2019.
 
 
 ```{r}
@@ -589,10 +591,13 @@ df %>%
 
 ```
 
-```{r}
+
+```{r include=FALSE}
 # cleaning
 rm(list=setdiff(ls(), "df"))
 ```
+
+Here we define the parties colors and we count the number of ads per party:
 
 ```{r}
 colors <- c("n-va"= "sienna3",
@@ -629,6 +634,7 @@ df %>%
   scale_fill_manual("name_party", values=colors)
 ```
 
+Doing the same but now looking at the amounts spent:
 
 ```{r message=FALSE, warning=FALSE}
 euro_format <- function(largest_with_cents = 100000) {
@@ -671,10 +677,7 @@ df %>%
 #top, then right, bottom and left
 ```
 
-i tried to find the most interesting insights and present it in this blog pots. from th beginning i felt that the data was interesting and really fun to play with. but what is more salient i think, is that there really is a transparency deficit. 
-
-
-The Vlaams Belang seems to be spending more than three times more than the second biggest spender, the N-VA. 
+The Vlaams Belang appears to be spending more than three times more than the second biggest spender, the N-VA. 
 
 ```{r}
 (df %>% filter(name_party=="vlaams belang") %>% 
@@ -695,15 +698,17 @@ top_df <- df %>%
   summarise(euro = sum(spent)) %>%
   arrange(desc(euro)) %>%
   ungroup() %>% 
-  slice(1:5)
+  slice(1:5) %>% 
+  datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 
-reactable(top_df, columns = list(
-  page_name = colDef(width = 90),
-  name_party = colDef(width = 90),
-  euro = colDef(width = 95 ,format = colFormat(prefix = "€", separators = TRUE, digits = 0))),
-          filterable = FALSE, minRows = 5)
+# reactable(top_df, columns = list(
+#   page_name = colDef(width = 90),
+#   name_party = colDef(width = 90),
+#   euro = colDef(width = 95 ,format = colFormat(prefix = "€", separators = TRUE, digits = 0))),
+#           filterable = FALSE, minRows = 5)
 ```
 
+This is the way the number of ads were spread out during the year by biggest advertisers:
 
 ```{r}
 biggest <- df %>%
@@ -735,9 +740,7 @@ df %>%
 ```
 
 
-
-
-
+And by amounts spent:
 
 ```{r message=FALSE, warning=FALSE}
 df %>% 
@@ -796,10 +799,12 @@ df %>%
   filter(week == 40) %>% 
   group_by(ad_creative_body, name_party) %>% 
   summarise(sum = sum(euro)) %>% 
-  arrange(desc(sum))
+  arrange(desc(sum)) %>% 
+  slice(1:5) %>% 
+  datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
 
-There are also some demographical data at hand. But they need to be extracted from a column. Here under with a bit of a slow loop but I have to go and run errands anyway.
+There are also some demo-graphical data at hand. And they need to be extracted from a column. Here under with a bit of a slow loop but I have to go and run errands anyway.
 
 ```{r eval=FALSE, include=TRUE}
 
@@ -820,7 +825,7 @@ for (i in (1:nrow(df))){
 
 ```
 
-Let's what we have and what categories the parties taget the most:
+Let's what we have and what categories the parties target the most:
 
 ```{r}
 #saveRDS(df_demog, "./data/20200104/df_demog.rds")
