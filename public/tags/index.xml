@@ -7,24 +7,33 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Thu, 12 Dec 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 04 Jan 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Beers</title>
-      <link>/tags/beers/</link>
-      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
+      <title>Belgian politics</title>
+      <link>/tags/belgian-politics/</link>
+      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
       
-      <guid>/tags/beers/</guid>
+      <guid>/tags/belgian-politics/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Facebook</title>
+      <link>/tags/facebook/</link>
+      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/facebook/</guid>
       <description></description>
     </item>
     
     <item>
       <title>nlp</title>
       <link>/tags/nlp/</link>
-      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
       
       <guid>/tags/nlp/</guid>
       <description></description>
@@ -33,9 +42,18 @@
     <item>
       <title>topic modeling</title>
       <link>/tags/topic-modeling/</link>
-      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
       
       <guid>/tags/topic-modeling/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Beers</title>
+      <link>/tags/beers/</link>
+      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/beers/</guid>
       <description></description>
     </item>
     
@@ -63,15 +81,6 @@
       <pubDate>Tue, 12 Nov 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/geocoding/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Belgian politics</title>
-      <link>/tags/belgian-politics/</link>
-      <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/belgian-politics/</guid>
       <description></description>
     </item>
     

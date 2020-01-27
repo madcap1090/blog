@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Thu, 12 Dec 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 04 Jan 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/nlp/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Political ads on Facebook for the 2019 Belgian elections</title>
+      <link>/post/political-ads-on-facebook-for-the-2019-belgian-elections/</link>
+      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/political-ads-on-facebook-for-the-2019-belgian-elections/</guid>
+      <description>I was looking for a way to have the same level of analysis that is possible with the Twitter API on Facebook, but gave up after a short while. The API seems to me quite closed in terms of what information is made available by Facebook.
+So I was quiet interested when I come across this blog post of Mr Schmidt not on an API for Facebook generally, but for Facebook ads.</description>
+    </item>
     
     <item>
       <title>Topic modeling beer reviews</title>

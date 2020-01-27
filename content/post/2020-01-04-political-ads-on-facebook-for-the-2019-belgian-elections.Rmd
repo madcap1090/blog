@@ -113,13 +113,6 @@ names(df_imp)
 ```
 
 
-```{r}
-head(df_imp) %>% 
-  select(page_name, ad_creative_body) %>% 
-  unique() %>% 
-  datatable(rownames = FALSE, class = 'compact', options = list(dom  = 't'))
-```
-
 It will be easier if we have a custom function that extracts the date from the different timestamps.
 
 ```{r}
@@ -260,24 +253,29 @@ Hmm 95 ads spent in roubles. That's always interesting these days.
 ```{r}
 rub <- df_imp %>% 
   filter(currency == "RUB")
-rub
 ```
 
 It contains a now infamous scam messages but also some anti-China and anti-US messages from the Russian International Affairs Council:
 
 ```{r}
-substr(rub$ad_creative_body[79:80],1,450)
+substr(rub$ad_creative_body[79:80],1,450) %>% 
+  datatable(rownames = FALSE)
 ```
 
-Russia critising a possible withdrawal of us is troops from Afghanistan is such a to 
+Russia critising a possible withdrawal of us is troops from Afghanistan is such a 2019 thing to do.
 
 And also what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:
 
 ```{r}
-rub %>% 
-  filter(str_detect(ad_creative_body, "Wever")) %>% 
-  select(page_name, ad_creative_body, ad_creative_link_description) %>% unique() %>% 
-  datatable(rownames = FALSE, class = 'compact', options = list(dom  = 't'))
+rub <- rub %>% 
+   filter(str_detect(ad_creative_body, "Wever")) %>% 
+   select(page_name, ad_creative_body, ad_creative_link_description)%>% 
+   unique() %>%
+   head(4) 
+
+```
+```{r}
+datatable(rub, rownames = FALSE, class = 'compact', escape = TRUE, options = list(dom  = 't'))
 
 ```
 
@@ -369,14 +367,17 @@ One strategy to get only the polital actors is to filter on the pages or funding
 Let's do some scraping from an official election site.
 
 ```{r eval=FALSE, include=TRUE}
-url <- "https://elections2019.belgium.be/en/candidates?title=&field_election_id_value=&field_party_name_value=&order=field_party_name&sort=asc&page=0"
+url <- paste0("https://elections2019.belgium.be/en/candidates?title=&field_election",
+              "_id_value=&field_party_name_value=&order=field_party_name&sort=asc&page=0")
 
 candidates <- data.frame()
-selector <- "body > div > main > div > div > section > div > div.views-element-container.form-group > div > div.view-content > div > table"
+selector <- paste0("body > div > main > div > div > section > div > div.views",
+                   "-element-container.form-group > div > div.view-content > div > table")
 
 for(i in (0:138)){
   print(i)
-  url <- glue("https://elections2019.belgium.be/en/candidates?field_election_id_value=&field_party_name_value=&title=&page={i}")
+  url <- glue("https://elections2019.belgium.be/en/candidates?field_election_id_value",
+              "=&field_party_name_value=&title=&page={i}")
   table <- url %>% 
   read_html() %>% 
   html_node(selector) %>% 
@@ -537,10 +538,14 @@ df_parties <- rbind(df_parties, additional_parties_f)
 We still missed a few pages, but they do not represent a lot of ads. 
 
 ```{r}
-more <- c("Jean-Claude Marcourt - Officiel", "Patrick Cottenie","Guillaume Soupart - Conseiller communal", 
-          "Cédric Mahieu - Conseiller communal à 1030", "Hannes De Reu", "Alexander Vandersmissen" ,
-          "Marie Arena","Luc Haegemans", "Michael Freilich - Kamerlid", "Christophe Leurident", 
-          "Lara Thommès - Conseillère communale à Ganshoren", "Kevin Engelen","Marie Meunier", 
+more <- c("Jean-Claude Marcourt - Officiel", "Patrick Cottenie",
+          "Guillaume Soupart - Conseiller communal", 
+          "Cédric Mahieu - Conseiller communal à 1030", 
+          "Hannes De Reu", "Alexander Vandersmissen" ,
+          "Marie Arena","Luc Haegemans", "Michael Freilich - Kamerlid", 
+          "Christophe Leurident", 
+          "Lara Thommès - Conseillère communale à Ganshoren", 
+          "Kevin Engelen","Marie Meunier", 
           "Thomas Van Hoof")
 
 
@@ -636,7 +641,8 @@ euro_format <- function(largest_with_cents = 100000) {
       x <- plyr::round_any(x, 1)
       nsmall <- 0L
     }
-    str_c("€", format(x, nsmall = nsmall, trim = TRUE, big.mark = ".", scientific = FALSE, digits=1L))
+    str_c("€", format(x, nsmall = nsmall, trim = TRUE, big.mark = ".", 
+                      scientific = FALSE, digits=1L))
   }
 }
 
@@ -688,13 +694,14 @@ top_df <- df %>%
   group_by(ad_creative_body, page_name, name_party) %>% 
   summarise(euro = sum(spent)) %>%
   arrange(desc(euro)) %>%
-  ungroup() 
+  ungroup() %>% 
+  slice(1:5)
 
 reactable(top_df, columns = list(
-  page_name = colDef(width = 80),
-  name_party = colDef(width = 80),
+  page_name = colDef(width = 90),
+  name_party = colDef(width = 90),
   euro = colDef(width = 95 ,format = colFormat(prefix = "€", separators = TRUE, digits = 0))),
-          filterable = TRUE, minRows = 10)
+          filterable = FALSE, minRows = 5)
 ```
 
 
@@ -780,7 +787,7 @@ df %>%
 
 ```
 
-Only in week 40 was there some advertising from the PVDA and PTB.
+Only in week 40 was there some advertising from the PVDA and CD&V.
 
 ```{r}
 df %>% 
@@ -812,6 +819,8 @@ for (i in (1:nrow(df))){
 
 
 ```
+
+Let's what we have and what categories the parties taget the most:
 
 ```{r}
 #saveRDS(df_demog, "./data/20200104/df_demog.rds")
@@ -856,43 +865,15 @@ line_df %>% left_join(top_spenders) %>%
 ```
 
 
+The data can be further subsetted by one of the three Belgian regions but that is where it ends. Facebook is not transparent enough to present the categories that are used to micro target political messages. 
 
+As Jason Kint put in a tweet:
 
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr"><a href="https://twitter.com/kevin_purcell">@kevin_purcell</a> Please feel free to try (click the menu Embed Tweet here) and let me know if it does not work.</p>&mdash; Yihui Xie (@xieyihui) <a href="https://twitter.com/jason_kint/status/1213678664740753409">Jan 5, 2016</a></blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
+If acurate at all we can only infer some general trends from what we obtianed. 
 
+In a future post I will be analysing the ad texts themselves. Let's see what we can learn from those!
 
-
-
-
-
-
-
-
-
-
-```{r}
-library("details") # install.packages("details")
-details::details({
-  x <- 1
-  x * 2
-},summary = 'click to see eval')
-```
-details::details({
-  x <- 1
-  x * 2
-},summary = 'click to see eval')
-
-
-```{r, details}
-x <- 1
-x * 2
-```
-
-```
-Jason Kint (@jason_kint) tweeted at 5:28 am on Sun, Jan 05, 2020:
-critical to understand based on these documents that it's not simply the existence of demonstrably false ads which makes Facebook toxic to free and fair elections. It's the allowance of these ads to be hypertargeted (eg microtargeting disinfo towards neurotic voters).
-
-https://www.theguardian.com/technology/2020/jan/09/facebook-political-ads-micro-targeting-us-election?CMP=Share_AndroidApp_Gmail
-
-s
 
