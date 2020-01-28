@@ -696,7 +696,7 @@ top_df <- df %>%
   summarise(euro = sum(spent)) %>%
   arrange(desc(euro)) %>%
   ungroup() %>% 
-  slice(1:5) 
+  head(5)
 
 top_df %>% 
   datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
@@ -785,19 +785,7 @@ df %>%
 
 ```
 
-Only in week 40 was there considerable more advertising from the PVDA and CD&V.
-
-```{r}
-df %>% 
-  filter(ad_creation_day > ymd("2019-05-31")) %>% 
-  mutate(week = week(ad_creation_day)) %>% 
-  filter(week == 40) %>% 
-  group_by(ad_creative_body, name_party) %>% 
-  summarise(sum = sum(euro)) %>% 
-  arrange(desc(sum)) %>% 
-  slice(1:5) %>%
-  datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
-```
+We can see there is more diversity after week 39.
 
 There are also some demo-graphical data at hand. And they need to be extracted from a column. Here under with a bit of a slow loop but I have to go and run errands anyway.
 
