@@ -16,9 +16,9 @@ So I was quiet interested when I come across [this](http://rpubs.com/zoowalk/FB_
 
 The increased transparency comes as a reaction against criticism on Facebook for running 'manipulative' political adds (lies) on it's servers. 
 
-Let's have a go at it (and thank you Mr. Schmidt ) and see what we can come up with related to the Belgian elections of May 2019 or more widely regarding Belgian politics. 
+Let's have a go at it (and thank you Mr. Schmidt ) and see what we can come up with related to the Belgian elections of May 2019 or more widely regarding Belgian political messages. 
 
-I am far from being an expert in Facebook advertising, so this is a blog on learning more about what we can get out of the API even though some are quite critical about the information it yeelds. See for instance [Facebook’s Ad Archive API is Inadequate](https://blog.mozilla.org/blog/2019/04/29/facebooks-ad-archive-api-is-inadequate/).
+I am far from being an expert in Facebook advertising, so this is a blog on learning more about what we can get out of the API even though some are quite critical about the information it offers. See for instance [Facebook’s Ad Archive API is Inadequate](https://blog.mozilla.org/blog/2019/04/29/facebooks-ad-archive-api-is-inadequate/).
 
 And amid new leaks reported [today](https://www.theguardian.com/uk-news/2020/jan/04/cambridge-analytica-data-leak-global-election-manipulation) that show the vast extent of manipulation trough Facebook it seems important to have a closer look at what can be learned from the data Facebook provides. 
 
@@ -106,7 +106,7 @@ This returned 18K rows when I ran it 4 months ago. We are more than doubling the
 df_imp <- readRDS("./data/20200104/df_imp_20200104.rds")
 ```
 
-We received 16 variables. Some of them are lists. 
+We received 16 columns. Some of them contain lists. 
 
 ```{r}
 names(df_imp)
@@ -170,7 +170,7 @@ df_imp %>%
   datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
 
-Glad to hear the change worked.
+Glad to hear the change works, but I guess that means the end of going to Romania for my dental work. 
 
 Analyzing the global figures a bit further and getting the total ads per funding entity:
 
@@ -269,18 +269,16 @@ Russia critising a possible withdrawal of US troops from Afghanistan is such a 2
 And the set of ads paid in rubles also contains what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:
 
 ```{r}
-rub <- rub %>% 
-   filter(str_detect(ad_creative_body, "Wever")) %>% 
-   select(page_name, ad_creative_body, ad_creative_link_description)%>% 
-   unique() %>%
-   head(4) 
-
-```
-```{r}
-datatable(rub, rownames = FALSE, class = 'compact', escape = TRUE, options = list(dom  = 't'))
+rub <- rub %>%
+  filter(str_detect(ad_creative_body, "Wever")) %>%
+  select(page_name, ad_creative_body, ad_creative_link_description)%>%
+  unique() %>%
+  head(4) %>%
+  datatable(rownames = FALSE, class = 'compact', escape = TRUE, options = list(dom  = 't'))
 
 ```
 
+***
 Rather weird. But it might be more interesting to see what ads had the biggest budgets. We need to convert to a common currency to compare the amounts spent. Let us get today's exchange rates to the euro of the currencies in our data frame.
 
 ```{r eval=FALSE}
@@ -301,9 +299,9 @@ rates <- readRDS("./data/20200104/rates.rds")
 head(rates)
 ```
 
-In order to estimate the amount spent per ad we will take the value at the middle of the spent range. 
+In order to estimate the amount spent per ad we will take the value in the middle of the spent range. 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 df_spent <- unnest_wider(df_imp, spend)
 df_spent <- df_spent %>%
   mutate(spent = as.numeric(lower_bound)+(as.numeric(upper_bound)-as.numeric(lower_bound)+1)/2)
@@ -329,7 +327,7 @@ df_spent %>%
   sum()
 ```
 
-6K€ is not that much, but too much to be a mere prank. 
+6K€ is not that much compared to the others, but too much to be a mere prank. 
 
 What was the reach of these ads/pages? Or rather we have a range of impressions per ad (the number of times the content was displayed to a target audience). 
 
@@ -417,7 +415,7 @@ candidates %>%
 
 We can start with the candidates, but then we need to construct a key to join the Facebook data with the candidates table. We will only use the sorted letters (without accents) of their first and last names.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 str_sort <- function(x)
   sapply(lapply(strsplit(x, NULL), sort), paste, collapse="")
 
@@ -698,14 +696,11 @@ top_df <- df %>%
   summarise(euro = sum(spent)) %>%
   arrange(desc(euro)) %>%
   ungroup() %>% 
-  slice(1:5) %>% 
+  slice(1:5) 
+
+top_df %>% 
   datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 
-# reactable(top_df, columns = list(
-#   page_name = colDef(width = 90),
-#   name_party = colDef(width = 90),
-#   euro = colDef(width = 95 ,format = colFormat(prefix = "€", separators = TRUE, digits = 0))),
-#           filterable = FALSE, minRows = 5)
 ```
 
 This is the way the number of ads were spread out during the year by biggest advertisers:
@@ -790,7 +785,7 @@ df %>%
 
 ```
 
-Only in week 40 was there some advertising from the PVDA and CD&V.
+Only in week 40 was there considerable more advertising from the PVDA and CD&V.
 
 ```{r}
 df %>% 
@@ -800,7 +795,7 @@ df %>%
   group_by(ad_creative_body, name_party) %>% 
   summarise(sum = sum(euro)) %>% 
   arrange(desc(sum)) %>% 
-  slice(1:5) %>% 
+  slice(1:5) %>%
   datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
 
@@ -870,14 +865,14 @@ line_df %>% left_join(top_spenders) %>%
 ```
 
 
-The data can be further subsetted by one of the three Belgian regions but that is where it ends. Facebook is not transparent enough to present the categories that are used to micro target political messages. 
+The data can be further subsetted by one of the three Belgian regions but that is where it ends. Facebook is not transparent enough to present the categories that are used to micro target political messages. And that is an important missing element.  
 
 As Jason Kint put in a tweet:
 
-<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr"><a href="https://twitter.com/kevin_purcell">@kevin_purcell</a> Please feel free to try (click the menu Embed Tweet here) and let me know if it does not work.</p>&mdash; Yihui Xie (@xieyihui) <a href="https://twitter.com/jason_kint/status/1213678664740753409">Jan 5, 2016</a></blockquote>
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<center><blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr"><a href="https://twitter.com/kevin_purcell">@kevin_purcell</a> Please feel free to try (click the menu Embed Tweet here) and let me know if it does not work.</p>&mdash; Yihui Xie (@xieyihui) <a href="https://twitter.com/jason_kint/status/1213678664740753409">Jan 5, 2016</a></blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script></center>
 
-If acurate at all we can only infer some general trends from what we obtianed. 
+If accurate at all we can only infer some general trends from what we obtained. 
 
 In a future post I will be analysing the ad texts themselves. Let's see what we can learn from those!
 
