@@ -274,7 +274,7 @@ rub <- rub %>%
   select(page_name, ad_creative_body, ad_creative_link_description)%>%
   unique() %>%
   head(4) %>%
-  datatable(rownames = FALSE, class = 'compact', escape = TRUE, options = list(dom  = 't'))
+  datatable(rownames = TRUE, class = 'compact', escape = TRUE, options = list(dom  = 't'))
 
 ```
 
@@ -687,22 +687,6 @@ sum(df$euro)
 
 And their spending represents 42% of the total spending we identified in 2019.
 
-What were the most spent on ads? 
-
-
-```{r}
-top_df <- df %>% 
-  group_by(ad_creative_body, page_name, name_party) %>% 
-  summarise(euro = sum(spent)) %>%
-  arrange(desc(euro)) %>%
-  ungroup() %>% 
-  head(5)
-
-top_df %>% 
-  datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
-
-```
-
 This is the way the number of ads were spread out during the year by biggest advertisers:
 
 ```{r}
@@ -734,6 +718,17 @@ df %>%
   scale_fill_manual("party", values=colors)
 ```
 
+
+
+
+```{r}
+# df %>% 
+#   group_by(ad_creative_body, page_name) %>% 
+#   summarise(euro = sum(spent)) %>%
+#   arrange(desc(euro)) %>%
+#   head(5) %>% 
+#   datatable()
+```
 
 And by amounts spent:
 
@@ -863,4 +858,5 @@ As Jason Kint put in a tweet:
 If accurate at all we can only infer some general trends from what we obtained. 
 
 In a future post I will be analysing the ad texts themselves. Let's see what we can learn from those!
+
 

@@ -367,7 +367,7 @@ The type of ad. We label either all returned ads as political or issue ads, or l
   select(page_name, ad_creative_body, ad_creative_link_description)%&gt;%
   unique() %&gt;%
   head(4) %&gt;%
-  datatable(rownames = FALSE, class = &#39;compact&#39;, escape = TRUE, options = list(dom  = &#39;t&#39;))</code></pre>
+  datatable(rownames = TRUE, class = &#39;compact&#39;, escape = TRUE, options = list(dom  = &#39;t&#39;))</code></pre>
 <hr />
 <p>Rather weird. But it might be more interesting to see what ads had the biggest budgets. We need to convert to a common currency to compare the amounts spent. Let us get today’s exchange rates to the euro of the currencies in our data frame.</p>
 <pre class="r"><code>library(quantmod)
@@ -765,18 +765,7 @@ df %&gt;%
 sum(df$euro)</code></pre>
 <pre><code>## [1] 0.4169943</code></pre>
 <p>And their spending represents 42% of the total spending we identified in 2019.</p>
-<p>What were the most spent on ads?</p>
-<pre class="r"><code>top_df &lt;- df %&gt;% 
-  group_by(ad_creative_body, page_name, name_party) %&gt;% 
-  summarise(euro = sum(spent)) %&gt;%
-  arrange(desc(euro)) %&gt;%
-  ungroup() %&gt;% 
-  head(5)
-
-top_df %&gt;% 
-  datatable(class = &#39;compact&#39;, escape = TRUE, options = list(dom  = &#39;t&#39;))</code></pre>
-<p>&lt;!iv id="htmlwidget-4" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-4">{"x":{"filter":"none","data":[["1","2","3","4","5"],["VIND DIT LEUK als je het eens bent!","Wie gelooft die mensen nog? De belastingdruk is niet gedaald, het begrotingstekort loopt op tot in de miljarden, de energiearmoede stijgt schrikwekkend én bovenop mag u daar - dankzij hen - nog eens twee jaar langer voor werken... Tijd voor échte verandering, tijd om onze mensen eerst te zetten!","Un message d'espoir de Marine Le Pen pour les Bruxellois.\n\nVlaams Belang et Rassemblement National, un combat, également à Bruxelles!\n\nVotez pour le Vlaams Belang le 26 mai et choisissez avec le Vlaams Belang pour nos gens d'abord!","Worden we niet genoeg uitgeperst? GEEN verhoging van de pensioenleeftijd! Wie 40 jaar heeft gewerkt, héél zijn leven zich blauw heeft betaald aan torenhoge belastingen, heeft volgens ons recht op een minimumpensioen van €1500. Dat is niet links, niet rechts, maar een kwestie van rechtvaardigheid!","Dit is waarom jij moet gaan stemmen."],["Tom Van Grieken","Vlaams Belang","Vlaams Belang Brussel","Vlaams Belang","Vlaams Belang"],["vlaams belang","vlaams belang","vlaams belang","vlaams belang","vlaams belang"],[78700,60000,39100,37550,37500]],"container":"<table class=\"compact\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ad_creative_body<\/th>\n      <th>page_name<\/th>\n      <th>name_party<\/th>\n      <th>euro<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":4},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script><!This is the way the number of ads were spread out during the year by biggest advertisers:</p>
+<p>This is the way the number of ads were spread out during the year by biggest advertisers:</p>
 <pre class="r"><code>biggest &lt;- df %&gt;%
   filter(ad_delivery_start_day &gt; ymd(&quot;2018-12-31&quot;)) %&gt;% 
   group_by(name_party) %&gt;% 
@@ -803,7 +792,13 @@ df %&gt;%
            stat=&quot;identity&quot;,
            width = 0.7)+
   scale_fill_manual(&quot;party&quot;, values=colors)</code></pre>
-<p><img src="/post/2020-01-04-political-ads-on-facebook-for-the-2019-belgian-elections_files/figure-html/unnamed-chunk-42-1.png" width="672" /></p>
+<p><img src="/post/2020-01-04-political-ads-on-facebook-for-the-2019-belgian-elections_files/figure-html/unnamed-chunk-41-1.png" width="672" /></p>
+<pre class="r"><code># df %&gt;% 
+#   group_by(ad_creative_body, page_name) %&gt;% 
+#   summarise(euro = sum(spent)) %&gt;%
+#   arrange(desc(euro)) %&gt;%
+#   head(5) %&gt;% 
+#   datatable()</code></pre>
 <p>And by amounts spent:</p>
 <pre class="r"><code>df %&gt;% 
   filter(ad_delivery_start_day &gt; ymd(&quot;2018-12-31&quot;)) %&gt;% 
