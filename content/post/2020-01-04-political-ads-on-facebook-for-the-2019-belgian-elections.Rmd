@@ -361,7 +361,7 @@ df_reach %>%
   filter(str_detect(ad_creative_body, "luchtvervuiling!|Pollution")) %>% 
   datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
-
+***
 Unless of course you see selling their water solution for wiping pollution from your face as an environmental cause...
 
 One strategy to get only the political actors is to filter on the pages or funding entities that have a political party name in them. But some politicians do not mention in their page name for which party they are a candidate for. So all the candidates names are also needed. 
@@ -501,8 +501,6 @@ df_parties %>%
   count(unlist(name_party),
         sort = TRUE,
         name = "total ads")
-
-# there was a problem treating the & and - in cd&v and n-va
 
 additional_parties <- df_reach %>%
   filter(!page_name%in% df_candidates$page_name) %>% 
@@ -806,7 +804,7 @@ df_demog <- readRDS("./data/20200104/df_demog.rds")
 ```
 
 
-```{r message=FALSE}
+```{r message=FALSE, fig.align='center'}
 df_demog <- df_demog %>% 
   mutate(percentage = as.numeric(as.character(percentage))) %>% 
   mutate(spent_demog = euro*percentage)
