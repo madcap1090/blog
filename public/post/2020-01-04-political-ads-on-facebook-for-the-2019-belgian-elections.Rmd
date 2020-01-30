@@ -269,17 +269,19 @@ Russia critising a possible withdrawal of US troops from Afghanistan is such a 2
 And the set of ads paid in rubles also contains what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:
 
 ```{r}
-rub <- rub %>%
+rub %>%
   filter(str_detect(ad_creative_body, "Wever")) %>%
   select(page_name, ad_creative_body, ad_creative_link_description)%>%
   unique() %>%
-  head(4) %>%
+  head(5) %>%
   datatable(rownames = TRUE, class = 'compact', escape = TRUE, options = list(dom  = 't'))
 
 ```
 
-***
-Rather weird. But it might be more interesting to see what ads had the biggest budgets. We need to convert to a common currency to compare the amounts spent. Let us get today's exchange rates to the euro of the currencies in our data frame.
+
+Rather weird. 
+
+But it might be more interesting to see what political parties had the biggest budgets. We need to convert to a common currency to compare the amounts spent. Let us get today's exchange rates to the euro of the currencies in our data frame.
 
 ```{r eval=FALSE}
 library(quantmod)
@@ -348,7 +350,7 @@ df_reach %>% filter(!is.na(impres)) %>%
   arrange(desc(sum)) 
 ```
 
-This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that reach and clicks are also important metrics to evaluate marketing impact, but we just do not have that data. 
+This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that, reach and clicks are also important metrics to evaluate marketing impact, but we just do not have that data. 
 
 Next to 'issue' pages there are also businesses in the list, like for instance Garnier. They cannot really be categorised as an issue organisation.
 
@@ -447,7 +449,7 @@ df_candidates  %>%
 
 And do some candidates names appear as funding entities for pages?
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 df_candidates_f <- df_reach %>%
   filter(!page_name %in% df_candidates$page_name) %>% 
   mutate(clean_name = str_replace_all(funding_entity,"[^[:alnum:][:blank:]?&/\\-]", "")) %>%
@@ -524,8 +526,6 @@ df_parties <- df_parties %>%
   rbind(df_parties_f %>% 
           filter((!is.na(name_party))))
 
-# there was a problem treating the & and - in cd&v and n-va
-
 additional_parties_f <- df_reach %>%
   filter(!page_name%in% df_candidates$page_name) %>% 
   mutate(name_party = tolower(str_extract(funding_entity, "N-VA|CD&V"))) %>% 
@@ -567,7 +567,7 @@ df_parties <- df_parties %>%
 There is a data frame based on the candidates, and another one based on the parties. Time to put them together. And we will be focusing on 2019.
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 
 df_candidates <- df_candidates %>% 
   mutate(name_party = tolower(Party))
@@ -611,7 +611,6 @@ colors <- c("n-va"= "sienna3",
             "ecolo" = "lightgreen",
             "défi" = "#ca2c92",
             "mr" = "royalblue")
-
 
 df %>% 
   group_by(name_party) %>% 
@@ -672,7 +671,6 @@ df %>%
   ylim(0, 2100000)+
   coord_flip()+
   scale_y_continuous(labels=euro_format())
-#top, then right, bottom and left
 ```
 
 The Vlaams Belang appears to be spending more than three times more than the second biggest spender, the N-VA. 
@@ -785,7 +783,6 @@ We can see there is more diversity after week 39.
 There are also some demo-graphical data at hand. And they need to be extracted from a column. Here under with a bit of a slow loop but I have to go and run errands anyway.
 
 ```{r eval=FALSE, include=TRUE}
-
 df_demog <- data_frame()
 for (i in (1:nrow(df))){
   print(i)
@@ -799,16 +796,17 @@ for (i in (1:nrow(df))){
   y <- cbind(y, add_df)
   df_demog <- rbind(df_demog, y)
 }
-
-
 ```
 
 Let's what we have and what categories the parties target the most:
 
-```{r}
+```{r include=FALSE}
 #saveRDS(df_demog, "./data/20200104/df_demog.rds")
 df_demog <- readRDS("./data/20200104/df_demog.rds")
+```
 
+
+```{r message=FALSE}
 df_demog <- df_demog %>% 
   mutate(percentage = as.numeric(as.character(percentage))) %>% 
   mutate(spent_demog = euro*percentage)
@@ -825,9 +823,6 @@ top_spenders <- line_df %>% group_by(name_party) %>%
   arrange(desc(budget)) %>% 
   head(9) 
 
-```
-
-```{r message=FALSE}
 line_df %>% left_join(top_spenders) %>% 
   mutate(prct = spent/budget) %>% 
   filter(name_party %in% top_spenders$name_party) %>%

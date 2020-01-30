@@ -362,14 +362,16 @@ The type of ad. We label either all returned ads as political or issue ads, or l
 <script type="application/json" data-for="htmlwidget-2">{"x":{"filter":"none","data":[["1","2"],["Russian International Affairs Council","Russian International Affairs Council"],["The abrupt withdrawal of U.S. forces from Afghanistan could destabilize the situation, leading to the failure of any peace initiatives, a new round of war between intra-Afghan forces and, ultimately, the transition of Kabul under the control of radicals. \nSuch a scenario could lead to the further radicalization of the situation and entail the moving of the crisis zone beyond the political and geographical borders of Afghanistan. This makes the Central Asian States vulnerable. For this reason, Russia continues to strengthen its cooperation with the Central Asian region countries. \n\nEscape from Responsibility: the U.S. Is Looking for a Way Out of Afghanistan, by Руслан Мамедов (Ruslan Mamedov)","General Secretary of China Xi Jinping’s tour of Italy, Monaco and France on March 21–26, 2019, caused a stir across Europe. What approach should be taken to projects being proposed under the Belt and Road Initiative? What threats are posed by China’s penetration into the EU economy? What foreign economic policy should be pursued in the current trade and economic confrontation between the United States and China? These and similar issues have been discussed by European leaders for years, and now, with Xi Jinping’s latest visit, the debates have taken on a new significance. While Brussels and Berlin are more concerned about maintaining competitiveness with China, Rome only added fuel to the fire, becoming the first EU founding country to join"]],"container":"<table class=\"compact\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>page_name<\/th>\n      <th>ad_creative_body<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}]}},"evals":[],"jsHooks":[]}</script>
 <p>Russia critising a possible withdrawal of US troops from Afghanistan is such a 2019 thing to do.</p>
 <p>And the set of ads paid in rubles also contains what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:</p>
-<pre class="r"><code>rub &lt;- rub %&gt;%
+<pre class="r"><code>rub %&gt;%
   filter(str_detect(ad_creative_body, &quot;Wever&quot;)) %&gt;%
   select(page_name, ad_creative_body, ad_creative_link_description)%&gt;%
   unique() %&gt;%
-  head(4) %&gt;%
+  head(5) %&gt;%
   datatable(rownames = TRUE, class = &#39;compact&#39;, escape = TRUE, options = list(dom  = &#39;t&#39;))</code></pre>
-<hr />
-<p>Rather weird. But it might be more interesting to see what ads had the biggest budgets. We need to convert to a common currency to compare the amounts spent. Let us get today’s exchange rates to the euro of the currencies in our data frame.</p>
+<div id="htmlwidget-3" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3">{"x":{"filter":"none","data":[["1","2","3","4","5"],["Tattoo Ideas","Sweet Treats","Prague Sights","One Day In The Desert","Holland History"],["Het schandaal van Bart De Wever SCHOKte het hele land!\nDit is wat hij heeft gedaan...","Bart De Wever kan niet aan de gevolgen van zijn daden ontkomen...","Het schandaal van Bart De Wever SCHOKte het hele land!\nDit is wat hij heeft gedaan...","Bart De Wever stuurt SCHOKGOLVEN door het hele land met zijn nieuwste schandaal","Bart De Wever vertelt LIVE de waaheid…"],["ANTWERPEN –  2019 was een rollercoaster voor Bart De Wever: een bijzonder bitse campagne voor de gemeenteraadsverkiezingen leverde weliswaar een zoete overwinning in eigen stad op, maar vanuit het Antwerpse stadhuis zag hij zijn N-VA vervolgens ook de regering-Michel ten val brengen. Maar in voll..."," ","Celebrities Week weggeweest, nu puin ruimen: federaal, Vlaams én binnen zijn eigen partij, overal ligt werk te wachten op Bart De Wever by admin August 21, 2019 No Comments Na acht dagen afwezigheid is Bart De Wever terug in het land. De Antwerpse burgemeester zal het zich misschien al beklaagd heb...","Bart De Wever stuurt SCHOKGOLVEN door het hele land met zijn nieuwste schandaal Informateur Bart De Wever heeft zijn startnota voorgelegd aan CD&amp;V en Open Vld en dat wil dus zeggen dat Vlaams Belang niet verder zal mee onderhandelen. Dat meldt partijvoorzitter Tom Van Grieken in een persbericht. â€œ...","Bart De Wever vertelt LIVE de waaheid... Bart De Wever veut-il réellement devenir ministre-président de la Flandre? \"Mon sort est entre les mains des électeurs. Je place la barre à 30%\", a répondu le président de la N-VA lundi soir lors d'une émission électorale sur la VRT. \"Sous les 30%, il..."]],"container":"<table class=\"compact\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>page_name<\/th>\n      <th>ad_creative_body<\/th>\n      <th>ad_creative_link_description<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}]}},"evals":[],"jsHooks":[]}</script>
+<p>Rather weird.</p>
+<p>But it might be more interesting to see what political parties had the biggest budgets. We need to convert to a common currency to compare the amounts spent. Let us get today’s exchange rates to the euro of the currencies in our data frame.</p>
 <pre class="r"><code>library(quantmod)
 from &lt;- unique(df_imp$currency)
 to &lt;- c(&quot;EUR&quot;)
@@ -445,15 +447,15 @@ df_spent %&gt;% group_by(page_name) %&gt;%
 ##  9 CD&amp;V                23997000
 ## 10 PTB                 23460500
 ## # ... with 4,113 more rows</code></pre>
-<p>This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that reach and clicks are also important metrics to evaluate marketing impact, but we just do not have that data.</p>
+<p>This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that, reach and clicks are also important metrics to evaluate marketing impact, but we just do not have that data.</p>
 <p>Next to ‘issue’ pages there are also businesses in the list, like for instance Garnier. They cannot really be categorised as an issue organisation.</p>
 <pre class="r"><code>df_reach %&gt;% 
   filter(page_name == &quot;Garnier&quot;) %&gt;% 
   select(ad_creative_body) %&gt;% 
   filter(str_detect(ad_creative_body, &quot;luchtvervuiling!|Pollution&quot;)) %&gt;% 
   datatable(class = &#39;compact&#39;, escape = TRUE, options = list(dom  = &#39;t&#39;))</code></pre>
-<p><div id="htmlwidget-3" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-3">{"x":{"filter":"none","data":[["1","2"],["Bye bye sporen van luchtvervuiling! Veeg onzuiverheden weg in slechts één beweging met het Micellair Water van Garnier. 👋","Pollution urbaine ? STOP ! EN un geste, ballayez toute trace d'impureté avec l'Eau Micellaire Garnier. 👋"]],"container":"<table class=\"compact\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ad_creative_body<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}]}},"evals":[],"jsHooks":[]}</script><!Unless of course you see selling their water solution for wiping pollution from your face as an environmental cause…</p>
+<p><div id="htmlwidget-4" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4">{"x":{"filter":"none","data":[["1","2"],["Bye bye sporen van luchtvervuiling! Veeg onzuiverheden weg in slechts één beweging met het Micellair Water van Garnier. 👋","Pollution urbaine ? STOP ! EN un geste, ballayez toute trace d'impureté avec l'Eau Micellaire Garnier. 👋"]],"container":"<table class=\"compact\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ad_creative_body<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}]}},"evals":[],"jsHooks":[]}</script><!Unless of course you see selling their water solution for wiping pollution from your face as an environmental cause…</p>
 <p>One strategy to get only the political actors is to filter on the pages or funding entities that have a political party name in them. But some politicians do not mention in their page name for which party they are a candidate for. So all the candidates names are also needed.</p>
 <p>Let’s do some scraping from an official election site.</p>
 <pre class="r"><code>url &lt;- paste0(&quot;https://elections2019.belgium.be/en/candidates?title=&amp;field_election&quot;,
@@ -539,9 +541,9 @@ df_candidates  %&gt;%
   select(-clean_name)
 
 df_candidates_f &lt;- df_candidates_f %&gt;% 
-  inner_join(candidates)</code></pre>
-<pre><code>## Joining, by = &quot;key&quot;</code></pre>
-<pre class="r"><code>df_candidates_f %&gt;% 
+  inner_join(candidates)
+
+df_candidates_f %&gt;% 
   count(page_name, funding_entity,
         sort = TRUE,
         name = &quot;total ads&quot;)</code></pre>
@@ -618,8 +620,6 @@ df_parties &lt;- df_parties %&gt;%
   filter(!is.na(name_party)) %&gt;% 
   rbind(df_parties_f %&gt;% 
           filter((!is.na(name_party))))
-
-# there was a problem treating the &amp; and - in cd&amp;v and n-va
 
 additional_parties_f &lt;- df_reach %&gt;%
   filter(!page_name%in% df_candidates$page_name) %&gt;% 
@@ -698,7 +698,6 @@ df %&gt;%
             &quot;défi&quot; = &quot;#ca2c92&quot;,
             &quot;mr&quot; = &quot;royalblue&quot;)
 
-
 df %&gt;% 
   group_by(name_party) %&gt;% 
   summarise(n_ads=n()) %&gt;%
@@ -756,7 +755,6 @@ df %&gt;%
   coord_flip()+
   scale_y_continuous(labels=euro_format())</code></pre>
 <p><img src="/post/2020-01-04-political-ads-on-facebook-for-the-2019-belgian-elections_files/figure-html/unnamed-chunk-39-1.png" width="672" /></p>
-<pre class="r"><code>#top, then right, bottom and left</code></pre>
 <p>The Vlaams Belang appears to be spending more than three times more than the second biggest spender, the N-VA.</p>
 <pre class="r"><code>(df %&gt;% filter(name_party==&quot;vlaams belang&quot;) %&gt;% 
                  filter(year(ymd(ad_creation_day))==2019) %&gt;% 
@@ -857,10 +855,7 @@ for (i in (1:nrow(df))){
   df_demog &lt;- rbind(df_demog, y)
 }</code></pre>
 <p>Let’s what we have and what categories the parties target the most:</p>
-<pre class="r"><code>#saveRDS(df_demog, &quot;./data/20200104/df_demog.rds&quot;)
-df_demog &lt;- readRDS(&quot;./data/20200104/df_demog.rds&quot;)
-
-df_demog &lt;- df_demog %&gt;% 
+<pre class="r"><code>df_demog &lt;- df_demog %&gt;% 
   mutate(percentage = as.numeric(as.character(percentage))) %&gt;% 
   mutate(spent_demog = euro*percentage)
 
@@ -874,8 +869,9 @@ line_df &lt;- df_demog %&gt;%
 top_spenders &lt;- line_df %&gt;% group_by(name_party) %&gt;% 
   summarise(budget = sum(spent)) %&gt;% 
   arrange(desc(budget)) %&gt;% 
-  head(9) </code></pre>
-<pre class="r"><code>line_df %&gt;% left_join(top_spenders) %&gt;% 
+  head(9) 
+
+line_df %&gt;% left_join(top_spenders) %&gt;% 
   mutate(prct = spent/budget) %&gt;% 
   filter(name_party %in% top_spenders$name_party) %&gt;%
   filter(age != &quot;13-17&quot;) %&gt;%
