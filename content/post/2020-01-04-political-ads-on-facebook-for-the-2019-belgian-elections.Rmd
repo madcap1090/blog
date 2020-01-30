@@ -352,7 +352,7 @@ df_reach %>% filter(!is.na(impres)) %>%
 
 This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that, reach and clicks are also important metrics to evaluate marketing impact, but we just do not have that data. 
 
-Next to 'issue' pages there are also businesses in the list, like for instance Garnier. They cannot really be categorised as an issue organisation.
+Next to 'issue' pages there are also businesses in the list, like for instance Garnier. They cannot really be categorised as an issue organisation. Unless of course you see selling their water solution for wiping pollution from your face as an environmental cause...
 
 ```{r}
 df_reach %>% 
@@ -362,7 +362,8 @@ df_reach %>%
   datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
 ***
-Unless of course you see selling their water solution for wiping pollution from your face as an environmental cause...
+
+
 
 One strategy to get only the political actors is to filter on the pages or funding entities that have a political party name in them. But some politicians do not mention in their page name for which party they are a candidate for. So all the candidates names are also needed. 
 

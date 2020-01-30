@@ -343,15 +343,14 @@ df_spent %&gt;% group_by(page_name) %&gt;%
 ## 10 PTB                 23460500
 ## # ... with 4,113 more rows</code></pre>
 <p>This means that the ads of the N-VA and sp.a have had a bigger number of impressions than the page of Tom Van Grieken, despite having spent less money on them. Having said that, reach and clicks are also important metrics to evaluate marketing impact, but we just do not have that data.</p>
-<p>Next to ‘issue’ pages there are also businesses in the list, like for instance Garnier. They cannot really be categorised as an issue organisation.</p>
+<p>Next to ‘issue’ pages there are also businesses in the list, like for instance Garnier. They cannot really be categorised as an issue organisation. Unless of course you see selling their water solution for wiping pollution from your face as an environmental cause…</p>
 <pre class="r"><code>df_reach %&gt;% 
   filter(page_name == &quot;Garnier&quot;) %&gt;% 
   select(ad_creative_body) %&gt;% 
   filter(str_detect(ad_creative_body, &quot;luchtvervuiling!|Pollution&quot;)) %&gt;% 
   datatable(class = &#39;compact&#39;, escape = TRUE, options = list(dom  = &#39;t&#39;))</code></pre>
 <p><div id="htmlwidget-4" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-4">{"x":{"filter":"none","data":[["1","2"],["Bye bye sporen van luchtvervuiling! Veeg onzuiverheden weg in slechts één beweging met het Micellair Water van Garnier. 👋","Pollution urbaine ? STOP ! EN un geste, ballayez toute trace d'impureté avec l'Eau Micellaire Garnier. 👋"]],"container":"<table class=\"compact\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ad_creative_body<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}]}},"evals":[],"jsHooks":[]}</script><!**
-Unless of course you see selling their water solution for wiping pollution from your face as an environmental cause…</p>
+<script type="application/json" data-for="htmlwidget-4">{"x":{"filter":"none","data":[["1","2"],["Bye bye sporen van luchtvervuiling! Veeg onzuiverheden weg in slechts één beweging met het Micellair Water van Garnier. 👋","Pollution urbaine ? STOP ! EN un geste, ballayez toute trace d'impureté avec l'Eau Micellaire Garnier. 👋"]],"container":"<table class=\"compact\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>ad_creative_body<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}]}},"evals":[],"jsHooks":[]}</script><!**</p>
 <p>One strategy to get only the political actors is to filter on the pages or funding entities that have a political party name in them. But some politicians do not mention in their page name for which party they are a candidate for. So all the candidates names are also needed.</p>
 <p>Let’s do some scraping from an official election site.</p>
 <pre class="r"><code>url &lt;- paste0(&quot;https://elections2019.belgium.be/en/candidates?title=&amp;field_election&quot;,
