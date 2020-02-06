@@ -264,7 +264,7 @@ rub %>%
   datatable(class = 'compact', escape = TRUE, options = list(dom  = 't'))
 ```
 
-Russia critising a possible withdrawal of US troops from Afghanistan is such a 2019 thing to do.
+Russia criticising a possible withdrawal of US troops from Afghanistan is such a 2019 thing to do.
 
 And the set of ads paid in rubles also contains what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:
 
@@ -777,7 +777,7 @@ df %>%
 
 ```
 
-We can see there is more diversity after week 39.
+We can see there is more diversity after week 39. And diversity is good. 
 
 There are also some demo-graphical data at hand. And they need to be extracted from a column. Here under with a bit of a slow loop but I have to go and run errands anyway.
 

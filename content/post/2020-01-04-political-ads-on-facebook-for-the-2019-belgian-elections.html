@@ -255,7 +255,7 @@ The type of ad. We label either all returned ads as political or issue ads, or l
   datatable(class = &#39;compact&#39;, escape = TRUE, options = list(dom  = &#39;t&#39;))</code></pre>
 <div id="htmlwidget-2" style="width:100%;height:auto;" class="datatables html-widget"></div>
 <script type="application/json" data-for="htmlwidget-2">{"x":{"filter":"none","data":[["1","2"],["Russian International Affairs Council","Russian International Affairs Council"],["The abrupt withdrawal of U.S. forces from Afghanistan could destabilize the situation, leading to the failure of any peace initiatives, a new round of war between intra-Afghan forces and, ultimately, the transition of Kabul under the control of radicals. \nSuch a scenario could lead to the further radicalization of the situation and entail the moving of the crisis zone beyond the political and geographical borders of Afghanistan. This makes the Central Asian States vulnerable. For this reason, Russia continues to strengthen its cooperation with the Central Asian region countries. \n\nEscape from Responsibility: the U.S. Is Looking for a Way Out of Afghanistan, by Руслан Мамедов (Ruslan Mamedov)","General Secretary of China Xi Jinping’s tour of Italy, Monaco and France on March 21–26, 2019, caused a stir across Europe. What approach should be taken to projects being proposed under the Belt and Road Initiative? What threats are posed by China’s penetration into the EU economy? What foreign economic policy should be pursued in the current trade and economic confrontation between the United States and China? These and similar issues have been discussed by European leaders for years, and now, with Xi Jinping’s latest visit, the debates have taken on a new significance. While Brussels and Berlin are more concerned about maintaining competitiveness with China, Rome only added fuel to the fire, becoming the first EU founding country to join"]],"container":"<table class=\"compact\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>page_name<\/th>\n      <th>ad_creative_body<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}]}},"evals":[],"jsHooks":[]}</script>
-<p>Russia critising a possible withdrawal of US troops from Afghanistan is such a 2019 thing to do.</p>
+<p>Russia criticising a possible withdrawal of US troops from Afghanistan is such a 2019 thing to do.</p>
 <p>And the set of ads paid in rubles also contains what looks to be ads against Bart De Wever (the president of the N-VA), or click-bait, by these pages:</p>
 <pre class="r"><code>rub %&gt;%
   filter(str_detect(ad_creative_body, &quot;Wever&quot;)) %&gt;%
@@ -732,7 +732,7 @@ df %&gt;%
   scale_fill_manual(&quot;party&quot;, values=colors)+
   scale_y_continuous(labels=euro_format())</code></pre>
 <p><img src="/post/2020-01-04-political-ads-on-facebook-for-the-2019-belgian-elections_files/figure-html/unnamed-chunk-44-1.png" width="672" /></p>
-<p>We can see there is more diversity after week 39.</p>
+<p>We can see there is more diversity after week 39. And diversity is good.</p>
 <p>There are also some demo-graphical data at hand. And they need to be extracted from a column. Here under with a bit of a slow loop but I have to go and run errands anyway.</p>
 <pre class="r"><code>df_demog &lt;- data_frame()
 for (i in (1:nrow(df))){
