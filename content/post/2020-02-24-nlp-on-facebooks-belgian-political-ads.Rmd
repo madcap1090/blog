@@ -59,9 +59,9 @@ df %>%
 ```
 
 
-As a first analysis We can apply a lexrank analysis (unsupervised approach to text summarization) to calculate the most representative sentences in the ads. The lexrank algorythm calculates the most relevant words in a text and then gives each sentence a score based on the words it contains. 
+As a first analysis We can apply a lexrank analysis (unsupervised approach to text summaries) to calculate the most representative sentences in the ads. The lexrank algorithm calculates the most relevant words in a text and then gives each sentence a score based on the words it contains. 
 
-So what would be the most representative sentences in 'God Save the Quen' by the Sex Pistols? 
+So what would be the most representative sentences in 'God Save the Queen' by the Sex Pistols? 
 
 
 ```{r message=FALSE, warning=FALSE}
@@ -99,9 +99,9 @@ reactable(lexRank(text_df$sentences,
 
 The sentences containing "God" and "save" have the higher scores. "you" works well too. 
 
-Since the algorythm scores the words in a sentence, that is analysed as mere list of words, we can also use a collection of sentences, like a ad text, and see what is the most representive ad of a party in 2019. I suspect longer ads might have a higher score. 
+Since the algorithm scores the words in a sentence, that is analysed as mere list of words, we can also use a collection of sentences, like a ad text, and see what is the most representative ad of a party in 2019. I suspect longer ads might have a higher score. 
 
-So what were the ads that were the most representative ones amongst all ads of one party? Let's find out. 
+So what were the ads that were the most representative ones among all ads of one party? Let's find out. 
 
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
@@ -143,7 +143,7 @@ reactable(ads %>%
 
 ***
 
-As expected we do get the more verbose ads in return. But they still look fairly representative. Instead of analysing the ads as such, there is also the possiblity to look at the sentences, like what was done in "God Save the Queen" example above.  
+As expected we do get the more verbose ads in return. But they still look fairly representative. Instead of analysing the ads as such, there is also the possibility to look at the sentences, like what was done in "God Save the Queen" example above.  
 
 ```{r, eval=FALSE}
 # create a function
@@ -229,11 +229,11 @@ show_sentences("open vld")
 ```
 
 
-The algorythm has difficulties in tokenizing the ads in sentences. But I still wanted to share the results with you as I think this is an interesting way of summerasing the thousands of ads. 
+The algorithm has difficulties in tokenizing the ads in sentences. But I still wanted to share the results with you as I think this is an interesting way of summerasing the thousands of ads. 
 
-A simpler approach could be used to analyse the ads of Het Vlaams Belang. It was said that in the 2019 campaign the party had its well known anti-foriegner (racists) messages but that it also had messages talking abouty people's finances too. A bit like the first ad that seemed representative : "Wat staat er nu eigenlijk in de startnota van Bart De Wever? N-VA wil de 'Lage Emissiezones' uitbreiden naar alle steden. En wie wordt de pineut? De gewone burger die zich geen nieuwe auto kan veroorloven of een jaarabonnement (lees belasting) zal moeten betalen om te mogen "vervuilen". STOP de asociale LEZ's!"
+A simpler approach could be used to analyse the ads of Het Vlaams Belang. It was said that in the 2019 campaign the party had its well known anti-foreigner (racists) messages but that it also had messages talking about people's finances too. A bit like the first ad that seemed representative : "Wat staat er nu eigenlijk in de startnota van Bart De Wever? N-VA wil de 'Lage Emissiezones' uitbreiden naar alle steden. En wie wordt de pineut? De gewone burger die zich geen nieuwe auto kan veroorloven of een jaarabonnement (lees belasting) zal moeten betalen om te mogen "vervuilen". STOP de asociale LEZ's!"
 
-A bit of a 'gilet jaune' kind of message, and btw I would be very supprised if the N-VA wanted to ban the most polluting cars from city centers. It's just not their kick. 
+A bit of a 'gilet jaune' kind of message, and btw I would be very suprised if the N-VA wanted to ban the most polluting cars from city centers. It's just not their kick. 
 
 In the next post I'll be topic modeling on the data set, but here, to conclude, let's see how far we can get with some basic text searches. 
 
