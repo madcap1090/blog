@@ -1,0 +1,253 @@
+---
+title: nlp on Facebooks Belgian political ads
+author: William Bourgeois
+date: '2020-02-24'
+slug: nlp-on-facebooks-belgian-political-ads
+categories: []
+tags:
+  - Belgian politics
+  - Facebook
+  - nlp
+---
+
+In the last post there was a fairly extensive analysis presented on what is possible to obtain from Facebook on political ads in Belgium. There was a fair amount of data to play with even if it took some energy and time to clean it and filter the 'issues' ads from the political ads. 
+
+However Facebook does not present and makes available enough data to analyse what type of deep manipulation is possible using their services. And it is also a conclusion that Julia Carrie Wong makes in [this](https://www.theguardian.com/us-news/2020/jan/28/donald-trump-facebook-ad-campaign-2020-election?CMP=share_btn_tw) Guardian article published at the end of January. Good article btw.
+
+They investigated 218k ads we only 13k in Belgium. 
+
+This blopost is about what we kan learn from those.
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+#library("lubridate")
+#library("scales")
+#library("lemon") 
+library("DT")
+#library("extrafont")
+library("httr")
+library("rvest")
+library("glue")
+# you might need the dev version of tidyr needed for unnest_wider function 
+# (and R ver 3.6)
+library("tidyr") # devtools::install_github("tidyverse/tidyr")
+library("stringi")
+#library("tokenizers") 
+library("reactable") #install.packages("reactable")
+#library("scales")
+library("lexRankr")
+library('knitr')
+options(scipen = 999)
+```
+
+Loading the data:
+
+```{r include=FALSE}
+df <- readRDS("./data/20200104/df.rds")
+```
+
+What were the most expensive ads?
+
+```{r}
+df %>%
+  group_by(ad_creative_body, page_name) %>%
+  summarise(euro = sum(spent)) %>%
+  arrange(desc(euro)) %>%
+  head(5) %>%
+  reactable(columns = list(
+  page_name = colDef(width = 90), euro = colDef(width = 80)))
+```
+
+
+As a first analysis We can apply a lexrank analysis (unsupervised approach to text summarization) to calculate the most representative sentences in the ads. The lexrank algorythm calculates the most relevant words in a text and then gives each sentence a score based on the words it contains. 
+
+So what would be the most representative sentences in 'God Save the Quen' by the Sex Pistols? 
+
+
+```{r message=FALSE, warning=FALSE}
+url <- "https://www.azlyrics.com/lyrics/sexpistols/godsavethequeen.html"
+selector <- paste0("body > div.container.main-page > div >",
+                   " div.col-xs-12.col-lg-8.text-center > div:nth-child(8)")
+
+text <- url %>% 
+  read_html() %>% 
+  html_node(selector) %>% 
+  html_text() %>% 
+  str_remove_all("\\\r") %>%
+  strsplit("\\\n") %>% 
+  unlist()
+
+text[nchar(text) > 2][1:16]
+```
+
+
+
+
+```{r message=FALSE, warning=FALSE}
+text_df  <- data.frame("sentences" = text) %>%
+  mutate(sentences = as.character(sentences)) %>% 
+  unique()
+
+reactable(lexRank(text_df$sentences,
+                        docId = rep(1, length(text_df$sentences)),
+                        n = 5,
+                        continuous = TRUE) %>%
+  select(sentence, value),  columns = list(
+  value = colDef(format = colFormat(separators = TRUE, digits = 4))))
+```
+
+
+The sentences containing "God" and "save" have the higher scores. "you" works well too. 
+
+Since the algorythm scores the words in a sentence, that is analysed as mere list of words, we can also use a collection of sentences, like a ad text, and see what is the most representive ad of a party in 2019. I suspect longer ads might have a higher score. 
+
+So what were the ads that were the most representative ones amongst all ads of one party? Let's find out. 
+
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+
+party_page <- c("Vlaams Belang", "Open Vld", "sp.a", "PVDA", "Groen",
+              "Parti Socialiste (PS)", "N-VA", "PTB", "CD&V")
+ads <- data.frame()
+for (i in(party_page)){
+  texts <- df %>% 
+    filter(page_name  == i) %>%
+    select(page_name, ad_creative_body) %>%
+    unique() %>%
+    rownames_to_column(var = "docId") %>%
+    mutate(ad_creative_body = as.character(ad_creative_body))
+    x <- lexRank(texts$ad_creative_body, n=10) %>% 
+      group_by(docId) %>%
+      summarise(sum = sum(value)) %>%
+      filter(max(sum) ==sum) %>%
+      select(docId) %>%
+      as.numeric()
+  row <- texts %>% 
+    filter(docId == x)
+  ads <- rbind(ads, row)
+}
+
+```
+
+```{r include=FALSE}
+ads <- readRDS("./data/20200104/ads.rds")
+```
+
+
+```{r}
+reactable(ads %>%
+            select(-docId), columns = list(
+  page_name = colDef(width = 90)))
+```
+
+
+***
+
+As expected we do get the more verbose ads in return. But they still look fairly representative. Instead of analysing the ads as such, there is also the possiblity to look at the sentences, like what was done in "God Save the Queen" example above.  
+
+```{r, eval=FALSE}
+# create a function
+
+party_sentences_df <- function (df, party, n){
+  sentences <- df %>% 
+  filter(name_party == party) %>% 
+  select(ad_creative_body) %>% 
+  rownames_to_column(var = "doc_id") %>%
+  unnest_sentences(sents, ad_creative_body) %>% 
+  select(sents) %>% 
+  unique()
+  top = lexRankr::lexRank(sentences$sents,
+                        docId = rep(1, length(sentences$sents)),
+                        n = n,
+                        continuous = TRUE)
+  x <- top %>% 
+  select(sentence)
+  return(x)
+  
+}
+
+# use a loop
+
+party_page <- c("vlaams belang", "open vld", "sp.a", "pvda", "groen",
+                "ps", "n-va", "ptb", "cd&v", "ecolo", "cdh")
+x <- df
+
+sentences <- data.frame()
+for (i in(party_page)){
+  print(i)
+  row <- party_sentences_df(x, i, 5) 
+  row <- cbind(i, row)
+  sentences <- rbind(sentences, row)
+}
+
+```
+
+```{r include=FALSE}
+sentences <- readRDS("~/R/blogs/content/post/data/20200104/sentences.rds") %>% 
+  mutate(i = as.character(i)) %>% 
+  rename("party" = "i")
+```
+
+
+```{r}
+show_sentences <- function(x){
+  sentences %>% 
+    filter(party == x) %>%
+    kable(format = "html")
+}
+
+show_sentences("vlaams belang")
+```
+
+
+```{r}
+show_sentences("groen")
+```
+
+```{r}
+show_sentences("sp.a")
+```
+
+```{r}
+show_sentences("n-va")
+```
+
+```{r}
+show_sentences("ecolo")
+```
+
+```{r}
+show_sentences("cdh")
+```
+
+```{r}
+show_sentences("cd&v")
+```
+
+```{r}
+show_sentences("open vld")
+```
+
+
+The algorythm has difficulties in tokenizing the ads in sentences. But I still wanted to share the results with you as I think this is an interesting way of summerasing the thousands of ads. 
+
+A simpler approach could be used to analyse the ads of Het Vlaams Belang. It was said that in the 2019 campaign the party had its well known anti-foriegner (racists) messages but that it also had messages talking abouty people's finances too. A bit like the first ad that seemed representative : "Wat staat er nu eigenlijk in de startnota van Bart De Wever? N-VA wil de 'Lage Emissiezones' uitbreiden naar alle steden. En wie wordt de pineut? De gewone burger die zich geen nieuwe auto kan veroorloven of een jaarabonnement (lees belasting) zal moeten betalen om te mogen "vervuilen". STOP de asociale LEZ's!"
+
+A bit of a 'gilet jaune' kind of message, and btw I would be very supprised if the N-VA wanted to ban the most polluting cars from city centers. It's just not their kick. 
+
+In the next post I'll be topic modeling on the data set, but here, to conclude, let's see how far we can get with some basic text searches. 
+
+Why for instance is Het Vlaams Belang so interested in swimming pools? It's not really our biggest popular sport. How can we find out?
+
+
+```{r}
+vlaams_belang <- df %>% 
+  filter(name_party == "vlaams belang") %>% 
+  select(ad_creative_body)
+```
+
+
+```{r}
+str_detect("een boot in een zwembad", "zwem")
+```
+
