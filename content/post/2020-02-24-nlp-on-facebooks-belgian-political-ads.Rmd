@@ -242,5 +242,5 @@ vlaams_belang %>% filter(external == TRUE) %>%
 
 ```
 
-Most of the ads (40%) are still rooted in identity politics.
+The biggest category of ads that represent about 40% of them, are still rooted in identity politics.
 
