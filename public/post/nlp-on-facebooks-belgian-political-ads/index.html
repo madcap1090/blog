@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>nlp on Facebooks Belgian political ads | bad to the code</title>
+
+<meta property='og:title' content='nlp on Facebooks Belgian political ads - bad to the code'>
+<meta property='og:description' content='In the last post there was a fairly extensive analysis presented on what is possible to obtain from Facebook on political ads in Belgium. There was a fair amount of data to play with even if it took some energy and time to clean it and filter the ‘issues’ ads from the political ads.
+However Facebook does not present and makes available enough data to analyse what type of deep manipulation is possible using their services.'>
+<meta property='og:url' content='/post/nlp-on-facebooks-belgian-political-ads/'>
+<meta property='og:site_name' content='bad to the code'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='Belgian politics'><meta property='article:tag' content='Facebook'><meta property='article:tag' content='nlp'><meta property='article:published_time' content='2020-02-24T00:00:00Z'/><meta property='article:modified_time' content='2020-02-24T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
+
+
+<link href="/index.xml" rel="alternate" type="application/rss+xml" title="bad to the code" />
+
+<link rel="stylesheet" href="/css/style.css"/><link rel='stylesheet' href='/css/custom.css'><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="theme-color" content="#ffffff">
+</head>
+<body>
+<section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="/">
+          <h1 class="title is-4">bad to the code</h1>
+        </a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile"><a class="level-item" aria-label="facebook" href='https://facebook.com/OClassicoOficial/videos/391802167961744/'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="email" href='mailto:madcap1090@gmail.com'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="linkedin" href='https://linkedin.com/in/williambourgeois'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path stroke-width="1.8" d="m5.839218,4.101561c0,1.211972 -0.974141,2.194011 -2.176459,2.194011s-2.176459,-0.982039 -2.176459,-2.194011c0,-1.211094 0.974141,-2.194011 2.176459,-2.194011s2.176459,0.982917 2.176459,2.194011zm0.017552,3.94922l-4.388022,0l0,14.04167l4.388022,0l0,-14.04167zm7.005038,0l-4.359939,0l0,14.04167l4.360816,0l0,-7.370999c0,-4.098413 5.291077,-4.433657 5.291077,0l0,7.370999l4.377491,0l0,-8.89101c0,-6.915523 -7.829986,-6.66365 -9.669445,-3.259423l0,-1.891237z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="twitter" href='https://twitter.com/WilliamBourgeoi'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="github" href='https://github.com/madcap1090'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+    
+  </svg></i>
+            </span>
+          </a></nav>
+      </div>
+    </nav>
+
+    <nav class="nav">
+      
+
+      
+    </nav>
+
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="subtitle tags is-6 is-pulled-right">
+      
+      
+<a class="subtitle is-6" href="/tags/belgian-politics">#Belgian politics</a>
+
+
+
+  
+  | <a class="subtitle is-6" href="/tags/facebook">#Facebook</a>
+  
+  | <a class="subtitle is-6" href="/tags/nlp">#nlp</a>
+  
+
+      
+    </div>
+    <h2 class="subtitle is-6">February 24, 2020</h2>
+    <h1 class="title">nlp on Facebooks Belgian political ads</h1>
+    
+    <div class="content">
+      
+<script src="/rmarkdown-libs/core-js/shim.min.js"></script>
+<script src="/rmarkdown-libs/react/react.min.js"></script>
+<script src="/rmarkdown-libs/react/react-dom.min.js"></script>
+<script src="/rmarkdown-libs/reactwidget/react-tools.js"></script>
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="/rmarkdown-libs/reactable-binding/reactable.js"></script>
+
+
+<p>In the last post there was a fairly extensive analysis presented on what is possible to obtain from Facebook on political ads in Belgium. There was a fair amount of data to play with even if it took some energy and time to clean it and filter the ‘issues’ ads from the political ads.</p>
+<p>However Facebook does not present and makes available enough data to analyse what type of deep manipulation is possible using their services. And it is also a conclusion that Julia Carrie Wong makes in <a href="https://www.theguardian.com/us-news/2020/jan/28/donald-trump-facebook-ad-campaign-2020-election?CMP=share_btn_tw">this</a> Guardian article published at the end of January. Good article btw. You can also listen to her being interviewed in this excellent <a href="https://www.theguardian.com/news/audio/2020/feb/19/inside-trump-facebook-campaign-podcast">podcast</a>.</p>
+<p>She investigated 218k ads we only 13k in Belgium. This blog post is about what we kan learn from those.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;DT&quot;)
+library(&quot;httr&quot;)
+library(&quot;rvest&quot;)
+library(&quot;glue&quot;)
+library(&quot;tidyr&quot;) 
+library(&quot;stringi&quot;)
+library(&quot;reactable&quot;) 
+library(&quot;lexRankr&quot;)
+library(&#39;knitr&#39;)
+options(scipen = 999)</code></pre>
+<p>Loading the data:</p>
+<pre class="r"><code>df &lt;- readRDS(&quot;./data/20200104/df.rds&quot;)</code></pre>
+<p>What were the most expensive ads?</p>
+<pre class="r"><code>df %&gt;%
+  group_by(ad_creative_body, page_name) %&gt;%
+  summarise(euro = sum(spent)) %&gt;%
+  arrange(desc(euro)) %&gt;%
+  head(5) %&gt;%
+  reactable(columns = list(
+  page_name = colDef(width = 90), euro = colDef(width = 80)))</code></pre>
+<div id="htmlwidget-1" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"ad_creative_body":["VIND DIT LEUK als je het eens bent!","Wie gelooft die mensen nog? De belastingdruk is niet gedaald, het begrotingstekort loopt op tot in de miljarden, de energiearmoede stijgt schrikwekkend én bovenop mag u daar - dankzij hen - nog eens twee jaar langer voor werken... Tijd voor échte verandering, tijd om onze mensen eerst te zetten!","Un message d'espoir de Marine Le Pen pour les Bruxellois.\n\nVlaams Belang et Rassemblement National, un combat, également à Bruxelles!\n\nVotez pour le Vlaams Belang le 26 mai et choisissez avec le Vlaams Belang pour nos gens d'abord!","Worden we niet genoeg uitgeperst? GEEN verhoging van de pensioenleeftijd! Wie 40 jaar heeft gewerkt, héél zijn leven zich blauw heeft betaald aan torenhoge belastingen, heeft volgens ons recht op een minimumpensioen van €1500. Dat is niet links, niet rechts, maar een kwestie van rechtvaardigheid!","Dit is waarom jij moet gaan stemmen."],"page_name":["Tom Van Grieken","Vlaams Belang","Vlaams Belang Brussel","Vlaams Belang","Vlaams Belang"],"euro":[78700,60000,39100,37550,37500]},"columns":[{"accessor":"ad_creative_body","name":"ad_creative_body","type":"character"},{"accessor":"page_name","name":"page_name","type":"character","width":90},{"accessor":"euro","name":"euro","type":"numeric","width":80}],"defaultPageSize":10,"paginationType":"numbers","showPageInfo":true,"minRows":1,"dataKey":"b0bc97409d48d4bc34125097ebc6775b"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<p>As a first analysis We can apply a lexrank analysis (unsupervised approach to text summaries) to calculate the most representative sentences in the ads. The lexrank algorithm calculates the most relevant words in a text and then gives each sentence a score based on the words it contains.</p>
+<p>So what would be the most representative sentences in ‘God Save the Queen’ by the Sex Pistols?</p>
+<pre class="r"><code>url &lt;- &quot;https://www.azlyrics.com/lyrics/sexpistols/godsavethequeen.html&quot;
+selector &lt;- paste0(&quot;body &gt; div.container.main-page &gt; div &gt;&quot;,
+                   &quot; div.col-xs-12.col-lg-8.text-center &gt; div:nth-child(8)&quot;)
+
+text &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_node(selector) %&gt;% 
+  html_text() %&gt;% 
+  str_remove_all(&quot;\\\r&quot;) %&gt;%
+  strsplit(&quot;\\\n&quot;) %&gt;% 
+  unlist()
+
+text[nchar(text) &gt; 2][1:16]</code></pre>
+<pre><code>##  [1] &quot;God save the queen&quot;            &quot;The fascist regime&quot;           
+##  [3] &quot;They made you a moron&quot;         &quot;Potential H-bomb&quot;             
+##  [5] &quot;God save the queen&quot;            &quot;She ain&#39;t no human being&quot;     
+##  [7] &quot;There is no future&quot;            &quot;In England&#39;s dreaming&quot;        
+##  [9] &quot;Don&#39;t be told what you want&quot;   &quot;Don&#39;t be told what you need&quot;  
+## [11] &quot;There&#39;s no future, no future,&quot; &quot;No future for you&quot;            
+## [13] &quot;God save the queen&quot;            &quot;We mean it man&quot;               
+## [15] &quot;We love our queen&quot;             &quot;God saves&quot;</code></pre>
+<pre class="r"><code>text_df  &lt;- data.frame(&quot;sentences&quot; = text) %&gt;%
+  mutate(sentences = as.character(sentences)) %&gt;% 
+  unique()
+
+reactable(lexRank(text_df$sentences,
+                        docId = rep(1, length(text_df$sentences)),
+                        n = 5,
+                        continuous = TRUE) %&gt;%
+  select(sentence, value),  columns = list(
+  value = colDef(format = colFormat(separators = TRUE, digits = 4))))</code></pre>
+<pre><code>## Parsing text into sentences and tokens...DONE
+## Calculating pairwise sentence similarities...DONE
+## Applying LexRank...DONE
+## Formatting Output...DONE</code></pre>
+<div id="htmlwidget-2" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-2">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"sentence":["God save the queen","God saves","Oh God save history","God save your mad parade","Don't be told what you need","Don't be told what you want"],"value":[0.0640686300827261,0.0572405409925414,0.0567883573659391,0.0563485832681643,0.0487804878048781,0.0487804878048781]},"columns":[{"accessor":"sentence","name":"sentence","type":"character"},{"accessor":"value","name":"value","type":"numeric","format":{"cell":{"digits":4,"separators":true},"aggregated":{"digits":4,"separators":true}}}],"defaultPageSize":10,"paginationType":"numbers","showPageInfo":true,"minRows":1,"dataKey":"79cb41289f36d4630a4a0f0e3b98ef13"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<p>The sentences containing “God” and “save” have the higher scores. “you” works well too.</p>
+<p>Since the algorithm scores the words in a sentence, that is analysed as mere list of words, we can also use a collection of sentences, like a ad text, and see what is the most representative ad of a party in 2019. I suspect longer ads might have a higher score.</p>
+<p>So what were the ads that were the most representative ones among all ads of one party? Let’s find out.</p>
+<pre class="r"><code>party_page &lt;- c(&quot;Vlaams Belang&quot;, &quot;Open Vld&quot;, &quot;sp.a&quot;, &quot;PVDA&quot;, &quot;Groen&quot;,
+              &quot;Parti Socialiste (PS)&quot;, &quot;N-VA&quot;, &quot;PTB&quot;, &quot;CD&amp;V&quot;)
+ads &lt;- data.frame()
+for (i in(party_page)){
+  texts &lt;- df %&gt;% 
+    filter(page_name  == i) %&gt;%
+    select(page_name, ad_creative_body) %&gt;%
+    unique() %&gt;%
+    rownames_to_column(var = &quot;docId&quot;) %&gt;%
+    mutate(ad_creative_body = as.character(ad_creative_body))
+    x &lt;- lexRank(texts$ad_creative_body, n=10) %&gt;% 
+      group_by(docId) %&gt;%
+      summarise(sum = sum(value)) %&gt;%
+      filter(max(sum) ==sum) %&gt;%
+      select(docId) %&gt;%
+      as.numeric()
+  row &lt;- texts %&gt;% 
+    filter(docId == x)
+  ads &lt;- rbind(ads, row)
+}</code></pre>
+<pre class="r"><code>ads %&gt;%
+  select(-docId) %&gt;%
+  kable(format = &quot;html&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+page_name
+</th>
+<th style="text-align:left;">
+ad_creative_body
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Vlaams Belang
+</td>
+<td style="text-align:left;">
+Wat staat er nu eigenlijk in de startnota van Bart De Wever? N-VA wil de ‘Lage Emissiezones’ uitbreiden naar alle steden. En wie wordt de pineut? De gewone burger die zich geen nieuwe auto kan veroorloven of een jaarabonnement (lees belasting) zal moeten betalen om te mogen “vervuilen”. STOP de asociale LEZ’s!
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Open Vld
+</td>
+<td style="text-align:left;">
+<p>De kiezer staat zondag voor een duidelijke keuze: kiezen we voor een land dat werkt of voor een land dat stilstaat en tijd verliest? Kiezen we voor belasten of belonen? Voor afbreken of bouwen? Voor pessimisme of optimisme? Voor weglopen of doorzetten? Wij hebben gekozen. Wij gaan voor de positieve keuze.</p>
+👇 Bekijk de aftermovie van onze slotmeeting. Het was ge-wel-dig!
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sp.a
+</td>
+<td style="text-align:left;">
+De facturen stegen de voorbije jaren, maar we kregen er niets voor terug. Waar is het geld van de mensen naartoe? Wij strijden opnieuw voor zekerheid. Voor iedereen. #NieuweStrijd
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PVDA
+</td>
+<td style="text-align:left;">
+329 euro op onze energiefactuur betalen voor kosten die niets met elektriciteit en gas te maken hebben?! Tijd voor dringende maatregelen om de energiefactuur betaalbaar te maken 👇
+1️⃣ Room de woekerwinsten op de zonnepanelen van Fernand Huts en co af. Het is niet normaal dat gezinnen opdraaien voor de oversubsidiëring van banken en miljardairs.
+2️⃣ Haal de groenestroomkosten uit de energiefactuur. De nettarieven liggen hier 40 procent hoger dan in het buitenland!
+3️⃣ Verlaag de BTW op energie van 21 naar 6 procent. Energie is een basisbehoefte, geen luxe.
+➡️ Zo verlagen we de energiefactuur voor de gezinnen en houden we de groenestroomkosten binnen de perken. Waar wachten we nog op?
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Groen
+</td>
+<td style="text-align:left;">
+<p>11 november: Belgische #Vrouwendag en #Wapenstilstand. Dit jaar vieren we beide feestdagen samen. We zetten enkele vrouwen in de kijker die een uitzonderlijke rol speelden tijdens de Eerste Wereldoorlog.</p>
+<p>Zij verdienen het om herinnerd te worden 🎗️ Niet louter omdat ze vrouw zijn, maar omdat hun werk het leven van ons allemaal veiliger heeft gemaakt. Het is nodig om hun verwezenlijkingen onder de aandacht te brengen, want de kans dat je ze tegenkomt in de les geschiedenis is bijzonder klein.</p>
+<p>Tijdens oorlogen hebben vrouwen het meest te verduren. En tegelijkertijd bieden vrouwen hoop voor het oplossen van conflicten. Vrede is onlosmakelijk verbonden met de gelijkwaardigheid van man en vrouw. Waar vrouwen gewaardeerd worden om volledig deel te nemen aan de vredesdialoog, stijgen de kansen op veiligheid, welvaart en stabiliteit 💚</p>
+<p>Hulde voor de stenen die zij hebben verlegd.</p>
+<p>De keuze voor deze historische figuren komt van Lotte Stoops, Juan Benjumea-Moreno, Celia Groothedde Ledoux, Jessika Soors en Evita Willaert: vijf groene parlementsleden die zich inzetten voor meer gelijkheid tussen vrouwen en mannen. Deze verhalen geven hen inspiratie en energie geven om iedere dag aan politiek te doen.</p>
+Ken jij nog vrouwen die een bloemenkrans verdienen? 🌼 Deel ze met ons! 👇🏽👇🏻👇🏿
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Parti Socialiste (PS)
+</td>
+<td style="text-align:left;">
+🔴👩‍👧‍👦Le PS entend faciliter la vie de toutes les familles, notamment les mamans en :
+🌹Renforçant le congé de maternité et de paternité
+🌹Indemnisant à 100% du salaire les congés de maternité (et de paternité).
+🌹Augmentant le nombre de places d’accueil de qualité pour la petite enfance.
+🌹Créant un congé de conciliation afin de permettre aux parents de trouver des solutions en cas de maladie des enfants.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+N-VA
+</td>
+<td style="text-align:left;">
+Laat je niets wijsmaken. De N-VA gaat door. Voor meer jobs, meer loon en meer veiligheid. Voor Vlaanderen. Voor Vooruitgang. 💛
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PTB
+</td>
+<td style="text-align:left;">
+Peter Mertens, président du PTB : « Fier de la solide équipe qui prête aujourd’hui serment à la Chambre. La fois passée, nous étions deux. Aujourd’hui, nous sommes 12 députés et députées.
+Nous allons faire entendre la voix de la rue dans le Parlement. Nous allons nous battre pour une pension minimum à 1500 euros, la pension à 65 ans, l’augmentation du salaire minimum, une politique humaine pour les malades de longue durée, de meilleurs transports en commun, une fiscalité équitable… Et nous continuerons à lutter contre les privilèges des politiciens.
+Le nouveau groupe du PTB est à l’image du parti : des hommes et des femmes de Wallonie, de Bruxelles et de Flandre, avec quatre ouvriers et ouvrières qui cumulent ensemble plus de 100 ans d’expérience syndicale. Tous et toutes connaissent la réalité du terrain et du quotidien des gens. »
+Découvrez-les ici : <a href="https://www.ptb.be/voici_les_12_lus_du_peuple_qui_forment_le_groupe_parlementaire_f_d_ral_du_ptb" class="uri">https://www.ptb.be/voici_les_12_lus_du_peuple_qui_forment_le_groupe_parlementaire_f_d_ral_du_ptb</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CD&amp;V
+</td>
+<td style="text-align:left;">
+Met het verbod op wegwerpplastic en het Vlaams klimaatbeleidsplan zetten we al belangrijke stappen voorwaarts. Door meer investeringen in duurzaam en veiliger verkeer, en een haalbaar en sociaal rechtvaardig klimaatbeleid zetten we onze weg volop verder. Kies #metHilde voor een groener én gezonder Vlaanderen en stem CD&amp;V. Ontdek hoe we dat doen 👉<a href="https://stem.cdenv.be/milieu-klimaat-mobiliteit" class="uri">https://stem.cdenv.be/milieu-klimaat-mobiliteit</a>
+</td>
+</tr>
+</tbody>
+</table>
+<p>As expected we do get the more verbose ads in return. But they still look fairly representative. Instead of analysing the ads as such, there is also the possibility to look at the sentences, like what was done in “God Save the Queen” example above.</p>
+<pre class="r"><code># create a function
+party_sentences_df &lt;- function (df, party, n){
+  sentences &lt;- df %&gt;% 
+  filter(name_party == party) %&gt;% 
+  select(ad_creative_body) %&gt;% 
+  rownames_to_column(var = &quot;doc_id&quot;) %&gt;%
+  unnest_sentences(sents, ad_creative_body) %&gt;% 
+  select(sents) %&gt;% 
+  unique()
+  top = lexRankr::lexRank(sentences$sents,
+                        docId = rep(1, length(sentences$sents)),
+                        n = n,
+                        continuous = TRUE)
+  x &lt;- top %&gt;% 
+  select(sentence)
+  return(x)
+}
+
+# use a loop
+party_page &lt;- c(&quot;vlaams belang&quot;, &quot;open vld&quot;, &quot;sp.a&quot;, &quot;pvda&quot;, &quot;groen&quot;,
+                &quot;ps&quot;, &quot;n-va&quot;, &quot;ptb&quot;, &quot;cd&amp;v&quot;, &quot;ecolo&quot;, &quot;cdh&quot;)
+x &lt;- df
+
+sentences &lt;- data.frame()
+for (i in(party_page)){
+  print(i)
+  row &lt;- party_sentences_df(x, i, 5) 
+  row &lt;- cbind(i, row)
+  sentences &lt;- rbind(sentences, row)
+}</code></pre>
+<pre class="r"><code>show_sentences &lt;- function(x){
+  sentences %&gt;% 
+    filter(party == x) %&gt;%
+    kable(format = &quot;html&quot;)
+}
+
+show_sentences(&quot;vlaams belang&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+party
+</th>
+<th style="text-align:left;">
+sentence
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+vlaams belang
+</td>
+<td style="text-align:left;">
+“Het Vlaams Belang deelt de grote zorg van de Vlamingen en wijst erop dat de massale immigratie geen onvermijdelijkheid is die we als een soort natuurramp moeten ondergaan.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vlaams belang
+</td>
+<td style="text-align:left;">
+De ene verantwoordelijke ‘security’ aanwezig, eveneens een persoon van allochtone afkomst, zegt dat iedereen - omwille van het nieuwe ‘Safe Swim zone’-concept zijn of haar identiteitskaart moet laten inscannen.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vlaams belang
+</td>
+<td style="text-align:left;">
+<p>WANTOESTANDEN NIEUW ZWEMBAD KORTRIJK</p>
+<p>“Quickie mag dan wel fier zijn op zijn ‘130 nationaliteiten’, dit was voor mij absoluut de allerlaatste zwembeurt ever in Lago Kortrijk.”</p>
+We kregen opnieuw een getuigenis van een bezorgde Kortrijkzaan:
+Ik kruip niet snel in de pen om mijn ongenoegen te uiten, zeker niet op vlak van politiek en religie, maar dit moet me toch even van het hart.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vlaams belang
+</td>
+<td style="text-align:left;">
+<p>Ik zou wel het voorstel willen lanceren om een bevraging te doen van de inwoners vooraleer wij dit beslissen.”</p>
+Geen enkele partij ging in op het voorstel van Vlaams Belang om toch eerst even te luisteren bij de bewoners en ondernemers in de straat.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vlaams belang
+</td>
+<td style="text-align:left;">
+“Het feit dat onze militairen te horen krijgen dat er voor de herstelling van al deze problemen geen geld is, is gewoon hemeltergend en zelfs een regelrecht schande.
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>show_sentences(&quot;groen&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+party
+</th>
+<th style="text-align:left;">
+sentence
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+groen
+</td>
+<td style="text-align:left;">
+<p>Een greep uit de belangrijkste investeringsplannen die we vanuit Groen Tielt steunen:</p>
+<p>𝗘𝗲𝗻 𝗴𝗿𝗼𝗲𝗻 𝗧𝗶𝗲𝗹𝘁</p>
+<p>🌳🌳🌳🌳 Ontwikkeling van het stadsrandbos (600.000€)
+🌳🌳🌳 Investeren in het landschapspark
+🌳🌳 Inventarisatie van waardevolle tuinen met het oog op bescherming bij projectontwikkeling
+🌧☀️ Opmaak van een waterplan om voorbereid te zijn op periodes van aanhoudende droogte én wateroverlast: investeren in ecologisch ingerichte waterbekkens en het ontharden van (beton)oppervlaktes waar mogelijk</p>
+<p>𝗘𝗲𝗻 𝗹𝗲𝗲𝗳𝗯𝗮𝗮𝗿 𝗧𝗶𝗲𝗹𝘁</p>
+<p>🚦🚸👮‍♀️ Aandacht voor het STOP principe (stappen, trappen, openbaar vervoer, personenwagens) in het mobiliteitsbeleid, met de opmaak van een verkeerscirculatieplan en een fietsbeleidsplan
+🚲🚲 Investeren in fietsinfrastructuur en -stallingen om het fietsverkeer te stimuleren
+♿️👫 Degelijk investeren in de (her)aanleg van veilige en comfortabele voetpaden</p>
+<p>𝗘𝗲𝗻 𝘄𝗮𝗿𝗺 𝗧𝗶𝗲𝗹𝘁</p>
+<p>🤸‍♀️🤸‍♂️🛴 Ontwikkeling van een speelweefselplan om de verschillende speelterreinen in Tielt te beheren én met elkaar te verbinden, met investeringen in speeltoestellen (250.000€)
+🎭🎸🏞 🗿 Nieuwe infrastructuur voor de muziek- en kunstacademies
+📩📩📩 Verhoging van de werkingssubsidies met 20% voor alle Tieltse verenigingen
+👩‍🦳👨‍🦳👩‍⚕️ Een nieuw dagverzorgingscentrum en extra serviceflats op de Deken Darras site</p>
+Meer weten?
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+groen
+</td>
+<td style="text-align:left;">
+Groen schepen en nummer drie op de Kamerlijst Ecolo-Groen Tinne Van der Straeten toont hoe ook het gemeentelijk niveau actie kan ondernemen voor een betere toekomst door een lokaal klimaatplan op te zetten 🌳🌍 🚴‍♂️
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+groen
+</td>
+<td style="text-align:left;">
+Dat de Heirbaan het statuut van fietsstraat krijgt, met voorrang voor fietsers op autoverkeer en een maximum snelheid van 30 km/uur vindt Groen een goed idee.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+groen
+</td>
+<td style="text-align:left;">
+<p>Een (geleid) bezoek aan de biopluktuin en gezellig tafelen onder Groen-sympathisanten</p>
+Iedereen welkom met het hele gezin van 10u tot 15u
+Klik door op het event voor meer info!
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+groen
+</td>
+<td style="text-align:left;">
+<p>Groen maakt gelukkig en gezond 💚</p>
+<p>🌳 Elke provincie een Nationaal Park
+🌳 Iedereen een bos of park op wandelafstand
+🌳 Boskaart maken en betonstop versnellen</p>
+‘Vlaanderen moet haar verantwoordelijkheid nemen in de strijd tegen het verlies van biodiversiteit’
+- Chris Steenwegen, voormalig directeur van Natuurpunt en kandidaat voor Groen in Vlaams-Brabant.
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>show_sentences(&quot;sp.a&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+party
+</th>
+<th style="text-align:left;">
+sentence
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sp.a
+</td>
+<td style="text-align:left;">
+<p>“Het verlagen van de BTW op elektriciteit naar 6% is een breekpunt voor sp.a. Want elektriciteit is een basisbehoefte en moet betaalbaar zijn voor iedereen.”</p>
+Dat was mijn boodschap in een debat met Bart Tommelein op Radio 1.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sp.a
+</td>
+<td style="text-align:left;">
+Een van de zaken waar ik erg trots op ben: het Parlement heeft beslist dat het geld van de structuur- en cohesiefondsen niet meer gebruikt kan worden voor fossiele brandstoffen, zonder uitzondering.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sp.a
+</td>
+<td style="text-align:left;">
+Integendeel, ik geloof zeer hard in het Huis van Kind en geloof dat het de ideale plek is om een breder gezinsbeleid uit te bouwen.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sp.a
+</td>
+<td style="text-align:left;">
+Op de gemeenteraad van maart werd ons voorstel voor een veiligere fietsoversteekplaats ter hoogte van het kruispunt N50 en Kortrijkstraat weggestemd.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sp.a
+</td>
+<td style="text-align:left;">
+Ondanks de warme campagne-aftrap was het mooiste moment voor mij toch wel het gesprek met een koppel socialisten die samen ooit aan de kar getrokken hebben in Aalst, extra speciaal omdat we het over mijn grootouders konden hebben en de rol van mijn pepe in de beweging en de textielraad.
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>show_sentences(&quot;n-va&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+party
+</th>
+<th style="text-align:left;">
+sentence
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+n-va
+</td>
+<td style="text-align:left;">
+Dat is niet anders voor mijn campagnevriend Gino Van der Elst die me een van de rechterhanden van BDW noemt, al had ik wel het plezier om zes jaar deel uit te maken van het team van Bart en hang ik vandaag aan diens venster in Deurne wat mijn campagneteam duidelijk doet vooruit kijken op een mooi resultaat.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+n-va
+</td>
+<td style="text-align:left;">
+<p>Ik stem alvast N-VA, omdat :
+✌️ de N-VA vindt dat ons onderwijs de lat opnieuw hoog moet leggen
+✌️ de N-VA zijn rekeningen op orde heeft volgens het planbureau, zónder belastingverhoging
+✌️ de N-VA staat voor een integrale veiligheidsaanpak: bestrijden van straffeloosheid, meer middelen beter inzetten, structurele samenwerking en informatiedoorstroming
+✌️ de N-VA voorstander is van een gecontroleerd en humaan migratiebeleid</p>
+Kies voor Vlaanderen.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+n-va
+</td>
+<td style="text-align:left;">
+Begin dit jaar zat hij mee aan tafel met het Seniorenkonvent Leuven en de Rector van de KU Leuven om een akkoord te bereiken over het veelbesproken doopcharter.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+n-va
+</td>
+<td style="text-align:left;">
+<p>–&gt; een veilig en zeker bedrijfsbeleid voor grote en kleine ondernemers
+–&gt; meer middelen voor een flinke uitbreiding van de waterbus
+–&gt; beleid op maat van de Vlaamse Paardenhouderij
+–&gt; bescherming van ons artistiek en cultureel patrimonium, met een
+sleutelrol voor onze standbeelden
+–&gt; bescherming van uniek natuurschoon</p>
+Dat is het engagement waarmee Dirk naar het Vlaams Parlement trekt.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+n-va
+</td>
+<td style="text-align:left;">
+Wegens het uitblijven van een bord dat verwijst naar Crop’s en Vanden Avenne aan het kruispunt met de Fabiolalaan, komen deze chauffeurs op het einde van de weg voor een verrassing te staan…
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>show_sentences(&quot;ecolo&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+party
+</th>
+<th style="text-align:left;">
+sentence
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ecolo
+</td>
+<td style="text-align:left;">
+<p>ECOLO vous consulte</p>
+Lors du Conseil communal du 2 septembre, la majorité MR et PS proposera au vote que le contrôle du temps de parcage sur les voiries réglementées de la commune soit confié à une firme privée qui serait payée pour ce service, entre autres, par le nombre de redevance de stationnement déposée sur le pare-brise de l’usager.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ecolo
+</td>
+<td style="text-align:left;">
+<p>📢 Gilets jaunes, manifs pour le climat, manifs contre le racisme, … 2018 et 2019 sont les années de la mobilisation ✊</p>
+<p>Si vous aussi, vous voulez des relais du terrain dans les Parlements 👉 partagez la vidéo 🎥 Découvrez nos candidat.e.s engagé.e.s au coeur du changement 💚
+👱‍♂ Simon Moutquin, 1er sur la liste fédérale Ecolo 🌱 pour le Brabant-Wallon
+👩 Sarah Schlitz, 1ère sur la liste fédérale Ecolo 🌱 pour Liège</p>
+Notre programme sur <a href="https://ecolo.be/" class="uri">https://ecolo.be/</a>
+<a href="https://www.instagram.com/ecolobe/" class="uri">https://www.instagram.com/ecolobe/</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ecolo
+</td>
+<td style="text-align:left;">
+<p>4️⃣ ECOLO souhaite mettre en place un revenu de base pour les 18-26 ans, pour leur donner des chances égales d’autonomie, de formation et d’émancipation au moment où ils suivent des études et entrent dans la vie active.👩‍🏫👨‍💻</p>
+5️⃣ Nous voulons que la transition soit créatrice d’emplois via les travaux d’isolation, la production d’énergie renouvelable, le développement des circuits de production d’alimentation au niveau local.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ecolo
+</td>
+<td style="text-align:left;">
+<p>👱🏼‍♂ Gilles Vanden Burre , 2ème sur la liste fédérale bruxelloise Ecolo 🌱 a rendu possible le dépôt des initiatives citoyennes au parlement fédéral
+👉 <a href="https://ecolo.be/feu-vert-pour-les-initiatives-citoyennes-a-la-chambre/" class="uri">https://ecolo.be/feu-vert-pour-les-initiatives-citoyennes-a-la-chambre/</a></p>
+<p>À Etterbeek aussi, un projet sera désormais discuté au conseil communal s’il réunit 750 signatures, grâce à Karim Sheikh Hassan, un échevin Ecolo 🌱</p>
+<p>Nos élu.e.s et candidat.e.s au coeur du changement 💚</p>
+<p>Découvrez toutes nos propositions sur la bonne gouvernance 🌱
+👉 <a href="https://ecolo.be/democratie/" class="uri">https://ecolo.be/democratie/</a></p>
+#JeVoteEcolo 🌱 #AuCoeurDuChangement 💚
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ecolo
+</td>
+<td style="text-align:left;">
+Jacques DELACOLLETTE et Cécile THIBAUT, candidats à la Chambre, et Jean-Philippe FLORENT, candidat à la région wallonne sur les listes ECOLO discuteront avec vous des différentes propositions avancées par le parti ECOLO pour tendre vers un monde meilleur.
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>show_sentences(&quot;cdh&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+party
+</th>
+<th style="text-align:left;">
+sentence
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+cdh
+</td>
+<td style="text-align:left;">
+<p>Nous voulons augmenter le budget de la justice de 500 millions € en 4 ans</p>
+Retrouvez toutes nos propositions pour plus de justice ⤵
+✴️ <a href="http://www.lecdh.be/nos-idees/rendre-justice-pour-relever-et-reparer" class="uri">http://www.lecdh.be/nos-idees/rendre-justice-pour-relever-et-reparer</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cdh
+</td>
+<td style="text-align:left;">
+Logement : avec les moyens dégagés, on ne financera que 300 nouveaux logements en 2020, la moitié de l’objectif annuel que le gouvernement wallon s’était pourtant fixé très récemment…et aucune annonce pour faciliter l’accès au premier logement pour les familles malgré les annonces faites par le nouveau gouvernement de réduire les frais d’achat !
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cdh
+</td>
+<td style="text-align:left;">
+<p>Moi je suis une jeune, une citoyenne, une étudiante, bientôt une travailleuse… Chacun a besoin de plusieurs choses pour être heureux et ne peut pas être limité à sa condition de travailleur, de patron, d’allocataire… Pour moi, les autres partis ont chaque fois un angle réducteur du débat de société et versant souvent dans la caricature.»</p>
+<p>📚📖📒🖊 Études et politique</p>
+Si Opaline Meunier est membre cdH depuis 10 ans, c’est en tant que présidente de l’UNECOF qu’elle se fait avant tout connaître.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cdh
+</td>
+<td style="text-align:left;">
+<p>Objectif numéro 6 ✅: la santé de tous, c’est une priorité pour le cdH, chacun a droit aux soins dont il a besoin, d’être apaisé et accompagné dans ses souffrances 😷🤧🤢🥴</p>
+<p>Les candidats humanistes à la Chambre en Province de Liège s’engagent pour des soins de santé accessibles à tous 🤧👩‍⚕️👨‍⚕️</p>
+<p>#autrementmaintenant #enavant #cdh</p>
+Toutes nos propositions ➡️[<a href="http://www.lecdh.be/nos-idees" class="uri">http://www.lecdh.be/nos-idees</a> ici]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cdh
+</td>
+<td style="text-align:left;">
+Ce 26 mai, nous, Jeunes Humanistes, sommes mobilisés et nos priorités sont :
+✅Supprimer le statut de cohabitant dans l’octroi de prestations sociales
+✅Adopter une loi climat fixant des objectifs concrets et un plan de financement à la réalisation de ceux-ci
+✅Mettre en place une juste contribution des géants du numérique (taxe GAFAM)
+✅Octroyer un droit à la démission permettant l’accès aux allocations de chômage
+✅Mettre en application l’interdiction de l’enferment d’enfants dans des centres pour demandeurs d’asile
+✅Augmenter immédiatement le nombre de numéros INAMI actuels pour permettre aux étudiants d’exercer leur profession et fixer les numéros INAMI disponibles à l’avenir en fonction des besoins réels de la population
+✅Soutenir et développer les initiatives visant à renforcer la lutte contre la cyber-violence et le cyber-harcèlement
+Orange 🍊 is the new start 🧡
+Marie Jacqmin, 7ème effective, 23 ans, Hannut
+Céline Baltaci, 9ème effective, 20 ans, Xhendelesse
+Olivier Rion, 8ème effectif, 34 ans, Liège
+Rose Teheux, 11ème effective, 23 ans, Hermalle-sous-Argenteaux
+Raphael Gregoire, 10ème effectif, 34 ans, Engis
+Loïc Jacob, 1er suppléant, 32 ans, Hamoir
+Teresa Bong, 3ème suppléante, 19 ans, Eupen
+Luc Mathues, 4ème suppléant, 29 ans, Verviers
+Marie Bastin, 8ème suppléante, 33 ans, Comblain-au-Pont
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>show_sentences(&quot;cd&amp;v&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+party
+</th>
+<th style="text-align:left;">
+sentence
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+cd&amp;v
+</td>
+<td style="text-align:left;">
+Werkingsmiddelen zijn o.a. inkomsten uit de belastingen en uitgaven voor o.a. personeel van de diverse diensten, onderhoud van wegen – gebouwen – sportvelden, beplanting en groen, openbare verlichting, speeltuintjes, politie, OCMW, subsidies aan jeugd-, sport-, cultuur-, seniorenverenigingen,…
+Daar deze cijfers nog betrekking hebben op het CD&amp;V-Balansbestuur maakte CD&amp;V fractieleider, en oud schepen van financiën Serge vander Linden, een overzicht van het financieel beleid van de voorbije zes jaren om duidelijk aan te tonen dat wat de nieuwe beleidsploeg overal verkondigd dat ze “de gemeentefinanciën terug gezond moeten maken” niet correct is.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cd&amp;v
+</td>
+<td style="text-align:left;">
+Op een plezant platteland is het aangenaam wonen, werken en ontspannen, is er ruimte voor kwaliteitsvolle voedselproductie, ga ik naar de buurtwinkel en klopt het hart van het dorp in de school en verenigingen.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cd&amp;v
+</td>
+<td style="text-align:left;">
+Ook hield ik de vinger aan de pols in onder meer de zoektocht naar een nieuwe bestemming voor het vliegveld Malle-Zoersel, de stand van zaken m.b.t. een omleidingsweg rond Zoersel en de aanleg van een fietspad langs de N12.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cd&amp;v
+</td>
+<td style="text-align:left;">
+Ik neem terug de draad op van mijn academisch werk en mijn maatschappelijk engagement met Sant’Egidio, in de vaste overtuiging dat deze inzet aan de basis van goudwaarde is om onze samenleving bij elkaar te houden en menselijker te maken, en dat een doorleefd christendom meer dan ooit nodig is om de planeet bewoonbaar te houden voor de volgende generaties.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cd&amp;v
+</td>
+<td style="text-align:left;">
+<p>Enkele cijfers:
+- over de periode van een jaar kampen ongeveer 700.000 mensen met een psychisch probleem
+- 1 op de 5 jongeren heeft last van psychische problemen
+- België kent een overconsumptie van psychofarmaca
+- Slechts 1 op 3 zoekt professionele hulp</p>
+Het wordt tijd om deze cijfers grondig aan te pakken, met speciale aandacht voor het mentale welzijn van kinderen en jongeren.
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>show_sentences(&quot;open vld&quot;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+party
+</th>
+<th style="text-align:left;">
+sentence
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+open vld
+</td>
+<td style="text-align:left;">
+Waar ga ik voor?, Artificiële intelligentie: Ons onderwijs mag de boot niet missen!, Hoogbegaafde leerlingen vervelen zich!, Digitale vaardigheden in het hoger onderwijs, Het migratiepact: Wat staat er nu net in?, Peeters: Belfius nu echt naar de Beurs?!, Waar je vandaag komt, mag niet meer bepalen waar je naartoe kan!, Sinds wanneer is het opleggen van een politiek standpunt een taak van de koepels?, Tekort aan leerkrachten wiskunde: 8 op 10 heeft niet juist diploma, Het centraal examen: Wat en Waarom?
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+open vld
+</td>
+<td style="text-align:left;">
+Het personeel blijft echter nog in de kou en dit moet snel veranderen, vandaar de volgende concrete voorstellen om het militaire statuut te verbeteren om niet onder kritieke getalsterkte te zakken :
+- Herziening weddebarema’s ➡ enorm veel goede militairen ruilen Defensie voor de politie waar het nettoloon ( ongeacht de graad ) ongeveer 500€ hoger ligt en bovendien is afstand woon-werk meestal een stuk interessanter ( de laatste weddeherziening dateert al van meer dan 15 jaar geleden )
+- Betaal een eerlijke weekendvergoeding ➡ militairen die vandaag tijdens weekend ( of op feestdagen ) dienen te werken krijgen een verloning die een kwart onder het wettelijke minimumloon ligt
+- Voer een belastingsvrijstelling in voor militairen die ontplooid zijn op een buitenlandse zending én voor de vergoedingen tijdens manoeuvres of opdrachten ➡ Veel militairen zien hun toelage verdwijnen naar kosten voor oa bijkomende kinderopvang.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+open vld
+</td>
+<td style="text-align:left;">
+<p>Belangrijke boodschap van Bart Somers 👇🏼</p>
+<p>“Ik wil in de volgende Vlaamse regering mijn verantwoordelijkheid opnemen en bouwen aan een positief Vlaanderen, net zoals ik dat in Mechelen heb gedaan.”</p>
+<p>1️⃣ Een veilig Vlaanderen waarin iedereen de spelregels respecteert</p>
+<p>2️⃣ Een Vlaanderen waarin we met mekaar en niet naast mekaar leven</p>
+3️⃣ Een Vlaanderen met een brede middenklasse die beloond wordt voor het harde werk.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+open vld
+</td>
+<td style="text-align:left;">
+Vandaag vroeg ik in de Kamercommissie duidelijkheid aan minister De Crem omtrent ‘brexitparking Puyenbroeck’ in kader van het nood- en circulatieplan bij een harde brexit.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+open vld
+</td>
+<td style="text-align:left;">
+Het is helaas een handelsmerk van de haast onzichtbare jeugdschepen om pertinent naast de kwestie te antwoorden, verantwoordelijkheid van haar af te schuiven en haar kop in het zand te steken.
+</td>
+</tr>
+</tbody>
+</table>
+<p>The algorithm has difficulties tokenizing the ads in sentences. But I still wanted to share the results with you as I think this is an interesting way of summerasing the thousands of ads.</p>
+<p>A simpler approach could be used to analyse the ads of Het Vlaams Belang. It was said that in the 2019 campaign the party had its well known anti-foreigner (racists) messages but that it also had messages talking about people’s economic situation too. A bit like the first ad that seemed representative : “Wat staat er nu eigenlijk in de startnota van Bart De Wever? N-VA wil de ‘Lage Emissiezones’ uitbreiden naar alle steden. En wie wordt de pineut? De gewone burger die zich geen nieuwe auto kan veroorloven of een jaarabonnement (lees belasting) zal moeten betalen om te mogen”vervuilen“. STOP de asociale LEZ’s!”</p>
+<p>A bit of a ‘gilet jaune’ kind of message, and btw I would be very surprised if the N-VA wanted to ban the most polluting cars from city centers. It’s just not their kind of kick.</p>
+<p>In the next post I’ll be topic modeling on the data set, but here, to conclude, let’s see how far we can get with some basic text searches.</p>
+<pre class="r"><code>ext &lt;- paste0(&quot;zwembad|alloch|islam|salaf|geslacht|immigra|&quot;,
+             &quot;vluchte|asiel|marok|sluier|origine|illegalen|&quot;,
+             &quot;migrat|hoofddoek|afgha|national|vreemdeling|&quot;,
+             &quot;moskee|multicult|grenzen|onze mensen|kerst|&quot;,
+             &quot;zwarte piet|akbar|beschaving|marrak|syrië|molenbeek|&quot;,
+             &quot;chez nous|is-regime|nouveaux belges|onze regels|&quot;,
+             &quot;tradities|zwart piet|voorrangsbeleid|zonder papieren|&quot;,
+             &quot;beschaving|schaarbee&quot;)
+
+vlaams_belang &lt;- df %&gt;% 
+  filter(name_party == &quot;vlaams belang&quot;) %&gt;% 
+  select(ad_creative_body) %&gt;% 
+  unique %&gt;% 
+  mutate(external = str_detect(tolower(ad_creative_body), ext))
+
+vlaams_belang %&gt;% filter(external == TRUE) %&gt;% 
+  nrow()</code></pre>
+<pre><code>## [1] 415</code></pre>
+<p>Most of the ads (40%) are still rooted in identity politics.</p>
+
+      
+      <div class="related">
+
+<h3>Similar articles:</h3>
+<ul>
+	
+	<li><a href="/post/political-ads-on-facebook-for-the-2019-belgian-elections/">Political ads on Facebook for the 2019 Belgian elections</a></li>
+	
+	<li><a href="/post/topic-modeling-beer-reviews/">Topic modeling beer reviews</a></li>
+	
+	<li><a href="/post/tf-idf-and-beer-reviews/">tf_idf and beer reviews</a></li>
+	
+	<li><a href="/post/beer-reviews-galore/">Beer reviews galore!</a></li>
+	
+	<li><a href="/post/analysing-belgian-politics-with-wikipedia/">Analysing Belgian Politics with Wikipedia</a></li>
+	
+</ul>
+</div>
+      
+    </div>
+    
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container">
+    <aside><div id="disqus_thread"></div></aside>
+  
+    <div id="show_comments"><a id="load_comments" class="button is-link">Load comments</a></div>
+  
+    <script type="text/javascript">
+      var disqus_shortname = 'bad-to-the-code';
+      function disqus() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+  
+      
+      var hash = window.location.hash.substr(1);
+      if ((hash.length > 8) && (hash.substring(0, 8) === "comment-")) {
+        disqus();
+        document.getElementById("show_comments").style.display = "none";
+      } else {
+        document.getElementById('load_comments').onclick = function() {
+          disqus();
+          document.getElementById("show_comments").style.display = "none";
+        };
+      }
+  
+
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/madcap1090">William Bourgeois</a> 2019</p>
+    
+      <p>Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/ribice/kiss">Kiss</a>.</p>
+    
+  </div>
+</section>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-137981534-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="\/\/matomo.example.com\/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript>
+  <img src="//matomo.example.com/piwik.php?idsite=1&amp;rec=1" style="border:0" alt="" />
+</noscript>
+
+
+</body>
+</html>
+
