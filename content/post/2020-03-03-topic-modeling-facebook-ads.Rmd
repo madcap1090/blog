@@ -1,0 +1,126 @@
+---
+title: Topic modeling Facebook ads
+author: William Bourgeois
+date: '2020-03-03'
+slug: topic-modeling-facebook-ads
+categories: []
+tags:
+  - Facebook
+  - nlp
+  - Belgian politics
+---
+
+In the last two posts there was an analysis of Facebook ads of Belgian politicians or political parties. To temporary conclude the subject we will do some topic modeling on these ads.
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("cld2")
+library("tidytext")
+library("topicmodels")
+```
+
+Loading the data.
+
+```{r}
+df <- readRDS("./data/20200104/df.rds")
+```
+
+
+I think that one of the first things to do is to is to determine the languages the ads were written in. But since a number of the ads are writen in more than one language it might be better to first parse them by sentences, while identifying the sentences still as belonging to the same ad. 
+
+
+```{r eval=FALSE, include=TRUE}
+# create a doc_id
+df <- rowid_to_column(df, "doc_id")
+
+sentences <- data.frame()
+for (i in (1:nrow(df))){
+  sentence_extract <- t(str_extract_all(df$ad_creative_body[i], boundary("sentence"), simplify = TRUE)) %>% 
+    as.data.frame()
+  sentence_extract <- bind_cols("sentences" = sentence_extract, "doc_id" = rep.int(df$doc_id[i],
+                                                                                   nrow(sentence_extract)))
+  sentences <- rbind(sentences, sentence_extract)
+}
+
+```
+
+```{r, include=FALSE}
+#saveRDS(sentences, "./data/20200303/sentences.rds")
+sentences <- readRDS("./data/20200303/sentences.rds")
+```
+
+```{r}
+sentences
+```
+
+So now we can filter and take only the dutch sentences. And then we can tokenize to words (while transforming CD&V, sp.a and N_VA in order to keep them as words)
+
+
+```{r}
+sentences_cld2 <- sentences %>%
+  mutate(clean_text = as.character(V1)) %>% 
+  mutate(language = detect_language(clean_text)) 
+
+sentences_nl <- sentences_cld2 %>% 
+  filter(language == "nl") %>% 
+  select(-V1, -language) %>% 
+  distinct(clean_text, .keep_all = TRUE)
+# sp.a , cd&v and n-va 
+sentences_nl <- sentences_nl %>% 
+  mutate(#clean_text = str_replace_all(clean_text, "sp.a", "spxxxxa"),
+         clean_text = str_replace_all(clean_text, "CD&V", "CDxxxxV"),
+         clean_text = str_replace_all(clean_text, "Cd&v", "CDxxxxV"),
+         clean_text = str_replace_all(clean_text, "cd&v", "CDxxxxV"),
+         clean_text = str_replace_all(clean_text, "Vlaams Belang", "VlaamsxxxxBelang"),
+         clean_text = str_replace_all(clean_text, "Open Vld", "Openxxxxvld"),
+         clean_text = str_replace_all(clean_text, "N-VA", "NVxxxxA"))
+by_doc_word <- sentences_nl %>%
+  select(doc_id, clean_text) %>% 
+  unnest_tokens(words, clean_text)
+
+head(by_doc_word %>% 
+       filter(doc_id > 1000),10)
+```
+
+Download stopwords from the web, remove them and count words per ad.
+
+```{r}
+stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
+
+names(stop) <- "words"
+word_counts <- by_doc_word %>% 
+  anti_join(stop) %>% 
+  count(doc_id, words, sort = TRUE) %>% 
+  filter(nchar(words) < 27) %>% 
+  filter(nchar(words) > 1)
+word_counts
+```
+
+And now we can make a document term matrix. With as its name suggests is a matrix with one row per ad (document) and one column per word here populated by the frequency of the word in the ad.
+
+
+```{r}
+doc_dtm <- word_counts %>%
+  cast_dtm(doc_id, words, n)
+doc_dtm
+```
+
+
+Let's start finding some topics.
+
+```{r}
+n_topics <- 5
+doc_lda <- LDA(doc_dtm, k = n_topics, method = "Gibbs", 
+               control = list(iter=2000, seed=42,alpha = 0.4))
+doc_terms <- as.data.frame(topicmodels::terms(doc_lda, 15), stringsAsFactors = FALSE)
+doc_terms[1:n_topics]
+
+```
+
+```{r}
+
+```
+
+
+
+
