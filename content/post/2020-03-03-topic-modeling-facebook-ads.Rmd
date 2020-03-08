@@ -55,6 +55,15 @@ sentences
 
 So now we can filter and take only the dutch sentences. And then we can tokenize to words (while transforming CD&V, sp.a and N_VA in order to keep them as words)
 
+Download stopwords
+```{r}
+stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
+
+```
+
+
+
+
 
 ```{r}
 sentences_cld2 <- sentences %>%
@@ -65,27 +74,52 @@ sentences_nl <- sentences_cld2 %>%
   filter(language == "nl") %>% 
   select(-V1, -language) %>% 
   distinct(clean_text, .keep_all = TRUE)
-# sp.a , cd&v and n-va 
+# remove stopwords
+library("qdap")
+tm::removeWords("en ik alles behalve maar in", tm::stopwords("dutch"))
+tm::removeWords("and", tm::stopwords("english"))
+
+
 sentences_nl <- sentences_nl %>% 
-  mutate(#clean_text = str_replace_all(clean_text, "sp.a", "spxxxxa"),
+  mutate(clean_text = tolower(clean_text)) %>% 
+  mutate(clean_text = tm::removeWords(clean_text, c(tm::stopwords("dutch"), 
+                                                    "én", "http", "https","www.s", "bit.ly")))
+
+sentences_nl <- sentences_nl %>% 
+  mutate(clean_text = str_replace_all(clean_text, "sp.a", "spxxxxa"),
          clean_text = str_replace_all(clean_text, "CD&V", "CDxxxxV"),
          clean_text = str_replace_all(clean_text, "Cd&v", "CDxxxxV"),
          clean_text = str_replace_all(clean_text, "cd&v", "CDxxxxV"),
-         clean_text = str_replace_all(clean_text, "Vlaams Belang", "VlaamsxxxxBelang"),
-         clean_text = str_replace_all(clean_text, "Open Vld", "Openxxxxvld"),
-         clean_text = str_replace_all(clean_text, "N-VA", "NVxxxxA"))
+         clean_text = str_replace_all(clean_text, "vlaams belang", "VlaamsxxxxBelang"),
+         clean_text = str_replace_all(clean_text, "open vld", "Openxxxxvld"),
+         clean_text = str_replace_all(clean_text, "n-va", "NVxxxxA"))
+
+
+# sp.a , cd&v and n-va 
+
 by_doc_word <- sentences_nl %>%
   select(doc_id, clean_text) %>% 
-  unnest_tokens(words, clean_text)
+  unnest_tokens(words, clean_text, token = "words")
+
+by_doc_word_2 <- sentences_nl %>%
+  select(doc_id, clean_text) %>% 
+  unnest_tokens(words, clean_text, token = "ngrams", n = 2)
+
+by_doc_word_3 <- sentences_nl %>%
+  select(doc_id, clean_text) %>% 
+  unnest_tokens(words, clean_text, token = "ngrams", n = 3)
+
+
+by_doc_word <- by_doc_word %>% 
+  rbind(by_doc_word_2, by_doc_word_3)
+#unnest_tokens(words, clean_text)
 
 head(by_doc_word %>% 
        filter(doc_id > 1000),10)
 ```
 
-Download stopwords from the web, remove them and count words per ad.
 
 ```{r}
-stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
 
 names(stop) <- "words"
 word_counts <- by_doc_word %>% 
@@ -101,7 +135,7 @@ And now we can make a document term matrix. With as its name suggests is a matri
 
 ```{r}
 doc_dtm <- word_counts %>%
-  cast_dtm(doc_id, words, n)
+  cast_dtm(doc_id, words, n, weighting = tm::weightTf)
 doc_dtm
 ```
 
@@ -109,7 +143,8 @@ doc_dtm
 Let's start finding some topics.
 
 ```{r}
-n_topics <- 5
+# 
+n_topics <- 25
 doc_lda <- LDA(doc_dtm, k = n_topics, method = "Gibbs", 
                control = list(iter=2000, seed=42,alpha = 0.4))
 doc_terms <- as.data.frame(topicmodels::terms(doc_lda, 15), stringsAsFactors = FALSE)
@@ -118,9 +153,137 @@ doc_terms[1:n_topics]
 ```
 
 ```{r}
+doc_topics <- topicmodels::topics(doc_lda, 1)
+doc_topics_df <- as.data.frame(doc_topics)
 
+theta <- as.data.frame(topicmodels::posterior(doc_lda)$topics)
+head(theta[1:5])
 ```
 
 
+Trying library(textmineR)
+https://cran.r-project.org/web/packages/textmineR/vignettes/c_topic_modeling.html
 
+```{r}
+library("textmineR") #install.packages("textmineR")
+```
+
+```{r}
+documents <- sentences_nl %>%
+  group_by(doc_id) %>%
+  mutate(text = paste0(clean_text, collapse = "")) %>%
+  select(doc_id, text) %>% 
+  unique()
+  
+  
+  
+```
+
+
+```{r}
+dtm <- CreateDtm(doc_vec = documents$text, # character vector of documents
+                 doc_names = documents$doc_id, # document names
+                 ngram_window = c(1, 2), # minimum and maximum n-gram length
+                 stopword_vec = c(stopwords::stopwords("nl"), # stopwords from tm
+                                  stopwords::stopwords(source = "smart")), # this is the default value
+                 lower = TRUE, # lowercase - this is the default value
+                 remove_punctuation = TRUE, # punctuation - this is the default
+                 remove_numbers = TRUE, # numbers - this is the default
+                 verbose = FALSE, # Turn off status bar for this demo
+                 cpus = 2) # default is all available cpus on the system
+
+dtm <- dtm[,colSums(dtm) > 2]
+```
+
+
+```{r}
+set.seed(12345)
+
+model <- FitLdaModel(dtm = dtm, 
+                     k = 20,
+                     iterations = 300, # I usually recommend at least 500 iterations or more
+                     burnin = 180,
+                     alpha = 0.4,
+                     beta = 0.05,
+                     optimize_alpha = TRUE,
+                     calc_likelihood = TRUE,
+                     calc_coherence = TRUE,
+                     calc_r2 = TRUE,
+                     cpus = 2) 
+```
+
+```{r}
+str(model)
+```
+```{r}
+
+# R-squared 
+# - only works for probabilistic models like LDA and CTM
+model$r2
+#> [1] 0.2747765
+
+```
+
+```{r}
+
+# log Likelihood (does not consider the prior) 
+plot(model$log_likelihood, type = "l")
+```
+
+```{r}
+# probabilistic coherence, a measure of topic quality
+# this measure can be used with any topic model, not just probabilistic ones
+summary(model$coherence)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#>  0.0060  0.1188  0.1543  0.1787  0.2187  0.4117
+```
+
+```{r}
+hist(model$coherence, 
+     col= "blue", 
+     main = "Histogram of probabilistic coherence")
+```
+
+```{r}
+# Get the top terms of each topic
+(model$top_terms <- GetTopTerms(phi = model$phi, M = 5))
+```
+
+```{r}
+# Get the prevalence of each topic
+# You can make this discrete by applying a threshold, say 0.05, for
+# topics in/out of documents. 
+model$prevalence <- colSums(model$theta) / sum(model$theta) * 100
+
+# prevalence should be proportional to alpha
+plot(model$prevalence, model$alpha, xlab = "prevalence", ylab = "alpha")
+```
+
+```{r}
+# textmineR has a naive topic labeling tool based on probable bigrams
+model$labels <- LabelTopics(assignments = model$theta > 0.05, 
+                            dtm = dtm,
+                            M = 1)
+
+head(model$labels, 10)
+```
+
+```{r}
+# put them together, with coherence into a summary table
+model$summary <- data.frame(topic = rownames(model$phi),
+                            label = model$labels,
+                            coherence = round(model$coherence, 3),
+                            prevalence = round(model$prevalence,3),
+                            top_terms = apply(model$top_terms, 2, function(x){
+                              paste(x, collapse = ", ")
+                            }),
+                            stringsAsFactors = FALSE)
+```
+
+```{r}
+model$summary[ order(model$summary$prevalence, decreasing = TRUE) , ][ 1:10 , ]
+```
+```{r}
+1+1
+```
 
