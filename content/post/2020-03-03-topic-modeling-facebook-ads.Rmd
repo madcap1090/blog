@@ -57,7 +57,7 @@ So now we can filter and take only the dutch sentences. And then we can tokenize
 
 Download stopwords
 ```{r}
-stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
+#stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
 
 ```
 
@@ -161,8 +161,7 @@ head(theta[1:5])
 ```
 
 
-Trying library(textmineR)
-https://cran.r-project.org/web/packages/textmineR/vignettes/c_topic_modeling.html
+Trying library(textmineR) for topic modeling. Here is some background [info](https://cran.r-project.org/web/packages/textmineR/vignettes/c_topic_modeling.html)
 
 ```{r}
 library("textmineR") #install.packages("textmineR")
@@ -174,6 +173,20 @@ documents <- sentences_nl %>%
   mutate(text = paste0(clean_text, collapse = "")) %>%
   select(doc_id, text) %>% 
   unique()
+
+# only take texts from biggest flemish parties
+top_seven <- documents %>% 
+  left_join(df) %>% 
+  group_by(name_party) %>%
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  top_n(7) %>% 
+  select(name_party)
+
+documents <- documents %>% 
+  left_join(df) %>% 
+  filter(name_party %in% top_seven$name_party) %>% 
+  select(doc_id, text)
   
   
   
@@ -197,13 +210,14 @@ dtm <- dtm[,colSums(dtm) > 2]
 
 
 ```{r}
-set.seed(12345)
+set.seed(42)
+n_topics <- 30
 
 model <- FitLdaModel(dtm = dtm, 
-                     k = 20,
-                     iterations = 300, # I usually recommend at least 500 iterations or more
-                     burnin = 180,
-                     alpha = 0.4,
+                     k = n_topics,
+                     iterations = 200, 
+                     burnin = 175,
+                     alpha = 0.08,
                      beta = 0.05,
                      optimize_alpha = TRUE,
                      calc_likelihood = TRUE,
@@ -246,7 +260,7 @@ hist(model$coherence,
 
 ```{r}
 # Get the top terms of each topic
-(model$top_terms <- GetTopTerms(phi = model$phi, M = 5))
+(model$top_terms <- GetTopTerms(phi = model$phi, M = 10))
 ```
 
 ```{r}
@@ -281,9 +295,82 @@ model$summary <- data.frame(topic = rownames(model$phi),
 ```
 
 ```{r}
-model$summary[ order(model$summary$prevalence, decreasing = TRUE) , ][ 1:10 , ]
+model$summary[ order(model$summary$prevalence, decreasing = TRUE) , ][ 1:30 , ]
 ```
+
+
+
 ```{r}
-1+1
+
+theta <- model$theta %>% 
+  as.data.frame()
+
+max <- apply(theta[, 1:n_topics], 1, max) %>% 
+  as.data.frame() %>% 
+  rename("max" = ".")
+
+max$doc_id = row.names(max)
+  
+```
+
+```{r}
+
+theta$topic <- colnames(theta)[apply(theta,1,which.max)]
+theta$doc_id = row.names(theta)
+```
+
+```{r}
+class(documents$doc_id)
+```
+
+
+```{r}
+test_ana <- theta %>% 
+  mutate(doc_id = as.integer(doc_id)) %>% 
+  left_join(max %>% 
+              mutate(doc_id = as.integer(doc_id))) %>% 
+  left_join(documents) %>% 
+  left_join(df) %>% 
+  select(doc_id, max, topic, text, name_party) %>% 
+  filter(max > 0.599)
+```
+
+```{r}
+y <- test_ana %>% group_by(name_party, topic) %>% 
+  summarise(sum_n = n())
+
+highest_seven <- y %>% group_by(name_party) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  top_n(7)
+highest_seven
+z <- y %>% 
+  mutate(topic = str_remove_all(topic, "t_")) %>% 
+  mutate(topic = as.integer(topic)) %>% 
+  filter(name_party %in% highest_seven$name_party) %>% 
+  ungroup()
+```
+
+```{r}
+  
+ggplot(data = z, aes(x = topic, y = sum_n)) +
+  geom_bar(stat = 'identity', width = 0.65)+
+  facet_wrap(~name_party, scales = 'free')+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme_minimal()+
+  ylab("number of ads")+
+  aes(fill = as.factor(name_party))+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("n-va"= "sienna3", 
+                                        "vlaams belang" = "grey35", 
+                                        "groen" = "lightgreen",
+                                        "open vld" = "royalblue2",
+                                        "cdh" = "orange2", 
+                                        "ps" = "pink", 
+                                        "sp.a" = "pink",
+                                        "pvda" ="firebrick2",
+                                        "ptb" = "firebrick2",
+                                        "cd&v" = "orange"
+                                        ))
 ```
 
