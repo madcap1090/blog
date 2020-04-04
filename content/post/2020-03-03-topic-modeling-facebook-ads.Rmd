@@ -23,16 +23,14 @@ Loading the data.
 
 ```{r}
 df <- readRDS("./data/20200104/df.rds")
+# create a doc_id
+df <- rowid_to_column(df, "doc_id")
 ```
 
 
-I think that one of the first things to do is to is to determine the languages the ads were written in. But since a number of the ads are writen in more than one language it might be better to first parse them by sentences, while identifying the sentences still as belonging to the same ad. 
-
+I think that one of the first things to do is to is to determine the languages the ads were written in. But since a number of the ads are writen in more than one language it might be better to first parse them by sentences, while identifying the sentences still that belong to the same ad. 
 
 ```{r eval=FALSE, include=TRUE}
-# create a doc_id
-df <- rowid_to_column(df, "doc_id")
-
 sentences <- data.frame()
 for (i in (1:nrow(df))){
   sentence_extract <- t(str_extract_all(df$ad_creative_body[i], boundary("sentence"), simplify = TRUE)) %>% 
@@ -49,15 +47,19 @@ for (i in (1:nrow(df))){
 sentences <- readRDS("./data/20200303/sentences.rds")
 ```
 
+Did it work?
+
 ```{r}
 sentences
 ```
 
-So now we can filter and take only the dutch sentences. And then we can tokenize to words (while transforming CD&V, sp.a and N_VA in order to keep them as words)
+Indeed.
+
+So now we can filter and take only the dutch sentences. And then we can tokenize to words (while transforming CD&V, sp.a and N_VA in order to keep them as tokens)
 
 Download stopwords
 ```{r}
-#stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
+stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
 
 ```
 
@@ -83,7 +85,7 @@ tm::removeWords("and", tm::stopwords("english"))
 sentences_nl <- sentences_nl %>% 
   mutate(clean_text = tolower(clean_text)) %>% 
   mutate(clean_text = tm::removeWords(clean_text, c(tm::stopwords("dutch"), 
-                                                    "én", "http", "https","www.s", "bit.ly")))
+                                                    "én", "http", "https","www.s", "bit.ly", "wwww")))
 
 sentences_nl <- sentences_nl %>% 
   mutate(clean_text = str_replace_all(clean_text, "sp.a", "spxxxxa"),
@@ -120,7 +122,6 @@ head(by_doc_word %>%
 
 
 ```{r}
-
 names(stop) <- "words"
 word_counts <- by_doc_word %>% 
   anti_join(stop) %>% 
@@ -373,4 +374,54 @@ ggplot(data = z, aes(x = topic, y = sum_n)) +
                                         "cd&v" = "orange"
                                         ))
 ```
+
+
+```{r}
+z %>% 
+  filter(name_party == "vlaams belang") %>% 
+  filter(topic == 28)
+
+```
+
+```{r}
+test_ana %>% 
+  filter(name_party == "vlaams belang") %>%
+  filter(topic == "t_28") %>% 
+  arrange(desc(max)) %>% 
+  head(8) %>% 
+  select(text)
+  
+```
+
+```{r}
+z %>% 
+  filter(name_party == "pvda") %>% 
+  filter(topic == 27)
+```
+
+
+```{r}
+test_ana %>% 
+  filter(name_party == "pvda") %>%
+  filter(topic == "t_27") %>% 
+  arrange(desc(max)) %>% 
+  head(8) %>% 
+  select(text)
+```
+
+```{r}
+z %>% 
+  filter(name_party == "n-va") %>% 
+  filter(topic == 3)
+
+```
+```{r}
+test_ana %>% 
+  filter(name_party == "n-va") %>%
+  filter(topic == "t_3") %>% 
+  arrange(desc(max)) %>% 
+  head(8) %>% 
+  select(text)
+```
+
 
