@@ -17,6 +17,7 @@ library("tidyverse")
 library("cld2")
 library("tidytext")
 library("topicmodels")
+library("qdap")
 ```
 
 Loading the data.
@@ -55,19 +56,12 @@ sentences
 
 Indeed.
 
-So now we can filter and take only the dutch sentences. And then we can tokenize to words (while transforming CD&V, sp.a and N_VA in order to keep them as tokens)
+So now we can filter and take only the dutch sentences. And then we can tokenize to words (while transforming CD&V, sp.a and N_VA in order to keep them as tokens).
 
 Download stopwords
 ```{r}
 stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
 
-```
-
-
-
-
-
-```{r}
 sentences_cld2 <- sentences %>%
   mutate(clean_text = as.character(V1)) %>% 
   mutate(language = detect_language(clean_text)) 
@@ -77,7 +71,7 @@ sentences_nl <- sentences_cld2 %>%
   select(-V1, -language) %>% 
   distinct(clean_text, .keep_all = TRUE)
 # remove stopwords
-library("qdap")
+
 tm::removeWords("en ik alles behalve maar in", tm::stopwords("dutch"))
 tm::removeWords("and", tm::stopwords("english"))
 
@@ -85,7 +79,8 @@ tm::removeWords("and", tm::stopwords("english"))
 sentences_nl <- sentences_nl %>% 
   mutate(clean_text = tolower(clean_text)) %>% 
   mutate(clean_text = tm::removeWords(clean_text, c(tm::stopwords("dutch"), 
-                                                    "én", "http", "https","www.s", "bit.ly", "wwww")))
+                                                    "én", "http", "https","www.s", 
+                                                    "bit.ly", "wwww", "pagina")))
 
 sentences_nl <- sentences_nl %>% 
   mutate(clean_text = str_replace_all(clean_text, "sp.a", "spxxxxa"),
@@ -95,7 +90,6 @@ sentences_nl <- sentences_nl %>%
          clean_text = str_replace_all(clean_text, "vlaams belang", "VlaamsxxxxBelang"),
          clean_text = str_replace_all(clean_text, "open vld", "Openxxxxvld"),
          clean_text = str_replace_all(clean_text, "n-va", "NVxxxxA"))
-
 
 # sp.a , cd&v and n-va 
 
@@ -116,8 +110,6 @@ by_doc_word <- by_doc_word %>%
   rbind(by_doc_word_2, by_doc_word_3)
 #unnest_tokens(words, clean_text)
 
-head(by_doc_word %>% 
-       filter(doc_id > 1000),10)
 ```
 
 
@@ -129,6 +121,13 @@ word_counts <- by_doc_word %>%
   filter(nchar(words) < 27) %>% 
   filter(nchar(words) > 1)
 word_counts
+```
+
+Let's see if we have corectly tokenised in words:
+```{r}
+
+head(by_doc_word %>% 
+       filter(doc_id > 1000),10)
 ```
 
 And now we can make a document term matrix. With as its name suggests is a matrix with one row per ad (document) and one column per word here populated by the frequency of the word in the ad.
@@ -231,7 +230,6 @@ model <- FitLdaModel(dtm = dtm,
 str(model)
 ```
 ```{r}
-
 # R-squared 
 # - only works for probabilistic models like LDA and CTM
 model$r2
@@ -240,24 +238,117 @@ model$r2
 ```
 
 ```{r}
-
 # log Likelihood (does not consider the prior) 
-plot(model$log_likelihood, type = "l")
+ggplot(data = model$log_likelihood, aes(x= iteration, y= log_likelihood))+
+  geom_line()+
+  labs(title="log likelihood",
+        x ="iterations", y = "log likelihood")+
+  theme_minimal()
 ```
+
+
+We can analyse the models probabilistic coherence measures of topics that are defined as "Topic Coherence measures score a single topic by measuring the degree of semantic similarity between high scoring words in the topic. These measurements help distinguish between topics that are semantically interpretable topics and topics that are artifacts of statistical inference..." by the authors in the paper [here](https://www.aclweb.org/anthology/D12-1087.pdf) 
+
 
 ```{r}
 # probabilistic coherence, a measure of topic quality
 # this measure can be used with any topic model, not just probabilistic ones
+model$coherence
 summary(model$coherence)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #>  0.0060  0.1188  0.1543  0.1787  0.2187  0.4117
 ```
+
+https://datascienceplus.com/evaluation-of-topic-modeling-topic-coherence/
+
 
 ```{r}
 hist(model$coherence, 
      col= "blue", 
      main = "Histogram of probabilistic coherence")
 ```
+
+```{r}
+# hist(model$coherence, 
+#      col= "blue", 
+#      main = "Histogram of probabilistic coherence")
+
+df <- as.data.frame(model$coherence) %>% 
+  rownames_to_column("topic") %>% 
+  mutate(topic = str_remove(topic, "t_"),
+         topic = as.numeric(topic)) 
+names(df) <- c("topic", "coherence")
+
+ggplot(data = df, aes(x=topic,y=coherence, fill=topic))+
+  geom_bar(stat = "identity",  color="blue")+
+  theme_minimal()
+```
+
+
+So this is what the probabilistic coherence of our topics look like using our parameters and 30 topics. 
+
+We could cylce through a range of number of topics to see what number of topics gives the best coherence score.
+
+```{r}
+results <- data.frame()
+for (i in (5:45)){
+  print(i)
+  n_topics <- i
+
+  model <- FitLdaModel(dtm = dtm, 
+                     k = n_topics,
+                     iterations = 200, 
+                     burnin = 175,
+                     alpha = 0.08,
+                     beta = 0.05,
+                     optimize_alpha = TRUE,
+                     calc_likelihood = TRUE,
+                     calc_coherence = TRUE,
+                     calc_r2 = TRUE,
+                     cpus = 2) 
+  
+  r2 <- model$r2
+  row <- data.frame("number of topics" = i, "r2" = r2)
+  results <- rbind(results, row)
+  
+}
+
+```
+
+
+
+
+```{r}
+results2 <- data.frame()
+for (i in (25:45)){
+  print(i)
+  n_topics <- i
+
+  model <- FitLdaModel(dtm = dtm, 
+                     k = n_topics,
+                     iterations = 200, 
+                     burnin = 175,
+                     alpha = 0.08,
+                     beta = 0.05,
+                     optimize_alpha = TRUE,
+                     calc_likelihood = TRUE,
+                     calc_coherence = TRUE,
+                     calc_r2 = TRUE,
+                     cpus = 2) 
+  
+  r2 <- model$r2
+  print(r2)
+  row <- data.frame("number of topics" = i, "r2" = r2)
+  results2 <- rbind(results2, row)
+  
+}
+
+```
+
+```{r}
+ggplot(data = results2, aes(x = , y=))
+```
+
 
 ```{r}
 # Get the top terms of each topic
