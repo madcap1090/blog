@@ -188,8 +188,6 @@ documents <- documents %>%
   filter(name_party %in% top_seven$name_party) %>% 
   select(doc_id, text)
   
-  
-  
 ```
 
 
@@ -209,6 +207,45 @@ dtm <- dtm[,colSums(dtm) > 2]
 ```
 
 
+Grid search for r squared
+
+```{r}
+gs <- list(alpha_v = c(0.12, 0.14, 0.16),
+           betha_v = c(0.04, 0.05, 0.06),
+           burnin_v = c(125, 150, 175)) %>% 
+  cross_df() # Convert to data frame grid
+gs
+set.seed(42)
+result <- data.frame()
+for (i in 1:nrow(gs)){
+  print(i)
+  model <- FitLdaModel(dtm = dtm, 
+                     k = n_topics,
+                     iterations = 200, 
+                     burnin = gs$burnin_v[i],
+                     alpha = gs$alpha_v[i],
+                     beta = gs$betha_v[i],
+                     optimize_alpha = TRUE,
+                     calc_likelihood = TRUE,
+                     calc_coherence = TRUE,
+                     calc_r2 = TRUE,
+                     cpus = 2)
+  print(gs[i,])
+  print(model$r2)
+  result <- rbind(result, cbind(gs[i,], model$r2))
+  
+}
+
+```
+
+```{r}
+result %>% 
+  filter(`model$r2` == max(`model$r2`))
+
+
+```
+
+
 ```{r}
 set.seed(42)
 n_topics <- 30
@@ -216,9 +253,9 @@ n_topics <- 30
 model <- FitLdaModel(dtm = dtm, 
                      k = n_topics,
                      iterations = 200, 
-                     burnin = 175,
-                     alpha = 0.08,
-                     beta = 0.05,
+                     burnin = 125,
+                     alpha = 0.14,
+                     beta = 0.04,
                      optimize_alpha = TRUE,
                      calc_likelihood = TRUE,
                      calc_coherence = TRUE,
@@ -236,6 +273,9 @@ model$r2
 #> [1] 0.2747765
 
 ```
+
+
+
 
 ```{r}
 # log Likelihood (does not consider the prior) 
@@ -273,81 +313,19 @@ hist(model$coherence,
 #      col= "blue", 
 #      main = "Histogram of probabilistic coherence")
 
-df <- as.data.frame(model$coherence) %>% 
+df_coh <- f <- as.data.frame(model$coherence) %>% 
   rownames_to_column("topic") %>% 
   mutate(topic = str_remove(topic, "t_"),
          topic = as.numeric(topic)) 
-names(df) <- c("topic", "coherence")
+names(df_coh) <- c("topic", "coherence")
 
-ggplot(data = df, aes(x=topic,y=coherence, fill=topic))+
+ggplot(data = df_coh, aes(x=topic,y=coherence, fill=topic))+
   geom_bar(stat = "identity",  color="blue")+
   theme_minimal()
 ```
 
 
 So this is what the probabilistic coherence of our topics look like using our parameters and 30 topics. 
-
-We could cylce through a range of number of topics to see what number of topics gives the best coherence score.
-
-```{r}
-results <- data.frame()
-for (i in (5:45)){
-  print(i)
-  n_topics <- i
-
-  model <- FitLdaModel(dtm = dtm, 
-                     k = n_topics,
-                     iterations = 200, 
-                     burnin = 175,
-                     alpha = 0.08,
-                     beta = 0.05,
-                     optimize_alpha = TRUE,
-                     calc_likelihood = TRUE,
-                     calc_coherence = TRUE,
-                     calc_r2 = TRUE,
-                     cpus = 2) 
-  
-  r2 <- model$r2
-  row <- data.frame("number of topics" = i, "r2" = r2)
-  results <- rbind(results, row)
-  
-}
-
-```
-
-
-
-
-```{r}
-results2 <- data.frame()
-for (i in (25:45)){
-  print(i)
-  n_topics <- i
-
-  model <- FitLdaModel(dtm = dtm, 
-                     k = n_topics,
-                     iterations = 200, 
-                     burnin = 175,
-                     alpha = 0.08,
-                     beta = 0.05,
-                     optimize_alpha = TRUE,
-                     calc_likelihood = TRUE,
-                     calc_coherence = TRUE,
-                     calc_r2 = TRUE,
-                     cpus = 2) 
-  
-  r2 <- model$r2
-  print(r2)
-  row <- data.frame("number of topics" = i, "r2" = r2)
-  results2 <- rbind(results2, row)
-  
-}
-
-```
-
-```{r}
-ggplot(data = results2, aes(x = , y=))
-```
 
 
 ```{r}
@@ -364,6 +342,25 @@ model$prevalence <- colSums(model$theta) / sum(model$theta) * 100
 # prevalence should be proportional to alpha
 plot(model$prevalence, model$alpha, xlab = "prevalence", ylab = "alpha")
 ```
+
+
+```{r}
+
+#plot(model$prevalence, model$alpha, xlab = "prevalence", ylab = "alpha")
+model$prevalence <- colSums(model$theta) / sum(model$theta) * 100
+df_prev <- data.frame("prevalence" = model$prevalence, "alpha" = model$alpha) %>% 
+  rownames_to_column("topic")
+
+ggplot(data = df_prev, aes(prevalence, alpha, color = topic)) + 
+  geom_point()+
+  geom_text(aes(label=topic),hjust=0.5, vjust=-1)+
+  theme_minimal()+
+  theme(legend.position = "none")
+
+```
+
+
+
 
 ```{r}
 # textmineR has a naive topic labeling tool based on probable bigrams
@@ -389,7 +386,6 @@ model$summary <- data.frame(topic = rownames(model$phi),
 ```{r}
 model$summary[ order(model$summary$prevalence, decreasing = TRUE) , ][ 1:30 , ]
 ```
-
 
 
 ```{r}
@@ -422,8 +418,9 @@ test_ana <- theta %>%
   left_join(max %>% 
               mutate(doc_id = as.integer(doc_id))) %>% 
   left_join(documents) %>% 
+  #mutate(topic = as.integer(topic)) %>% 
   left_join(df) %>% 
-  select(doc_id, max, topic, text, name_party) %>% 
+  select(doc_id, max, topic, text, name_party, euro) %>% 
   filter(max > 0.599)
 ```
 
@@ -466,11 +463,79 @@ ggplot(data = z, aes(x = topic, y = sum_n)) +
                                         ))
 ```
 
+```{r}
+y <- test_ana %>% group_by(name_party, topic) %>% 
+  summarise(sum = sum(euro))
+
+highest_seven <- y %>% group_by(name_party) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  top_n(7)
+highest_seven
+z <- y %>% 
+  mutate(topic = str_remove_all(topic, "t_")) %>% 
+  mutate(topic = as.integer(topic)) %>% 
+  filter(name_party %in% highest_seven$name_party) %>% 
+  ungroup()
+```
+```{r}
+  
+ggplot(data = z, aes(x = topic, y = sum)) +
+  geom_bar(stat = 'identity', width = 0.65)+
+  facet_wrap(~name_party, scales = 'free')+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme_minimal()+
+  ylab("number of ads")+
+  aes(fill = as.factor(name_party))+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("n-va"= "sienna3", 
+                                        "vlaams belang" = "grey35", 
+                                        "groen" = "lightgreen",
+                                        "open vld" = "royalblue2",
+                                        "cdh" = "orange2", 
+                                        "ps" = "pink", 
+                                        "sp.a" = "pink",
+                                        "pvda" ="firebrick2",
+                                        "ptb" = "firebrick2",
+                                        "cd&v" = "orange"
+                                        ))
+```
+
+As you can see we roughly have two patterns here. The pvda, sp.a and vb are mono topic, the others have more of a spread. 
+
+```{r}
+top_by_party <- z %>% 
+  arrange(desc(sum)) %>%
+  group_by(name_party) %>% 
+  slice(1) %>% 
+  arrange(desc(sum))
+
+top_by_party
+```
+
+So these are the top topics by amount spent by party.
+
+What are they?
+
+```{r}
+model_data <- model$summary %>% 
+  mutate(topic = as.numeric(str_remove_all(topic,"t_"))) %>% 
+  select(topic, label_1, top_terms)
+
+top_by_party %>% 
+  left_join(model_data) %>% 
+  filter(name_party %in% c("sp.a", "vlaams belang", "pvda")) %>% 
+  select(-topic, -sum)
+
+```
+
+
+
 
 ```{r}
 z %>% 
   filter(name_party == "vlaams belang") %>% 
-  filter(topic == 28)
+  filter(topic == 3)
 
 ```
 
