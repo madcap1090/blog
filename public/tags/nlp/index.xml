@@ -7,10 +7,21 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Mon, 24 Feb 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 03 Mar 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/nlp/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Topic modeling Facebook ads</title>
+      <link>/post/topic-modeling-facebook-ads/</link>
+      <pubDate>Tue, 03 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/topic-modeling-facebook-ads/</guid>
+      <description>In the last two posts there was an analysis of Facebook ads of Belgian politicians or political parties. To temporary conclude the subject we will do some topic modeling on these ads.
+library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;cld2&amp;quot;)library(&amp;quot;tidytext&amp;quot;)library(&amp;quot;topicmodels&amp;quot;)library(&amp;quot;qdap&amp;quot;)library(&amp;quot;gt&amp;quot;)Loading the data.
+df &amp;lt;- readRDS(&amp;quot;./data/20200104/df.rds&amp;quot;)# create a doc_iddf &amp;lt;- rowid_to_column(df, &amp;quot;doc_id&amp;quot;)I think that one of the first things to do is to is to determine the languages the ads were written in.</description>
+    </item>
     
     <item>
       <title>nlp on Facebooks Belgian political ads</title>
