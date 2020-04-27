@@ -1,0 +1,3027 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>Topic modeling Facebook ads | bad to the code</title>
+
+<meta property='og:title' content='Topic modeling Facebook ads - bad to the code'>
+<meta property='og:description' content='In the last two posts there was an analysis of Facebook ads of Belgian politicians or political parties. To temporary conclude the subject we will do some topic modeling on these ads.
+library(&quot;tidyverse&quot;)library(&quot;cld2&quot;)library(&quot;tidytext&quot;)library(&quot;topicmodels&quot;)library(&quot;qdap&quot;)library(&quot;gt&quot;)Loading the data.
+df &lt;- readRDS(&quot;./data/20200104/df.rds&quot;)# create a doc_iddf &lt;- rowid_to_column(df, &quot;doc_id&quot;)I think that one of the first things to do is to is to determine the languages the ads were written in.'>
+<meta property='og:url' content='/post/topic-modeling-facebook-ads/'>
+<meta property='og:site_name' content='bad to the code'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='Facebook'><meta property='article:tag' content='nlp'><meta property='article:tag' content='Belgian politics'><meta property='article:published_time' content='2020-03-03T00:00:00Z'/><meta property='article:modified_time' content='2020-03-03T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
+
+
+<link href="/index.xml" rel="alternate" type="application/rss+xml" title="bad to the code" />
+
+<link rel="stylesheet" href="/css/style.css"/><link rel='stylesheet' href='/css/custom.css'><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="theme-color" content="#ffffff">
+</head>
+<body>
+<section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="/">
+          <h1 class="title is-4">bad to the code</h1>
+        </a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile"><a class="level-item" aria-label="facebook" href='https://facebook.com/OClassicoOficial/videos/391802167961744/'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="email" href='mailto:madcap1090@gmail.com'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="linkedin" href='https://linkedin.com/in/williambourgeois'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path stroke-width="1.8" d="m5.839218,4.101561c0,1.211972 -0.974141,2.194011 -2.176459,2.194011s-2.176459,-0.982039 -2.176459,-2.194011c0,-1.211094 0.974141,-2.194011 2.176459,-2.194011s2.176459,0.982917 2.176459,2.194011zm0.017552,3.94922l-4.388022,0l0,14.04167l4.388022,0l0,-14.04167zm7.005038,0l-4.359939,0l0,14.04167l4.360816,0l0,-7.370999c0,-4.098413 5.291077,-4.433657 5.291077,0l0,7.370999l4.377491,0l0,-8.89101c0,-6.915523 -7.829986,-6.66365 -9.669445,-3.259423l0,-1.891237z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="twitter" href='https://twitter.com/WilliamBourgeoi'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+    
+  </svg></i>
+            </span>
+          </a><a class="level-item" aria-label="github" href='https://github.com/madcap1090'
+            target='_blank' rel='noopener'>
+            <span class="icon">
+              <i class><svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+    
+  </svg></i>
+            </span>
+          </a></nav>
+      </div>
+    </nav>
+
+    <nav class="nav">
+      
+
+      
+    </nav>
+
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="subtitle tags is-6 is-pulled-right">
+      
+      
+<a class="subtitle is-6" href="/tags/facebook">#Facebook</a>
+
+
+
+  
+  | <a class="subtitle is-6" href="/tags/nlp">#nlp</a>
+  
+  | <a class="subtitle is-6" href="/tags/belgian-politics">#Belgian politics</a>
+  
+
+      
+    </div>
+    <h2 class="subtitle is-6">March 3, 2020</h2>
+    <h1 class="title">Topic modeling Facebook ads</h1>
+    
+    <div class="content">
+      
+<script src="/rmarkdown-libs/core-js/shim.min.js"></script>
+<script src="/rmarkdown-libs/react/react.min.js"></script>
+<script src="/rmarkdown-libs/react/react-dom.min.js"></script>
+<script src="/rmarkdown-libs/reactwidget/react-tools.js"></script>
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="/rmarkdown-libs/reactable-binding/reactable.js"></script>
+
+
+<p>In the last two posts there was an analysis of Facebook ads of Belgian politicians or political parties. To temporary conclude the subject we will do some topic modeling on these ads.</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;cld2&quot;)
+library(&quot;tidytext&quot;)
+library(&quot;topicmodels&quot;)
+library(&quot;qdap&quot;)
+library(&quot;gt&quot;)</code></pre>
+<p>Loading the data.</p>
+<pre class="r"><code>df &lt;- readRDS(&quot;./data/20200104/df.rds&quot;)
+# create a doc_id
+df &lt;- rowid_to_column(df, &quot;doc_id&quot;)</code></pre>
+<p>I think that one of the first things to do is to is to determine the languages the ads were written in. But since a number of the ads are written in more than one language it might be better to first parse them by sentences, while identifying the sentences still that belong to the same ad.</p>
+<pre class="r"><code>sentences &lt;- data.frame()
+for (i in (1:nrow(df))){
+  sentence_extract &lt;- t(str_extract_all(df$ad_creative_body[i], 
+                                        boundary(&quot;sentence&quot;), 
+                                        simplify = TRUE)) %&gt;%
+    as.data.frame()
+  sentence_extract &lt;- bind_cols(&quot;sentences&quot; = sentence_extract, 
+                                &quot;doc_id&quot; = rep.int(df$doc_id[i],
+                                        nrow(sentence_extract)))
+  sentences &lt;- rbind(sentences, sentence_extract)
+}</code></pre>
+<p>Did it work?</p>
+<pre class="r"><code>head(sentences,10) %&gt;% 
+  gt()</code></pre>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#ngibzsgcaw .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#ngibzsgcaw .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#ngibzsgcaw .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#ngibzsgcaw .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#ngibzsgcaw .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#ngibzsgcaw .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#ngibzsgcaw .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#ngibzsgcaw .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ngibzsgcaw .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ngibzsgcaw .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#ngibzsgcaw .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#ngibzsgcaw .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#ngibzsgcaw .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#ngibzsgcaw .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#ngibzsgcaw .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ngibzsgcaw .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ngibzsgcaw .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#ngibzsgcaw .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ngibzsgcaw .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#ngibzsgcaw .gt_left {
+  text-align: left;
+}
+
+#ngibzsgcaw .gt_center {
+  text-align: center;
+}
+
+#ngibzsgcaw .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#ngibzsgcaw .gt_font_normal {
+  font-weight: normal;
+}
+
+#ngibzsgcaw .gt_font_bold {
+  font-weight: bold;
+}
+
+#ngibzsgcaw .gt_font_italic {
+  font-style: italic;
+}
+
+#ngibzsgcaw .gt_super {
+  font-size: 65%;
+}
+
+#ngibzsgcaw .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="ngibzsgcaw" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1">V1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1">doc_id</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_center">Groen Blankenberge - Uitkerke wenst je een stralend 2020!</td>
+      <td class="gt_row gt_center">1</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">Kies je mee onze Groene Pluim 2020? </td>
+      <td class="gt_row gt_center">2</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">Drie organisaties werden genomineerd : vzw De Inval, Lokaal en Roeseloarezingtegaore. </td>
+      <td class="gt_row gt_center">2</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">Kies op https://www.groenroeselare.be/kies_een_groene_pluim_2020</td>
+      <td class="gt_row gt_center">2</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">Tijdens de gemeenteraad van december vroegen we om het Meerjarenplan punt per punt te stemmen.
+</td>
+      <td class="gt_row gt_center">3</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">De ideale kans voor de schepenen om de acties die ze de komende jaren willen uitvoeren aan ons en aan de Tongenaar toe te lichten.
+</td>
+      <td class="gt_row gt_center">3</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">Veel raadsleden schoten in paniek. </td>
+      <td class="gt_row gt_center">3</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">'Oh nee hoe lang moeten we hier nu blijven zitten?'.
+</td>
+      <td class="gt_row gt_center">3</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">Deze verontwaardiging staat volgens ons niet in verhouding met de verantwoordelijkheid die wij als gemeenteraadsleden hebben.
+</td>
+      <td class="gt_row gt_center">3</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">We zijn door de Tongenaar verkozen om onze controlerende taak ten gronde uit te voeren.</td>
+      <td class="gt_row gt_center">3</td>
+    </tr>
+  </tbody>
+  
+  
+</table></div>
+<p>Indeed.</p>
+<p>So now we can filter and take only the dutch sentences. And then we can tokenize to words (while transforming CD&amp;V, sp.a and N_VA in order to keep them as tokens).</p>
+<pre class="r"><code>stop &lt;- read.delim(&quot;http://www.damienvanholten.com/downloads/dutch-stop-words.txt&quot;, header=FALSE)
+
+sentences_cld2 &lt;- sentences %&gt;%
+  mutate(clean_text = as.character(V1)) %&gt;% 
+  mutate(language = detect_language(clean_text)) 
+
+sentences_nl &lt;- sentences_cld2 %&gt;% 
+  filter(language == &quot;nl&quot;) %&gt;% 
+  select(-V1, -language) %&gt;% 
+  distinct(clean_text, .keep_all = TRUE)
+
+sentences_nl &lt;- sentences_nl %&gt;% 
+  mutate(clean_text = tolower(clean_text)) %&gt;% 
+  mutate(clean_text = tm::removeWords(clean_text, c(tm::stopwords(&quot;dutch&quot;), 
+                                                    &quot;én&quot;, &quot;http&quot;, &quot;https&quot;,&quot;www.s&quot;, 
+                                                    &quot;bit.ly&quot;, &quot;wwww&quot;, &quot;pagina&quot;)))
+
+sentences_nl &lt;- sentences_nl %&gt;% 
+  mutate(clean_text = str_replace_all(clean_text, &quot;sp.a&quot;, &quot;spxxxxa&quot;),
+         clean_text = str_replace_all(clean_text, &quot;CD&amp;V&quot;, &quot;CDxxxxV&quot;),
+         clean_text = str_replace_all(clean_text, &quot;Cd&amp;v&quot;, &quot;CDxxxxV&quot;),
+         clean_text = str_replace_all(clean_text, &quot;cd&amp;v&quot;, &quot;CDxxxxV&quot;),
+         clean_text = str_replace_all(clean_text, &quot;vlaams belang&quot;, &quot;VlaamsxxxxBelang&quot;),
+         clean_text = str_replace_all(clean_text, &quot;open vld&quot;, &quot;Openxxxxvld&quot;),
+         clean_text = str_replace_all(clean_text, &quot;n-va&quot;, &quot;NVxxxxA&quot;))
+
+by_doc_word &lt;- sentences_nl %&gt;%
+  select(doc_id, clean_text) %&gt;% 
+  unnest_tokens(words, clean_text, token = &quot;words&quot;)
+
+by_doc_word_2 &lt;- sentences_nl %&gt;%
+  select(doc_id, clean_text) %&gt;% 
+  unnest_tokens(words, clean_text, token = &quot;ngrams&quot;, n = 2)
+
+by_doc_word_3 &lt;- sentences_nl %&gt;%
+  select(doc_id, clean_text) %&gt;% 
+  unnest_tokens(words, clean_text, token = &quot;ngrams&quot;, n = 3)
+
+
+by_doc_word &lt;- by_doc_word %&gt;% 
+  rbind(by_doc_word_2, by_doc_word_3)</code></pre>
+<pre class="r"><code>names(stop) &lt;- &quot;words&quot;
+word_counts &lt;- by_doc_word %&gt;% 
+  anti_join(stop) %&gt;% 
+  count(doc_id, words, sort = TRUE) %&gt;% 
+  filter(nchar(words) &lt; 27) %&gt;% 
+  filter(nchar(words) &gt; 1)</code></pre>
+<pre><code>## Warning: Column `words` joining character vector and factor, coercing into
+## character vector</code></pre>
+<p>Let’s see if we have correctly tokenised in words:</p>
+<pre class="r"><code>head(by_doc_word %&gt;% 
+       filter(doc_id &gt; 1000),10) %&gt;% 
+  gt()</code></pre>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#wukgldmyhv .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#wukgldmyhv .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#wukgldmyhv .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#wukgldmyhv .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#wukgldmyhv .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#wukgldmyhv .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#wukgldmyhv .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#wukgldmyhv .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#wukgldmyhv .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#wukgldmyhv .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#wukgldmyhv .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#wukgldmyhv .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#wukgldmyhv .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#wukgldmyhv .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#wukgldmyhv .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wukgldmyhv .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wukgldmyhv .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#wukgldmyhv .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wukgldmyhv .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#wukgldmyhv .gt_left {
+  text-align: left;
+}
+
+#wukgldmyhv .gt_center {
+  text-align: center;
+}
+
+#wukgldmyhv .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#wukgldmyhv .gt_font_normal {
+  font-weight: normal;
+}
+
+#wukgldmyhv .gt_font_bold {
+  font-weight: bold;
+}
+
+#wukgldmyhv .gt_font_italic {
+  font-style: italic;
+}
+
+#wukgldmyhv .gt_super {
+  font-size: 65%;
+}
+
+#wukgldmyhv .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="wukgldmyhv" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1">doc_id</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">words</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_center">1002</td>
+      <td class="gt_row gt_left">parlementsleden</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1002</td>
+      <td class="gt_row gt_left">programma</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1002</td>
+      <td class="gt_row gt_left">willen</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1002</td>
+      <td class="gt_row gt_left">we</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1002</td>
+      <td class="gt_row gt_left">aantal</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1002</td>
+      <td class="gt_row gt_left">drastisch</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1002</td>
+      <td class="gt_row gt_left">verminderen</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1003</td>
+      <td class="gt_row gt_left">wilmès</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1003</td>
+      <td class="gt_row gt_left">onze</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_center">1003</td>
+      <td class="gt_row gt_left">premier</td>
+    </tr>
+  </tbody>
+  
+  
+</table></div>
+<p>And now we can make a document term matrix. With as its name suggests is a matrix with one row per ad (document) and one column per word here populated by the frequency of the word in the ad.</p>
+<pre class="r"><code>doc_dtm &lt;- word_counts %&gt;%
+  cast_dtm(doc_id, words, n, weighting = tm::weightTf)
+doc_dtm</code></pre>
+<pre><code>## &lt;&lt;DocumentTermMatrix (documents: 6415, terms: 202913)&gt;&gt;
+## Non-/sparse entries: 345088/1301341807
+## Sparsity           : 100%
+## Maximal term length: 26
+## Weighting          : term frequency (tf)</code></pre>
+<p>Trying library(textmineR) for topic modeling. Here is some background <a href="https://cran.r-project.org/web/packages/textmineR/vignettes/c_topic_modeling.html">info</a></p>
+<pre class="r"><code>library(&quot;textmineR&quot;) #install.packages(&quot;textmineR&quot;)</code></pre>
+<pre class="r"><code>documents &lt;- sentences_nl %&gt;%
+  group_by(doc_id) %&gt;%
+  mutate(text = paste0(clean_text, collapse = &quot;&quot;)) %&gt;%
+  select(doc_id, text) %&gt;% 
+  unique()
+
+# only take texts from biggest flemish parties
+top_seven &lt;- documents %&gt;% 
+  left_join(df) %&gt;% 
+  group_by(name_party) %&gt;%
+  summarise(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  top_n(7) %&gt;% 
+  select(name_party)</code></pre>
+<pre><code>## Joining, by = &quot;doc_id&quot;</code></pre>
+<pre><code>## Selecting by count</code></pre>
+<pre class="r"><code>documents &lt;- documents %&gt;% 
+  left_join(df) %&gt;% 
+  filter(name_party %in% top_seven$name_party) %&gt;% 
+  select(doc_id, text)</code></pre>
+<pre><code>## Joining, by = &quot;doc_id&quot;</code></pre>
+<pre class="r"><code>dtm &lt;- CreateDtm(doc_vec = documents$text, # character vector of documents
+                 doc_names = documents$doc_id, # document names
+                 ngram_window = c(1, 2), # minimum and maximum n-gram length
+                 stopword_vec = c(stopwords::stopwords(&quot;nl&quot;), # stopwords from tm
+                                  stopwords::stopwords(source = &quot;smart&quot;)), # this is the default
+                 lower = TRUE, # lowercase - this is the default value
+                 remove_punctuation = TRUE, # punctuation - this is the default
+                 remove_numbers = TRUE, # numbers - this is the default
+                 verbose = FALSE, # Turn off status bar for this demo
+                 cpus = 2) # default is all available cpus on the system
+
+dtm &lt;- dtm[,colSums(dtm) &gt; 2]</code></pre>
+<p>Grid search for r squared.</p>
+<pre class="r"><code>n_topics &lt;- 30
+gs &lt;- list(alpha_v = c(0.12, 0.14, 0.16),
+           betha_v = c(0.04, 0.05, 0.06),
+           burnin_v = c(125, 150, 175)) %&gt;% 
+  cross_df() # Convert to data frame grid
+gs
+set.seed(42)
+result &lt;- data.frame()
+for (i in 1:nrow(gs)){
+  print(i)
+  model &lt;- FitLdaModel(dtm = dtm, 
+                     k = n_topics,
+                     iterations = 200, 
+                     burnin = gs$burnin_v[i],
+                     alpha = gs$alpha_v[i],
+                     beta = gs$betha_v[i],
+                     optimize_alpha = TRUE,
+                     calc_likelihood = TRUE,
+                     calc_coherence = TRUE,
+                     calc_r2 = TRUE,
+                     cpus = 2)
+    result &lt;- rbind(result, cbind(gs[i,], model$r2))
+  
+}</code></pre>
+<pre class="r"><code>result %&gt;% 
+  filter(`model$r2` == max(`model$r2`))</code></pre>
+<pre><code>##   alpha_v betha_v burnin_v model$r2
+## 1    0.14    0.04      125 0.328439</code></pre>
+<p>Using the results of the grid search.</p>
+<pre class="r"><code>set.seed(42)
+n_topics &lt;- 30
+
+model &lt;- FitLdaModel(dtm = dtm, 
+                     k = n_topics,
+                     iterations = 200, 
+                     burnin = 125,
+                     alpha = 0.14,
+                     beta = 0.04,
+                     optimize_alpha = TRUE,
+                     calc_likelihood = TRUE,
+                     calc_coherence = TRUE,
+                     calc_r2 = TRUE,
+                     cpus = 2) </code></pre>
+<p>Looking at the content of the model object:</p>
+<pre class="r"><code>str(model)</code></pre>
+<pre><code>## List of 9
+##  $ phi           : num [1:30, 1:23109] 5.78e-06 5.16e-06 5.88e-06 2.03e-06 1.93e-06 ...
+##   ..- attr(*, &quot;dimnames&quot;)=List of 2
+##   .. ..$ : chr [1:30] &quot;t_1&quot; &quot;t_2&quot; &quot;t_3&quot; &quot;t_4&quot; ...
+##   .. ..$ : chr [1:23109] &quot;ertoe_vrienden&quot; &quot;starten_bevolking&quot; &quot;brand&quot; &quot;galant&quot; ...
+##  $ theta         : num [1:6277, 1:30] 0.02692 0.00814 0.16154 0.00422 0.0125 ...
+##   ..- attr(*, &quot;dimnames&quot;)=List of 2
+##   .. ..$ : chr [1:6277] &quot;1&quot; &quot;2&quot; &quot;3&quot; &quot;4&quot; ...
+##   .. ..$ : chr [1:30] &quot;t_1&quot; &quot;t_2&quot; &quot;t_3&quot; &quot;t_4&quot; ...
+##  $ gamma         : num [1:30, 1:23109] 0.0127 0.0127 0.0126 0.0121 0.0125 ...
+##   ..- attr(*, &quot;dimnames&quot;)=List of 2
+##   .. ..$ : chr [1:30] &quot;t_1&quot; &quot;t_2&quot; &quot;t_3&quot; &quot;t_4&quot; ...
+##   .. ..$ : chr [1:23109] &quot;ertoe_vrienden&quot; &quot;starten_bevolking&quot; &quot;brand&quot; &quot;galant&quot; ...
+##  $ data          :Formal class &#39;dgCMatrix&#39; [package &quot;Matrix&quot;] with 6 slots
+##   .. ..@ i       : int [1:256664] 3499 3501 3502 534 535 291 682 685 195 203 ...
+##   .. ..@ p       : int [1:23110] 0 3 5 8 11 14 17 20 23 24 ...
+##   .. ..@ Dim     : int [1:2] 6277 23109
+##   .. ..@ Dimnames:List of 2
+##   .. .. ..$ : chr [1:6277] &quot;1&quot; &quot;2&quot; &quot;3&quot; &quot;4&quot; ...
+##   .. .. ..$ : chr [1:23109] &quot;ertoe_vrienden&quot; &quot;starten_bevolking&quot; &quot;brand&quot; &quot;galant&quot; ...
+##   .. ..@ x       : num [1:256664] 1 1 1 1 2 1 1 1 1 1 ...
+##   .. ..@ factors : list()
+##  $ alpha         : Named num [1:30] 0.0982 0.1134 0.099 0.2769 0.3375 ...
+##   ..- attr(*, &quot;names&quot;)= chr [1:30] &quot;t_1&quot; &quot;t_2&quot; &quot;t_3&quot; &quot;t_4&quot; ...
+##  $ beta          : Named num [1:23109] 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 ...
+##   ..- attr(*, &quot;names&quot;)= chr [1:23109] &quot;ertoe_vrienden&quot; &quot;starten_bevolking&quot; &quot;brand&quot; &quot;galant&quot; ...
+##  $ log_likelihood:&#39;data.frame&#39;:  20 obs. of  2 variables:
+##   ..$ iteration     : num [1:20] 0 10 20 30 40 50 60 70 80 90 ...
+##   ..$ log_likelihood: num [1:20] -3255937 -2958143 -2898487 -2876873 -2867225 ...
+##  $ coherence     : Named num [1:30] 0.2782 0.0445 0.0448 0.2812 0.0888 ...
+##   ..- attr(*, &quot;names&quot;)= chr [1:30] &quot;t_1&quot; &quot;t_2&quot; &quot;t_3&quot; &quot;t_4&quot; ...
+##  $ r2            : num 0.293
+##  - attr(*, &quot;class&quot;)= chr &quot;lda_topic_model&quot;</code></pre>
+<pre class="r"><code># R-squared 
+model$r2</code></pre>
+<pre><code>## [1] 0.2931479</code></pre>
+<p>Plotting the log likelihood:</p>
+<pre class="r"><code># log Likelihood (does not consider the prior) 
+ggplot(data = model$log_likelihood, aes(x= iteration, y= log_likelihood))+
+  geom_line()+
+  labs(title=&quot;log likelihood&quot;,
+        x =&quot;iterations&quot;, y = &quot;log likelihood&quot;)+
+  theme_minimal()</code></pre>
+<p><img src="/post/2020-03-03-topic-modeling-facebook-ads_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>We can analyse the models probabilistic coherence measures of topics that are defined as “Topic Coherence measures score a single topic by measuring the degree of semantic similarity between high scoring words in the topic. These measurements help distinguish between topics that are semantically interpretable topics and topics that are artifacts of statistical inference…” by the authors in the paper <a href="https://www.aclweb.org/anthology/D12-1087.pdf">here</a></p>
+<pre class="r"><code>df_coh &lt;- f &lt;- as.data.frame(model$coherence) %&gt;% 
+  rownames_to_column(&quot;topic&quot;) %&gt;% 
+  mutate(topic = str_remove(topic, &quot;t_&quot;),
+         topic = as.numeric(topic)) 
+names(df_coh) &lt;- c(&quot;topic&quot;, &quot;coherence&quot;)
+
+ggplot(data = df_coh, aes(x=topic,y=coherence, fill=topic))+
+  geom_bar(stat = &quot;identity&quot;,  color=&quot;blue&quot;)+
+  theme_minimal()</code></pre>
+<p><img src="/post/2020-03-03-topic-modeling-facebook-ads_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p>So this is what the probabilistic coherence of our topics look like using our parameters and 30 topics.</p>
+<pre class="r"><code># Get the top terms of each topic
+(model$top_terms &lt;- GetTopTerms(phi = model$phi, M = 10)) %&gt;% 
+  gt()</code></pre>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#pticmcttbp .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#pticmcttbp .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#pticmcttbp .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#pticmcttbp .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#pticmcttbp .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#pticmcttbp .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#pticmcttbp .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#pticmcttbp .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#pticmcttbp .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#pticmcttbp .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#pticmcttbp .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#pticmcttbp .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#pticmcttbp .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#pticmcttbp .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#pticmcttbp .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pticmcttbp .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pticmcttbp .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#pticmcttbp .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#pticmcttbp .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#pticmcttbp .gt_left {
+  text-align: left;
+}
+
+#pticmcttbp .gt_center {
+  text-align: center;
+}
+
+#pticmcttbp .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#pticmcttbp .gt_font_normal {
+  font-weight: normal;
+}
+
+#pticmcttbp .gt_font_bold {
+  font-weight: bold;
+}
+
+#pticmcttbp .gt_font_italic {
+  font-style: italic;
+}
+
+#pticmcttbp .gt_super {
+  font-size: 65%;
+}
+
+#pticmcttbp .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="pticmcttbp" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_2</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_3</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_4</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_5</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_6</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_7</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_8</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_9</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_10</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_11</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_12</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_13</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_14</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_15</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_16</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_17</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_18</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_19</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_20</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_21</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_22</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_23</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_24</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_25</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_26</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_27</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_28</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_29</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">t_30</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_left">vervoer</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">parlement</td>
+      <td class="gt_row gt_left">groen</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">jaar</td>
+      <td class="gt_row gt_left">nvxxxxa</td>
+      <td class="gt_row gt_left">cdenv</td>
+      <td class="gt_row gt_left">west</td>
+      <td class="gt_row gt_left">groen</td>
+      <td class="gt_row gt_left">kies</td>
+      <td class="gt_row gt_left">voorstellen</td>
+      <td class="gt_row gt_left">pvda</td>
+      <td class="gt_row gt_left">heel</td>
+      <td class="gt_row gt_left">euro</td>
+      <td class="gt_row gt_left">zekerheid</td>
+      <td class="gt_row gt_left">parlement</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">plaats</td>
+      <td class="gt_row gt_left">stad</td>
+      <td class="gt_row gt_left">theo</td>
+      <td class="gt_row gt_left">groen</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">straat</td>
+      <td class="gt_row gt_left">mensen</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">euro</td>
+      <td class="gt_row gt_left">daarom</td>
+      <td class="gt_row gt_left">spxxxxa</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">openbaar</td>
+      <td class="gt_row gt_left">gaan</td>
+      <td class="gt_row gt_left">jaar</td>
+      <td class="gt_row gt_left">eerste</td>
+      <td class="gt_row gt_left">mensen</td>
+      <td class="gt_row gt_left">geld</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">cdxxxxv</td>
+      <td class="gt_row gt_left">vlaanderen</td>
+      <td class="gt_row gt_left">nieuwe</td>
+      <td class="gt_row gt_left">groen</td>
+      <td class="gt_row gt_left">aantal</td>
+      <td class="gt_row gt_left">post</td>
+      <td class="gt_row gt_left">veranderen</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">zorg</td>
+      <td class="gt_row gt_left">vlaams</td>
+      <td class="gt_row gt_left">stad</td>
+      <td class="gt_row gt_left">burgemeester</td>
+      <td class="gt_row gt_left">oplossing</td>
+      <td class="gt_row gt_left">theo_francken</td>
+      <td class="gt_row gt_left">maken</td>
+      <td class="gt_row gt_left">mensen</td>
+      <td class="gt_row gt_left">kinderen</td>
+      <td class="gt_row gt_left">euro</td>
+      <td class="gt_row gt_left">jij</td>
+      <td class="gt_row gt_left">samen</td>
+      <td class="gt_row gt_left">jaar</td>
+      <td class="gt_row gt_left">gent</td>
+      <td class="gt_row gt_left">jullie</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">openbaar_vervoer</td>
+      <td class="gt_row gt_left">mee</td>
+      <td class="gt_row gt_left">vlaamsxxxxbelang</td>
+      <td class="gt_row gt_left">mens</td>
+      <td class="gt_row gt_left">moeten</td>
+      <td class="gt_row gt_left">euro</td>
+      <td class="gt_row gt_left">wij</td>
+      <td class="gt_row gt_left">stem</td>
+      <td class="gt_row gt_left">west_vlaanderen</td>
+      <td class="gt_row gt_left">vlaming</td>
+      <td class="gt_row gt_left">land</td>
+      <td class="gt_row gt_left">meerjarenplan</td>
+      <td class="gt_row gt_left">mensen</td>
+      <td class="gt_row gt_left">alle</td>
+      <td class="gt_row gt_left">miljoen</td>
+      <td class="gt_row gt_left">goed</td>
+      <td class="gt_row gt_left">plaats</td>
+      <td class="gt_row gt_left">vlaamse</td>
+      <td class="gt_row gt_left">gaan</td>
+      <td class="gt_row gt_left">mei</td>
+      <td class="gt_row gt_left">francken</td>
+      <td class="gt_row gt_left">euro</td>
+      <td class="gt_row gt_left">partij</td>
+      <td class="gt_row gt_left">onderwijs</td>
+      <td class="gt_row gt_left">miljoen</td>
+      <td class="gt_row gt_left">wij</td>
+      <td class="gt_row gt_left">jij</td>
+      <td class="gt_row gt_left">pensioen</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">onze</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">vrouwen</td>
+      <td class="gt_row gt_left">orde</td>
+      <td class="gt_row gt_left">nvxxxxa</td>
+      <td class="gt_row gt_left">parlementsvoorzitter</td>
+      <td class="gt_row gt_left">tijd</td>
+      <td class="gt_row gt_left">verder</td>
+      <td class="gt_row gt_left">jaar</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">vlaamse</td>
+      <td class="gt_row gt_left">gaat</td>
+      <td class="gt_row gt_left">morgen</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">ronny</td>
+      <td class="gt_row gt_left">vlaanderen</td>
+      <td class="gt_row gt_left">miljoen_euro</td>
+      <td class="gt_row gt_left">iedereen</td>
+      <td class="gt_row gt_left">vlaams_parlement</td>
+      <td class="gt_row gt_left">regering</td>
+      <td class="gt_row gt_left">samenwerking</td>
+      <td class="gt_row gt_left">natuurverenigingen</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">opwijk</td>
+      <td class="gt_row gt_left">stem</td>
+      <td class="gt_row gt_left">moeten</td>
+      <td class="gt_row gt_left">miljoen_euro</td>
+      <td class="gt_row gt_left">kinderen</td>
+      <td class="gt_row gt_left">stemmen</td>
+      <td class="gt_row gt_left">betalen</td>
+      <td class="gt_row gt_left">iedereen</td>
+      <td class="gt_row gt_left">vlaanderen</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">minister</td>
+      <td class="gt_row gt_left">sociale</td>
+      <td class="gt_row gt_left">jongeren</td>
+      <td class="gt_row gt_left">dronken</td>
+      <td class="gt_row gt_left">maken</td>
+      <td class="gt_row gt_left">leven</td>
+      <td class="gt_row gt_left">kom</td>
+      <td class="gt_row gt_left">stem_cdenv</td>
+      <td class="gt_row gt_left">provincie</td>
+      <td class="gt_row gt_left">mee</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">groen</td>
+      <td class="gt_row gt_left">regering</td>
+      <td class="gt_row gt_left">toekomst</td>
+      <td class="gt_row gt_left">samen</td>
+      <td class="gt_row gt_left">wij</td>
+      <td class="gt_row gt_left">stem</td>
+      <td class="gt_row gt_left">onze_stad</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">goed</td>
+      <td class="gt_row gt_left">gaat</td>
+      <td class="gt_row gt_left">steeds</td>
+      <td class="gt_row gt_left">samen</td>
+      <td class="gt_row gt_left">wij</td>
+      <td class="gt_row gt_left">voorstel</td>
+      <td class="gt_row gt_left">brussel</td>
+      <td class="gt_row gt_left">mee</td>
+      <td class="gt_row gt_left">wij</td>
+      <td class="gt_row gt_left">mensen</td>
+      <td class="gt_row gt_left">politiek</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">schepencollege</td>
+      <td class="gt_row gt_left">meetup</td>
+      <td class="gt_row gt_left">pkp</td>
+      <td class="gt_row gt_left">bewust</td>
+      <td class="gt_row gt_left">willen</td>
+      <td class="gt_row gt_left">geven</td>
+      <td class="gt_row gt_left">jong</td>
+      <td class="gt_row gt_left">onderwijs</td>
+      <td class="gt_row gt_left">samen</td>
+      <td class="gt_row gt_left">jaar</td>
+      <td class="gt_row gt_left">belasten</td>
+      <td class="gt_row gt_left">belasting</td>
+      <td class="gt_row gt_left">moeten</td>
+      <td class="gt_row gt_left">samen</td>
+      <td class="gt_row gt_left">rekenen</td>
+      <td class="gt_row gt_left">zorgen</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">vlaanderen</td>
+      <td class="gt_row gt_left">samen</td>
+      <td class="gt_row gt_left">mee</td>
+      <td class="gt_row gt_left">terug</td>
+      <td class="gt_row gt_left">tijdens</td>
+      <td class="gt_row gt_left">zetten</td>
+      <td class="gt_row gt_left">verkiezingen</td>
+      <td class="gt_row gt_left">vlaams</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">video</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">waar</td>
+      <td class="gt_row gt_left">jaar</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">euro</td>
+      <td class="gt_row gt_left">kijken</td>
+      <td class="gt_row gt_left">wij</td>
+      <td class="gt_row gt_left">voorzitter</td>
+      <td class="gt_row gt_left">waar</td>
+      <td class="gt_row gt_left">één</td>
+      <td class="gt_row gt_left">graag</td>
+      <td class="gt_row gt_left">iedereen</td>
+      <td class="gt_row gt_left">antwerpen</td>
+      <td class="gt_row gt_left">waar</td>
+      <td class="gt_row gt_left">samen</td>
+      <td class="gt_row gt_left">gemeenteraad</td>
+      <td class="gt_row gt_left">jobs</td>
+      <td class="gt_row gt_left">systeem</td>
+      <td class="gt_row gt_left">gemeente</td>
+      <td class="gt_row gt_left">strijden</td>
+      <td class="gt_row gt_left">lijst</td>
+      <td class="gt_row gt_left">jambon</td>
+      <td class="gt_row gt_left">af</td>
+      <td class="gt_row gt_left">social</td>
+      <td class="gt_row gt_left">mensen</td>
+      <td class="gt_row gt_left">indien</td>
+      <td class="gt_row gt_left">stemmen</td>
+      <td class="gt_row gt_left">maken</td>
+      <td class="gt_row gt_left">bewoners</td>
+      <td class="gt_row gt_left">beperking</td>
+      <td class="gt_row gt_left">groen</td>
+      <td class="gt_row gt_left">belastingen</td>
+      <td class="gt_row gt_left">vlaamsxxxxbelang</td>
+      <td class="gt_row gt_left">volgende</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">geven</td>
+      <td class="gt_row gt_left">blijven</td>
+      <td class="gt_row gt_left">nieuwe</td>
+      <td class="gt_row gt_left">dijck</td>
+      <td class="gt_row gt_left">werken</td>
+      <td class="gt_row gt_left">woningen</td>
+      <td class="gt_row gt_left">welkom</td>
+      <td class="gt_row gt_left">maken</td>
+      <td class="gt_row gt_left">kortrijk</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">kandidaat</td>
+      <td class="gt_row gt_left">gemeente</td>
+      <td class="gt_row gt_left">pvda_post</td>
+      <td class="gt_row gt_left">heel_vlaanderen</td>
+      <td class="gt_row gt_left">maken</td>
+      <td class="gt_row gt_left">opnieuw</td>
+      <td class="gt_row gt_left">mei</td>
+      <td class="gt_row gt_left">vlaamse_regering</td>
+      <td class="gt_row gt_left">schepen</td>
+      <td class="gt_row gt_left">fiesta</td>
+      <td class="gt_row gt_left">komen</td>
+      <td class="gt_row gt_left">groen_opwijk</td>
+      <td class="gt_row gt_left">vlaamsxxxxbelang</td>
+      <td class="gt_row gt_left">volgende</td>
+      <td class="gt_row gt_left">wel</td>
+      <td class="gt_row gt_left">www</td>
+      <td class="gt_row gt_left">deel</td>
+      <td class="gt_row gt_left">sociale</td>
+      <td class="gt_row gt_left">onderwijs</td>
+      <td class="gt_row gt_left">zetten</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">iedereen</td>
+      <td class="gt_row gt_left">migratie</td>
+      <td class="gt_row gt_left">mortsel</td>
+      <td class="gt_row gt_left">wij</td>
+      <td class="gt_row gt_left">hoop</td>
+      <td class="gt_row gt_left">iedereen</td>
+      <td class="gt_row gt_left">vlaanderen</td>
+      <td class="gt_row gt_left">mooie</td>
+      <td class="gt_row gt_left">cdxxxxv</td>
+      <td class="gt_row gt_left">plaats</td>
+      <td class="gt_row gt_left">lokale</td>
+      <td class="gt_row gt_left">jaar</td>
+      <td class="gt_row gt_left">eem_veranderen</td>
+      <td class="gt_row gt_left">kader</td>
+      <td class="gt_row gt_left">onze</td>
+      <td class="gt_row gt_left">kamer</td>
+      <td class="gt_row gt_left">ten</td>
+      <td class="gt_row gt_left">gemeente</td>
+      <td class="gt_row gt_left">fiesta_social</td>
+      <td class="gt_row gt_left">doe</td>
+      <td class="gt_row gt_left">gemeente</td>
+      <td class="gt_row gt_left">mei</td>
+      <td class="gt_row gt_left">akkoord</td>
+      <td class="gt_row gt_left">collaboratie</td>
+      <td class="gt_row gt_left">doe</td>
+      <td class="gt_row gt_left">plaats</td>
+      <td class="gt_row gt_left">mensen</td>
+      <td class="gt_row gt_left">laten</td>
+      <td class="gt_row gt_left">eerste</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">geweld</td>
+      <td class="gt_row gt_left">rik</td>
+      <td class="gt_row gt_left">heel</td>
+      <td class="gt_row gt_left">groen_mortsel</td>
+      <td class="gt_row gt_left">werk</td>
+      <td class="gt_row gt_left">af</td>
+      <td class="gt_row gt_left">alvast</td>
+      <td class="gt_row gt_left">energie</td>
+      <td class="gt_row gt_left">mei</td>
+      <td class="gt_row gt_left">élke</td>
+      <td class="gt_row gt_left">vragen</td>
+      <td class="gt_row gt_left">nieuwe</td>
+      <td class="gt_row gt_left">wij</td>
+      <td class="gt_row gt_left">eem</td>
+      <td class="gt_row gt_left">bezocht</td>
+      <td class="gt_row gt_left">mensen</td>
+      <td class="gt_row gt_left">nvxxxxa</td>
+      <td class="gt_row gt_left">zullen</td>
+      <td class="gt_row gt_left">vlaamsparlement</td>
+      <td class="gt_row gt_left">turnhout</td>
+      <td class="gt_row gt_left">vaak</td>
+      <td class="gt_row gt_left">gemeenteraad</td>
+      <td class="gt_row gt_left">jij</td>
+      <td class="gt_row gt_left">parlement</td>
+      <td class="gt_row gt_left">vlaanderen</td>
+      <td class="gt_row gt_left">betalen</td>
+      <td class="gt_row gt_left">bomen</td>
+      <td class="gt_row gt_left">werken</td>
+      <td class="gt_row gt_left">vragen</td>
+      <td class="gt_row gt_left">vlaamse</td>
+    </tr>
+  </tbody>
+  
+  
+</table></div>
+<p>Next, plotting alpha and prevalence by topic.</p>
+<pre class="r"><code>model$prevalence &lt;- colSums(model$theta) / sum(model$theta) * 100
+df_prev &lt;- data.frame(&quot;prevalence&quot; = model$prevalence, &quot;alpha&quot; = model$alpha) %&gt;% 
+  rownames_to_column(&quot;topic&quot;)
+
+ggplot(data = df_prev, aes(prevalence, alpha, color = topic)) + 
+  geom_point()+
+  geom_text(aes(label=topic),hjust=0.5, vjust=-1)+
+  theme_minimal()+
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/post/2020-03-03-topic-modeling-facebook-ads_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<pre class="r"><code># textmineR has a naive topic labeling tool based on probable bigrams
+model$labels &lt;- LabelTopics(assignments = model$theta &gt; 0.05, 
+                            dtm = dtm,
+                            M = 1)
+head(model$labels, 10)</code></pre>
+<pre><code>##      label_1             
+## t_1  &quot;openbaar_vervoer&quot;  
+## t_2  &quot;raoul_hedebouw&quot;    
+## t_3  &quot;europees_parlement&quot;
+## t_4  &quot;groen_mortsel&quot;     
+## t_5  &quot;elke_dag&quot;          
+## t_6  &quot;hln_buurt&quot;         
+## t_7  &quot;jong_nvxxxxa&quot;      
+## t_8  &quot;stem_cdenv&quot;        
+## t_9  &quot;west_vlaanderen&quot;   
+## t_10 &quot;weg_vooruit&quot;</code></pre>
+<pre class="r"><code># put them together, with coherence into a summary table
+model$summary &lt;- data.frame(topic = rownames(model$phi),
+                            label = model$labels,
+                            coherence = round(model$coherence, 3),
+                            prevalence = round(model$prevalence,3),
+                            top_terms = apply(model$top_terms, 2, function(x){
+                              paste(x, collapse = &quot;, &quot;)
+                            }),
+                            stringsAsFactors = FALSE)</code></pre>
+<pre class="r"><code>model$summary[ order(model$summary$prevalence, decreasing = TRUE) , ][ 1:30 , ] %&gt;% 
+  select(label_1, top_terms, coherence, prevalence) %&gt;% 
+  gt()</code></pre>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#xbhjkckmha .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#xbhjkckmha .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#xbhjkckmha .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#xbhjkckmha .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#xbhjkckmha .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#xbhjkckmha .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#xbhjkckmha .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#xbhjkckmha .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#xbhjkckmha .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#xbhjkckmha .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#xbhjkckmha .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#xbhjkckmha .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#xbhjkckmha .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#xbhjkckmha .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#xbhjkckmha .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xbhjkckmha .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xbhjkckmha .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#xbhjkckmha .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#xbhjkckmha .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#xbhjkckmha .gt_left {
+  text-align: left;
+}
+
+#xbhjkckmha .gt_center {
+  text-align: center;
+}
+
+#xbhjkckmha .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#xbhjkckmha .gt_font_normal {
+  font-weight: normal;
+}
+
+#xbhjkckmha .gt_font_bold {
+  font-weight: bold;
+}
+
+#xbhjkckmha .gt_font_italic {
+  font-style: italic;
+}
+
+#xbhjkckmha .gt_super {
+  font-size: 65%;
+}
+
+#xbhjkckmha .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="xbhjkckmha" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">label_1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">top_terms</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">coherence</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">prevalence</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_left">elke_dag</td>
+      <td class="gt_row gt_left">onze, mensen, moeten, tijd, maken, willen, waar, werken, wij, werk</td>
+      <td class="gt_row gt_right">0.089</td>
+      <td class="gt_row gt_right">11.359</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">vlaams_parlement</td>
+      <td class="gt_row gt_left">parlement, vlaams, plaats, vlaams_parlement, stem, onze, lijst, mei, kamer, nvxxxxa</td>
+      <td class="gt_row gt_right">0.281</td>
+      <td class="gt_row gt_right">8.152</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">minimumpensioen_euro</td>
+      <td class="gt_row gt_left">euro, jaar, pensioen, betalen, wij, onze, belastingen, sociale, mensen, werken</td>
+      <td class="gt_row gt_right">0.143</td>
+      <td class="gt_row gt_right">6.984</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">gelijke_kansen</td>
+      <td class="gt_row gt_left">zekerheid, zorg, goed, iedereen, wij, zorgen, strijden, opnieuw, onze, mensen</td>
+      <td class="gt_row gt_right">0.138</td>
+      <td class="gt_row gt_right">5.799</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">jong_nvxxxxa</td>
+      <td class="gt_row gt_left">nvxxxxa, onze, wij, jaar, kom, jong, graag, welkom, iedereen, alvast</td>
+      <td class="gt_row gt_right">0.063</td>
+      <td class="gt_row gt_right">5.355</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">stem_cdenv</td>
+      <td class="gt_row gt_left">cdenv, cdxxxxv, stem, onze, stem_cdenv, onderwijs, iedereen, maken, vlaanderen, energie</td>
+      <td class="gt_row gt_right">0.183</td>
+      <td class="gt_row gt_right">5.037</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">onze_mensen</td>
+      <td class="gt_row gt_left">onze, mensen, partij, stem, samen, zetten, stemmen, vlaamsxxxxbelang, mei, jij</td>
+      <td class="gt_row gt_right">0.059</td>
+      <td class="gt_row gt_right">4.770</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">west_vlaanderen</td>
+      <td class="gt_row gt_left">west, vlaanderen, west_vlaanderen, vlaamse, provincie, samen, antwerpen, kortrijk, mooie, mei</td>
+      <td class="gt_row gt_right">0.203</td>
+      <td class="gt_row gt_right">3.693</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">vlaams_parlement</td>
+      <td class="gt_row gt_left">onze, samen, jij, stemmen, mee, video, groen, deel, plaats, bomen</td>
+      <td class="gt_row gt_right">0.063</td>
+      <td class="gt_row gt_right">3.419</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">onze_stad</td>
+      <td class="gt_row gt_left">onze, stad, vlaamse, regering, onze_stad, vlaanderen, jambon, vlaamse_regering, ten, zullen</td>
+      <td class="gt_row gt_right">0.065</td>
+      <td class="gt_row gt_right">3.251</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">miljoen_euro</td>
+      <td class="gt_row gt_left">euro, onze, miljoen, miljoen_euro, samen, rekenen, gemeente, maken, kader, bezocht</td>
+      <td class="gt_row gt_right">0.202</td>
+      <td class="gt_row gt_right">2.812</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">openbaar_vervoer</td>
+      <td class="gt_row gt_left">vervoer, openbaar, openbaar_vervoer, vrouwen, minister, schepencollege, euro, geven, onze, geweld</td>
+      <td class="gt_row gt_right">0.278</td>
+      <td class="gt_row gt_right">2.716</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">raoul_hedebouw</td>
+      <td class="gt_row gt_left">onze, gaan, mee, orde, sociale, meetup, kijken, blijven, iedereen, rik</td>
+      <td class="gt_row gt_right">0.045</td>
+      <td class="gt_row gt_right">2.635</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">europees_parlement</td>
+      <td class="gt_row gt_left">parlement, jaar, vlaamsxxxxbelang, nvxxxxa, jongeren, pkp, wij, nieuwe, migratie, heel</td>
+      <td class="gt_row gt_right">0.045</td>
+      <td class="gt_row gt_right">2.632</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">heel_vlaanderen</td>
+      <td class="gt_row gt_left">heel, veranderen, alle, vlaanderen, toekomst, samen, systeem, heel_vlaanderen, eem_veranderen, eem</td>
+      <td class="gt_row gt_right">0.196</td>
+      <td class="gt_row gt_right">2.593</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">betalen_euro</td>
+      <td class="gt_row gt_left">mensen, jij, wij, kinderen, brussel, onze, beperking, www, doe, betalen</td>
+      <td class="gt_row gt_right">0.044</td>
+      <td class="gt_row gt_right">2.436</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">gaan_samen</td>
+      <td class="gt_row gt_left">plaats, burgemeester, gaan, samenwerking, onze, samen, af, schepen, gemeente, vlaamsparlement</td>
+      <td class="gt_row gt_right">0.116</td>
+      <td class="gt_row gt_right">2.325</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">weg_vooruit</td>
+      <td class="gt_row gt_left">groen, nieuwe, vlaming, gaat, mee, jaar, waar, onze, cdxxxxv, élke</td>
+      <td class="gt_row gt_right">0.097</td>
+      <td class="gt_row gt_right">2.295</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">daarom_krijgen</td>
+      <td class="gt_row gt_left">daarom, gent, onze, iedereen, mensen, waar, vlaamsxxxxbelang, onderwijs, laten, vragen</td>
+      <td class="gt_row gt_right">0.141</td>
+      <td class="gt_row gt_right">2.158</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">aantal_voorstellen</td>
+      <td class="gt_row gt_left">voorstellen, aantal, meerjarenplan, onze, groen, belasting, gemeenteraad, gemeente, lokale, nieuwe</td>
+      <td class="gt_row gt_right">0.221</td>
+      <td class="gt_row gt_right">1.943</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">waa_zien</td>
+      <td class="gt_row gt_left">spxxxxa, jullie, onze, vlaanderen, politiek, jaar, volgende, zetten, eerste, vlaamse</td>
+      <td class="gt_row gt_right">0.043</td>
+      <td class="gt_row gt_right">1.908</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">fiesta_social</td>
+      <td class="gt_row gt_left">stad, oplossing, mei, natuurverenigingen, goed, mee, social, fiesta, fiesta_social, turnhout</td>
+      <td class="gt_row gt_right">0.164</td>
+      <td class="gt_row gt_right">1.902</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">akkoord_bent</td>
+      <td class="gt_row gt_left">onze, kinderen, onderwijs, moeten, wij, verkiezingen, maken, volgende, akkoord, parlement</td>
+      <td class="gt_row gt_right">0.093</td>
+      <td class="gt_row gt_right">1.881</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">dronken_bestuurder</td>
+      <td class="gt_row gt_left">kies, groen, land, morgen, onze, belasten, samen, kandidaat, plaats, vragen</td>
+      <td class="gt_row gt_right">0.140</td>
+      <td class="gt_row gt_right">1.862</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">theo_francken</td>
+      <td class="gt_row gt_left">theo, theo_francken, francken, onze, gaat, terug, mensen, komen, doe, vaak</td>
+      <td class="gt_row gt_right">0.290</td>
+      <td class="gt_row gt_right">1.781</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">hln_buurt</td>
+      <td class="gt_row gt_left">jaar, geld, euro, verder, leven, geven, één, woningen, hoop, af</td>
+      <td class="gt_row gt_right">0.114</td>
+      <td class="gt_row gt_right">1.771</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">miljoen_euro</td>
+      <td class="gt_row gt_left">straat, euro, miljoen, miljoen_euro, voorstel, vlaams, bewoners, wel, collaboratie, vlaanderen</td>
+      <td class="gt_row gt_right">0.156</td>
+      <td class="gt_row gt_right">1.741</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">groen_mortsel</td>
+      <td class="gt_row gt_left">groen, eerste, mens, parlementsvoorzitter, dronken, bewust, voorzitter, dijck, mortsel, groen_mortsel</td>
+      <td class="gt_row gt_right">0.281</td>
+      <td class="gt_row gt_right">1.682</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">groen_opwijk</td>
+      <td class="gt_row gt_left">groen, maken, euro, opwijk, steeds, tijdens, indien, groen_opwijk, gemeente, gemeenteraad</td>
+      <td class="gt_row gt_right">0.141</td>
+      <td class="gt_row gt_right">1.611</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">pvda_post</td>
+      <td class="gt_row gt_left">pvda, post, mensen, ronny, regering, moeten, jobs, pvda_post, jaar, wij</td>
+      <td class="gt_row gt_right">0.243</td>
+      <td class="gt_row gt_right">1.496</td>
+    </tr>
+  </tbody>
+  
+  
+</table></div>
+<pre class="r"><code>theta &lt;- model$theta %&gt;% 
+  as.data.frame()
+
+max &lt;- apply(theta[, 1:n_topics], 1, max) %&gt;% 
+  as.data.frame() %&gt;% 
+  rename(&quot;max&quot; = &quot;.&quot;)
+
+max$doc_id = row.names(max)</code></pre>
+<pre class="r"><code>theta$topic &lt;- colnames(theta)[apply(theta,1,which.max)]
+theta$doc_id = row.names(theta)</code></pre>
+<pre class="r"><code>df_ana &lt;- theta %&gt;% 
+  mutate(doc_id = as.integer(doc_id)) %&gt;% 
+  left_join(max %&gt;% 
+              mutate(doc_id = as.integer(doc_id))) %&gt;% 
+  left_join(documents) %&gt;% 
+  #mutate(topic = as.integer(topic)) %&gt;% 
+  left_join(df) %&gt;% 
+  select(doc_id, max, topic, text, name_party, euro) %&gt;% 
+  filter(max &gt; 0.599)</code></pre>
+<pre><code>## Joining, by = &quot;doc_id&quot;
+## Joining, by = &quot;doc_id&quot;
+## Joining, by = &quot;doc_id&quot;</code></pre>
+<pre class="r"><code>y &lt;- df_ana %&gt;% group_by(name_party, topic) %&gt;% 
+  summarise(sum_n = n())
+
+highest_seven &lt;- y %&gt;% group_by(name_party) %&gt;% 
+  summarise(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  top_n(7)</code></pre>
+<pre><code>## Selecting by count</code></pre>
+<pre class="r"><code>highest_seven</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   name_party    count
+##   &lt;chr&gt;         &lt;int&gt;
+## 1 open vld         30
+## 2 sp.a             30
+## 3 groen            29
+## 4 pvda             27
+## 5 cd&amp;v             24
+## 6 n-va             24
+## 7 vlaams belang    24</code></pre>
+<pre class="r"><code>z &lt;- y %&gt;% 
+  mutate(topic = str_remove_all(topic, &quot;t_&quot;)) %&gt;% 
+  mutate(topic = as.integer(topic)) %&gt;% 
+  filter(name_party %in% highest_seven$name_party) %&gt;% 
+  ungroup()</code></pre>
+<p>Plotting the ad count per topic per political party.</p>
+<pre class="r"><code>ggplot(data = z, aes(x = topic, y = sum_n)) +
+  geom_bar(stat = &#39;identity&#39;, width = 0.65)+
+  facet_wrap(~name_party, scales = &#39;free&#39;)+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme_minimal()+
+  ylab(&quot;number of ads&quot;)+
+  aes(fill = as.factor(name_party))+
+  theme(legend.position = &quot;none&quot;)+
+  scale_fill_manual(values = c(&quot;n-va&quot;= &quot;sienna3&quot;, 
+                                        &quot;vlaams belang&quot; = &quot;grey35&quot;, 
+                                        &quot;groen&quot; = &quot;lightgreen&quot;,
+                                        &quot;open vld&quot; = &quot;royalblue2&quot;,
+                                        &quot;cdh&quot; = &quot;orange2&quot;, 
+                                        &quot;ps&quot; = &quot;pink&quot;, 
+                                        &quot;sp.a&quot; = &quot;pink&quot;,
+                                        &quot;pvda&quot; =&quot;firebrick2&quot;,
+                                        &quot;ptb&quot; = &quot;firebrick2&quot;,
+                                        &quot;cd&amp;v&quot; = &quot;orange&quot;
+                                        ))</code></pre>
+<p><img src="/post/2020-03-03-topic-modeling-facebook-ads_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+<p>Plotting the ad cost per topic per political party:</p>
+<pre class="r"><code>y &lt;- df_ana %&gt;% group_by(name_party, topic) %&gt;% 
+  summarise(sum = sum(euro))
+
+highest_seven &lt;- y %&gt;% group_by(name_party) %&gt;% 
+  summarise(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  top_n(7)</code></pre>
+<pre><code>## Selecting by count</code></pre>
+<pre class="r"><code>highest_seven</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   name_party    count
+##   &lt;chr&gt;         &lt;int&gt;
+## 1 open vld         30
+## 2 sp.a             30
+## 3 groen            29
+## 4 pvda             27
+## 5 cd&amp;v             24
+## 6 n-va             24
+## 7 vlaams belang    24</code></pre>
+<pre class="r"><code>z &lt;- y %&gt;% 
+  mutate(topic = str_remove_all(topic, &quot;t_&quot;)) %&gt;% 
+  mutate(topic = as.integer(topic)) %&gt;% 
+  filter(name_party %in% highest_seven$name_party) %&gt;% 
+  ungroup()
+
+ggplot(data = z, aes(x = topic, y = sum)) +
+  geom_bar(stat = &#39;identity&#39;, width = 0.65)+
+  facet_wrap(~name_party, scales = &#39;free&#39;)+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme_minimal()+
+  ylab(&quot;€ spent per topic&quot;)+
+  aes(fill = as.factor(name_party))+
+  theme(legend.position = &quot;none&quot;)+
+  scale_fill_manual(values = c(&quot;n-va&quot;= &quot;sienna3&quot;, 
+                                        &quot;vlaams belang&quot; = &quot;grey35&quot;, 
+                                        &quot;groen&quot; = &quot;lightgreen&quot;,
+                                        &quot;open vld&quot; = &quot;royalblue2&quot;,
+                                        &quot;cdh&quot; = &quot;orange2&quot;, 
+                                        &quot;ps&quot; = &quot;pink&quot;, 
+                                        &quot;sp.a&quot; = &quot;pink&quot;,
+                                        &quot;pvda&quot; =&quot;firebrick2&quot;,
+                                        &quot;ptb&quot; = &quot;firebrick2&quot;,
+                                        &quot;cd&amp;v&quot; = &quot;orange&quot;
+                                        ))</code></pre>
+<p><img src="/post/2020-03-03-topic-modeling-facebook-ads_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
+<p>As you can see we roughly have two patterns here. The pvda, sp.a and vb are mono topic, the others have more of a spread.</p>
+<pre class="r"><code>top_by_party &lt;- z %&gt;% 
+  arrange(desc(sum)) %&gt;%
+  group_by(name_party) %&gt;% 
+  slice(1) %&gt;% 
+  arrange(desc(sum))
+
+# top_by_party %&gt;% 
+#   gt()
+
+top_by_party %&gt;% 
+  reactable::reactable()</code></pre>
+<div id="htmlwidget-1" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"name_party":["vlaams belang","sp.a","pvda","n-va","cd&v","open vld","groen"],"topic":[28,16,28,3,8,5,1],"sum":[170000,70418.86,57600,31050,24850,10000,5550]},"columns":[{"accessor":"name_party","name":"name_party","type":"character"},{"accessor":"topic","name":"topic","type":"numeric"},{"accessor":"sum","name":"sum","type":"numeric"}],"defaultPageSize":10,"paginationType":"numbers","showPageInfo":true,"minRows":1,"dataKey":"0c01f4f3c850d26ed00ca78b076dffda"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<p>So these are the top topics by amount spent by party.</p>
+<p>What are they?</p>
+<pre class="r"><code>model_data &lt;- model$summary %&gt;% 
+  mutate(topic = as.numeric(str_remove_all(topic,&quot;t_&quot;))) %&gt;% 
+  select(topic, label_1, top_terms)
+
+top_by_party %&gt;% 
+  left_join(model_data) %&gt;% 
+  filter(name_party %in% c(&quot;sp.a&quot;, &quot;vlaams belang&quot;, &quot;pvda&quot;, 
+                           &quot;groen&quot;, &quot;cd&amp;v&quot;, &quot;n-va&quot;, &quot;open vld&quot;)) %&gt;% 
+  select(-topic, -sum, -label_1) %&gt;% 
+  gt()</code></pre>
+<pre><code>## Joining, by = &quot;topic&quot;</code></pre>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#xmhimdtizn .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#xmhimdtizn .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#xmhimdtizn .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#xmhimdtizn .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#xmhimdtizn .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#xmhimdtizn .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#xmhimdtizn .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#xmhimdtizn .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#xmhimdtizn .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#xmhimdtizn .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#xmhimdtizn .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#xmhimdtizn .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#xmhimdtizn .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#xmhimdtizn .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#xmhimdtizn .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xmhimdtizn .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xmhimdtizn .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#xmhimdtizn .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#xmhimdtizn .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#xmhimdtizn .gt_left {
+  text-align: left;
+}
+
+#xmhimdtizn .gt_center {
+  text-align: center;
+}
+
+#xmhimdtizn .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#xmhimdtizn .gt_font_normal {
+  font-weight: normal;
+}
+
+#xmhimdtizn .gt_font_bold {
+  font-weight: bold;
+}
+
+#xmhimdtizn .gt_font_italic {
+  font-style: italic;
+}
+
+#xmhimdtizn .gt_super {
+  font-size: 65%;
+}
+
+#xmhimdtizn .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="xmhimdtizn" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">top_terms</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr class="gt_group_heading_row">
+      <td colspan="1" class="gt_group_heading">vlaams belang</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">euro, jaar, pensioen, betalen, wij, onze, belastingen, sociale, mensen, werken</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="1" class="gt_group_heading">sp.a</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">zekerheid, zorg, goed, iedereen, wij, zorgen, strijden, opnieuw, onze, mensen</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="1" class="gt_group_heading">pvda</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">euro, jaar, pensioen, betalen, wij, onze, belastingen, sociale, mensen, werken</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="1" class="gt_group_heading">n-va</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">parlement, jaar, vlaamsxxxxbelang, nvxxxxa, jongeren, pkp, wij, nieuwe, migratie, heel</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="1" class="gt_group_heading">cd&amp;v</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">cdenv, cdxxxxv, stem, onze, stem_cdenv, onderwijs, iedereen, maken, vlaanderen, energie</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="1" class="gt_group_heading">open vld</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">onze, mensen, moeten, tijd, maken, willen, waar, werken, wij, werk</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="1" class="gt_group_heading">groen</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">vervoer, openbaar, openbaar_vervoer, vrouwen, minister, schepencollege, euro, geven, onze, geweld</td>
+    </tr>
+  </tbody>
+  
+  
+</table></div>
+<p>The unique selling points of each party can be guessed, except for the n-va and open vld that have spent the most on a topic that could be described as ‘vote for us’. Seems logical in an election year (data is from the year 2019).</p>
+<p>And on this bomb shell, stay safe!</p>
+
+      
+      <div class="related">
+
+<h3>Similar articles:</h3>
+<ul>
+	
+	<li><a href="/post/nlp-on-facebooks-belgian-political-ads/">nlp on Facebooks Belgian political ads</a></li>
+	
+	<li><a href="/post/political-ads-on-facebook-for-the-2019-belgian-elections/">Political ads on Facebook for the 2019 Belgian elections</a></li>
+	
+	<li><a href="/post/topic-modeling-beer-reviews/">Topic modeling beer reviews</a></li>
+	
+	<li><a href="/post/tf-idf-and-beer-reviews/">tf_idf and beer reviews</a></li>
+	
+	<li><a href="/post/beer-reviews-galore/">Beer reviews galore!</a></li>
+	
+</ul>
+</div>
+      
+    </div>
+    
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container">
+    <aside><div id="disqus_thread"></div></aside>
+  
+    <div id="show_comments"><a id="load_comments" class="button is-link">Load comments</a></div>
+  
+    <script type="text/javascript">
+      var disqus_shortname = 'bad-to-the-code';
+      function disqus() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+  
+      
+      var hash = window.location.hash.substr(1);
+      if ((hash.length > 8) && (hash.substring(0, 8) === "comment-")) {
+        disqus();
+        document.getElementById("show_comments").style.display = "none";
+      } else {
+        document.getElementById('load_comments').onclick = function() {
+          disqus();
+          document.getElementById("show_comments").style.display = "none";
+        };
+      }
+  
+
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/madcap1090">William Bourgeois</a> 2019</p>
+    
+      <p>Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/ribice/kiss">Kiss</a>.</p>
+    
+  </div>
+</section>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-137981534-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="\/\/matomo.example.com\/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript>
+  <img src="//matomo.example.com/piwik.php?idsite=1&amp;rec=1" style="border:0" alt="" />
+</noscript>
+
+
+</body>
+</html>
+

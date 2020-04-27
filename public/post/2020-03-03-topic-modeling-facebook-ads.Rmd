@@ -1,0 +1,478 @@
+---
+title: Topic modeling Facebook ads
+author: William Bourgeois
+date: '2020-03-03'
+slug: topic-modeling-facebook-ads
+categories: []
+tags:
+  - Facebook
+  - nlp
+  - Belgian politics
+---
+
+In the last two posts there was an analysis of Facebook ads of Belgian politicians or political parties. To temporary conclude the subject we will do some topic modeling on these ads.
+
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("cld2")
+library("tidytext")
+library("topicmodels")
+library("qdap")
+library("gt")
+```
+
+Loading the data.
+
+```{r}
+df <- readRDS("./data/20200104/df.rds")
+# create a doc_id
+df <- rowid_to_column(df, "doc_id")
+```
+
+
+I think that one of the first things to do is to is to determine the languages the ads were written in. But since a number of the ads are written in more than one language it might be better to first parse them by sentences, while identifying the sentences still that belong to the same ad. 
+
+```{r eval=FALSE, include=TRUE}
+sentences <- data.frame()
+for (i in (1:nrow(df))){
+  sentence_extract <- t(str_extract_all(df$ad_creative_body[i], 
+                                        boundary("sentence"), 
+                                        simplify = TRUE)) %>%
+    as.data.frame()
+  sentence_extract <- bind_cols("sentences" = sentence_extract, 
+                                "doc_id" = rep.int(df$doc_id[i],
+                                        nrow(sentence_extract)))
+  sentences <- rbind(sentences, sentence_extract)
+}
+
+```
+
+```{r, include=FALSE}
+#saveRDS(sentences, "./data/20200303/sentences.rds")
+sentences <- readRDS("./data/20200303/sentences.rds")
+```
+
+Did it work?
+
+```{r}
+head(sentences,10) %>% 
+  gt()
+```
+
+Indeed.
+
+So now we can filter and take only the dutch sentences. And then we can tokenize to words (while transforming CD&V, sp.a and N_VA in order to keep them as tokens).
+
+
+```{r message=FALSE}
+stop <- read.delim("http://www.damienvanholten.com/downloads/dutch-stop-words.txt", header=FALSE)
+
+sentences_cld2 <- sentences %>%
+  mutate(clean_text = as.character(V1)) %>% 
+  mutate(language = detect_language(clean_text)) 
+
+sentences_nl <- sentences_cld2 %>% 
+  filter(language == "nl") %>% 
+  select(-V1, -language) %>% 
+  distinct(clean_text, .keep_all = TRUE)
+
+sentences_nl <- sentences_nl %>% 
+  mutate(clean_text = tolower(clean_text)) %>% 
+  mutate(clean_text = tm::removeWords(clean_text, c(tm::stopwords("dutch"), 
+                                                    "én", "http", "https","www.s", 
+                                                    "bit.ly", "wwww", "pagina")))
+
+sentences_nl <- sentences_nl %>% 
+  mutate(clean_text = str_replace_all(clean_text, "sp.a", "spxxxxa"),
+         clean_text = str_replace_all(clean_text, "CD&V", "CDxxxxV"),
+         clean_text = str_replace_all(clean_text, "Cd&v", "CDxxxxV"),
+         clean_text = str_replace_all(clean_text, "cd&v", "CDxxxxV"),
+         clean_text = str_replace_all(clean_text, "vlaams belang", "VlaamsxxxxBelang"),
+         clean_text = str_replace_all(clean_text, "open vld", "Openxxxxvld"),
+         clean_text = str_replace_all(clean_text, "n-va", "NVxxxxA"))
+
+by_doc_word <- sentences_nl %>%
+  select(doc_id, clean_text) %>% 
+  unnest_tokens(words, clean_text, token = "words")
+
+by_doc_word_2 <- sentences_nl %>%
+  select(doc_id, clean_text) %>% 
+  unnest_tokens(words, clean_text, token = "ngrams", n = 2)
+
+by_doc_word_3 <- sentences_nl %>%
+  select(doc_id, clean_text) %>% 
+  unnest_tokens(words, clean_text, token = "ngrams", n = 3)
+
+
+by_doc_word <- by_doc_word %>% 
+  rbind(by_doc_word_2, by_doc_word_3)
+
+
+```
+
+
+```{r message=FALSE}
+names(stop) <- "words"
+word_counts <- by_doc_word %>% 
+  anti_join(stop) %>% 
+  count(doc_id, words, sort = TRUE) %>% 
+  filter(nchar(words) < 27) %>% 
+  filter(nchar(words) > 1)
+```
+
+Let's see if we have correctly tokenised in words:
+
+```{r}
+head(by_doc_word %>% 
+       filter(doc_id > 1000),10) %>% 
+  gt()
+```
+
+And now we can make a document term matrix. With as its name suggests is a matrix with one row per ad (document) and one column per word here populated by the frequency of the word in the ad.
+
+
+```{r}
+doc_dtm <- word_counts %>%
+  cast_dtm(doc_id, words, n, weighting = tm::weightTf)
+doc_dtm
+```
+
+Trying library(textmineR) for topic modeling. Here is some background [info](https://cran.r-project.org/web/packages/textmineR/vignettes/c_topic_modeling.html)
+
+```{r message=FALSE, warning=FALSE}
+library("textmineR") #install.packages("textmineR")
+```
+
+```{r}
+documents <- sentences_nl %>%
+  group_by(doc_id) %>%
+  mutate(text = paste0(clean_text, collapse = "")) %>%
+  select(doc_id, text) %>% 
+  unique()
+
+# only take texts from biggest flemish parties
+top_seven <- documents %>% 
+  left_join(df) %>% 
+  group_by(name_party) %>%
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  top_n(7) %>% 
+  select(name_party)
+
+documents <- documents %>% 
+  left_join(df) %>% 
+  filter(name_party %in% top_seven$name_party) %>% 
+  select(doc_id, text)
+  
+```
+
+
+```{r}
+dtm <- CreateDtm(doc_vec = documents$text, # character vector of documents
+                 doc_names = documents$doc_id, # document names
+                 ngram_window = c(1, 2), # minimum and maximum n-gram length
+                 stopword_vec = c(stopwords::stopwords("nl"), # stopwords from tm
+                                  stopwords::stopwords(source = "smart")), # this is the default
+                 lower = TRUE, # lowercase - this is the default value
+                 remove_punctuation = TRUE, # punctuation - this is the default
+                 remove_numbers = TRUE, # numbers - this is the default
+                 verbose = FALSE, # Turn off status bar for this demo
+                 cpus = 2) # default is all available cpus on the system
+
+dtm <- dtm[,colSums(dtm) > 2]
+```
+
+
+Grid search for r squared.
+
+```{r eval=FALSE, message=FALSE}
+n_topics <- 30
+gs <- list(alpha_v = c(0.12, 0.14, 0.16),
+           betha_v = c(0.04, 0.05, 0.06),
+           burnin_v = c(125, 150, 175)) %>% 
+  cross_df() # Convert to data frame grid
+gs
+set.seed(42)
+result <- data.frame()
+for (i in 1:nrow(gs)){
+  print(i)
+  model <- FitLdaModel(dtm = dtm, 
+                     k = n_topics,
+                     iterations = 200, 
+                     burnin = gs$burnin_v[i],
+                     alpha = gs$alpha_v[i],
+                     beta = gs$betha_v[i],
+                     optimize_alpha = TRUE,
+                     calc_likelihood = TRUE,
+                     calc_coherence = TRUE,
+                     calc_r2 = TRUE,
+                     cpus = 2)
+    result <- rbind(result, cbind(gs[i,], model$r2))
+  
+}
+```
+
+```{r include=FALSE}
+#saveRDS(result, "./data/20200303/result.rds" )
+result <- readRDS("./data/20200303/result.rds" )
+```
+
+
+```{r}
+result %>% 
+  filter(`model$r2` == max(`model$r2`))
+```
+
+Using the results of the grid search.
+
+```{r}
+set.seed(42)
+n_topics <- 30
+
+model <- FitLdaModel(dtm = dtm, 
+                     k = n_topics,
+                     iterations = 200, 
+                     burnin = 125,
+                     alpha = 0.14,
+                     beta = 0.04,
+                     optimize_alpha = TRUE,
+                     calc_likelihood = TRUE,
+                     calc_coherence = TRUE,
+                     calc_r2 = TRUE,
+                     cpus = 2) 
+```
+
+Looking at the content of the model object:
+
+```{r}
+str(model)
+```
+```{r}
+# R-squared 
+model$r2
+```
+
+Plotting the log likelihood:
+
+```{r}
+# log Likelihood (does not consider the prior) 
+ggplot(data = model$log_likelihood, aes(x= iteration, y= log_likelihood))+
+  geom_line()+
+  labs(title="log likelihood",
+        x ="iterations", y = "log likelihood")+
+  theme_minimal()
+```
+
+
+We can analyse the models probabilistic coherence measures of topics that are defined as "Topic Coherence measures score a single topic by measuring the degree of semantic similarity between high scoring words in the topic. These measurements help distinguish between topics that are semantically interpretable topics and topics that are artifacts of statistical inference..." by the authors in the paper [here](https://www.aclweb.org/anthology/D12-1087.pdf) 
+
+
+```{r}
+df_coh <- f <- as.data.frame(model$coherence) %>% 
+  rownames_to_column("topic") %>% 
+  mutate(topic = str_remove(topic, "t_"),
+         topic = as.numeric(topic)) 
+names(df_coh) <- c("topic", "coherence")
+
+ggplot(data = df_coh, aes(x=topic,y=coherence, fill=topic))+
+  geom_bar(stat = "identity",  color="blue")+
+  theme_minimal()
+```
+
+
+So this is what the probabilistic coherence of our topics look like using our parameters and 30 topics. 
+
+```{r}
+# Get the top terms of each topic
+(model$top_terms <- GetTopTerms(phi = model$phi, M = 10)) %>% 
+  gt()
+```
+
+Next, plotting alpha and prevalence by topic. 
+
+```{r}
+model$prevalence <- colSums(model$theta) / sum(model$theta) * 100
+df_prev <- data.frame("prevalence" = model$prevalence, "alpha" = model$alpha) %>% 
+  rownames_to_column("topic")
+
+ggplot(data = df_prev, aes(prevalence, alpha, color = topic)) + 
+  geom_point()+
+  geom_text(aes(label=topic),hjust=0.5, vjust=-1)+
+  theme_minimal()+
+  theme(legend.position = "none")
+
+```
+
+
+```{r}
+# textmineR has a naive topic labeling tool based on probable bigrams
+model$labels <- LabelTopics(assignments = model$theta > 0.05, 
+                            dtm = dtm,
+                            M = 1)
+head(model$labels, 10)
+```
+
+```{r}
+# put them together, with coherence into a summary table
+model$summary <- data.frame(topic = rownames(model$phi),
+                            label = model$labels,
+                            coherence = round(model$coherence, 3),
+                            prevalence = round(model$prevalence,3),
+                            top_terms = apply(model$top_terms, 2, function(x){
+                              paste(x, collapse = ", ")
+                            }),
+                            stringsAsFactors = FALSE)
+```
+
+```{r}
+model$summary[ order(model$summary$prevalence, decreasing = TRUE) , ][ 1:30 , ] %>% 
+  select(label_1, top_terms, coherence, prevalence) %>% 
+  gt()
+```
+
+
+```{r}
+theta <- model$theta %>% 
+  as.data.frame()
+
+max <- apply(theta[, 1:n_topics], 1, max) %>% 
+  as.data.frame() %>% 
+  rename("max" = ".")
+
+max$doc_id = row.names(max)
+```
+
+```{r}
+theta$topic <- colnames(theta)[apply(theta,1,which.max)]
+theta$doc_id = row.names(theta)
+```
+
+```{r}
+df_ana <- theta %>% 
+  mutate(doc_id = as.integer(doc_id)) %>% 
+  left_join(max %>% 
+              mutate(doc_id = as.integer(doc_id))) %>% 
+  left_join(documents) %>% 
+  #mutate(topic = as.integer(topic)) %>% 
+  left_join(df) %>% 
+  select(doc_id, max, topic, text, name_party, euro) %>% 
+  filter(max > 0.599)
+```
+
+```{r}
+y <- df_ana %>% group_by(name_party, topic) %>% 
+  summarise(sum_n = n())
+
+highest_seven <- y %>% group_by(name_party) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  top_n(7)
+highest_seven
+z <- y %>% 
+  mutate(topic = str_remove_all(topic, "t_")) %>% 
+  mutate(topic = as.integer(topic)) %>% 
+  filter(name_party %in% highest_seven$name_party) %>% 
+  ungroup()
+```
+
+Plotting the ad count per topic per political party.
+
+```{r}
+ggplot(data = z, aes(x = topic, y = sum_n)) +
+  geom_bar(stat = 'identity', width = 0.65)+
+  facet_wrap(~name_party, scales = 'free')+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme_minimal()+
+  ylab("number of ads")+
+  aes(fill = as.factor(name_party))+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("n-va"= "sienna3", 
+                                        "vlaams belang" = "grey35", 
+                                        "groen" = "lightgreen",
+                                        "open vld" = "royalblue2",
+                                        "cdh" = "orange2", 
+                                        "ps" = "pink", 
+                                        "sp.a" = "pink",
+                                        "pvda" ="firebrick2",
+                                        "ptb" = "firebrick2",
+                                        "cd&v" = "orange"
+                                        ))
+```
+
+Plotting the ad cost per topic per political party:
+
+```{r}
+y <- df_ana %>% group_by(name_party, topic) %>% 
+  summarise(sum = sum(euro))
+
+highest_seven <- y %>% group_by(name_party) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  top_n(7)
+highest_seven
+z <- y %>% 
+  mutate(topic = str_remove_all(topic, "t_")) %>% 
+  mutate(topic = as.integer(topic)) %>% 
+  filter(name_party %in% highest_seven$name_party) %>% 
+  ungroup()
+
+ggplot(data = z, aes(x = topic, y = sum)) +
+  geom_bar(stat = 'identity', width = 0.65)+
+  facet_wrap(~name_party, scales = 'free')+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme_minimal()+
+  ylab("€ spent per topic")+
+  aes(fill = as.factor(name_party))+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("n-va"= "sienna3", 
+                                        "vlaams belang" = "grey35", 
+                                        "groen" = "lightgreen",
+                                        "open vld" = "royalblue2",
+                                        "cdh" = "orange2", 
+                                        "ps" = "pink", 
+                                        "sp.a" = "pink",
+                                        "pvda" ="firebrick2",
+                                        "ptb" = "firebrick2",
+                                        "cd&v" = "orange"
+                                        ))
+```
+
+As you can see we roughly have two patterns here. The pvda, sp.a and vb are mono topic, the others have more of a spread. 
+
+```{r}
+top_by_party <- z %>% 
+  arrange(desc(sum)) %>%
+  group_by(name_party) %>% 
+  slice(1) %>% 
+  arrange(desc(sum))
+
+# top_by_party %>% 
+#   gt()
+
+top_by_party %>% 
+  reactable::reactable()
+
+```
+
+So these are the top topics by amount spent by party.
+
+What are they?
+
+```{r}
+model_data <- model$summary %>% 
+  mutate(topic = as.numeric(str_remove_all(topic,"t_"))) %>% 
+  select(topic, label_1, top_terms)
+
+top_by_party %>% 
+  left_join(model_data) %>% 
+  filter(name_party %in% c("sp.a", "vlaams belang", "pvda", 
+                           "groen", "cd&v", "n-va", "open vld")) %>% 
+  select(-topic, -sum, -label_1) %>% 
+  gt()
+```
+
+
+
+The unique selling points of each party can be guessed, except for the n-va and open vld that have spent the most on a topic that could be described as 'vote for us'. Seems logical in an election year (data is from the year 2019).
+
+And on this bomb shell, stay safe!
