@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on bad to the code</title>
@@ -7,10 +7,15 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Tue, 03 Mar 2020 00:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
-    
+    <lastBuildDate>Fri, 20 Nov 2020 00:00:00 +0000</lastBuildDate><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>time-series</title>
+      <link>/tags/time-series/</link>
+      <pubDate>Fri, 20 Nov 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/time-series/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Belgian politics</title>
@@ -85,6 +90,15 @@
     </item>
     
     <item>
+      <title>igraph</title>
+      <link>/tags/igraph/</link>
+      <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/igraph/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Network analysis</title>
       <link>/tags/network-analysis/</link>
       <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
@@ -99,15 +113,6 @@
       <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/wikipedia/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>igraph</title>
-      <link>/tags/igraph/</link>
-      <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/igraph/</guid>
       <description></description>
     </item>
     
@@ -175,24 +180,6 @@
     </item>
     
     <item>
-      <title>AWS</title>
-      <link>/tags/aws/</link>
-      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/aws/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>AWS Rekognition</title>
-      <link>/tags/aws-rekognition/</link>
-      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/aws-rekognition/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>Amazon Comprehend</title>
       <link>/tags/amazon-comprehend/</link>
       <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
@@ -207,6 +194,24 @@
       <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/amazon-translate/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>AWS</title>
+      <link>/tags/aws/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/aws/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>AWS Rekognition</title>
+      <link>/tags/aws-rekognition/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/aws-rekognition/</guid>
       <description></description>
     </item>
     
@@ -256,20 +261,20 @@
     </item>
     
     <item>
-      <title>Spotify</title>
-      <link>/tags/spotify/</link>
-      <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/spotify/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>clustering</title>
       <link>/tags/clustering/</link>
       <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
       
       <guid>/tags/clustering/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Spotify</title>
+      <link>/tags/spotify/</link>
+      <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/spotify/</guid>
       <description></description>
     </item>
     

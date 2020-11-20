@@ -1,0 +1,23 @@
+---
+title: predicting my natural gas consumption
+author: William Bourgeois
+date: '2020-11-20'
+slug: predicting-my-natural-gas-consumption
+categories: []
+tags:
+  - time-series
+---
+
+It's been a while since I posted on this blog. That was mainly due to the confinement
+in the covid-19 pandemic. And it's I promise the last time I mention this virus.
+
+Let's get away from all that and look at energy consumption and global warming instead.
+That will lift our spirits!
+
+Here I the packages I need to attach.
+
+```{r}
+library('tidyverse')
+```
+
+

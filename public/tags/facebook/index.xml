@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Facebook on bad to the code</title>
@@ -7,11 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Tue, 03 Mar 2020 00:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="/tags/facebook/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Tue, 03 Mar 2020 00:00:00 +0000</lastBuildDate><atom:link href="/tags/facebook/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Topic modeling Facebook ads</title>
       <link>/post/topic-modeling-facebook-ads/</link>
