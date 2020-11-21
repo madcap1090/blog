@@ -1,280 +1,39 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>bad to the code</title>
     <link>/</link>
     <description>Recent content on bad to the code</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo - gohugo.io</generator>
     <language>en</language>
-    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/madcap1090&#34;&gt;William Bourgeois&lt;/a&gt; 2019</copyright>
-    <lastBuildDate>Fri, 20 Nov 2020 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <contact>madcap1090@gmail.com</contact>
+    <copyright>&copy; <a href="https://github.com/madcap1090">William Bourgeois</a> 2020</copyright>
+    
+        <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    
     <item>
-      <title>predicting my natural gas consumption</title>
-      <link>/post/predicting-my-natural-gas-consumption/</link>
+      <title>Posts</title>
+      <link>/post/</link>
       <pubDate>Fri, 20 Nov 2020 00:00:00 +0000</pubDate>
+      <author>William Bourgeois</author>
+      <guid>/post/</guid>
+      <description></description>
       
-      <guid>/post/predicting-my-natural-gas-consumption/</guid>
-      <description>It’s been a while since I posted on this blog. That was mainly due to the confinementin the covid-19 pandemic. And it’s I promise the last time I mention this virus.
-Let’s get away from all that and look at energy consumption and global warming instead.That will lift our spirits!
-Here I the packages I need to attach.
-library(&amp;#39;tidyverse&amp;#39;)## -- Attaching packages -------------------------------------------------------- tidyverse 1.3.0 --## v ggplot2 3.</description>
-    </item>
-    
-    <item>
-      <title>Topic modeling Facebook ads</title>
-      <link>/post/topic-modeling-facebook-ads/</link>
-      <pubDate>Tue, 03 Mar 2020 00:00:00 +0000</pubDate>
+      <content></content>
       
-      <guid>/post/topic-modeling-facebook-ads/</guid>
-      <description>In the last two posts there was an analysis of Facebook ads of Belgian politicians or political parties. To temporary conclude the subject we will do some topic modeling on these ads.
-library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;cld2&amp;quot;)library(&amp;quot;tidytext&amp;quot;)library(&amp;quot;topicmodels&amp;quot;)library(&amp;quot;qdap&amp;quot;)library(&amp;quot;gt&amp;quot;)Loading the data.
-df &amp;lt;- readRDS(&amp;quot;./data/20200104/df.rds&amp;quot;)# create a doc_iddf &amp;lt;- rowid_to_column(df, &amp;quot;doc_id&amp;quot;)I think that one of the first things to do is to is to determine the languages the ads were written in.</description>
-    </item>
-    
-    <item>
-      <title>nlp on Facebooks Belgian political ads</title>
-      <link>/post/nlp-on-facebooks-belgian-political-ads/</link>
-      <pubDate>Mon, 24 Feb 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/post/nlp-on-facebooks-belgian-political-ads/</guid>
-      <description>In the last post there was a fairly extensive analysis presented on what is possible to obtain from Facebook on political ads in Belgium. There was a fair amount of data to play with even if it took some energy and time to clean it and filter the ‘issues’ ads from the political ads.
-However Facebook does not present and makes available enough data to analyse what type of deep manipulation is possible using their services.</description>
-    </item>
-    
-    <item>
-      <title>Political ads on Facebook for the 2019 Belgian elections</title>
-      <link>/post/political-ads-on-facebook-for-the-2019-belgian-elections/</link>
-      <pubDate>Sat, 04 Jan 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/post/political-ads-on-facebook-for-the-2019-belgian-elections/</guid>
-      <description>I was looking for a way to have the same level of analysis of Facebook that is possible with the Twitter API, but gave up after a short while. The API seems to me quite closed in terms of what information is made available by Facebook.
-So I was quiet interested when I come across this blog post of Mr Schmidt not on an API for Facebook generally, but for Facebook ads.</description>
-    </item>
-    
-    <item>
-      <title>Topic modeling beer reviews</title>
-      <link>/post/topic-modeling-beer-reviews/</link>
-      <pubDate>Thu, 12 Dec 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/topic-modeling-beer-reviews/</guid>
-      <description>Another tool to analyse our text data with is topic modeling. This might seem similar to the tf-idf calculations but the biggest difference in topic modeling is that here we will see if we can learn something by seeing which words tend to be used in the same reviews. While the tf-idf only looks at the occurrence of the word compared to the total occurrences of all the other words.</description>
-    </item>
-    
-    <item>
-      <title>tf_idf and beer reviews</title>
-      <link>/post/tf-idf-and-beer-reviews/</link>
-      <pubDate>Sun, 17 Nov 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/tf-idf-and-beer-reviews/</guid>
-      <description>We have our data now, we scraped it from the web like we showed here. How can we best start analysing it?
-Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (differences between categories of texts, whatever you might decide these categories to be)</description>
-    </item>
-    
-    <item>
-      <title>Beer reviews galore!</title>
-      <link>/post/beer-reviews-galore/</link>
-      <pubDate>Wed, 13 Nov 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/beer-reviews-galore/</guid>
-      <description>I’ll be using some NLP tools soon, but let us first obtain texts to work with. The idea here is to construct a data frame with one row per Belgian beer and one list with all the reviews of that beer in one cell of that row. And that in order to have the data nice and tidy.
-In order to do that we will create a couple of loops.</description>
-    </item>
-    
-    <item>
-      <title>The Belgian beer landscape</title>
-      <link>/post/the-belgian-beer-landscape/</link>
-      <pubDate>Tue, 12 Nov 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/the-belgian-beer-landscape/</guid>
-      <description>More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts: both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.</description>
-    </item>
-    
-    <item>
-      <title>Analysing Belgian Politics with Wikipedia</title>
-      <link>/post/analysing-belgian-politics-with-wikipedia/</link>
-      <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/analysing-belgian-politics-with-wikipedia/</guid>
-      <description>Another source of data is Wikipedia. I came across this article, and decided to see what I could obtain using it on Belgian politics. Many thanks to the authors of the MZES (Mannheim Zentrum für Europäische Sozialforschung)!
-Gentlepersons, load your libraries:
-## Packagespkgs &amp;lt;- c(&amp;quot;devtools&amp;quot;,&amp;quot;ggnetwork&amp;quot;,&amp;quot;igraph&amp;quot;,&amp;quot;intergraph&amp;quot;,&amp;quot;tidyverse&amp;quot;,&amp;quot;rvest&amp;quot;,&amp;quot;devtools&amp;quot;,&amp;quot;magrittr&amp;quot;,&amp;quot;plotly&amp;quot;,&amp;quot;RColorBrewer&amp;quot;,&amp;quot;colorspace&amp;quot;,&amp;quot;lubridate&amp;quot;,&amp;quot;networkD3&amp;quot;,&amp;quot;pageviews&amp;quot;,&amp;quot;readr&amp;quot;,&amp;quot;wikipediatrend&amp;quot;,&amp;quot;WikipediR&amp;quot;,&amp;quot;WikidataR&amp;quot;,&amp;quot;glue&amp;quot;)## Install uninstalled packageslapply(pkgs[!</description>
-    </item>
-    
-    <item>
-      <title>r u bot or not bot?</title>
-      <link>/post/r-u-bot-or-not-bot/</link>
-      <pubDate>Fri, 27 Sep 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/r-u-bot-or-not-bot/</guid>
-      <description>If you have a Twitter account chances are one day you had a new follower that you did not know and that felt a bit odd. Maybe the account had few followers, a lot or no tweets, had been recently created, is not followed by anyone you’re following, or likely a combination of the above.
-It is also likely that these accounts are managed by bots using the Twitter API.</description>
-    </item>
-    
-    <item>
-      <title>members of the chamber of representatives of Belgium, 55th legistlature, in pictures</title>
-      <link>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures/</link>
-      <pubDate>Sat, 03 Aug 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature-in-pictures/</guid>
-      <description>We are one good month into Belgium’s 55th parliamentarian legislature and the chamber’s website has been updated, so it is time to get to know our representatives just a little bit better.
-A list of the current members of parliament can be found here on the chamber’s official website.
-Attach the libraries and stiffen the sinews.
-library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;rvest&amp;quot;)library(&amp;quot;magick&amp;quot;)library(&amp;quot;glue&amp;quot;)A first table is scraped with their name, party and sometimes email (nicely protected from scraping as seen in the results below).</description>
-    </item>
-    
-    <item>
-      <title>friends in politics</title>
-      <link>/post/friends-in-politics/</link>
-      <pubDate>Sun, 28 Jul 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/friends-in-politics/</guid>
-      <description>In the last post we tried hard to find out all the Twitter handles of our current parliamentarians. A number of interesting analyses can be done with the texts they tweet. But the legislature is quite young and since there still is no federal government and that we are in summer break there are not enough tweets to have interesting analyses at this moment.
-One of the things we can analyse now are the links on Twitter between members of parliament as demonstrated by the excellent blog posts/code of Markus Konrad starting here</description>
-    </item>
-    
-    <item>
-      <title>members of the chamber of representatives of Belgium, 55th legistlature</title>
-      <link>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature/</link>
-      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/members-of-the-chamber-of-representatives-of-belgium-55th-legistlature/</guid>
-      <description>On 20/06/2019 the new chamber of representative was constituted for the 55th legislature. There are a fair number of new members in this assembly. In this post we will get their Twitter handles if they have one. This will make it possible to get their tweets and information about their accounts to be used in various analyses.
-The process can get a tiny bit tedious because as far as I know there is no website regrouping the handles, we need to search for them using the rtweet package, roughly in the same way in which it was done for the last legislature.</description>
-    </item>
-    
-    <item>
-      <title>Belgian May election results are published on Wikipedia</title>
-      <link>/post/belgian-may-election-results-are-published-on-wikipedia/</link>
-      <pubDate>Thu, 06 Jun 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/belgian-may-election-results-are-published-on-wikipedia/</guid>
-      <description>They say there is a Chinese curse that says ‘may you live in interesting times’. The results of the elections are in and they are, wel… interesting.
-The part about ‘living in interesting times’ coming from China might however be fake.
-The results of the federal parliamentarian elections have also been posted on Wikipedia. All the past results can also be found there, so the idea behind this post is to have an understanding of the evolution in Belgian politics through the evolution of the composition of the federal chamber.</description>
-    </item>
-    
-    <item>
-      <title>soon, in a sports stadium near you!</title>
-      <link>/post/soon-in-a-sports-stadium-near-you/</link>
-      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/soon-in-a-sports-stadium-near-you/</guid>
-      <description>When I showed a colleague of mine the last post, he suggested to construct an animated map with the geo location of the different Metallica concerts. By the way it turns out that the guy also sometimes enjoys being a metalhead. We both were right in front of the stage at Dessel on the 6th June 2015 for the last concert of AC/DC in Belgium, that is more than three years before we first met.</description>
-    </item>
-    
-    <item>
-      <title>Metallica rules the world</title>
-      <link>/post/metallica-rules-the-world/</link>
-      <pubDate>Fri, 24 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/metallica-rules-the-world/</guid>
-      <description>23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called setlist that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed.
-And the site even says it cares about our privacy, that is just perfect!</description>
-    </item>
-    
-    <item>
-      <title>tests with paws on aws</title>
-      <link>/post/tests-with-paws-on-aws/</link>
-      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/tests-with-paws-on-aws/</guid>
-      <description>When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from rweekly, that a number of interesting R packages just came out at the beginning of the month.
-As far as I understand at the moment, there are 11 packages bundled in a kit published three days ago…</description>
-    </item>
-    
-    <item>
-      <title>I second that emotion</title>
-      <link>/post/i-second-that-emotion/</link>
-      <pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/i-second-that-emotion/</guid>
-      <description>In an earlier post we scraped the pictures of parliamentarians and used Rekognition to analyses their faces. It’s time to look a little bit closer at the data, test the usage of the ‘gather’ and ‘spread’ function and get to know ggplot a little bit more.
-library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;magick&amp;quot;)library(&amp;quot;ggthemes&amp;quot;)library(&amp;quot;extrafont&amp;quot;)Here are the different features we now have available. On the side of the observations (rows), it might be best to take a snapshot (at the end of the legislation) in order to have a slightly more objective representation.</description>
-    </item>
-    
-    <item>
-      <title>RAMMSTEIN by Rammstein</title>
-      <link>/post/rammstein-by-rammstein/</link>
-      <pubDate>Fri, 17 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/rammstein-by-rammstein/</guid>
-      <description>Today Rammstein released ‘RAMMSTEIN’, first studio album since 10 years.
-Jetzt geht es mir gut, ja!I love it. Gave me a lot of pleasure today.
-Time for a small analysis. I got the code from Peer. And from plzbeemyfriend who is a cool dude, and made some insightful graphs based on Spotify data.
-library(spotifyr) # install.packages(&amp;quot;spotifyr&amp;quot;)library(tidyverse)library(factoextra)library(viridisLite)library(ggiraphExtra)Spotify also has an API and some interesting information can be downloaded from it.</description>
-    </item>
-    
-    <item>
-      <title>happy faces in a bucket</title>
-      <link>/post/happy-faces-in-a-bucket/</link>
-      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/happy-faces-in-a-bucket/</guid>
-      <description>Remember we downloaded the pictures of our parliamentarians and made a patchwork with them? I looked for a while how to analyse them for gender, age and skin color. One obvious candidate was Rekognition from AWS if only because the instances at my workplace decided to use AWS services. Getting a little bit more familiar with using these seemed therefore like a good choice.
-I searched for R packages to use Rekognition with, but did not find any.</description>
-    </item>
-    
-    <item>
-      <title>Belgian parliamentarians tweets</title>
-      <link>/post/belgian-parliamentarians-tweets/</link>
-      <pubDate>Fri, 03 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/belgian-parliamentarians-tweets/</guid>
-      <description>In the last post we were pretty successful in getting our parliamentarians Twitter handles. We can now use these to download their tweets.
-The twitter API allows to download 3200 tweets per handle. This means that we will not be able to download all tweets of all parliamentarians from the last five years, because some of them tweeted more than 3200 during that time period. But there will be a fair amount.</description>
-    </item>
-    
-    <item>
-      <title>Belgian parliamentarians Twitter accounts</title>
-      <link>/post/belgian-parliamentarians-twitter-accounts/</link>
-      <pubDate>Thu, 02 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/belgian-parliamentarians-twitter-accounts/</guid>
-      <description>Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too.
-Let’s start by reconstructing the list. Then we can search Twitter for their accounts handles. A bit of grunt work and no visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.
-Starting with attaching libraries, and in particular ‘rtweet’.
-#librarieslibrary(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;rvest&amp;quot;)library(&amp;quot;glue&amp;quot;)library(&amp;quot;rtweet&amp;quot;)library(&amp;quot;purrr&amp;quot;)# the ones seating currently, with their (current) partyurl &amp;lt;- paste0(&amp;quot;http://www.</description>
-    </item>
-    
-    <item>
-      <title>members of the chamber of representatives of Belgium, 54th legistlature</title>
-      <link>/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/</link>
-      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/members-of-the-chamber-of-representatives-of-belgium-54th-legistlature/</guid>
-      <description>For a country as small as Belgium 6 governments is a lot. It’s maybe because we Belgians like to be governed and governed well. Why else would we want to pay for 6 governments, their administration and their parliaments?
-We also love politicians, so we want to have many. I also like politicians and decided to do some NLP on their tweets. But since there are a significant number of politicians in Belgium I searched for an objective criteria to define a subset.</description>
-    </item>
-    
-    <item>
-      <title>am I getting slower going to work?</title>
-      <link>/post/am-i-getting-slower-going-to-work/</link>
-      <pubDate>Sat, 13 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/am-i-getting-slower-going-to-work/</guid>
-      <description>I got a bit distracted writing the last post. What I want to find out is, based on my Google location history, how fast I bike to work and if this has changed over time.
-Attaching libraries
-library(&amp;quot;tidyverse&amp;quot;)library(&amp;quot;lubridate&amp;quot;)library(&amp;quot;glue&amp;quot;)library(&amp;quot;purrr&amp;quot;)library(&amp;quot;ggmap&amp;quot;)library(&amp;quot;ggplot2&amp;quot;); theme_set(theme_minimal())And loading the data
-# the code to convert your location data to a data frame:# see last post too# data &amp;lt;- fromJSON(&amp;quot;./data/Location History.</description>
-    </item>
-    
-    <item>
-      <title>google location tracking</title>
-      <link>/post/google-location-tracking/</link>
-      <pubDate>Sat, 30 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>/post/google-location-tracking/</guid>
-      <description>Biking to work this week I was wondering if I had not gotten slower and if my commute was not taking longer than before. Not being a regular user of Strava or a similar app, I wondered if I could find an answer to that question using my Google location history.
-So I downloaded the data, that comes in json format, and had a go at it. You can download your Google location data from your Google account.</description>
     </item>
     
     <item>
       <title>About</title>
       <link>/about/</link>
       <pubDate>Thu, 05 May 2016 21:48:51 -0700</pubDate>
-      
+      <author>William Bourgeois</author>
       <guid>/about/</guid>
-      <description>This is a &amp;ldquo;hello world&amp;rdquo; example website for the blogdown package. The theme was forked from @jrutheiser/hugo-lithium-theme and modified by Yihui Xie.</description>
+      <description></description>
+      
+      <content>&lt;p&gt;This is a &amp;ldquo;hello world&amp;rdquo; example website for the &lt;a href=&#34;https://github.com/rstudio/blogdown&#34;&gt;&lt;strong&gt;blogdown&lt;/strong&gt;&lt;/a&gt; package. The theme was forked from &lt;a href=&#34;https://github.com/jrutheiser/hugo-lithium-theme&#34;&gt;@jrutheiser/hugo-lithium-theme&lt;/a&gt; and modified by &lt;a href=&#34;https://github.com/yihui/hugo-lithium&#34;&gt;Yihui Xie&lt;/a&gt;.&lt;/p&gt;
+</content>
+      
     </item>
     
   </channel>
