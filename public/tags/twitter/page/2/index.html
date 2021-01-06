@@ -95,29 +95,71 @@
   <div class="container">
     
     
+    
     <article>
-      <div class="subtitle tags is-6 is-pulled-right">
+      <h2 class="subtitle is-6 date">November 17, 2019</h2>
+      <h1 class="title"><a href="/post/tf-idf-and-beer-reviews/">tf_idf and beer reviews</a></h1>
+      <div class="content">
+        We have our data now, we scraped it from the web like we showed here. How can we best start analysing it?
+Maybe best by a tf-idf analysis? I like it because it is simple, but at the same time gives valuable insights both into the structure of the data (words by category) and the content (differences between categories of texts, whatever you might decide these categories to be)
         
-        
-<a class="subtitle is-6" href="/tags/belgian-politics">#Belgian politics</a>
-
-
-
-  
-  | <a class="subtitle is-6" href="/tags/twitter">#Twitter</a>
-  
-
+        <a class="button is-link" href="/post/tf-idf-and-beer-reviews/" style="height:28px">
+          Read more
+        </a>
         
       </div>
-      <h2 class="subtitle is-6 date">May 2, 2019</h2>
-      <h1 class="title"><a href="/post/belgian-parliamentarians-twitter-accounts/">Belgian parliamentarians Twitter accounts</a></h1>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">November 13, 2019</h2>
+      <h1 class="title"><a href="/post/beer-reviews-galore/">Beer reviews galore!</a></h1>
       <div class="content">
-        Now that we can scrape the names of the parliamentarians of the 54th legislature, we can try to find their Twitter accounts too.
-Let’s start by reconstructing the list. Then we can search Twitter for their accounts handles. A bit of grunt work and no visuals in this post, but it is needed to harvest parlaimentarians’ tweets soonish.
-Starting with attaching libraries, and in particular ‘rtweet’.
-#librarieslibrary(&quot;tidyverse&quot;)library(&quot;rvest&quot;)library(&quot;glue&quot;)library(&quot;rtweet&quot;)library(&quot;purrr&quot;)# the ones seating currently, with their (current) partyurl &lt;- paste0(&quot;http://www.
+        I’ll be using some NLP tools soon, but let us first obtain texts to work with. The idea here is to construct a data frame with one row per Belgian beer and one list with all the reviews of that beer in one cell of that row. And that in order to have the data nice and tidy.
+In order to do that we will create a couple of loops.
         
-        <a class="button is-link" href="/post/belgian-parliamentarians-twitter-accounts/" style="height:28px">
+        <a class="button is-link" href="/post/beer-reviews-galore/" style="height:28px">
+          Read more
+        </a>
+        
+      </div>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">November 12, 2019</h2>
+      <h1 class="title"><a href="/post/the-belgian-beer-landscape/">The Belgian beer landscape</a></h1>
+      <div class="content">
+        More than a year ago I started scraping a beer website to test web scraping and to have fun and interesting text data to analyse. Let’s see if we can reproduce the analysis and push it a bit further in the next couple of posts: both in terms of analysis of the Belgian beer landscape as in terms of analysing the beers through the reviews of the site’s members.
+        
+        <a class="button is-link" href="/post/the-belgian-beer-landscape/" style="height:28px">
+          Read more
+        </a>
+        
+      </div>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">November 8, 2019</h2>
+      <h1 class="title"><a href="/post/analysing-belgian-politics-with-wikipedia/">Analysing Belgian Politics with Wikipedia</a></h1>
+      <div class="content">
+        Another source of data is Wikipedia. I came across this article, and decided to see what I could obtain using it on Belgian politics. Many thanks to the authors of the MZES (Mannheim Zentrum für Europäische Sozialforschung)!
+Gentlepersons, load your libraries:
+## Packagespkgs &lt;- c(&quot;devtools&quot;,&quot;ggnetwork&quot;,&quot;igraph&quot;,&quot;intergraph&quot;,&quot;tidyverse&quot;,&quot;rvest&quot;,&quot;devtools&quot;,&quot;magrittr&quot;,&quot;plotly&quot;,&quot;RColorBrewer&quot;,&quot;colorspace&quot;,&quot;lubridate&quot;,&quot;networkD3&quot;,&quot;pageviews&quot;,&quot;readr&quot;,&quot;wikipediatrend&quot;,&quot;WikipediR&quot;,&quot;WikidataR&quot;,&quot;glue&quot;)## Install uninstalled packageslapply(pkgs[!
+        
+        <a class="button is-link" href="/post/analysing-belgian-politics-with-wikipedia/" style="height:28px">
+          Read more
+        </a>
+        
+      </div>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">September 27, 2019</h2>
+      <h1 class="title"><a href="/post/r-u-bot-or-not-bot/">r u bot or not bot?</a></h1>
+      <div class="content">
+        If you have a Twitter account chances are one day you had a new follower that you did not know and that felt a bit odd. Maybe the account had few followers, a lot or no tweets, had been recently created, is not followed by anyone you’re following, or likely a combination of the above.
+It is also likely that these accounts are managed by bots using the Twitter API.
+        
+        <a class="button is-link" href="/post/r-u-bot-or-not-bot/" style="height:28px">
           Read more
         </a>
         
@@ -147,6 +189,17 @@ Starting with attaching libraries, and in particular ‘rtweet’.
       </div>
       <div class="level-right is-marginless">
         <div class="level-item">
+          
+          <a class="button" href="/tags/twitter/page/3/">
+            Older
+            <span class="icon is-small is-marginless">
+              <svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <polyline points="14 6 20 12 14 18"/>
+    
+  </svg>
+            </span>
+          </a>
           
         </div>
       </div>

@@ -95,37 +95,73 @@
   <div class="container">
     
     
+    
     <article>
-      <div class="subtitle tags is-6 is-pulled-right">
+      <h2 class="subtitle is-6 date">November 20, 2020</h2>
+      <h1 class="title"><a href="/post/predicting-my-natural-gas-consumption/">predicting my natural gas consumption</a></h1>
+      <div class="content">
+        It’s been a while since I posted on this blog. That was mainly due to the confinementin the covid-19 pandemic. And it’s a promise the last time I mention this virus.
+Let’s get away from all that and look at energy consumption and global warming instead.That will lift our spirits!
+Here I the packages I need to attach.
+library(&#39;tidyverse&#39;)## -- Attaching packages -------------------------------------------------------- tidyverse 1.3.0 --## v ggplot2 3.
         
-        
-<a class="subtitle is-6" href="/tags/aws">#AWS</a>
-
-
-
-  
-  | <a class="subtitle is-6" href="/tags/r">#R</a>
-  
-  | <a class="subtitle is-6" href="/tags/sagemaker">#Sagemaker</a>
-  
-  | <a class="subtitle is-6" href="/tags/twitter">#Twitter</a>
-  
-  | <a class="subtitle is-6" href="/tags/amazon-translate">#Amazon Translate</a>
-  
-  | <a class="subtitle is-6" href="/tags/aws-rekognition">#AWS Rekognition</a>
-  
-  | <a class="subtitle is-6" href="/tags/amazon-comprehend">#Amazon Comprehend</a>
-  
-
+        <a class="button is-link" href="/post/predicting-my-natural-gas-consumption/" style="height:28px">
+          Read more
+        </a>
         
       </div>
-      <h2 class="subtitle is-6 date">May 21, 2019</h2>
-      <h1 class="title"><a href="/post/tests-with-paws-on-aws/">tests with paws on aws</a></h1>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">March 3, 2020</h2>
+      <h1 class="title"><a href="/post/topic-modeling-facebook-ads/">Topic modeling Facebook ads</a></h1>
       <div class="content">
-        When trying to find an interface between AWS and Rekognition in a previous post, I was unsuccessful in finding a suitable R library. But today I (partially) caught up with my email backlog and was excited to find in the newsletter from rweekly, that a number of interesting R packages just came out at the beginning of the month.
-As far as I understand at the moment, there are 11 packages bundled in a kit published three days ago…
+        In the last two posts there was an analysis of Facebook ads of Belgian politicians or political parties. To temporary conclude the subject we will do some topic modeling on these ads.
+library(&quot;tidyverse&quot;)library(&quot;cld2&quot;)library(&quot;tidytext&quot;)library(&quot;topicmodels&quot;)library(&quot;qdap&quot;)library(&quot;gt&quot;)Loading the data.
+df &lt;- readRDS(&quot;./data/20200104/df.rds&quot;)# create a doc_iddf &lt;- rowid_to_column(df, &quot;doc_id&quot;)I think that one of the first things to do is to is to determine the languages the ads were written in.
         
-        <a class="button is-link" href="/post/tests-with-paws-on-aws/" style="height:28px">
+        <a class="button is-link" href="/post/topic-modeling-facebook-ads/" style="height:28px">
+          Read more
+        </a>
+        
+      </div>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">February 24, 2020</h2>
+      <h1 class="title"><a href="/post/nlp-on-facebooks-belgian-political-ads/">nlp on Facebooks Belgian political ads</a></h1>
+      <div class="content">
+        In the last post there was a fairly extensive analysis presented on what is possible to obtain from Facebook on political ads in Belgium. There was a fair amount of data to play with even if it took some energy and time to clean it and filter the ‘issues’ ads from the political ads.
+However Facebook does not present and makes available enough data to analyse what type of deep manipulation is possible using their services.
+        
+        <a class="button is-link" href="/post/nlp-on-facebooks-belgian-political-ads/" style="height:28px">
+          Read more
+        </a>
+        
+      </div>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">January 4, 2020</h2>
+      <h1 class="title"><a href="/post/political-ads-on-facebook-for-the-2019-belgian-elections/">Political ads on Facebook for the 2019 Belgian elections</a></h1>
+      <div class="content">
+        I was looking for a way to have the same level of analysis of Facebook that is possible with the Twitter API, but gave up after a short while. The API seems to me quite closed in terms of what information is made available by Facebook.
+So I was quiet interested when I come across this blog post of Mr Schmidt not on an API for Facebook generally, but for Facebook ads.
+        
+        <a class="button is-link" href="/post/political-ads-on-facebook-for-the-2019-belgian-elections/" style="height:28px">
+          Read more
+        </a>
+        
+      </div>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">December 12, 2019</h2>
+      <h1 class="title"><a href="/post/topic-modeling-beer-reviews/">Topic modeling beer reviews</a></h1>
+      <div class="content">
+        Another tool to analyse our text data with is topic modeling. This might seem similar to the tf-idf calculations but the biggest difference in topic modeling is that here we will see if we can learn something by seeing which words tend to be used in the same reviews. While the tf-idf only looks at the occurrence of the word compared to the total occurrences of all the other words.
+        
+        <a class="button is-link" href="/post/topic-modeling-beer-reviews/" style="height:28px">
           Read more
         </a>
         
@@ -144,6 +180,17 @@ As far as I understand at the moment, there are 11 packages bundled in a kit pub
       </div>
       <div class="level-right is-marginless">
         <div class="level-item">
+          
+          <a class="button" href="/tags/aws/page/2/">
+            Older
+            <span class="icon is-small is-marginless">
+              <svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <polyline points="14 6 20 12 14 18"/>
+    
+  </svg>
+            </span>
+          </a>
           
         </div>
       </div>

@@ -16,8 +16,184 @@ That will lift our spirits!
 
 Here I the packages I need to attach.
 
+
 ```{r}
-library('tidyverse')
+library("tidyverse")
+library("tsibble") 
+library("lubridate")
+library("zoo")
+library("rvest")
+library("glue")
+library("reactable") 
+library("scales")
+library("hrbrthemes")
+library("stationaRy")
 ```
 
+I've been recording the gas meter index for almost ten years now. 
+
+This is our prime data source:
+
+<center>
+![meter](/img/20201120/meter.jpg)
+
+<\center>
+
+
+The data point are from around the end of each month. So this data can be loaded from the xl file.
+
+
+
+```{r, fig.align='center'}
+gas <- readxl::read_excel("./data/20201120/gas.xlsx")
+head(gas) %>% 
+  reactable(columns = list(
+    date = colDef(format = colFormat(date = TRUE)),
+    gas_meter = colDef(format = colFormat(separators = TRUE, locales = "en-EN"))
+  ), compact = TRUE, width = 250)
+```
+Next we will build a time series with an entry for every day. By firstly creating an index, using the tsibble (package)[https://cran.r-project.org/web/packages/tsibble/index.html].
+
+```{r}
+
+n_days <- as.integer(max(gas$date) - min(gas$date))
+days <- ymd(min(gas$date)) + days(0:n_days)
+ts_gas <- tsibble(days = days, index = days) %>% 
+  rename("date" = "days")
+ts_gas %>% head(5)
+
+```
+
+Next join our meter data to the index. It logically results in mostly missing values per date.
+
+
+```{r}
+ts_gas <-ts_gas %>% 
+  left_join(gas %>% 
+              mutate(date = ymd(date)))
+ts_gas %>% head(5)
+```
+
+But we can use the zoo package to fill in the NAs with a linear interpolation between values like so:
+
+```{r}
+ts_gas$gas_meter <-  na.approx(ts_gas$gas_meter)
+
+head(ts_gas)
+
+```
+
+This gives a smooth time-series that can be plotted like this:
+
+```{r}
+ggplot(data = ts_gas, aes(x=  date, y = gas_meter))+
+  geom_line()+
+  theme_minimal()+
+  labs(x="year", y="gas meter")+
+  scale_y_continuous(labels = comma)
+```
+But this is just the evolution of the gas meter. The gas consumption is more interesting. The dplyr, lead function will help us here:
+
+```{r}
+ts_gas <- ts_gas %>% 
+   mutate(cons = lead(x = gas_meter, 1, default = NA) - gas_meter )
+
+```
+
+An plotting it we get:
+
+```{r warning=False}
+ggplot(data = ts_gas, aes(x=  date, y = cons))+
+  geom_line()+
+  theme_minimal()
+```
+
+We can see that the gas consumption forms little plateaus per month, that is of course because we did a linear extrapolation. The chart gives us a clear seasonal pattern. And maybe a downward trend, but we will look at this a bit further down. 
+
+Plotting the average consumption per months over the years:
+
+```{r, warning=False, message=False}
+ts_gas_month <- ts_gas %>% 
+  as.data.frame() %>% 
+  filter(!is.na(date)) %>% 
+  mutate(month = as.factor(month(date))) %>% 
+  mutate(year = as.factor(year(date))) %>% 
+  filter(year!=2010 & year!=2021) %>% 
+  group_by(year, month) %>% 
+  summarise(cons = mean(cons))
+
+ggplot(data = ts_gas_month, aes(x=  month, y = cons, group = year))+
+  geom_line(aes(color = year))+
+  theme_minimal()
+
+```
+
+No surprise since we need to heat during the winter months. I used to take holidays in July or August so this is where the minima are situated, since no gas is then used for a couple of weeks. 
+
+The same data can be used to plot a heat map:
+
+```{r}
+ggplot(data = ts_gas_month , aes(year, month, fill= cons)) + 
+  geom_tile()+
+  scale_fill_gradient(low="white", high="red")
+
+```
+
+The package stationRy enables getting data from over 29 thousand weather stations including 52 Belgian weatherstations. Let's get data from the station in Uccle.
+
+
+```{r}
+#install.packages("stationaRy")
+
+met_data <-get_station_metadata()
+
+belgian_stations <- met_data %>% 
+  filter(country == "BE")
+
+be_met_data <-
+  get_met_data(
+    station_id = "064510-99999",
+    years = 2010:2020
+  )
+
+```
+
+That gives us 150k observations for the time period. One per hour 
+
+```{r}
+head(be_met_data)
+```
+
+
+And plotting the temperature data gives us something like this:
+
+```{r}
+ggplot(data = be_met_data, aes(x=  time, y = temp))+
+  geom_line()+
+  theme_minimal()
+```
+
+But it might be lighter to work with daily avarages.
+
+```{r, warning==False}
+be_met_data_day <- be_met_data %>% 
+  mutate(date = ymd(str_sub(time, 1, 10))) %>% 
+  group_by(date) %>% 
+  summarise(temp = mean(temp)) %>% 
+  filter(!is.na(temp)) %>% 
+  mutate(month_ = as.factor(month(date))) %>% 
+  mutate(year_ = as.factor(year(date))) %>% 
+  filter(year_ != 2010 & year_ != 2021)
+  
+
+head(be_met_data_day)
+
+```
+And plotting the daily avarage gives us this plot.
+
+```{r}
+ggplot(data = be_met_data_day, aes(x=  date, y = temp))+
+  geom_line()+
+  theme_minimal()
+```
 

@@ -95,30 +95,17 @@
   <div class="container">
     
     
+    
     <article>
-      <div class="subtitle tags is-6 is-pulled-right">
-        
-        
-<a class="subtitle is-6" href="/tags/geocoding">#Geocoding</a>
-
-
-
-  
-  | <a class="subtitle is-6" href="/tags/music">#music</a>
-  
-  | <a class="subtitle is-6" href="/tags/gganimate">#gganimate</a>
-  
-  | <a class="subtitle is-6" href="/tags/metallica">#Metallica</a>
-  
-
-        
-      </div>
-      <h2 class="subtitle is-6 date">May 31, 2019</h2>
-      <h1 class="title"><a href="/post/soon-in-a-sports-stadium-near-you/">soon, in a sports stadium near you!</a></h1>
+      <h2 class="subtitle is-6 date">November 20, 2020</h2>
+      <h1 class="title"><a href="/post/predicting-my-natural-gas-consumption/">predicting my natural gas consumption</a></h1>
       <div class="content">
-        When I showed a colleague of mine the last post, he suggested to construct an animated map with the geo location of the different Metallica concerts. By the way it turns out that the guy also sometimes enjoys being a metalhead. We both were right in front of the stage at Dessel on the 6th June 2015 for the last concert of AC/DC in Belgium, that is more than three years before we first met.
+        It’s been a while since I posted on this blog. That was mainly due to the confinementin the covid-19 pandemic. And it’s a promise the last time I mention this virus.
+Let’s get away from all that and look at energy consumption and global warming instead.That will lift our spirits!
+Here I the packages I need to attach.
+library(&#39;tidyverse&#39;)## -- Attaching packages -------------------------------------------------------- tidyverse 1.3.0 --## v ggplot2 3.
         
-        <a class="button is-link" href="/post/soon-in-a-sports-stadium-near-you/" style="height:28px">
+        <a class="button is-link" href="/post/predicting-my-natural-gas-consumption/" style="height:28px">
           Read more
         </a>
         
@@ -126,34 +113,14 @@
     </article>
     
     <article>
-      <div class="subtitle tags is-6 is-pulled-right">
-        
-        
-<a class="subtitle is-6" href="/tags/geocoding">#Geocoding</a>
-
-
-
-  
-  | <a class="subtitle is-6" href="/tags/music">#music</a>
-  
-  | <a class="subtitle is-6" href="/tags/scraping">#scraping</a>
-  
-  | <a class="subtitle is-6" href="/tags/rbokeh">#rbokeh</a>
-  
-  | <a class="subtitle is-6" href="/tags/opencage">#opencage</a>
-  
-  | <a class="subtitle is-6" href="/tags/metallica">#Metallica</a>
-  
-
-        
-      </div>
-      <h2 class="subtitle is-6 date">May 24, 2019</h2>
-      <h1 class="title"><a href="/post/metallica-rules-the-world/">Metallica rules the world</a></h1>
+      <h2 class="subtitle is-6 date">March 3, 2020</h2>
+      <h1 class="title"><a href="/post/topic-modeling-facebook-ads/">Topic modeling Facebook ads</a></h1>
       <div class="content">
-        23 days till Metallica hits the Koning Boudewijnstadion in Belgium. High time to get loaded with some Metallica data. There is an interesting site called setlist that publishes setlists of loads of bands and indeed also of Metallica. It also lists the name of the tour, the venues and the dates. Pretty cool stuff that can be scraped and analysed.
-And the site even says it cares about our privacy, that is just perfect!
+        In the last two posts there was an analysis of Facebook ads of Belgian politicians or political parties. To temporary conclude the subject we will do some topic modeling on these ads.
+library(&quot;tidyverse&quot;)library(&quot;cld2&quot;)library(&quot;tidytext&quot;)library(&quot;topicmodels&quot;)library(&quot;qdap&quot;)library(&quot;gt&quot;)Loading the data.
+df &lt;- readRDS(&quot;./data/20200104/df.rds&quot;)# create a doc_iddf &lt;- rowid_to_column(df, &quot;doc_id&quot;)I think that one of the first things to do is to is to determine the languages the ads were written in.
         
-        <a class="button is-link" href="/post/metallica-rules-the-world/" style="height:28px">
+        <a class="button is-link" href="/post/topic-modeling-facebook-ads/" style="height:28px">
           Read more
         </a>
         
@@ -161,30 +128,40 @@ And the site even says it cares about our privacy, that is just perfect!
     </article>
     
     <article>
-      <div class="subtitle tags is-6 is-pulled-right">
+      <h2 class="subtitle is-6 date">February 24, 2020</h2>
+      <h1 class="title"><a href="/post/nlp-on-facebooks-belgian-political-ads/">nlp on Facebooks Belgian political ads</a></h1>
+      <div class="content">
+        In the last post there was a fairly extensive analysis presented on what is possible to obtain from Facebook on political ads in Belgium. There was a fair amount of data to play with even if it took some energy and time to clean it and filter the ‘issues’ ads from the political ads.
+However Facebook does not present and makes available enough data to analyse what type of deep manipulation is possible using their services.
         
-        
-<a class="subtitle is-6" href="/tags/music">#music</a>
-
-
-
-  
-  | <a class="subtitle is-6" href="/tags/spotify">#Spotify</a>
-  
-  | <a class="subtitle is-6" href="/tags/clustering">#clustering</a>
-  
-
+        <a class="button is-link" href="/post/nlp-on-facebooks-belgian-political-ads/" style="height:28px">
+          Read more
+        </a>
         
       </div>
-      <h2 class="subtitle is-6 date">May 17, 2019</h2>
-      <h1 class="title"><a href="/post/rammstein-by-rammstein/">RAMMSTEIN by Rammstein</a></h1>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">January 4, 2020</h2>
+      <h1 class="title"><a href="/post/political-ads-on-facebook-for-the-2019-belgian-elections/">Political ads on Facebook for the 2019 Belgian elections</a></h1>
       <div class="content">
-        Today Rammstein released ‘RAMMSTEIN’, first studio album since 10 years.
-Jetzt geht es mir gut, ja!I love it. Gave me a lot of pleasure today.
-Time for a small analysis. I got the code from Peer. And from plzbeemyfriend who is a cool dude, and made some insightful graphs based on Spotify data.
-library(spotifyr) # install.packages(&quot;spotifyr&quot;)library(tidyverse)library(factoextra)library(viridisLite)library(ggiraphExtra)Spotify also has an API and some interesting information can be downloaded from it.
+        I was looking for a way to have the same level of analysis of Facebook that is possible with the Twitter API, but gave up after a short while. The API seems to me quite closed in terms of what information is made available by Facebook.
+So I was quiet interested when I come across this blog post of Mr Schmidt not on an API for Facebook generally, but for Facebook ads.
         
-        <a class="button is-link" href="/post/rammstein-by-rammstein/" style="height:28px">
+        <a class="button is-link" href="/post/political-ads-on-facebook-for-the-2019-belgian-elections/" style="height:28px">
+          Read more
+        </a>
+        
+      </div>
+    </article>
+    
+    <article>
+      <h2 class="subtitle is-6 date">December 12, 2019</h2>
+      <h1 class="title"><a href="/post/topic-modeling-beer-reviews/">Topic modeling beer reviews</a></h1>
+      <div class="content">
+        Another tool to analyse our text data with is topic modeling. This might seem similar to the tf-idf calculations but the biggest difference in topic modeling is that here we will see if we can learn something by seeing which words tend to be used in the same reviews. While the tf-idf only looks at the occurrence of the word compared to the total occurrences of all the other words.
+        
+        <a class="button is-link" href="/post/topic-modeling-beer-reviews/" style="height:28px">
           Read more
         </a>
         
@@ -203,6 +180,17 @@ library(spotifyr) # install.packages(&quot;spotifyr&quot;)library(tidyverse)li
       </div>
       <div class="level-right is-marginless">
         <div class="level-item">
+          
+          <a class="button" href="/tags/music/page/2/">
+            Older
+            <span class="icon is-small is-marginless">
+              <svg viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+    
+    <polyline points="14 6 20 12 14 18"/>
+    
+  </svg>
+            </span>
+          </a>
           
         </div>
       </div>
