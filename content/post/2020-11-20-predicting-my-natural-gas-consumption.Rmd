@@ -28,6 +28,7 @@ library("reactable")
 library("scales")
 library("hrbrthemes")
 library("stationaRy")
+library("ggmap")
 ```
 
 I've been recording the gas meter index for almost ten years now. 
@@ -148,15 +149,47 @@ The package stationRy enables getting data from over 29 thousand weather station
 met_data <-get_station_metadata()
 
 belgian_stations <- met_data %>% 
-  filter(country == "BE")
+  filter(country == "BE") %>% 
+  filter(lon > 0)
+```
+
+
+```{r}
+bbox <- make_bbox(belgian_stations$lon, belgian_stations$lat, f= 0.03)
 
 be_met_data <-
   get_met_data(
     station_id = "064510-99999",
     years = 2010:2020
   )
+belgium <- get_map(bbox, maptype = "toner", 
+                   color = "bw", source = "google")
+ggmap(belgium)+ 
+  geom_point(data = belgian_stations, aes(x = lon, y = lat),
+             alpha = 0.4, color = "blue", size =3)
+```
+```{r}
+  
+bbox[1] <- 4.2
+bbox[2] <- 50.7
+bbox[3] <- 4.6
+bbox[4] <- 51
+brussels <- get_map(bbox, maptype = "toner", 
+                   color = "bw", source = "google")
+
+ggmap(brussels)+ 
+  geom_point(data = belgian_stations, aes(x = lon, y = lat),
+             alpha = 0.4, color = "blue", size =3)
+
 
 ```
+
+```{r}
+
+
+
+```
+
 
 That gives us 150k observations for the time period. One per hour 
 
@@ -195,5 +228,20 @@ And plotting the daily avarage gives us this plot.
 ggplot(data = be_met_data_day, aes(x=  date, y = temp))+
   geom_line()+
   theme_minimal()
+```
+
+And as with the gas consumption data we can plot the mean temperature per month per year.
+
+```{r}
+
+be_met_month <- be_met_data_day %>% 
+  group_by(year_, month_) %>% 
+  summarise(temp = mean(temp))
+
+ggplot(data = be_met_month, aes(x=  month_, y = temp, group = year_))+
+  geom_line(aes(color = year_))+
+  theme_minimal()
+
+
 ```
 
