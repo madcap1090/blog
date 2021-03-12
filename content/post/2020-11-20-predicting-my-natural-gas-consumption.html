@@ -39,7 +39,7 @@ library(&quot;prophet&quot;)</code></pre>
 <p>This is our prime data source:</p>
 <div class="figure">
 <img src="/img/20201120/meter.jpg" alt="" />
-<p class="caption">meter</p>
+<p class="caption">the gas meter</p>
 </div>
 <p>The data point are from around the end of each month. So this data can be loaded from the xl file.</p>
 <pre class="r"><code>gas &lt;- readxl::read_excel(&quot;./data/20201120/gas.xlsx&quot;)
@@ -144,22 +144,8 @@ be_met_data &lt;-
     years = 2010:2020
   )
 belgium &lt;- get_map(bbox, maptype = &quot;toner&quot;, 
-                   color = &quot;bw&quot;, source = &quot;google&quot;)</code></pre>
-<pre><code>## maptype = &quot;toner&quot; is only available with source = &quot;stamen&quot;.</code></pre>
-<pre><code>## resetting to source = &quot;stamen&quot;...</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/129/85.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/130/85.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/131/85.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/132/85.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/129/86.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/130/86.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/131/86.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/132/86.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/129/87.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/130/87.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/131/87.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/8/132/87.png</code></pre>
-<pre class="r"><code>ggmap(belgium)+ 
+                   color = &quot;bw&quot;, source = &quot;google&quot;)
+ggmap(belgium)+ 
   geom_point(data = belgian_stations, aes(x = lon, y = lat),
              alpha = 0.4, color = &quot;blue&quot;, size =3)</code></pre>
 <p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
@@ -168,29 +154,11 @@ bbox[2] &lt;- 50.7
 bbox[3] &lt;- 4.6
 bbox[4] &lt;- 51
 brussels &lt;- get_map(bbox, maptype = &quot;toner&quot;, 
-                   color = &quot;bw&quot;, source = &quot;google&quot;)</code></pre>
-<pre><code>## maptype = &quot;toner&quot; is only available with source = &quot;stamen&quot;.</code></pre>
-<pre><code>## resetting to source = &quot;stamen&quot;...</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1047/685.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1048/685.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1049/685.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1050/685.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1047/686.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1048/686.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1049/686.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1050/686.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1047/687.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1048/687.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1049/687.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1050/687.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1047/688.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1048/688.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1049/688.png</code></pre>
-<pre><code>## Source : http://tile.stamen.com/terrain/11/1050/688.png</code></pre>
-<pre class="r"><code>ggmap(brussels)+ 
+                   color = &quot;bw&quot;, source = &quot;google&quot;)
+
+ggmap(brussels)+ 
   geom_point(data = belgian_stations, aes(x = lon, y = lat),
              alpha = 0.4, color = &quot;blue&quot;, size =3)</code></pre>
-<pre><code>## Warning: Removed 46 rows containing missing values (geom_point).</code></pre>
 <p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <p>That gives us 150k observations for the time period. One per hour</p>
 <pre class="r"><code>head(be_met_data)</code></pre>

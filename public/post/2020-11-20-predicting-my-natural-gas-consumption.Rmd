@@ -37,7 +37,7 @@ I've been recording the gas meter index for almost ten years now.
 This is our prime data source:
 
 
-![meter](/img/20201120/meter.jpg)
+![the gas meter](/img/20201120/meter.jpg)
 
 
 
@@ -144,7 +144,7 @@ ggplot(data = ts_gas_month , aes(year, month, fill= cons)) +
 The package stationRy enables getting data from over 29 thousand weather stations including 52 Belgian weather stations. Let's get data from the station in Uccle.
 
 
-```{r}
+```{r, message=FALSE}
 #install.packages("stationaRy")
 
 met_data <-get_station_metadata()
@@ -155,7 +155,7 @@ belgian_stations <- met_data %>%
 ```
 
 
-```{r, message='hide'}
+```{r, message=FALSE}
 bbox <- make_bbox(belgian_stations$lon, belgian_stations$lat, f= 0.03)
 
 be_met_data <-
@@ -170,7 +170,7 @@ ggmap(belgium)+
              alpha = 0.4, color = "blue", size =3)
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
   
 bbox[1] <- 4.2
 bbox[2] <- 50.7
