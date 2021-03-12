@@ -17,7 +17,7 @@ That will lift our spirits!
 Here I the packages I need to attach.
 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library("tidyverse")
 library("tsibble") 
 library("lubridate")
@@ -29,23 +29,23 @@ library("scales")
 library("hrbrthemes")
 library("stationaRy")
 library("ggmap")
+library("prophet")
 ```
 
 I've been recording the gas meter index for almost ten years now. 
 
 This is our prime data source:
 
-<center>
-![meter](/img/20201120/meter.jpg)
 
-<\center>
+![the gas meter](/img/20201120/meter.jpg)
+
 
 
 The data point are from around the end of each month. So this data can be loaded from the xl file.
 
 
 
-```{r, fig.align='center'}
+```{r}
 gas <- readxl::read_excel("./data/20201120/gas.xlsx")
 head(gas) %>% 
   reactable(columns = list(
@@ -53,6 +53,7 @@ head(gas) %>%
     gas_meter = colDef(format = colFormat(separators = TRUE, locales = "en-EN"))
   ), compact = TRUE, width = 250)
 ```
+
 Next we will build a time series with an entry for every day. By firstly creating an index, using the tsibble (package)[https://cran.r-project.org/web/packages/tsibble/index.html].
 
 ```{r}
@@ -103,7 +104,7 @@ ts_gas <- ts_gas %>%
 
 An plotting it we get:
 
-```{r warning=False}
+```{r}
 ggplot(data = ts_gas, aes(x=  date, y = cons))+
   geom_line()+
   theme_minimal()
@@ -113,7 +114,7 @@ We can see that the gas consumption forms little plateaus per month, that is of 
 
 Plotting the average consumption per months over the years:
 
-```{r, warning=False, message=False}
+```{r, warning='hide', message='hide'}
 ts_gas_month <- ts_gas %>% 
   as.data.frame() %>% 
   filter(!is.na(date)) %>% 
@@ -140,10 +141,10 @@ ggplot(data = ts_gas_month , aes(year, month, fill= cons)) +
 
 ```
 
-The package stationRy enables getting data from over 29 thousand weather stations including 52 Belgian weatherstations. Let's get data from the station in Uccle.
+The package stationRy enables getting data from over 29 thousand weather stations including 52 Belgian weather stations. Let's get data from the station in Uccle.
 
 
-```{r}
+```{r, message=FALSE}
 #install.packages("stationaRy")
 
 met_data <-get_station_metadata()
@@ -154,7 +155,7 @@ belgian_stations <- met_data %>%
 ```
 
 
-```{r}
+```{r, message=FALSE}
 bbox <- make_bbox(belgian_stations$lon, belgian_stations$lat, f= 0.03)
 
 be_met_data <-
@@ -168,6 +169,7 @@ ggmap(belgium)+
   geom_point(data = belgian_stations, aes(x = lon, y = lat),
              alpha = 0.4, color = "blue", size =3)
 ```
+
 ```{r}
   
 bbox[1] <- 4.2
@@ -206,7 +208,7 @@ ggplot(data = be_met_data, aes(x=  time, y = temp))+
   theme_minimal()
 ```
 
-But it might be lighter to work with daily avarages.
+But it might be lighter to work with daily averages.
 
 ```{r, warning==False}
 be_met_data_day <- be_met_data %>% 
@@ -222,7 +224,7 @@ be_met_data_day <- be_met_data %>%
 head(be_met_data_day)
 
 ```
-And plotting the daily avarage gives us this plot.
+And plotting the daily average gives us this plot.
 
 ```{r}
 ggplot(data = be_met_data_day, aes(x=  date, y = temp))+
@@ -245,3 +247,77 @@ ggplot(data = be_met_month, aes(x=  month_, y = temp, group = year_))+
 
 ```
 
+We can make the negative correlation appear more clearly when we average per month and plot the temperature and the gas consumption.
+
+
+
+```{r}
+#scale_y_continuous("Precipitation", sec.axis = sec_axis(~ (. - a)/b, name = "Temperature"))
+
+be_met_year <- be_met_data_day %>% 
+  group_by(month_) %>% 
+  summarise(temp = mean(temp))
+
+ts_gas_day <- ts_gas %>% 
+  mutate(year = year(date)) %>% 
+  filter(year != 2010 & year != 2021)
+
+ts_gas_year <- ts_gas_day %>% 
+  as.tibble() %>% 
+  mutate(month_ = as.factor(month(date))) %>% 
+  group_by(month_) %>%
+  summarise(cons = mean(cons))
+
+data <- be_met_year %>% 
+  left_join(ts_gas_year)
+
+data_ <- data %>% 
+  mutate(cons = (1/cons)*32)
+
+ggplot(data = data, aes(x=month_, y=temp, group = 1))+
+  geom_line(aes(color ="temperature"))+
+  geom_line(aes(y = cons, color = "consumption"))+
+  scale_y_continuous("temperature - gas")+
+  theme_minimal()+
+  theme(legend.title = element_blank())+
+  scale_fill_discrete(labels = c("A", "B"))
+
+
+
+```
+
+So indeed when the average temperature rises, the consumption figures drop.  But can we measure this correlation ? Using the tseries package we can calculate the correlation between two time series, but also see how correlated they are over time by introducing a lag. In our case a lag in days.
+
+```{r}
+ccf(be_met_data_day$temp, ts_gas_day$cons, lag = 15, plot = FALSE)
+```
+
+As you can see the it is between -5 and -7 days that we negative correlation is the highest. I does sometimes feel like there is some inertia in the system, the temperatures are too high for a couple of days when the temperature rises and it takes some time when the weather gets colder,  to have nice temperatures inside the house (or it is just because we are only working with average gas consumption date per month). 
+
+To conclude let's take Prophet (Facebook's time series package) for a spin. 
+
+```{r}
+
+ts <- ts_gas %>% 
+  select(date, cons) %>% 
+  rename("ds" = "date",
+         "y" = "cons") %>% 
+  as.data.frame()
+
+m <- prophet(ts)
+future <- make_future_dataframe(m, periods = (365*2))
+forecast <- predict(m, future)
+
+plot(m, forecast)
+
+```
+
+
+
+```{r}
+prophet_plot_components(m, forecast)
+```
+
+Decomposes in trends; monthly, daily and yearly trend. Before 2020 the trend was slightly downwards, due to global warming. Now the trend is upward, due to the confinement. So we do not even enjoy having lower energy bills caused by the climatic crisis.
+
+See you soon.

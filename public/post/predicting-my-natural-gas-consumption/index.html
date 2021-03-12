@@ -10,7 +10,7 @@
 <meta property='og:description' content='It’s been a while since I posted on this blog. That was mainly due to the confinementin the covid-19 pandemic. And it’s a promise the last time I mention this virus.
 Let’s get away from all that and look at energy consumption and global warming instead.That will lift our spirits!
 Here I the packages I need to attach.
-library(&#39;tidyverse&#39;)## -- Attaching packages -------------------------------------------------------- tidyverse 1.3.0 --## v ggplot2 3.'>
+library(&quot;tidyverse&quot;)library(&quot;tsibble&quot;) library(&quot;lubridate&quot;)library(&quot;zoo&quot;)library(&quot;rvest&quot;)library(&quot;glue&quot;)library(&quot;reactable&quot;) library(&quot;scales&quot;)library(&quot;hrbrthemes&quot;)library(&quot;stationaRy&quot;)library(&quot;ggmap&quot;)library(&quot;prophet&quot;)I’ve been recording the gas meter index for almost ten years now.'>
 <meta property='og:url' content='/post/predicting-my-natural-gas-consumption/'>
 <meta property='og:site_name' content='bad to the code'>
 <meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/5f460ebf37e30791f47bb5be3de73e3a?s=256'><meta property='article:author' content='https://facebook.com/OClassicoOficial/videos/391802167961744/'><meta property='article:section' content='Post'><meta property='article:tag' content='time-series'><meta property='article:published_time' content='2020-11-20T00:00:00Z'/><meta property='article:modified_time' content='2020-11-20T00:00:00Z'/><meta name='twitter:card' content='summary'><meta name='twitter:site' content='@WilliamBourgeoi'><meta name='twitter:creator' content='@WilliamBourgeoi'>
@@ -112,6 +112,12 @@ library(&#39;tidyverse&#39;)## -- Attaching packages --------------------------
       
 <link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
 <script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
+<script src="/rmarkdown-libs/core-js/shim.min.js"></script>
+<script src="/rmarkdown-libs/react/react.min.js"></script>
+<script src="/rmarkdown-libs/react/react-dom.min.js"></script>
+<script src="/rmarkdown-libs/reactwidget/react-tools.js"></script>
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="/rmarkdown-libs/reactable-binding/reactable.js"></script>
 
 
 <p>It’s been a while since I posted on this blog. That was mainly due to the confinement
@@ -119,16 +125,292 @@ in the covid-19 pandemic. And it’s a promise the last time I mention this viru
 <p>Let’s get away from all that and look at energy consumption and global warming instead.
 That will lift our spirits!</p>
 <p>Here I the packages I need to attach.</p>
-<pre class="r"><code>library(&#39;tidyverse&#39;)</code></pre>
-<pre><code>## -- Attaching packages -------------------------------------------------------- tidyverse 1.3.0 --</code></pre>
-<pre><code>## v ggplot2 3.3.1     v purrr   0.3.4
-## v tibble  3.0.1     v dplyr   1.0.0
-## v tidyr   1.1.0     v stringr 1.4.0
-## v readr   1.3.1     v forcats 0.5.0</code></pre>
-<pre><code>## -- Conflicts ----------------------------------------------------------- tidyverse_conflicts() --
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<p>Test één twee</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)
+library(&quot;tsibble&quot;) 
+library(&quot;lubridate&quot;)
+library(&quot;zoo&quot;)
+library(&quot;rvest&quot;)
+library(&quot;glue&quot;)
+library(&quot;reactable&quot;) 
+library(&quot;scales&quot;)
+library(&quot;hrbrthemes&quot;)
+library(&quot;stationaRy&quot;)
+library(&quot;ggmap&quot;)
+library(&quot;prophet&quot;)</code></pre>
+<p>I’ve been recording the gas meter index for almost ten years now.</p>
+<p>This is our prime data source:</p>
+<div class="figure">
+<img src="/img/20201120/meter.jpg" alt="" />
+<p class="caption">meter</p>
+</div>
+<p>The data point are from around the end of each month. So this data can be loaded from the xl file.</p>
+<pre class="r"><code>gas &lt;- readxl::read_excel(&quot;./data/20201120/gas.xlsx&quot;)
+head(gas) %&gt;% 
+  reactable(columns = list(
+    date = colDef(format = colFormat(date = TRUE)),
+    gas_meter = colDef(format = colFormat(separators = TRUE, locales = &quot;en-EN&quot;))
+  ), compact = TRUE, width = 250)</code></pre>
+<div id="htmlwidget-1" class="reactable html-widget" style="width:250px;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"date":["2010-11-18T00:00:00","2011-02-02T00:00:00","2011-03-02T00:00:00","2011-04-03T00:00:00","2011-05-03T00:00:00","2011-05-30T00:00:00"],"gas_meter":[44354,45730,46085,46343,46402,46445]},"columns":[{"accessor":"date","name":"date","type":"Date","format":{"cell":{"date":true},"aggregated":{"date":true}}},{"accessor":"gas_meter","name":"gas_meter","type":"numeric","format":{"cell":{"separators":true,"locales":"en-EN"},"aggregated":{"separators":true,"locales":"en-EN"}}}],"defaultPageSize":10,"paginationType":"numbers","showPageInfo":true,"minRows":1,"compact":true,"width":"250px","dataKey":"03ecfd09aac4ca23aaf3f9ba39010396","key":"03ecfd09aac4ca23aaf3f9ba39010396"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<p>Next we will build a time series with an entry for every day. By firstly creating an index, using the tsibble (package)[<a href="https://cran.r-project.org/web/packages/tsibble/index.html" class="uri">https://cran.r-project.org/web/packages/tsibble/index.html</a>].</p>
+<pre class="r"><code>n_days &lt;- as.integer(max(gas$date) - min(gas$date))
+days &lt;- ymd(min(gas$date)) + days(0:n_days)
+ts_gas &lt;- tsibble(days = days, index = days) %&gt;% 
+  rename(&quot;date&quot; = &quot;days&quot;)
+ts_gas %&gt;% head(5)</code></pre>
+<pre><code>## # A tsibble: 5 x 1 [1D]
+##   date      
+##   &lt;date&gt;    
+## 1 2010-11-18
+## 2 2010-11-19
+## 3 2010-11-20
+## 4 2010-11-21
+## 5 2010-11-22</code></pre>
+<p>Next join our meter data to the index. It logically results in mostly missing values per date.</p>
+<pre class="r"><code>ts_gas &lt;-ts_gas %&gt;% 
+  left_join(gas %&gt;% 
+              mutate(date = ymd(date)))</code></pre>
+<pre><code>## Joining, by = &quot;date&quot;</code></pre>
+<pre class="r"><code>ts_gas %&gt;% head(5)</code></pre>
+<pre><code>## # A tsibble: 5 x 2 [1D]
+##   date       gas_meter
+##   &lt;date&gt;         &lt;dbl&gt;
+## 1 2010-11-18     44354
+## 2 2010-11-19        NA
+## 3 2010-11-20        NA
+## 4 2010-11-21        NA
+## 5 2010-11-22        NA</code></pre>
+<p>But we can use the zoo package to fill in the NAs with a linear interpolation between values like so:</p>
+<pre class="r"><code>ts_gas$gas_meter &lt;-  na.approx(ts_gas$gas_meter)
+
+head(ts_gas)</code></pre>
+<pre><code>## # A tsibble: 6 x 2 [1D]
+##   date       gas_meter
+##   &lt;date&gt;         &lt;dbl&gt;
+## 1 2010-11-18    44354 
+## 2 2010-11-19    44372.
+## 3 2010-11-20    44390.
+## 4 2010-11-21    44408.
+## 5 2010-11-22    44426.
+## 6 2010-11-23    44445.</code></pre>
+<p>This gives a smooth time-series that can be plotted like this:</p>
+<pre class="r"><code>ggplot(data = ts_gas, aes(x=  date, y = gas_meter))+
+  geom_line()+
+  theme_minimal()+
+  labs(x=&quot;year&quot;, y=&quot;gas meter&quot;)+
+  scale_y_continuous(labels = comma)</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-6-1.png" width="672" />
+But this is just the evolution of the gas meter. The gas consumption is more interesting. The dplyr, lead function will help us here:</p>
+<pre class="r"><code>ts_gas &lt;- ts_gas %&gt;% 
+   mutate(cons = lead(x = gas_meter, 1, default = NA) - gas_meter )</code></pre>
+<p>An plotting it we get:</p>
+<pre class="r"><code>ggplot(data = ts_gas, aes(x=  date, y = cons))+
+  geom_line()+
+  theme_minimal()</code></pre>
+<pre><code>## Warning: Removed 1 row(s) containing missing values (geom_path).</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>We can see that the gas consumption forms little plateaus per month, that is of course because we did a linear extrapolation. The chart gives us a clear seasonal pattern. And maybe a downward trend, but we will look at this a bit further down.</p>
+<p>Plotting the average consumption per months over the years:</p>
+<pre class="r"><code>ts_gas_month &lt;- ts_gas %&gt;% 
+  as.data.frame() %&gt;% 
+  filter(!is.na(date)) %&gt;% 
+  mutate(month = as.factor(month(date))) %&gt;% 
+  mutate(year = as.factor(year(date))) %&gt;% 
+  filter(year!=2010 &amp; year!=2021) %&gt;% 
+  group_by(year, month) %&gt;% 
+  summarise(cons = mean(cons))</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;year&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>ggplot(data = ts_gas_month, aes(x=  month, y = cons, group = year))+
+  geom_line(aes(color = year))+
+  theme_minimal()</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>No surprise since we need to heat during the winter months. I used to take holidays in July or August so this is where the minima are situated, since no gas is then used for a couple of weeks.</p>
+<p>The same data can be used to plot a heat map:</p>
+<pre class="r"><code>ggplot(data = ts_gas_month , aes(year, month, fill= cons)) + 
+  geom_tile()+
+  scale_fill_gradient(low=&quot;white&quot;, high=&quot;red&quot;)</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>The package stationRy enables getting data from over 29 thousand weather stations including 52 Belgian weather stations. Let’s get data from the station in Uccle.</p>
+<pre class="r"><code>#install.packages(&quot;stationaRy&quot;)
+
+met_data &lt;-get_station_metadata()
+
+belgian_stations &lt;- met_data %&gt;% 
+  filter(country == &quot;BE&quot;) %&gt;% 
+  filter(lon &gt; 0)</code></pre>
+<pre class="r"><code>bbox &lt;- make_bbox(belgian_stations$lon, belgian_stations$lat, f= 0.03)
+
+be_met_data &lt;-
+  get_met_data(
+    station_id = &quot;064510-99999&quot;,
+    years = 2010:2020
+  )
+belgium &lt;- get_map(bbox, maptype = &quot;toner&quot;, 
+                   color = &quot;bw&quot;, source = &quot;google&quot;)</code></pre>
+<pre><code>## maptype = &quot;toner&quot; is only available with source = &quot;stamen&quot;.</code></pre>
+<pre><code>## resetting to source = &quot;stamen&quot;...</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/129/85.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/130/85.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/131/85.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/132/85.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/129/86.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/130/86.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/131/86.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/132/86.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/129/87.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/130/87.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/131/87.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/8/132/87.png</code></pre>
+<pre class="r"><code>ggmap(belgium)+ 
+  geom_point(data = belgian_stations, aes(x = lon, y = lat),
+             alpha = 0.4, color = &quot;blue&quot;, size =3)</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<pre class="r"><code>bbox[1] &lt;- 4.2
+bbox[2] &lt;- 50.7
+bbox[3] &lt;- 4.6
+bbox[4] &lt;- 51
+brussels &lt;- get_map(bbox, maptype = &quot;toner&quot;, 
+                   color = &quot;bw&quot;, source = &quot;google&quot;)</code></pre>
+<pre><code>## maptype = &quot;toner&quot; is only available with source = &quot;stamen&quot;.</code></pre>
+<pre><code>## resetting to source = &quot;stamen&quot;...</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1047/685.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1048/685.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1049/685.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1050/685.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1047/686.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1048/686.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1049/686.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1050/686.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1047/687.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1048/687.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1049/687.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1050/687.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1047/688.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1048/688.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1049/688.png</code></pre>
+<pre><code>## Source : http://tile.stamen.com/terrain/11/1050/688.png</code></pre>
+<pre class="r"><code>ggmap(brussels)+ 
+  geom_point(data = belgian_stations, aes(x = lon, y = lat),
+             alpha = 0.4, color = &quot;blue&quot;, size =3)</code></pre>
+<pre><code>## Warning: Removed 46 rows containing missing values (geom_point).</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>That gives us 150k observations for the time period. One per hour</p>
+<pre class="r"><code>head(be_met_data)</code></pre>
+<pre><code>## # A tibble: 6 x 10
+##   id    time                 temp    wd    ws atmos_pres dew_point    rh
+##   &lt;chr&gt; &lt;dttm&gt;              &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;
+## 1 0645~ 2010-01-01 00:00:00    -1    30   3.6       997.        -3  86.3
+## 2 0645~ 2010-01-01 01:00:00    -1    20   4.1       997.        -3  86.3
+## 3 0645~ 2010-01-01 02:00:00    -1    30   4.6       996.        -3  86.3
+## 4 0645~ 2010-01-01 03:00:00    -1    20   4         996.        -3  85.7
+## 5 0645~ 2010-01-01 04:00:00    -1    30   4         996.        -8  59  
+## 6 0645~ 2010-01-01 05:00:00    -1    30   5.7       997.        -3  86.3
+## # ... with 2 more variables: ceil_hgt &lt;dbl&gt;, visibility &lt;dbl&gt;</code></pre>
+<p>And plotting the temperature data gives us something like this:</p>
+<pre class="r"><code>ggplot(data = be_met_data, aes(x=  time, y = temp))+
+  geom_line()+
+  theme_minimal()</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>But it might be lighter to work with daily averages.</p>
+<pre class="r"><code>be_met_data_day &lt;- be_met_data %&gt;% 
+  mutate(date = ymd(str_sub(time, 1, 10))) %&gt;% 
+  group_by(date) %&gt;% 
+  summarise(temp = mean(temp)) %&gt;% 
+  filter(!is.na(temp)) %&gt;% 
+  mutate(month_ = as.factor(month(date))) %&gt;% 
+  mutate(year_ = as.factor(year(date))) %&gt;% 
+  filter(year_ != 2010 &amp; year_ != 2021)</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre class="r"><code>head(be_met_data_day)</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   date          temp month_ year_
+##   &lt;date&gt;       &lt;dbl&gt; &lt;fct&gt;  &lt;fct&gt;
+## 1 2011-01-01  2.26   1      2011 
+## 2 2011-01-02  1.28   1      2011 
+## 3 2011-01-03  1.46   1      2011 
+## 4 2011-01-04 -0.425  1      2011 
+## 5 2011-01-05  0.0792 1      2011 
+## 6 2011-01-06  6.15   1      2011</code></pre>
+<p>And plotting the daily average gives us this plot.</p>
+<pre class="r"><code>ggplot(data = be_met_data_day, aes(x=  date, y = temp))+
+  geom_line()+
+  theme_minimal()</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>And as with the gas consumption data we can plot the mean temperature per month per year.</p>
+<pre class="r"><code>be_met_month &lt;- be_met_data_day %&gt;% 
+  group_by(year_, month_) %&gt;% 
+  summarise(temp = mean(temp))</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;year_&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>ggplot(data = be_met_month, aes(x=  month_, y = temp, group = year_))+
+  geom_line(aes(color = year_))+
+  theme_minimal()</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>We can make the negative correlation appear more clearly when we average per month and plot the temperature and the gas consumption.</p>
+<pre class="r"><code>#scale_y_continuous(&quot;Precipitation&quot;, sec.axis = sec_axis(~ (. - a)/b, name = &quot;Temperature&quot;))
+
+be_met_year &lt;- be_met_data_day %&gt;% 
+  group_by(month_) %&gt;% 
+  summarise(temp = mean(temp))</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre class="r"><code>ts_gas_day &lt;- ts_gas %&gt;% 
+  mutate(year = year(date)) %&gt;% 
+  filter(year != 2010 &amp; year != 2021)
+
+ts_gas_year &lt;- ts_gas_day %&gt;% 
+  as.tibble() %&gt;% 
+  mutate(month_ = as.factor(month(date))) %&gt;% 
+  group_by(month_) %&gt;%
+  summarise(cons = mean(cons))</code></pre>
+<pre><code>## Warning: `as.tibble()` is deprecated as of tibble 2.0.0.
+## Please use `as_tibble()` instead.
+## The signature and semantics have changed, see `?as_tibble`.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre class="r"><code>data &lt;- be_met_year %&gt;% 
+  left_join(ts_gas_year)</code></pre>
+<pre><code>## Joining, by = &quot;month_&quot;</code></pre>
+<pre class="r"><code>data_ &lt;- data %&gt;% 
+  mutate(cons = (1/cons)*32)
+
+ggplot(data = data, aes(x=month_, y=temp, group = 1))+
+  geom_line(aes(color =&quot;temperature&quot;))+
+  geom_line(aes(y = cons, color = &quot;consumption&quot;))+
+  scale_y_continuous(&quot;temperature - gas&quot;)+
+  theme_minimal()+
+  theme(legend.title = element_blank())+
+  scale_fill_discrete(labels = c(&quot;A&quot;, &quot;B&quot;))</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>So indeed when the average temperature rises, the consumption figures drop. But can we measure this correlation ? Using the tseries package we can calculate the correlation between two time series, but also see how correlated they are over time by introducing a lag. In our case a lag in days.</p>
+<pre class="r"><code>ccf(be_met_data_day$temp, ts_gas_day$cons, lag = 15, plot = FALSE)</code></pre>
+<pre><code>## 
+## Autocorrelations of series &#39;X&#39;, by lag
+## 
+##    -15    -14    -13    -12    -11    -10     -9     -8     -7     -6     -5 
+## -0.752 -0.753 -0.754 -0.756 -0.758 -0.759 -0.759 -0.759 -0.761 -0.761 -0.761 
+##     -4     -3     -2     -1      0      1      2      3      4      5      6 
+## -0.760 -0.759 -0.758 -0.756 -0.754 -0.751 -0.747 -0.744 -0.740 -0.735 -0.731 
+##      7      8      9     10     11     12     13     14     15 
+## -0.728 -0.724 -0.718 -0.712 -0.708 -0.703 -0.698 -0.692 -0.686</code></pre>
+<p>As you can see the it is between -5 and -7 days that we negative correlation is the highest. I does sometimes feel like there is some inertia in the system, the temperatures are too high for a couple of days when the temperature rises and it takes some time when the weather gets colder, to have nice temperatures inside the house (or it is just because we are only working with average gas consumption date per month).</p>
+<p>To conclude let’s take Prophet (Facebook’s time series package) for a spin.</p>
+<pre class="r"><code>ts &lt;- ts_gas %&gt;% 
+  select(date, cons) %&gt;% 
+  rename(&quot;ds&quot; = &quot;date&quot;,
+         &quot;y&quot; = &quot;cons&quot;) %&gt;% 
+  as.data.frame()
+
+m &lt;- prophet(ts)</code></pre>
+<pre><code>## Disabling daily seasonality. Run prophet with daily.seasonality=TRUE to override this.</code></pre>
+<pre class="r"><code>future &lt;- make_future_dataframe(m, periods = (365*2))
+forecast &lt;- predict(m, future)
+
+plot(m, forecast)</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<pre class="r"><code>prophet_plot_components(m, forecast)</code></pre>
+<p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>Decomposes in trends; monthly, daily and yearly trend. Before 2020 the trend was slightly downwards, due to global warming. Now the trend is upward, due to the confinement. So we do not even enjoy having lower energy bills caused by the climatic crisis.</p>
+<p>See you soon.</p>
 
       
       <div class="related">
