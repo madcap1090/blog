@@ -67,9 +67,8 @@ ts_gas %&gt;% head(5)</code></pre>
 <p>Next join our meter data to the index. It logically results in mostly missing values per date.</p>
 <pre class="r"><code>ts_gas &lt;-ts_gas %&gt;% 
   left_join(gas %&gt;% 
-              mutate(date = ymd(date)))</code></pre>
-<pre><code>## Joining, by = &quot;date&quot;</code></pre>
-<pre class="r"><code>ts_gas %&gt;% head(5)</code></pre>
+              mutate(date = ymd(date)))
+ts_gas %&gt;% head(5)</code></pre>
 <pre><code>## # A tsibble: 5 x 2 [1D]
 ##   date       gas_meter
 ##   &lt;date&gt;         &lt;dbl&gt;

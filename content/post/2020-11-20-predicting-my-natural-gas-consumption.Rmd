@@ -69,7 +69,7 @@ ts_gas %>% head(5)
 Next join our meter data to the index. It logically results in mostly missing values per date.
 
 
-```{r}
+```{r,  message=FALSE}
 ts_gas <-ts_gas %>% 
   left_join(gas %>% 
               mutate(date = ymd(date)))
