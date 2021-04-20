@@ -9,12 +9,12 @@ tags:
 ---
 
 It's been a while since I posted on this blog. That was mainly due to the confinement
-in the covid-19 pandemic. And it's a promise the last time I mention this virus.
+in the covid-19 pandemic. And it's a promise, this is  the last time I will mention the virus.
 
 Let's get away from all that and look at energy consumption and global warming instead.
 That will lift our spirits!
 
-Here I the packages I need to attach.
+Here are the packages I need to attach.
 
 
 ```{r, warning=FALSE, message=FALSE}
@@ -41,7 +41,7 @@ This is our prime data source:
 
 
 
-The data point are from around the end of each month. So this data can be loaded from the xl file.
+The data points are from around the end of each month. We load the data from an xl file.
 
 
 
@@ -94,7 +94,7 @@ ggplot(data = ts_gas, aes(x=  date, y = gas_meter))+
   labs(x="year", y="gas meter")+
   scale_y_continuous(labels = comma)
 ```
-But this is just the evolution of the gas meter. The gas consumption is more interesting. The dplyr, lead function will help us here:
+Looking at the gas consumption per period is more interesting. The dplyr, lead function will help us here:
 
 ```{r}
 ts_gas <- ts_gas %>% 
@@ -130,7 +130,7 @@ ggplot(data = ts_gas_month, aes(x=  month, y = cons, group = year))+
 
 ```
 
-No surprise since we need to heat during the winter months. I used to take holidays in July or August so this is where the minima are situated, since no gas is then used for a couple of weeks. 
+No surprise since we need to heat during the winter months. I used to take holidays in July or August so this is where the minima are situated, since no gas at all is then used for a couple of weeks. 
 
 The same data can be used to plot a heat map:
 
@@ -292,7 +292,7 @@ So indeed when the average temperature rises, the consumption figures drop.  But
 ccf(be_met_data_day$temp, ts_gas_day$cons, lag = 15, plot = FALSE)
 ```
 
-As you can see the it is between -5 and -7 days that we negative correlation is the highest. I does sometimes feel like there is some inertia in the system, the temperatures are too high for a couple of days when the temperature rises and it takes some time when the weather gets colder,  to have nice temperatures inside the house (or it is just because we are only working with average gas consumption date per month). 
+As you can see the it is between -5 and -7 days that we negative correlation is the highest. I does sometimes feel like there is some inertia in the heating system, the temperatures are too high for a couple of days when the temperature rises and it takes some time when the weather gets colder,  to have nice temperatures inside the house (or it is just might be because we are only working with average gas consumption date per month). 
 
 To conclude let's take Prophet (Facebook's time series package) for a spin. 
 
@@ -318,6 +318,6 @@ plot(m, forecast)
 prophet_plot_components(m, forecast)
 ```
 
-Decomposes in trends; monthly, daily and yearly trend. Before 2020 the trend was slightly downwards, due to global warming. Now the trend is upward, due to the confinement. So we do not even enjoy having lower energy bills caused by the climatic crisis.
+Decomposes in trends; monthly, daily and yearly trend. Before 2020 the trend was slightly downwards, because of temperature increases. Now the trend is upward, due to the confinement. So we do not even enjoy having lower energy bills caused by the climatic crisis.
 
 See you soon.

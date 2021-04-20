@@ -19,10 +19,10 @@ tags:
 
 
 <p>It’s been a while since I posted on this blog. That was mainly due to the confinement
-in the covid-19 pandemic. And it’s a promise the last time I mention this virus.</p>
+in the covid-19 pandemic. And it’s a promise, this is the last time I will mention the virus.</p>
 <p>Let’s get away from all that and look at energy consumption and global warming instead.
 That will lift our spirits!</p>
-<p>Here I the packages I need to attach.</p>
+<p>Here are the packages I need to attach.</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)
 library(&quot;tsibble&quot;) 
 library(&quot;lubridate&quot;)
@@ -41,7 +41,7 @@ library(&quot;prophet&quot;)</code></pre>
 <img src="/img/20201120/meter.jpg" alt="" />
 <p class="caption">the gas meter</p>
 </div>
-<p>The data point are from around the end of each month. So this data can be loaded from the xl file.</p>
+<p>The data points are from around the end of each month. We load the data from an xl file.</p>
 <pre class="r"><code>gas &lt;- readxl::read_excel(&quot;./data/20201120/gas.xlsx&quot;)
 head(gas) %&gt;% 
   reactable(columns = list(
@@ -97,7 +97,7 @@ head(ts_gas)</code></pre>
   labs(x=&quot;year&quot;, y=&quot;gas meter&quot;)+
   scale_y_continuous(labels = comma)</code></pre>
 <p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-6-1.png" width="672" />
-But this is just the evolution of the gas meter. The gas consumption is more interesting. The dplyr, lead function will help us here:</p>
+Looking at the gas consumption per period is more interesting. The dplyr, lead function will help us here:</p>
 <pre class="r"><code>ts_gas &lt;- ts_gas %&gt;% 
    mutate(cons = lead(x = gas_meter, 1, default = NA) - gas_meter )</code></pre>
 <p>An plotting it we get:</p>
@@ -121,7 +121,7 @@ But this is just the evolution of the gas meter. The gas consumption is more int
   geom_line(aes(color = year))+
   theme_minimal()</code></pre>
 <p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
-<p>No surprise since we need to heat during the winter months. I used to take holidays in July or August so this is where the minima are situated, since no gas is then used for a couple of weeks.</p>
+<p>No surprise since we need to heat during the winter months. I used to take holidays in July or August so this is where the minima are situated, since no gas at all is then used for a couple of weeks.</p>
 <p>The same data can be used to plot a heat map:</p>
 <pre class="r"><code>ggplot(data = ts_gas_month , aes(year, month, fill= cons)) + 
   geom_tile()+
@@ -257,7 +257,7 @@ ggplot(data = data, aes(x=month_, y=temp, group = 1))+
 ## -0.760 -0.759 -0.758 -0.756 -0.754 -0.751 -0.747 -0.744 -0.740 -0.735 -0.731 
 ##      7      8      9     10     11     12     13     14     15 
 ## -0.728 -0.724 -0.718 -0.712 -0.708 -0.703 -0.698 -0.692 -0.686</code></pre>
-<p>As you can see the it is between -5 and -7 days that we negative correlation is the highest. I does sometimes feel like there is some inertia in the system, the temperatures are too high for a couple of days when the temperature rises and it takes some time when the weather gets colder, to have nice temperatures inside the house (or it is just because we are only working with average gas consumption date per month).</p>
+<p>As you can see the it is between -5 and -7 days that we negative correlation is the highest. I does sometimes feel like there is some inertia in the heating system, the temperatures are too high for a couple of days when the temperature rises and it takes some time when the weather gets colder, to have nice temperatures inside the house (or it is just might be because we are only working with average gas consumption date per month).</p>
 <p>To conclude let’s take Prophet (Facebook’s time series package) for a spin.</p>
 <pre class="r"><code>ts &lt;- ts_gas %&gt;% 
   select(date, cons) %&gt;% 
@@ -274,5 +274,5 @@ plot(m, forecast)</code></pre>
 <p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 <pre class="r"><code>prophet_plot_components(m, forecast)</code></pre>
 <p><img src="/post/2020-11-20-predicting-my-natural-gas-consumption_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
-<p>Decomposes in trends; monthly, daily and yearly trend. Before 2020 the trend was slightly downwards, due to global warming. Now the trend is upward, due to the confinement. So we do not even enjoy having lower energy bills caused by the climatic crisis.</p>
+<p>Decomposes in trends; monthly, daily and yearly trend. Before 2020 the trend was slightly downwards, because of temperature increases. Now the trend is upward, due to the confinement. So we do not even enjoy having lower energy bills caused by the climatic crisis.</p>
 <p>See you soon.</p>
